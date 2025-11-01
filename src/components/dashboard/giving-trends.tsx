@@ -1,7 +1,7 @@
 "use client"
 
 import { HandCoins } from "lucide-react"
-import { Area, AreaChart, ResponsiveContainer, Tooltip } from "recharts"
+import { Area, AreaChart, ResponsiveContainer } from "recharts"
 
 import {
   Card,
@@ -11,11 +11,18 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { givingData } from "@/lib/data"
-import { ChartTooltipContent } from "@/components/ui/chart"
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 
 const lastGiving = givingData[givingData.length - 1]?.total ?? 0
 const secondLastGiving = givingData[givingData.length - 2]?.total ?? 0
 const trend = ((lastGiving - secondLastGiving) / secondLastGiving) * 100
+
+const chartConfig = {
+  total: {
+    label: "Giving",
+    color: "hsl(var(--primary))",
+  },
+}
 
 export function GivingTrends() {
   return (
@@ -35,8 +42,9 @@ export function GivingTrends() {
           {trend >= 0 ? '+' : ''}{trend.toFixed(1)}% from last month
         </p>
         <div className="h-[100px] w-full mt-4">
-          <ResponsiveContainer width="100%" height="100%">
+          <ChartContainer config={chartConfig} className="min-h-[100px] w-full">
             <AreaChart
+              accessibilityLayer
               data={givingData}
               margin={{ top: 5, right: 10, left: 10, bottom: 0 }}
             >
@@ -46,7 +54,7 @@ export function GivingTrends() {
                   <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
                 </linearGradient>
               </defs>
-              <Tooltip
+              <ChartTooltip
                 cursor={false}
                 content={<ChartTooltipContent indicator="dot" hideLabel />}
               />
@@ -59,7 +67,7 @@ export function GivingTrends() {
                 fill="url(#colorGiving)"
               />
             </AreaChart>
-          </ResponsiveContainer>
+          </ChartContainer>
         </div>
       </CardContent>
     </Card>

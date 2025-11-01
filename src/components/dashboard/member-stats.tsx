@@ -1,7 +1,7 @@
 "use client"
 
 import { Users } from "lucide-react"
-import { Bar, BarChart, ResponsiveContainer, Tooltip } from "recharts"
+import { Bar, BarChart, ResponsiveContainer } from "recharts"
 
 import {
   Card,
@@ -11,9 +11,15 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { memberDemographics } from "@/lib/data"
-import { ChartTooltipContent } from "@/components/ui/chart"
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 
 const totalMembers = memberDemographics.reduce((acc, curr) => acc + curr.value, 0)
+const chartConfig = {
+  value: {
+    label: "Members",
+    color: "hsl(var(--chart-1))",
+  },
+}
 
 export function MemberStats() {
   return (
@@ -31,15 +37,15 @@ export function MemberStats() {
         <div className="text-2xl font-bold">{totalMembers.toLocaleString()}</div>
         <p className="text-xs text-muted-foreground">+2.1% from last month</p>
         <div className="h-[100px] w-full mt-4">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={memberDemographics} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
-              <Tooltip
+          <ChartContainer config={chartConfig} className="min-h-[100px] w-full">
+            <BarChart accessibilityLayer data={memberDemographics} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
+              <ChartTooltip
                 cursor={false}
                 content={<ChartTooltipContent indicator="dot" hideLabel />}
               />
               <Bar dataKey="value" radius={[4, 4, 0, 0]} />
             </BarChart>
-          </ResponsiveContainer>
+          </ChartContainer>
         </div>
       </CardContent>
     </Card>

@@ -1,7 +1,7 @@
 "use client"
 
 import { BarChart3 } from "lucide-react"
-import { Line, LineChart, ResponsiveContainer, Tooltip, XAxis } from "recharts"
+import { Line, LineChart, ResponsiveContainer } from "recharts"
 
 import {
   Card,
@@ -11,11 +11,18 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { attendanceData } from "@/lib/data"
-import { ChartTooltipContent } from "@/components/ui/chart"
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 
 const lastAttendance = attendanceData[attendanceData.length - 1]?.attendance ?? 0
 const secondLastAttendance = attendanceData[attendanceData.length - 2]?.attendance ?? 0
 const trend = ((lastAttendance - secondLastAttendance) / secondLastAttendance) * 100
+
+const chartConfig = {
+  attendance: {
+    label: "Attendance",
+    color: "hsl(var(--primary))",
+  },
+}
 
 export function AttendanceTracking() {
   return (
@@ -35,12 +42,13 @@ export function AttendanceTracking() {
           {trend >= 0 ? '+' : ''}{trend.toFixed(1)}% from last week
         </p>
         <div className="h-[100px] w-full mt-4">
-          <ResponsiveContainer width="100%" height="100%">
+          <ChartContainer config={chartConfig} className="min-h-[100px] w-full">
             <LineChart
+              accessibilityLayer
               data={attendanceData}
               margin={{ top: 5, right: 10, left: 10, bottom: 0 }}
             >
-              <Tooltip
+              <ChartTooltip
                 cursor={false}
                 content={<ChartTooltipContent indicator="dot" hideLabel />}
               />
@@ -52,7 +60,7 @@ export function AttendanceTracking() {
                 dot={false}
               />
             </LineChart>
-          </ResponsiveContainer>
+          </ChartContainer>
         </div>
       </CardContent>
     </Card>
