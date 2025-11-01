@@ -8,7 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { ChartContainer, ChartLegend, ChartLegendContent } from "@/components/ui/chart"
+import { ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
 
 const memberDemographics = [
   { name: '18-25', value: 35, fill: 'var(--color-chart-2)' },
@@ -36,6 +36,7 @@ export function MemberDemographics() {
         <div className="h-[200px] w-full relative">
           <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
             <PieChart>
+              <ChartTooltip content={<ChartTooltipContent hideLabel />} />
               <Pie data={memberDemographics} dataKey="value" nameKey="name" innerRadius={60} outerRadius={80} paddingAngle={2}>
                  {memberDemographics.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.fill} />
@@ -48,10 +49,12 @@ export function MemberDemographics() {
              <div className="text-sm text-muted-foreground">Members</div>
           </div>
         </div>
-        <ChartLegend
-            content={<ChartLegendContent nameKey="name" />}
-            className="-mt-4 flex-wrap"
-          />
+        <ChartContainer config={chartConfig} className="w-full">
+            <ChartLegend
+                content={<ChartLegendContent nameKey="name" />}
+                className="-mt-4 flex-wrap"
+            />
+        </ChartContainer>
       </CardContent>
     </Card>
   )
