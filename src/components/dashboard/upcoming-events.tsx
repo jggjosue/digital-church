@@ -1,48 +1,34 @@
-import { Calendar, MapPin } from "lucide-react"
-
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
 import { upcomingEvents } from "@/lib/data"
-import { ScrollArea } from "../ui/scroll-area"
+import { Button } from "@/components/ui/button"
 
 export function UpcomingEvents() {
   return (
-    <Card className="h-full">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle>Upcoming Events</CardTitle>
-          <Calendar className="h-5 w-5 text-muted-foreground" />
-        </div>
-        <CardDescription>
-          Stay updated with what's happening in our community.
-        </CardDescription>
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-base font-medium">Upcoming Events</CardTitle>
+        <Button variant="link" className="p-0 h-auto">View All</Button>
       </CardHeader>
       <CardContent>
-        <ScrollArea className="h-[380px]">
-          <div className="space-y-6">
-            {upcomingEvents.map((event, index) => (
+        <div className="space-y-4">
+            {upcomingEvents.slice(0, 4).map((event, index) => (
               <div key={index} className="flex items-start gap-4">
-                <div className="flex-shrink-0 bg-primary/10 text-primary rounded-md p-2 flex flex-col items-center justify-center h-16 w-16">
-                    <span className="text-sm font-bold">{event.date.split(' ')[0]}</span>
+                <div className="flex-shrink-0 bg-secondary rounded-md p-2 flex flex-col items-center justify-center h-14 w-14">
+                    <span className="text-xs font-bold text-primary">{event.date.split(' ')[0].toUpperCase()}</span>
                     <span className="text-2xl font-bold">{event.date.split(' ')[1].replace(',', '')}</span>
                 </div>
                 <div className="flex-grow">
-                  <h3 className="font-semibold">{event.title}</h3>
-                  <p className="text-sm text-muted-foreground">{event.time}</p>
-                  <div className="flex items-center text-sm text-muted-foreground mt-1">
-                    <MapPin className="h-3 w-3 mr-1.5" />
-                    <span>{event.location}</span>
-                  </div>
+                  <h3 className="font-semibold text-sm">{event.title}</h3>
+                  <p className="text-sm text-muted-foreground">{event.time} - {event.location}</p>
                 </div>
               </div>
             ))}
           </div>
-        </ScrollArea>
       </CardContent>
     </Card>
   )

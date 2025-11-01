@@ -12,7 +12,7 @@ export const attendanceData = [
   { week: 'Week 3', attendance: 430 },
   { week: 'Week 4', attendance: 480 },
   { week: 'Week 5', attendance: 460 },
-  { week: 'Week 6', attendance: 489 },
+  { week: 'Week 6', attendance: 458 },
 ];
 
 export const givingData = [
@@ -20,40 +20,39 @@ export const givingData = [
   { month: 'Feb', total: 11200 },
   { month: 'Mar', total: 13100 },
   { month: 'Apr', total: 12800 },
-  { month: 'May', total: 14000 },
+  { month: 'May', total: 15780 },
   { month: 'Jun', total: 12450 },
 ];
 
 export const upcomingEvents = [
   {
-    title: 'Summer Youth Camp',
-    date: 'July 15-19, 2024',
-    time: 'All Day',
-    location: 'Mountain View Retreat Center',
-  },
-  {
-    title: 'Community BBQ',
-    date: 'July 27, 2024',
-    time: '12:00 PM - 3:00 PM',
-    location: 'Church Park',
-  },
-  {
-    title: 'Worship Night',
-    date: 'August 2, 2024',
-    time: '7:00 PM',
+    title: 'Sunday Morning Service',
+    date: 'JUN 23',
+    time: '10:00 AM',
     location: 'Main Sanctuary',
   },
   {
-    title: 'Back to School Drive',
-    date: 'August 10, 2024',
-    time: '9:00 AM - 1:00 PM',
+    title: 'Youth Group Hangout',
+    date: 'JUN 26',
+    time: '6:30 PM',
+    location: 'Youth Hall',
+  },
+  {
+    title: 'Community Food Drive',
+    date: 'JUN 29',
+    time: '9:00 AM',
+    location: 'Church Parking Lot',
+  },
+  {
+    title: "Men's Breakfast",
+    date: 'JUL 01',
+    time: '8:00 AM',
     location: 'Fellowship Hall',
   },
 ];
 
 export const prayerRequests = [
-    { id: 1, request: 'For healing and strength for my mother who is unwell.', submitted: '2 days ago' },
-    { id: 2, request: 'Guidance and wisdom in a major life decision I have to make.', submitted: '1 day ago' },
-    { id: 3, request: 'Praying for a new job opportunity.', submitted: '18 hours ago' },
-    { id: 4, request: 'For peace and comfort for a grieving family in our community.', submitted: '5 hours ago' },
+    { id: 1, request: 'Healing for Mary S.', submitted: 'Submitted 2 days ago' },
+    { id: 2, request: 'Guidance for the Johnson Family', submitted: 'Submitted 3 days ago' },
+    { id: 3, request: 'Job opportunity for David P.', submitted: 'Submitted 5 days ago' },
 ];
