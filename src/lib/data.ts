@@ -7,21 +7,35 @@ export const memberDemographics = [
 ];
 
 export const attendanceData = [
-  { week: 'Week 1', attendance: 420 },
-  { week: 'Week 2', attendance: 450 },
-  { week: 'Week 3', attendance: 430 },
-  { week: 'Week 4', attendance: 480 },
-  { week: 'Week 5', attendance: 460 },
-  { week: 'Week 6', attendance: 458 },
+    // Year Data
+    { week: 1, month: 'Jan', attendance: 420 }, { week: 2, month: 'Jan', attendance: 430 }, { week: 3, month: 'Jan', attendance: 440 }, { week: 4, month: 'Jan', attendance: 450 },
+    { week: 5, month: 'Feb', attendance: 460 }, { week: 6, month: 'Feb', attendance: 455 }, { week: 7, month: 'Feb', attendance: 465 }, { week: 8, month: 'Feb', attendance: 470 },
+    { week: 9, month: 'Mar', attendance: 475 }, { week: 10, month: 'Mar', attendance: 480 }, { week: 11, month: 'Mar', attendance: 485 }, { week: 12, month: 'Mar', attendance: 490 },
+    { week: 13, month: 'Apr', attendance: 495 }, { week: 14, month: 'Apr', attendance: 500 }, { week: 15, month: 'Apr', attendance: 505 }, { week: 16, month: 'Apr', attendance: 510 },
+    { week: 17, month: 'May', attendance: 515 }, { week: 18, month: 'May', attendance: 520 }, { week: 19, month: 'May', attendance: 525 }, { week: 20, month: 'May', attendance: 530 },
+    { week: 21, month: 'Jun', attendance: 535 }, { week: 22, month: 'Jun', attendance: 540 }, { week: 23, month: 'Jun', attendance: 545 }, { week: 24, month: 'Jun', attendance: 550 },
+    { week: 25, month: 'Jul', attendance: 555 }, { week: 26, month: 'Jul', attendance: 560 }, { week: 27, month: 'Jul', attendance: 565 }, { week: 28, month: 'Jul', attendance: 570 },
+    { week: 29, month: 'Aug', attendance: 575 }, { week: 30, month: 'Aug', attendance: 580 }, { week: 31, month: 'Aug', attendance: 585 }, { week: 32, month: 'Aug', attendance: 590 },
+    { week: 33, month: 'Sep', attendance: 595 }, { week: 34, month: 'Sep', attendance: 600 }, { week: 35, month: 'Sep', attendance: 605 }, { week: 36, month: 'Sep', attendance: 610 },
+    { week: 37, month: 'Oct', attendance: 615 }, { week: 38, month: 'Oct', attendance: 620 }, { week: 39, month: 'Oct', attendance: 625 }, { week: 40, month: 'Oct', attendance: 630 },
+    { week: 41, month: 'Nov', attendance: 635 }, { week: 42, month: 'Nov', attendance: 640 }, { week: 43, month: 'Nov', attendance: 645 }, { week: 44, month: 'Nov', attendance: 650 },
+    { week: 45, month: 'Dec', attendance: 655 }, { week: 46, month: 'Dec', attendance: 660 }, { week: 47, month: 'Dec', attendance: 665 }, { week: 48, month: 'Dec', attendance: 670 },
+    { week: 49, month: 'Dec', attendance: 675 }, { week: 50, month: 'Dec', attendance: 680 }, { week: 51, month: 'Dec', attendance: 685 }, { week: 52, month: 'Dec', attendance: 458 },
 ];
 
 export const givingData = [
-  { month: 'Jan', total: 10500 },
-  { month: 'Feb', total: 11200 },
-  { month: 'Mar', total: 13100 },
-  { month: 'Apr', total: 12800 },
-  { month: 'May', total: 15780 },
-  { month: 'Jun', total: 12450 },
+    { month: 'Jan', total: 10500, newVisitors: 15 },
+    { month: 'Feb', total: 11200, newVisitors: 18 },
+    { month: 'Mar', total: 13100, newVisitors: 22 },
+    { month: 'Apr', total: 12800, newVisitors: 20 },
+    { month: 'May', total: 15780, newVisitors: 25 },
+    { month: 'Jun', total: 12450, newVisitors: 23 },
+    { month: 'Jul', total: 16200, newVisitors: 28 },
+    { month: 'Aug', total: 14800, newVisitors: 26 },
+    { month: 'Sep', total: 17500, newVisitors: 30 },
+    { month: 'Oct', total: 18100, newVisitors: 32 },
+    { month: 'Nov', total: 19500, newVisitors: 35 },
+    { month: 'Dec', total: 22450, newVisitors: 40 },
 ];
 
 export const upcomingEvents = [

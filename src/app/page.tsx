@@ -1,17 +1,27 @@
-import { Church, Plus } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TotalMembers } from "@/components/dashboard/total-members";
-import { WeeklyAttendance } from "@/components/dashboard/weekly-attendance";
-import { GivingThisMonth } from "@/components/dashboard/giving-this-month";
-import { NewVisitors } from "@/components/dashboard/new-visitors";
-import { GivingTrends } from "@/components/dashboard/giving-trends";
-import { MemberDemographics } from "@/components/dashboard/member-demographics";
-import { UpcomingEvents } from "@/components/dashboard/upcoming-events";
-import { PrayerRequests } from "@/components/dashboard/prayer-requests";
+'use client';
+import * as React from 'react';
+import { Church, Plus } from 'lucide-react';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TotalMembers } from '@/components/dashboard/total-members';
+import { WeeklyAttendance } from '@/components/dashboard/weekly-attendance';
+import { GivingThisMonth } from '@/components/dashboard/giving-this-month';
+import { NewVisitors } from '@/components/dashboard/new-visitors';
+import { GivingTrends } from '@/components/dashboard/giving-trends';
+import { MemberDemographics } from '@/components/dashboard/member-demographics';
+import { UpcomingEvents } from '@/components/dashboard/upcoming-events';
+import { PrayerRequests } from '@/components/dashboard/prayer-requests';
+
+export type TimeRange = 'this-week' | 'this-month' | 'this-quarter' | 'this-year';
 
 export default function Home() {
+  const [timeRange, setTimeRange] = React.useState<TimeRange>('this-week');
+
+  const handleTimeRangeChange = (value: string) => {
+    setTimeRange(value as TimeRange);
+  };
+
   return (
     <div className="flex min-h-screen w-full flex-col bg-background text-foreground">
       <header className="sticky top-0 z-10 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
@@ -20,11 +30,33 @@ export default function Home() {
           <span>ChurchFlow</span>
         </div>
         <nav className="hidden flex-1 items-center gap-6 text-sm font-medium md:flex">
-          <a href="#" className="font-bold text-primary">Dashboard</a>
-          <a href="#" className="text-muted-foreground transition-colors hover:text-foreground">Members</a>
-          <a href="#" className="text-muted-foreground transition-colors hover:text-foreground">Events</a>
-          <a href="#" className="text-muted-foreground transition-colors hover:text-foreground">Finances</a>
-          <a href="#" className="text-muted-foreground transition-colors hover:text-foreground">Reports</a>
+          <a href="#" className="font-bold text-primary">
+            Dashboard
+          </a>
+          <a
+            href="#"
+            className="text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Members
+          </a>
+          <a
+            href="#"
+            className="text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Events
+          </a>
+          <a
+            href="#"
+            className="text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Finances
+          </a>
+          <a
+            href="#"
+            className="text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Reports
+          </a>
         </nav>
         <div className="flex flex-1 items-center justify-end gap-4">
           <Button>
@@ -40,9 +72,15 @@ export default function Home() {
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-            <p className="text-muted-foreground">An overview of key church activities and statistics.</p>
+            <p className="text-muted-foreground">
+              An overview of key church activities and statistics.
+            </p>
           </div>
-          <Tabs defaultValue="this-week" className="w-full sm:w-auto">
+          <Tabs
+            defaultValue="this-week"
+            className="w-full sm:w-auto"
+            onValueChange={handleTimeRangeChange}
+          >
             <TabsList>
               <TabsTrigger value="this-week">This Week</TabsTrigger>
               <TabsTrigger value="this-month">This Month</TabsTrigger>
@@ -52,17 +90,17 @@ export default function Home() {
           </Tabs>
         </div>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <TotalMembers />
-          <WeeklyAttendance />
-          <GivingThisMonth />
-          <NewVisitors />
+          <TotalMembers timeRange={timeRange} />
+          <WeeklyAttendance timeRange={timeRange} />
+          <GivingThisMonth timeRange={timeRange} />
+          <NewVisitors timeRange={timeRange} />
         </div>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
           <div className="lg:col-span-2">
-            <GivingTrends />
+            <GivingTrends timeRange={timeRange} />
           </div>
           <div className="lg:col-span-1">
-             <MemberDemographics />
+            <MemberDemographics />
           </div>
           <div className="lg:col-span-2">
             <div className="grid gap-6">
