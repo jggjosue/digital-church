@@ -15,7 +15,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 
 const lastGiving = givingData[givingData.length - 1]?.total ?? 0
 const secondLastGiving = givingData[givingData.length - 2]?.total ?? 0
-const trend = ((lastGiving - secondLastGiving) / secondLastGiving) * 100
+const trend = secondLastGiving > 0 ? ((lastGiving - secondLastGiving) / secondLastGiving) * 100 : 0
 
 const chartConfig = {
   total: {

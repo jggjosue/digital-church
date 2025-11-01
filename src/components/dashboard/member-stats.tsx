@@ -19,6 +19,11 @@ const chartConfig = {
     label: "Members",
     color: "hsl(var(--chart-1))",
   },
+  'Children (0-12)': { label: 'Children (0-12)', color: 'hsl(var(--chart-1))' },
+  'Youth (13-18)': { label: 'Youth (13-18)', color: 'hsl(var(--chart-2))' },
+  'Young Adults (19-35)': { label: 'Young Adults (19-35)', color: 'hsl(var(--chart-3))' },
+  'Adults (36-60)': { label: 'Adults (36-60)', color: 'hsl(var(--chart-4))' },
+  'Seniors (60+)': { label: 'Seniors (60+)', color: 'hsl(var(--chart-5))' },
 }
 
 export function MemberStats() {
@@ -41,7 +46,8 @@ export function MemberStats() {
             <BarChart accessibilityLayer data={memberDemographics} margin={{ top: 5, right: 0, left: 0, bottom: 0 }}>
               <ChartTooltip
                 cursor={false}
-                content={<ChartTooltipContent indicator="dot" hideLabel />}
+                content={<ChartTooltipContent indicator="dot" />}
+                nameKey="name"
               />
               <Bar dataKey="value" radius={[4, 4, 0, 0]} />
             </BarChart>

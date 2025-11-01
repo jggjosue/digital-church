@@ -15,7 +15,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/
 
 const lastAttendance = attendanceData[attendanceData.length - 1]?.attendance ?? 0
 const secondLastAttendance = attendanceData[attendanceData.length - 2]?.attendance ?? 0
-const trend = ((lastAttendance - secondLastAttendance) / secondLastAttendance) * 100
+const trend = secondLastAttendance > 0 ? ((lastAttendance - secondLastAttendance) / secondLastAttendance) * 100 : 0
 
 const chartConfig = {
   attendance: {
