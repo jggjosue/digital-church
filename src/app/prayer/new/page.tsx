@@ -26,11 +26,10 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
-import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 export default function NewPrayerRequestPage() {
-  const [isAnonymous, setIsAnonymous] = React.useState(false);
 
   return (
     <main className="flex-1 space-y-6 p-8 bg-muted/20">
@@ -45,76 +44,80 @@ export default function NewPrayerRequestPage() {
             Nueva Petición de Oración
           </h1>
           <p className="text-muted-foreground">
-            Comparta una nueva petición de oración con la comunidad de la iglesia.
+            Comparta sus necesidades de oración con la comunidad.
           </p>
         </div>
       </div>
 
       <Card className="max-w-3xl mx-auto">
         <CardHeader>
-          <CardTitle>Detalles de la Petición</CardTitle>
+          <CardTitle>Detalles de la Petición de Oración</CardTitle>
           <CardDescription>
-            Complete los detalles de su petición a continuación.
+            Por favor, proporcione tantos detalles como se sienta cómodo compartiendo.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-8">
           <div className="space-y-2">
             <Label htmlFor="title">Título</Label>
-            <Input id="title" placeholder="Ej., Sanidad para un familiar" />
+            <Input id="title" placeholder="Ej., Sanidad para un ser querido" />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="description">Descripción</Label>
             <Textarea
               id="description"
-              placeholder="Describa su petición en detalle. Incluya cualquier información relevante que ayude a otros a orar específicamente."
-              rows={5}
+              placeholder="Comparta más detalles sobre su petición de oración..."
+              rows={4}
             />
           </div>
 
-          <div className="flex items-center space-x-2">
-            <Switch
-              id="anonymous"
-              checked={isAnonymous}
-              onCheckedChange={setIsAnonymous}
-            />
-            <Label htmlFor="anonymous">Enviar Anónimamente</Label>
-          </div>
-
-          {!isAnonymous && (
-            <div className="space-y-2">
-              <Label htmlFor="name">Su Nombre</Label>
-              <Input id="name" placeholder="John Doe" disabled />
-            </div>
-          )}
-
-          <div className="space-y-3">
-            <Label>Visibilidad</Label>
-            <RadioGroup defaultValue="public" className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <RadioGroupItem value="public" id="public" className="peer sr-only" />
-                <Label
-                  htmlFor="public"
-                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-                >
-                    <Globe className="mb-3 h-6 w-6" />
-                    Público
-                    <p className="text-xs text-muted-foreground text-center mt-1">Visible para todos en la iglesia.</p>
-                </Label>
+          <div className="space-y-4">
+            <Label>Configuración de Privacidad</Label>
+            <p className="text-sm text-muted-foreground">
+                Elija quién puede ver su petición de oración.
+            </p>
+            <RadioGroup defaultValue="public" className="space-y-4">
+              <div className="flex items-start gap-4 rounded-lg border p-4">
+                <RadioGroupItem value="public" id="public" />
+                <div className="flex-1">
+                  <Label htmlFor="public" className="font-semibold">Público</Label>
+                  <p className="text-sm text-muted-foreground">Visible para todos los miembros de la iglesia.</p>
+                </div>
               </div>
-              <div>
-                <RadioGroupItem value="staff-only" id="staff-only" className="peer sr-only" />
-                <Label
-                  htmlFor="staff-only"
-                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary"
-                >
-                    <Lock className="mb-3 h-6 w-6" />
-                    Solo Personal
-                    <p className="text-xs text-muted-foreground text-center mt-1">Solo visible para los pastores y el personal.</p>
-                </Label>
+              <div className="flex items-start gap-4 rounded-lg border p-4">
+                <RadioGroupItem value="specific-group" id="specific-group" />
+                <div className='flex-1 space-y-2'>
+                  <Label htmlFor="specific-group" className="font-semibold">Grupo de Oración Específico</Label>
+                  <p className="text-sm text-muted-foreground">Solo visible para los miembros de un grupo seleccionado.</p>
+                   <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Seleccione un grupo..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="grupo-oracion-1">Grupo de Oración 1</SelectItem>
+                      <SelectItem value="grupo-oracion-2">Grupo de Oración 2</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <div className="flex items-start gap-4 rounded-lg border p-4">
+                <RadioGroupItem value="staff-only" id="staff-only" />
+                <div className='flex-1'>
+                  <Label htmlFor="staff-only" className="font-semibold">Solo Personal Pastoral</Label>
+                  <p className="text-sm text-muted-foreground">Completamente confidencial, solo visto por los pastores.</p>
+                </div>
               </div>
             </RadioGroup>
           </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox id="anonymous" />
+            <Label htmlFor="anonymous" className="leading-none">
+                Enviar Anónimamente
+                <p className="text-xs text-muted-foreground mt-1">Su nombre no se adjuntará a esta petición de oración.</p>
+            </Label>
+          </div>
+
 
           <div className="flex justify-end gap-2 pt-4">
             <Button variant="outline">Cancelar</Button>
