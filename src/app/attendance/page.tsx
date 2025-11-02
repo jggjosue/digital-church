@@ -180,7 +180,7 @@ export default function AttendancePage() {
                 </Pagination>
             </div>
         </CardContent>
-      </Card>>
+      </Card>
     </main>
   );
 }
