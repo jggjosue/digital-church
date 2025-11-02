@@ -28,8 +28,10 @@ export function MemberDemographics() {
         <CardDescription>Distribución por grupo de edad</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col items-center">
-        <div className="h-[200px] w-full relative">
-          <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
+        <ChartContainer
+            config={chartConfig}
+            className="relative mx-auto aspect-square h-[200px] w-full"
+          >
             <PieChart>
               <ChartTooltip content={<ChartTooltipContent hideLabel />} />
               <Pie data={demographicsData} dataKey="value" nameKey="name" innerRadius={60} outerRadius={80} paddingAngle={2}>
@@ -38,12 +40,11 @@ export function MemberDemographics() {
                   ))}
               </Pie>
             </PieChart>
-          </ChartContainer>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
              <div className="text-3xl font-bold">{totalMembers}</div>
              <div className="text-sm text-muted-foreground">Miembros</div>
           </div>
-        </div>
+        </ChartContainer>
         <ChartContainer config={chartConfig} className="w-full">
              <ChartLegend
                 content={
