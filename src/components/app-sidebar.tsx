@@ -37,7 +37,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collap
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Panel' },
-  { href: '/members', icon: Users, label: 'Gente' },
+  { href: '/members', icon: Users, label: 'Miembros' },
   { href: '/groups', icon: Users, label: 'Grupos' },
   { href: '/ministries', icon: Church, label: 'Ministerios' },
   { href: '/volunteers', icon: Users, label: 'Voluntarios' },
