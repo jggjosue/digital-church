@@ -3,13 +3,12 @@
 import {
   BarChart,
   Calendar,
-  Church,
-  Coins,
-  HelpCircle,
-  Home,
+  Heart,
   LayoutDashboard,
   Settings,
   Users,
+  HelpCircle,
+  FileText
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -30,7 +29,8 @@ const navItems = [
   { href: '/groups', icon: Users, label: 'Groups' },
   { href: '/attendance', icon: BarChart, label: 'Attendance' },
   { href: '/events', icon: Calendar, label: 'Events' },
-  { href: '/finances', icon: Coins, label: 'Finances' },
+  { href: '/donations', icon: Heart, label: 'Donations' },
+  { href: '/reports', icon: FileText, label: 'Reports' },
 ];
 
 const bottomNavItems = [
@@ -50,7 +50,7 @@ export function AppSidebar() {
         </Avatar>
         <div>
             <p className="font-semibold text-foreground">Grace Church</p>
-            <p className="text-sm text-muted-foreground">Admin Panel</p>
+            <p className="text-sm text-muted-foreground">Admin Portal</p>
         </div>
       </div>
       <nav className="flex-1 space-y-1 px-4 py-2">
