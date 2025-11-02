@@ -320,8 +320,8 @@ export default function MembersPage() {
                             <UserPlus className="h-4 w-4" />
                             </Button>
                             <AlertDialogTrigger asChild>
-                                <Button variant="destructive-ghost" size="icon" className="h-8 w-8" onClick={() => setIsBulkDelete(true)}>
-                                    <Trash2 className="h-4 w-4" />
+                                <Button variant="destructive" size="sm" onClick={() => setIsBulkDelete(true)}>
+                                    Eliminar
                                 </Button>
                             </AlertDialogTrigger>
                             <Button size="sm" asChild>
