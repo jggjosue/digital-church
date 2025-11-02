@@ -14,11 +14,10 @@ import { memberDemographics as demographicsData } from "@/lib/data";
 const totalMembers = demographicsData.reduce((acc, curr) => acc + curr.value, 0);
 
 const chartConfig = {
-  'Niños (0-12)': { label: 'Niños (0-12)', color: 'hsl(var(--chart-1))' },
-  'Jóvenes (13-18)': { label: 'Jóvenes (13-18)', color: 'hsl(var(--chart-2))' },
-  'Adultos Jóvenes (19-35)': { label: 'Adultos Jóvenes (19-35)', color: 'hsl(var(--chart-3))' },
-  'Adultos (36-60)': { label: 'Adultos (36-60)', color: 'hsl(var(--chart-4))' },
-  'Adultos Mayores (60+)': { label: 'Adultos Mayores (60+)', color: 'hsl(var(--chart-5))' },
+  '18-25': { label: '18-25', color: 'hsl(252 82% 64%)' },
+  '26-40': { label: '26-40', color: 'hsl(217 91% 60%)' },
+  '41-60': { label: '41-60', color: 'hsl(45 93% 58%)' },
+  '60+': { label: '60+', color: 'hsl(142 71% 45%)' },
 }
 
 export function MemberDemographics() {

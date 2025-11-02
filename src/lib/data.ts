@@ -1,9 +1,8 @@
 export const memberDemographics = [
-  { name: 'Niños (0-12)', value: 450, fill: 'var(--color-chart-1)' },
-  { name: 'Jóvenes (13-18)', value: 300, fill: 'var(--color-chart-2)' },
-  { name: 'Adultos Jóvenes (19-35)', value: 650, fill: 'var(--color-chart-3)' },
-  { name: 'Adultos (36-60)', value: 700, fill: 'var(--color-chart-4)' },
-  { name: 'Adultos Mayores (60+)', value: 250, fill: 'var(--color-chart-5)' },
+  { name: '18-25', value: 301, fill: 'hsl(252 82% 64%)' },
+  { name: '26-40', value: 421, fill: 'hsl(217 91% 60%)' },
+  { name: '41-60', value: 241, fill: 'hsl(45 93% 58%)' },
+  { name: '60+', value: 241, fill: 'hsl(142 71% 45%)' },
 ];
 
 export const memberGrowthData = [
@@ -732,3 +731,4 @@ export const membersData = [
       privacy: 'Público',
     },
   ];
+
