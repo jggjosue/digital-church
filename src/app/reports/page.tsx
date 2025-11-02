@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/card';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
-import { attendanceRecords } from '@/lib/data';
+import { attendanceRecords, membersData } from '@/lib/data';
 
 type AutoTable = {
     autoTable: (options: any) => void;
@@ -74,11 +74,41 @@ export default function ReportsPage() {
         });
     
         doc.save('reporte_asistencia.pdf');
-      };
+    };
+
+    const generateMembershipReport = () => {
+        const doc = new jsPDF() as jsPDF & AutoTable;
+
+        doc.text('Reporte de Membresía', 14, 20);
+
+        const tableColumn = ["Nombre", "Email", "Teléfono", "Estado", "Grupos"];
+        const tableRows: (string | number)[][] = [];
+
+        membersData.forEach(member => {
+            const memberData = [
+                member.name,
+                member.email,
+                member.phone1,
+                member.status,
+                member.groups.join(', '),
+            ];
+            tableRows.push(memberData);
+        });
+
+        doc.autoTable({
+            head: [tableColumn],
+            body: tableRows,
+            startY: 30,
+        });
+
+        doc.save('reporte_membresia.pdf');
+    };
 
     const handleReportGeneration = (reportId: string) => {
         if (reportId === 'attendance') {
             generateAttendanceReport();
+        } else if (reportId === 'membership') {
+            generateMembershipReport();
         } else {
             alert(`La generación del reporte para "${reportId}" aún no está implementada.`);
         }
