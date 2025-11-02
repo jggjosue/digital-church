@@ -644,3 +644,18 @@ export const membersData = [
         actual: 37290.25
     }
   };
+
+  export const fundBalancesData = {
+    totalBalance: 576215.80,
+    activeFunds: 8,
+    totalInflows: 145521.00,
+    totalOutflows: 108230.75,
+    funds: [
+        { name: 'General Fund', description: 'Main operational fund', type: 'Unrestricted', balance: 350120.45, ytdInflows: 125450.75, ytdOutflows: -88960.50, status: 'Active' },
+        { name: 'Building Fund', description: 'For new sanctuary construction', type: 'Designated', balance: 150500.00, ytdInflows: 15200.00, ytdOutflows: 0.00, status: 'Active' },
+        { name: 'Missions Fund', description: 'Supports global & local missions', type: 'Restricted', balance: 52345.10, ytdInflows: 4870.25, ytdOutflows: -16800.00, status: 'Active' },
+        { name: 'Youth Ministry Fund', description: 'For youth events and activities', type: 'Designated', balance: 12850.25, ytdInflows: 0.00, ytdOutflows: -2470.25, status: 'Active' },
+        { name: 'Benevolence Fund', description: 'Assistance for community members', type: 'Restricted', balance: 10400.00, ytdInflows: 0.00, ytdOutflows: 0.00, status: 'Active' },
+        { name: "Pastor's Discretionary Fund", description: 'Confidential pastoral support', type: 'Designated', balance: 0.00, ytdInflows: 0.00, ytdOutflows: 0.00, status: 'Inactive' },
+    ]
+  };
