@@ -280,11 +280,9 @@ export default function MembersPage() {
                         <Button variant="ghost" size="icon" className="h-8 w-8">
                         <UserPlus className="h-4 w-4" />
                         </Button>
-                        <div className="ml-4">
-                        <Button size="sm">
-                            Acciones Masivas
+                        <Button size="sm" asChild>
+                           <Link href="/members/bulk-actions">Acciones Masivas</Link>
                         </Button>
-                        </div>
                     </div>
                     </div>
                 )}
