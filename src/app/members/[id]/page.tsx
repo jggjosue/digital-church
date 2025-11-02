@@ -216,7 +216,9 @@ export default function MemberProfilePage({ params }: { params: { id: string } }
              <Card>
                 <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle>Resumen de Donaciones</CardTitle>
-                     <Button variant="link" className='p-0 h-auto'>Ver Historial Completo</Button>
+                     <Button variant="link" className='p-0 h-auto' asChild>
+                        <Link href={`/members/${params.id}/donations`}>Ver Historial Completo</Link>
+                    </Button>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className='bg-muted/50 p-4 rounded-lg'>
@@ -279,5 +281,3 @@ export default function MemberProfilePage({ params }: { params: { id: string } }
     </main>
   );
 }
-
-    

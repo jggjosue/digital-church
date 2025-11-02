@@ -732,3 +732,11 @@ export const membersData = [
     },
   ];
 
+export const memberDonationHistory = [
+    { id: 1, date: '2023-10-22', amount: 100.00, fund: 'Fondo General', type: 'Donación en Línea' },
+    { id: 2, date: '2023-09-15', amount: 250.00, fund: 'Campaña de Construcción', type: 'Cheque' },
+    { id: 3, date: '2023-08-20', amount: 100.00, fund: 'Fondo General', type: 'Donación en Línea' },
+    { id: 4, date: '2023-07-18', amount: 50.00, fund: 'Fondo de Misiones', type: 'Efectivo' },
+    { id: 5, date: '2023-06-12', amount: 100.00, fund: 'Fondo General', type: 'Donación en Línea' },
+    { id: 6, date: '2023-05-21', amount: 500.00, fund: 'Campaña de Construcción', type: 'Transferencia Bancaria' },
+];
