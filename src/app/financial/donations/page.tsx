@@ -47,6 +47,10 @@ const chartConfig = {
 
 export default function DonationReportsPage() {
   const { totalDonations, averageDonation, newDonors, givingTrends, recentDonations } = donationReportsData;
+  const currentYear = new Date().getFullYear();
+  const [selectedYear, setSelectedYear] = React.useState<string>(currentYear.toString());
+
+  const filteredGivingData = givingData.filter(d => d.year.toString() === selectedYear);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-ES', {
@@ -74,13 +78,14 @@ export default function DonationReportsPage() {
               <Input placeholder="Buscar por donante..." className="pl-9" />
             </div>
             <div className="flex items-center gap-2">
-                <Select>
+                <Select value={selectedYear} onValueChange={setSelectedYear}>
                     <SelectTrigger className="w-full sm:w-[140px]">
-                        <SelectValue placeholder="Este Año" />
+                        <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="this-year">Este Año</SelectItem>
-                        <SelectItem value="last-year">Año Pasado</SelectItem>
+                        <SelectItem value={currentYear.toString()}>Este Año</SelectItem>
+                        <SelectItem value={(currentYear - 1).toString()}>Año Pasado</SelectItem>
+                        <SelectItem value={(currentYear - 2).toString()}>Hace 2 Años</SelectItem>
                     </SelectContent>
                 </Select>
                  <Select>
@@ -148,12 +153,12 @@ export default function DonationReportsPage() {
         <Card>
           <CardHeader>
             <CardTitle>Tendencias de Donaciones</CardTitle>
-            <CardDescription>Donaciones mensuales durante el último año</CardDescription>
+            <CardDescription>Donaciones mensuales para el año {selectedYear}</CardDescription>
           </CardHeader>
           <CardContent>
             <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
               <LineChart
-                data={givingData}
+                data={filteredGivingData}
                 margin={{
                   top: 5,
                   right: 20,

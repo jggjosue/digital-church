@@ -39,19 +39,47 @@ export const attendanceData = [
 ];
 
 export const givingData = [
-    { month: 'Ene', total: 10500, newVisitors: 15 },
-    { month: 'Feb', total: 11200, newVisitors: 18 },
-    { month: 'Mar', total: 13100, newVisitors: 22 },
-    { month: 'Abr', total: 12800, newVisitors: 20 },
-    { month: 'May', total: 15780, newVisitors: 25 },
-    { month: 'Jun', total: 12450, newVisitors: 23 },
-    { month: 'Jul', total: 16200, newVisitors: 28 },
-    { month: 'Ago', total: 14800, newVisitors: 26 },
-    { month: 'Sep', total: 17500, newVisitors: 30 },
-    { month: 'Oct', total: 18100, newVisitors: 32 },
-    { month: 'Nov', total: 19500, newVisitors: 35 },
-    { month: 'Dic', total: 22450, newVisitors: 40 },
+    // 2022 Data
+    { year: 2022, month: 'Ene', total: 9500, newVisitors: 12 },
+    { year: 2022, month: 'Feb', total: 10200, newVisitors: 15 },
+    { year: 2022, month: 'Mar', total: 12100, newVisitors: 18 },
+    { year: 2022, month: 'Abr', total: 11800, newVisitors: 16 },
+    { year: 2022, month: 'May', total: 14780, newVisitors: 22 },
+    { year: 2022, month: 'Jun', total: 11450, newVisitors: 20 },
+    { year: 2022, month: 'Jul', total: 15200, newVisitors: 25 },
+    { year: 2022, month: 'Ago', total: 13800, newVisitors: 24 },
+    { year: 2022, month: 'Sep', total: 16500, newVisitors: 28 },
+    { year: 2022, month: 'Oct', total: 17100, newVisitors: 30 },
+    { year: 2022, month: 'Nov', total: 18500, newVisitors: 33 },
+    { year: 2022, month: 'Dic', total: 21450, newVisitors: 38 },
+    // 2023 Data
+    { year: 2023, month: 'Ene', total: 10500, newVisitors: 15 },
+    { year: 2023, month: 'Feb', total: 11200, newVisitors: 18 },
+    { year: 2023, month: 'Mar', total: 13100, newVisitors: 22 },
+    { year: 2023, month: 'Abr', total: 12800, newVisitors: 20 },
+    { year: 2023, month: 'May', total: 15780, newVisitors: 25 },
+    { year: 2023, month: 'Jun', total: 12450, newVisitors: 23 },
+    { year: 2023, month: 'Jul', total: 16200, newVisitors: 28 },
+    { year: 2023, month: 'Ago', total: 14800, newVisitors: 26 },
+    { year: 2023, month: 'Sep', total: 17500, newVisitors: 30 },
+    { year: 2023, month: 'Oct', total: 18100, newVisitors: 32 },
+    { year: 2023, month: 'Nov', total: 19500, newVisitors: 35 },
+    { year: 2023, month: 'Dic', total: 22450, newVisitors: 40 },
+    // 2024 Data
+    { year: 2024, month: 'Ene', total: 11500, newVisitors: 18 },
+    { year: 2024, month: 'Feb', total: 12200, newVisitors: 20 },
+    { year: 2024, month: 'Mar', total: 14100, newVisitors: 25 },
+    { year: 2024, month: 'Abr', total: 13800, newVisitors: 22 },
+    { year: 2024, month: 'May', total: 16780, newVisitors: 28 },
+    { year: 2024, month: 'Jun', total: 13450, newVisitors: 25 },
+    { year: 2024, month: 'Jul', total: 17200, newVisitors: 30 },
+    { year: 2024, month: 'Ago', total: 15800, newVisitors: 28 },
+    { year: 2024, month: 'Sep', total: 18500, newVisitors: 32 },
+    { year: 2024, month: 'Oct', total: 19100, newVisitors: 35 },
+    { year: 2024, month: 'Nov', total: 20500, newVisitors: 38 },
+    { year: 2024, month: 'Dic', total: 23450, newVisitors: 42 },
 ];
+
 
 export const upcomingEvents = [
   {
