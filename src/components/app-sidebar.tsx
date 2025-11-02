@@ -2,6 +2,7 @@
 
 import {
   BarChart,
+  Building,
   Calendar,
   Heart,
   LayoutDashboard,
@@ -31,6 +32,7 @@ const navItems = [
   { href: '/attendance', icon: BarChart, label: 'Attendance' },
   { href: '/events', icon: Calendar, label: 'Events' },
   { href: '/donations', icon: Heart, label: 'Donations' },
+  { href: '/facilities', icon: Building, label: 'Facilities' },
   { href: '/reports', icon: FileText, label: 'Reports' },
 ];
 
