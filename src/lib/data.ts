@@ -118,3 +118,65 @@ export const membersData = [
       groups: [],
     },
   ];
+
+  export const groupData = [
+    {
+      id: 1,
+      name: 'Youth Group',
+      members: 12,
+      description: 'Weekly meeting for teenagers and young adults.',
+      status: 'Active',
+    },
+    {
+      id: 2,
+      name: 'Choir',
+      members: 25,
+      description: 'Leads worship through music on Sundays.',
+      status: 'Active',
+    },
+    {
+      id: 3,
+      name: 'Volunteers',
+      members: 58,
+      description: 'General volunteer pool for church events and needs.',
+      status: 'Active',
+    },
+    {
+      id: 4,
+      name: "Men's Bible Study",
+      members: 8,
+      description: 'Bi-weekly study sessions for men.',
+      status: 'On Hold',
+    },
+    {
+      id: 5,
+      name: 'New Members Class',
+      members: 15,
+      description: 'Orientation class for new church members.',
+      status: 'Inactive',
+    },
+  ];
+  
+  export const groupMembers = [
+    {
+      id: 1,
+      name: 'Jane Smith',
+      email: 'jane.smith@example.com',
+      phone: '+1 987 654 321',
+      role: 'Leader',
+    },
+    {
+      id: 2,
+      name: 'Emily White',
+      email: 'emily.white@example.com',
+      phone: '+1 234 567 891',
+      role: 'Member',
+    },
+    {
+      id: 3,
+      name: 'Michael Johnson',
+      email: 'michael.j@example.com',
+      phone: '+1 555 123 457',
+      role: 'Member',
+    },
+  ];
