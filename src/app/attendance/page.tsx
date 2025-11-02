@@ -36,6 +36,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { attendanceRecords } from '@/lib/data';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import Link from 'next/link';
 
 const statusColors: { [key: string]: string } = {
     Presente: 'bg-green-100 text-green-800 border-green-200',
@@ -74,7 +75,7 @@ export default function AttendancePage() {
           <h1 className="text-3xl font-bold">Gestión de Asistencia</h1>
         </div>
         <div className="flex gap-2">
-            <Button variant="outline"><BarChart className="mr-2 h-4 w-4" /> Generar Reporte</Button>
+            <Button variant="outline" asChild><Link href="/reports"><BarChart className="mr-2 h-4 w-4" /> Generar Reporte</Link></Button>
             <Button><Plus className="mr-2 h-4 w-4" /> Registrar Nueva Asistencia</Button>
         </div>
       </div>
