@@ -17,6 +17,7 @@ import { Textarea } from '@/components/ui/textarea';
 import Link from 'next/link';
 import { membersData } from '@/lib/data';
 import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 type Member = (typeof membersData)[0];
 
@@ -31,6 +32,7 @@ export default function SendEmailPage() {
 
   const [searchTerm, setSearchTerm] = React.useState('');
   const [filteredMembers, setFilteredMembers] = React.useState<Member[]>([]);
+  const [highlightedIndex, setHighlightedIndex] = React.useState(-1);
 
   React.useEffect(() => {
     if (searchTerm) {
@@ -43,6 +45,7 @@ export default function SendEmailPage() {
             m.email.toLowerCase().includes(searchTerm.toLowerCase()))
         ).slice(0, 5) // Limit results for performance
       );
+      setHighlightedIndex(-1); // Reset highlight when search term changes
     } else {
       setFilteredMembers([]);
     }
@@ -57,12 +60,26 @@ export default function SendEmailPage() {
     setRecipients(prev => [...prev, member]);
     setSearchTerm('');
     setFilteredMembers([]);
+    setHighlightedIndex(-1);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Backspace' && searchTerm === '' && recipients.length > 0) {
       const lastRecipient = recipients[recipients.length - 1];
       handleRemoveRecipient(lastRecipient.id);
+    } else if (filteredMembers.length > 0) {
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            setHighlightedIndex(prev => (prev + 1) % filteredMembers.length);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            setHighlightedIndex(prev => (prev - 1 + filteredMembers.length) % filteredMembers.length);
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (highlightedIndex >= 0 && highlightedIndex < filteredMembers.length) {
+                handleAddRecipient(filteredMembers[highlightedIndex]);
+            }
+        }
     }
   };
 
@@ -114,11 +131,13 @@ export default function SendEmailPage() {
                 />
                 {filteredMembers.length > 0 && (
                     <div className="absolute top-full left-0 mt-2 w-full bg-background border rounded-md shadow-lg z-10">
-                        {filteredMembers.map(member => (
+                        {filteredMembers.map((member, index) => (
                              <div 
                                 key={member.id} 
-                                className="p-2 hover:bg-accent cursor-pointer"
-                                onClick={() => handleAddRecipient(member)}
+                                className={cn("p-2 hover:bg-accent cursor-pointer",
+                                    index === highlightedIndex && 'bg-accent'
+                                )}
+                                onMouseDown={(e) => { e.preventDefault(); handleAddRecipient(member); }}
                             >
                                 <p className="font-medium">{member.name}</p>
                                 <p className="text-sm text-muted-foreground">{member.email}</p>
