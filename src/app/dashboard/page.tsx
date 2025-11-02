@@ -4,11 +4,14 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { TotalMembers } from '@/components/dashboard/total-members';
 import { WeeklyAttendance } from '@/components/dashboard/weekly-attendance';
 import { GivingThisMonth } from '@/components/dashboard/giving-this-month';
-import { NewVisitors } from '@/components/dashboard/new-visitors';
 import { GivingTrends } from '@/components/dashboard/giving-trends';
 import { MemberDemographics } from '@/components/dashboard/member-demographics';
 import { UpcomingEvents } from '@/components/dashboard/upcoming-events';
 import { PrayerRequests } from '@/components/dashboard/prayer-requests';
+import { TotalGroups } from '@/components/dashboard/total-groups';
+import { TotalMinistries } from '@/components/dashboard/total-ministries';
+import { TotalVolunteers } from '@/components/dashboard/total-volunteers';
+import { UpcomingEventsCard } from '@/components/dashboard/upcoming-events-card';
 
 export type TimeRange = 'this-week' | 'this-month' | 'this-quarter' | 'this-year';
 
@@ -45,7 +48,12 @@ export default function DashboardPage() {
           <TotalMembers timeRange={timeRange} />
           <WeeklyAttendance timeRange={timeRange} />
           <GivingThisMonth timeRange={timeRange} />
-          <NewVisitors timeRange={timeRange} />
+          <UpcomingEventsCard />
+        </div>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <TotalGroups />
+          <TotalMinistries />
+          <TotalVolunteers />
         </div>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
           <div className="lg:col-span-2">
