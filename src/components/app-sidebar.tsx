@@ -152,10 +152,16 @@ export function AppSidebar() {
                     <ClipboardList className="h-4 w-4" />
                     <span>Donation Reports</span>
                 </Link>
-                <Button variant="ghost" className="w-full justify-start pl-10">
+                <Link
+                    href="/financial/new-transaction"
+                    className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
+                    pathname === '/financial/new-transaction' && 'bg-accent text-accent-foreground font-medium'
+                    )}
+                >
                     <Plus className="mr-2 h-4 w-4" />
                     New Transaction
-                </Button>
+                </Link>
             </CollapsibleContent>
         </Collapsible>
       </nav>
