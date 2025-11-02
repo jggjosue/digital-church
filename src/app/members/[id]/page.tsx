@@ -62,7 +62,11 @@ const member = {
         lastYear: 3250.00,
         lastGiftAmount: 100.00,
         lastGiftDate: 'Oct 22, 2023',
-    }
+    },
+    notes: [
+        { id: 1, author: 'Jane Smith', date: 'Apr 12, 2023', content: 'John expresó interés en unirse al equipo de bienvenida. Hice un seguimiento con él y está emocionado de comenzar a servir el próximo mes.' },
+        { id: 2, author: 'Pastor John', date: 'Feb 28, 2023', content: 'Me reuní con John para tomar un café y discutir sus metas espirituales. Parece estar en un buen lugar y buscando crecer en su fe.' },
+    ]
 };
 
 const groupColors: { [key: string]: string } = {
@@ -252,8 +256,18 @@ export default function MemberProfilePage({ params }: { params: { id: string } }
                             ))}
                         </ul>
                     </TabsContent>
-                     <TabsContent value="notes" className="mt-4 p-4 text-center text-muted-foreground">
-                        La sección de notas estará disponible próximamente.
+                     <TabsContent value="notes" className="mt-4">
+                        <div className="space-y-4">
+                            {member.notes.map(note => (
+                                <div key={note.id} className="p-4 rounded-lg border bg-muted/50">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <p className="font-semibold text-sm">{note.author}</p>
+                                        <p className="text-xs text-muted-foreground">{note.date}</p>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground">{note.content}</p>
+                                </div>
+                            ))}
+                        </div>
                     </TabsContent>
                 </Tabs>
             </CardContent>
@@ -263,3 +277,5 @@ export default function MemberProfilePage({ params }: { params: { id: string } }
     </main>
   );
 }
+
+    
