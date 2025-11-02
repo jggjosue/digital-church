@@ -31,6 +31,7 @@ import {
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { sermonsData } from '@/lib/data';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 
 type Sermon = (typeof sermonsData)[0];
 
@@ -43,10 +44,26 @@ const statusColors: { [key: string]: string } = {
 
 export default function SermonsPage() {
   const [selected, setSelected] = React.useState<number[]>([]);
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const itemsPerPage = 20;
+
+  const totalPages = Math.ceil(sermonsData.length / itemsPerPage);
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const paginatedData = sermonsData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelected(sermonsData.map((s) => s.id));
+      setSelected(paginatedData.map((s) => s.id));
     } else {
       setSelected([]);
     }
@@ -105,7 +122,7 @@ export default function SermonsPage() {
                       <Checkbox
                         checked={
                           selected.length > 0 &&
-                          selected.length === sermonsData.length
+                          selected.length === paginatedData.length
                         }
                         onCheckedChange={(checked) => handleSelectAll(!!checked)}
                       />
@@ -119,7 +136,7 @@ export default function SermonsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {sermonsData.map((sermon) => (
+                  {paginatedData.map((sermon) => (
                     <TableRow key={sermon.id}>
                       <TableCell>
                         <Checkbox
@@ -162,6 +179,28 @@ export default function SermonsPage() {
                 </TableBody>
               </Table>
               </div>
+               <div className="flex flex-col sm:flex-row items-center justify-between pt-4 gap-4">
+                <div className="text-sm text-muted-foreground">
+                    Mostrando {paginatedData.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} a {Math.min(currentPage * itemsPerPage, sermonsData.length)} de {sermonsData.length} resultados
+                </div>
+                <Pagination>
+                    <PaginationContent>
+                    <PaginationItem>
+                        <PaginationPrevious href="#" onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }} />
+                    </PaginationItem>
+                    {[...Array(totalPages)].map((_, i) => (
+                        <PaginationItem key={i}>
+                        <PaginationLink href="#" isActive={i + 1 === currentPage} onClick={(e) => { e.preventDefault(); handlePageChange(i + 1); }}>
+                            {i + 1}
+                        </PaginationLink>
+                        </PaginationItem>
+                    ))}
+                    <PaginationItem>
+                        <PaginationNext href="#" onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }}/>
+                    </PaginationItem>
+                    </PaginationContent>
+                </Pagination>
+            </div>
             </TabsContent>
           </Tabs>
         </CardContent>
