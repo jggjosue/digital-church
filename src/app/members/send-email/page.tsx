@@ -62,8 +62,9 @@ export default function SendEmailPage() {
             <Label htmlFor="recipients">Para</Label>
             <div className="min-h-10 rounded-md border border-input p-2 flex flex-wrap gap-2">
               {recipients.map(recipient => (
-                <Badge key={recipient.id} variant="secondary" className="flex items-center gap-1.5">
-                  {recipient.name}
+                <Badge key={recipient.id} variant="secondary" className="flex items-center gap-1.5 py-1">
+                  <span className="font-medium">{recipient.name}</span>
+                  <span className="text-muted-foreground">({recipient.email})</span>
                   <button onClick={() => handleRemoveRecipient(recipient.id)} className="rounded-full hover:bg-black/10 dark:hover:bg-white/10">
                     <X className="h-3 w-3" />
                   </button>
