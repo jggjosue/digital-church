@@ -36,6 +36,8 @@ import { donationReportsData, givingData } from '@/lib/data';
 import { cn } from '@/lib/utils';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { Line, LineChart, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+
 
 const chartConfig = {
   donations: {
@@ -49,6 +51,21 @@ export default function DonationReportsPage() {
   const { totalDonations, averageDonation, newDonors, givingTrends, recentDonations } = donationReportsData;
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = React.useState<string>(currentYear.toString());
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const itemsPerPage = 20;
+
+  const totalPages = Math.ceil(recentDonations.length / itemsPerPage);
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const paginatedData = recentDonations.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const filteredGivingData = givingData.filter(d => d.year.toString() === selectedYear);
 
@@ -202,33 +219,57 @@ export default function DonationReportsPage() {
 
         <Card>
           <CardContent className="p-0">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Donante</TableHead>
-                  <TableHead>Fecha</TableHead>
-                  <TableHead>Fondo</TableHead>
-                  <TableHead>Método de Pago</TableHead>
-                  <TableHead className="text-right">Monto</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {recentDonations.map((donation) => (
-                  <TableRow key={donation.id}>
-                    <TableCell>
-                      <div className="font-medium">{donation.donorName}</div>
-                      <div className="text-sm text-muted-foreground">{donation.donorEmail}</div>
-                    </TableCell>
-                    <TableCell>{donation.date}</TableCell>
-                    <TableCell>{donation.fund}</TableCell>
-                    <TableCell>{donation.paymentMethod}</TableCell>
-                    <TableCell className="text-right font-medium text-green-600">
-                      {formatCurrency(donation.amount)}
-                    </TableCell>
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Donante</TableHead>
+                    <TableHead>Fecha</TableHead>
+                    <TableHead>Fondo</TableHead>
+                    <TableHead>Método de Pago</TableHead>
+                    <TableHead className="text-right">Monto</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {paginatedData.map((donation) => (
+                    <TableRow key={donation.id}>
+                      <TableCell>
+                        <div className="font-medium">{donation.donorName}</div>
+                        <div className="text-sm text-muted-foreground">{donation.donorEmail}</div>
+                      </TableCell>
+                      <TableCell>{donation.date}</TableCell>
+                      <TableCell>{donation.fund}</TableCell>
+                      <TableCell>{donation.paymentMethod}</TableCell>
+                      <TableCell className="text-right font-medium text-green-600">
+                        {formatCurrency(donation.amount)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+             <div className="flex flex-col sm:flex-row items-center justify-between pt-4 px-4 gap-4">
+                <div className="text-sm text-muted-foreground">
+                    Mostrando {paginatedData.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} a {Math.min(currentPage * itemsPerPage, recentDonations.length)} de {recentDonations.length} resultados
+                </div>
+                <Pagination>
+                    <PaginationContent>
+                    <PaginationItem>
+                        <PaginationPrevious href="#" onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }} />
+                    </PaginationItem>
+                    {[...Array(totalPages)].map((_, i) => (
+                        <PaginationItem key={i}>
+                        <PaginationLink href="#" isActive={i + 1 === currentPage} onClick={(e) => { e.preventDefault(); handlePageChange(i + 1); }}>
+                            {i + 1}
+                        </PaginationLink>
+                        </PaginationItem>
+                    ))}
+                    <PaginationItem>
+                        <PaginationNext href="#" onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }}/>
+                    </PaginationItem>
+                    </PaginationContent>
+                </Pagination>
+            </div>
           </CardContent>
         </Card>
       </div>
