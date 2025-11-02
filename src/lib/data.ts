@@ -659,3 +659,28 @@ export const membersData = [
         { name: "Pastor's Discretionary Fund", description: 'Confidential pastoral support', type: 'Designated', balance: 0.00, ytdInflows: 0.00, ytdOutflows: 0.00, status: 'Inactive' },
     ]
   };
+
+  export const donationReportsData = {
+    totalDonations: {
+        amount: 18250.75,
+        period: 'This month'
+    },
+    averageDonation: {
+        amount: 125.69,
+        description: 'Across 145 donations'
+    },
+    newDonors: {
+        amount: 1500.00,
+        description: 'From 12 new donors this month'
+    },
+    givingTrends: {
+        // Data for chart will go here
+    },
+    recentDonations: [
+        { id: 1, donorName: 'John & Jane Smith', donorEmail: 'john.smith@example.com', date: 'Aug 28, 2023', fund: 'General Fund', paymentMethod: 'Credit Card', amount: 250.00 },
+        { id: 2, donorName: 'Robert Williams', donorEmail: 'robert.w@example.com', date: 'Aug 25, 2023', fund: 'Building Fund', paymentMethod: 'ACH/Bank Transfer', amount: 1000.00 },
+        { id: 3, donorName: 'Mary Johnson', donorEmail: 'mary.j@example.com', date: 'Aug 22, 2023', fund: 'Missions Fund', paymentMethod: 'Credit Card', amount: 50.00 },
+        { id: 4, donorName: 'David Brown', donorEmail: 'david.b@example.com', date: 'Aug 20, 2023', fund: 'General Fund', paymentMethod: 'Check', amount: 100.00 },
+        { id: 5, donorName: 'Anonymous Donor', donorEmail: 'Cash Donation', date: 'Aug 18, 2023', fund: 'Benevolence Fund', paymentMethod: 'Cash', amount: 20.00 },
+    ]
+  }
