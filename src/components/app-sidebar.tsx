@@ -42,7 +42,7 @@ const navItems = [
   { href: '/events', icon: Calendar, label: 'Events' },
   { href: '/donations', icon: Heart, label: 'Donations' },
   { href: '/sermons', icon: Video, label: 'Sermons & Media' },
-  { href: '/facilities', icon: DollarSign, label: 'Financial' },
+  { href: '/financial', icon: DollarSign, label: 'Financial' },
   { href: '/reports', icon: FileText, label: 'Reports' },
 ];
 

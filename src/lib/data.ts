@@ -566,3 +566,30 @@ export const membersData = [
         ],
     }
   ];
+
+  export const incomeExpenseData = [
+    { month: 'Jan', net: 18000 },
+    { month: 'Feb', net: 22000 },
+    { month: 'Mar', net: 19000 },
+    { month: 'Apr', net: 25000 },
+    { month: 'May', net: 23000 },
+    { month: 'Jun', net: 28000 },
+    { month: 'Jul', net: 31000 },
+    { month: 'Aug', net: 29000 },
+  ];
+  
+  export const budgetSpendingData = [
+    { name: 'Missions', spent: 4000, budget: 1000 },
+    { name: 'Salaries', spent: 8000, budget: 6000 },
+    { name: 'Utilities', spent: 1500, budget: 3500 },
+    { name: 'Maint.', spent: 3000, budget: 2000 },
+    { name: 'Events', spent: 2500, budget: 2500 },
+  ];
+  
+  export const recentTransactions = [
+    { id: 1, date: 'Aug 12, 2023', description: 'Tithes & Offerings', category: 'Donation', fund: 'General Fund', amount: 5250.00 },
+    { id: 2, date: 'Aug 10, 2023', description: 'Electric Bill', category: 'Utilities', fund: 'Operating Expenses', amount: -450.75 },
+    { id: 3, date: 'Aug 08, 2023', description: 'Mission Trip - Mexico', category: 'Missions', fund: 'Missions Fund', amount: -2100.00 },
+    { id: 4, date: 'Aug 05, 2023', description: 'Tithes & Offerings', category: 'Donation', fund: 'General Fund', amount: 4820.50 },
+    { id: 5, date: 'Aug 01, 2023', description: 'Pastoral Salaries', category: 'Salaries', fund: 'Operating Expenses', amount: -8500.00 },
+  ];
