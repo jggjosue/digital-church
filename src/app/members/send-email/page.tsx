@@ -59,6 +59,13 @@ export default function SendEmailPage() {
     setFilteredMembers([]);
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && searchTerm === '' && recipients.length > 0) {
+      const lastRecipient = recipients[recipients.length - 1];
+      handleRemoveRecipient(lastRecipient.id);
+    }
+  };
+
   const recipientEmails = recipients.map(r => r.email).join(', ');
 
   return (
@@ -103,6 +110,7 @@ export default function SendEmailPage() {
                     className="border-none focus-visible:ring-0 shadow-none h-auto py-0 px-1"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
+                    onKeyDown={handleKeyDown}
                 />
                 {filteredMembers.length > 0 && (
                     <div className="absolute top-full left-0 mt-2 w-full bg-background border rounded-md shadow-lg z-10">
