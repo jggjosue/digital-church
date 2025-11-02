@@ -12,6 +12,7 @@ import { TotalGroups } from '@/components/dashboard/total-groups';
 import { TotalMinistries } from '@/components/dashboard/total-ministries';
 import { TotalVolunteers } from '@/components/dashboard/total-volunteers';
 import { UpcomingEventsCard } from '@/components/dashboard/upcoming-events-card';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 export type TimeRange = 'this-week' | 'this-month' | 'this-quarter' | 'this-year';
 
@@ -23,14 +24,19 @@ export default function DashboardPage() {
   };
 
   return (
-    <main className="flex-1 space-y-6 p-4 sm:p-6 md:p-8">
+    <div className="flex flex-1 flex-col">
+        <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-background px-6">
+            <div>
+                <h1 className="text-3xl font-bold tracking-tight">Panel</h1>
+                <p className="text-muted-foreground">
+                Un resumen de las actividades y estadísticas clave de la iglesia.
+                </p>
+            </div>
+            <ThemeToggle />
+        </header>
+        <main className="flex-1 space-y-6 p-6">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Panel</h1>
-            <p className="text-muted-foreground">
-              Un resumen de las actividades y estadísticas clave de la iglesia.
-            </p>
-          </div>
+          
           <Tabs
             defaultValue="this-week"
             className="w-full sm:w-auto"
@@ -70,5 +76,6 @@ export default function DashboardPage() {
           </div>
         </div>
       </main>
+    </div>
   );
 }

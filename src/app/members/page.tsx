@@ -48,6 +48,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { membersData } from '@/lib/data';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 type Member = (typeof membersData)[0];
 
@@ -142,19 +143,22 @@ export default function MembersPage() {
           </Button>
         </div>
       </aside>
-      <main className="flex-1 p-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Directorio de Miembros</h1>
-            <p className="text-muted-foreground">
-              Administre perfiles de miembros, información de contacto y membresías de grupos.
-            </p>
-          </div>
-          <Button>
-            <Plus className="mr-2" /> Añadir Nuevo Miembro
-          </Button>
-        </div>
-        <div className="mt-6">
+      <main className="flex-1">
+        <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-background px-8">
+            <div>
+                <h1 className="text-3xl font-bold">Directorio de Miembros</h1>
+                <p className="text-muted-foreground">
+                Administre perfiles de miembros, información de contacto y membresías de grupos.
+                </p>
+            </div>
+            <div className="flex items-center gap-4">
+                <Button>
+                    <Plus className="mr-2" /> Añadir Nuevo Miembro
+                </Button>
+                <ThemeToggle />
+            </div>
+        </header>
+        <div className='p-8'>
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between gap-4">

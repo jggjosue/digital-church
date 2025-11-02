@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { PT_Sans } from 'next/font/google';
 import { cn } from '@/lib/utils';
 import { AppSidebar } from '@/components/app-sidebar';
+import { ThemeProvider } from '@/components/theme-provider';
 
 const ptSans = PT_Sans({ 
   subsets: ['latin'], 
@@ -22,23 +23,29 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
+    <html lang="es" suppressHydrationWarning>
       <body
         className={cn(
           "min-h-screen bg-background font-sans antialiased",
           ptSans.variable
         )}
-        suppressHydrationWarning
       >
-        <div className="flex min-h-screen w-full flex-col bg-background text-foreground">
-          <div className="flex">
-            <AppSidebar />
-            <div className="flex-1">
-              {children}
+        <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+        >
+            <div className="flex min-h-screen w-full flex-col bg-background text-foreground">
+              <div className="flex">
+                <AppSidebar />
+                <div className="flex-1 flex">
+                  {children}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-        <Toaster />
+            <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );
