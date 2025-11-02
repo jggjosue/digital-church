@@ -56,7 +56,7 @@ export default function NewMemberPage() {
 
   return (
     <main className="flex-1 space-y-6 p-4 sm:p-8 bg-muted/20">
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 max-w-6xl mx-auto">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className='flex items-center gap-4'>
             <Button variant="outline" size="icon" className="sm:hidden" asChild>
                 <Link href="/members"><ArrowLeft className="h-4 w-4" /></Link>
@@ -78,7 +78,7 @@ export default function NewMemberPage() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
             <Card>
                 <CardHeader>
