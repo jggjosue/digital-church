@@ -234,7 +234,6 @@ export default function MemberProfilePage({ params }: { params: { id: string } }
                 <Tabs defaultValue="activity">
                     <TabsList>
                         <TabsTrigger value="activity">Actividad</TabsTrigger>
-                        <TabsTrigger value="attendance">Asistencia</TabsTrigger>
                         <TabsTrigger value="giving">Donaciones</TabsTrigger>
                         <TabsTrigger value="notes">Notas</TabsTrigger>
                     </TabsList>
@@ -254,9 +253,6 @@ export default function MemberProfilePage({ params }: { params: { id: string } }
                             ))}
                         </ul>
                     </TabsContent>
-                    <TabsContent value="attendance" className="mt-4 p-4 text-center text-muted-foreground">
-                        El historial de asistencia estará disponible próximamente.
-                    </TabsContent>
                     <TabsContent value="giving" className="mt-4 p-4 text-center text-muted-foreground">
                         El historial de donaciones estará disponible próximamente.
                     </TabsContent>
@@ -271,5 +267,3 @@ export default function MemberProfilePage({ params }: { params: { id: string } }
     </main>
   );
 }
-
-    
