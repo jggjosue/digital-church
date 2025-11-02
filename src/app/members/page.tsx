@@ -317,7 +317,7 @@ export default function MembersPage() {
                                 <Link href={`/members/send-email?ids=${selected.join(',')}`}><Mail className="h-4 w-4" /></Link>
                             </Button>
                             <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <UserPlus className="h-4 w-4" />
+                            
                             </Button>
                             <AlertDialogTrigger asChild>
                                 <Button variant="destructive" size="sm" onClick={() => setIsBulkDelete(true)}>
