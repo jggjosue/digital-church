@@ -50,7 +50,7 @@ const chartConfig = {
 export default function DonationReportsPage() {
   const { totalDonations, averageDonation, newDonors, givingTrends, recentDonations } = donationReportsData;
   const currentYear = new Date().getFullYear();
-  const [selectedYear, setSelectedYear] = React.useState<string>(currentYear.toString());
+  const [selectedYear, setSelectedYear] = React.useState<string>((currentYear + 1).toString());
   const [currentPage, setCurrentPage] = React.useState(1);
   const itemsPerPage = 20;
 
@@ -100,9 +100,9 @@ export default function DonationReportsPage() {
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value={currentYear.toString()}>Este Año</SelectItem>
-                        <SelectItem value={(currentYear - 1).toString()}>Año Pasado</SelectItem>
-                        <SelectItem value={(currentYear - 2).toString()}>Hace 2 Años</SelectItem>
+                        <SelectItem value={(currentYear + 1).toString()}>Este Año</SelectItem>
+                        <SelectItem value={currentYear.toString()}>Año Pasado</SelectItem>
+                        <SelectItem value={(currentYear - 1).toString()}>Hace 2 Años</SelectItem>
                     </SelectContent>
                 </Select>
                  <Select>
