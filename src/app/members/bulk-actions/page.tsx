@@ -28,6 +28,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function BulkActionsPage() {
     const [selectedCount, setSelectedCount] = React.useState(12);
@@ -118,7 +119,14 @@ export default function BulkActionsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Input placeholder="Asunto del Correo" />
+            <div className="space-y-2">
+                <Label htmlFor="email-subject">Asunto</Label>
+                <Input id="email-subject" placeholder="Asunto del Correo" />
+            </div>
+             <div className="space-y-2">
+                <Label htmlFor="email-message">Mensaje</Label>
+                <Textarea id="email-message" placeholder="Escriba su mensaje aquí..." rows={4} />
+            </div>
             <Button className="w-full">Redactar Correo</Button>
           </CardContent>
         </Card>
