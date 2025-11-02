@@ -169,8 +169,8 @@ export default function MembersPage() {
                     <ThemeToggle />
                 </div>
             </header>
-            <div className='flex-1 p-4 sm:p-8'>
-            <Card>
+            <div className='flex-1 flex flex-col p-4 sm:p-8'>
+            <Card className="flex-1 flex flex-col">
                 <CardHeader>
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="relative w-full max-w-sm">
@@ -210,7 +210,7 @@ export default function MembersPage() {
                     </div>
                 </div>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="flex-1">
                 {selected.length > 0 && (
                     <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between rounded-lg bg-blue-50 p-3 gap-2">
                     <div className="text-sm font-medium">
