@@ -51,6 +51,7 @@ import { membersData } from '@/lib/data';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Label } from '@/components/ui/label';
+import Link from 'next/link';
 
 type Member = (typeof membersData)[0];
 
@@ -153,7 +154,7 @@ export default function MembersPage() {
         data = data.filter(member => 
             member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            member.phone1.toLowerCase().includes(searchTerm.toLowerCase())
+            (member.phone1 && member.phone1.toLowerCase().includes(searchTerm.toLowerCase()))
         );
     }
 
@@ -216,8 +217,8 @@ export default function MembersPage() {
                     </p>
                 </div>
                 <div className="flex items-center gap-4">
-                    <Button>
-                        <Plus className="mr-2" /> Añadir Nuevo Miembro
+                    <Button asChild>
+                        <Link href="/members/new"><Plus className="mr-2" /> Añadir Nuevo Miembro</Link>
                     </Button>
                     <ThemeToggle />
                 </div>
@@ -295,7 +296,7 @@ export default function MembersPage() {
                 )}
 
                 {view === 'table' && filteredMembers.length > 0 ? (
-                    <div className="overflow-x-auto">
+                    <div className="overflow-x-auto flex-1">
                     <Table>
                     <TableHeader>
                     <TableRow>
@@ -398,7 +399,7 @@ export default function MembersPage() {
                 </Table>
                 </div>
                 ) : view === 'card' && filteredMembers.length > 0 ? (
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 flex-1">
                     {filteredMembers.map((member) => (
                     <Card key={member.id} className="relative flex flex-col">
                         <Checkbox
