@@ -29,8 +29,8 @@ type Ministry = (typeof ministriesData)[0];
 
 export default function MinistriesPage() {
   return (
-    <main className="flex-1 bg-muted/20 p-8">
-      <div className="flex items-center justify-between">
+    <main className="flex-1 bg-muted/20 p-4 sm:p-8">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold">Ministerios</h1>
           <p className="text-muted-foreground">
@@ -42,12 +42,12 @@ export default function MinistriesPage() {
         </Button>
       </div>
 
-      <div className="mt-6 flex items-center justify-between gap-4">
+      <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="relative w-full max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input placeholder="Buscar ministerios..." className="pl-9" />
         </div>
-        <div className="w-[180px]">
+        <div className="w-full sm:w-[180px]">
             <Select>
                 <SelectTrigger>
                     <SelectValue placeholder="Ordenar por: Nombre" />
@@ -73,7 +73,7 @@ export default function MinistriesPage() {
                             <MoreHorizontal className="h-5 w-5" />
                         </Button>
                     </div>
-                    <div className="flex items-center justify-between mt-6">
+                    <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between mt-6 gap-4">
                         <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                             <div className="flex items-center text-sm text-muted-foreground">
                                 <Users className="h-4 w-4 mr-2" />

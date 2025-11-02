@@ -10,6 +10,7 @@ import {
   Plus,
   Search,
   UserPlus,
+  SlidersHorizontal,
 } from 'lucide-react';
 import {
   Avatar,
@@ -49,6 +50,7 @@ import {
 } from '@/components/ui/table';
 import { membersData } from '@/lib/data';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 type Member = (typeof membersData)[0];
 
@@ -64,6 +66,67 @@ const groupColors = {
   'Grupo de Jóvenes': 'bg-purple-100 text-purple-800',
   'Nuevo Miembro': 'bg-green-100 text-green-800',
 };
+
+function Filters() {
+    return (
+        <>
+            <h2 className="text-lg font-semibold">Filtros</h2>
+            <div className="mt-6 space-y-6">
+            <div>
+                <h3 className="text-sm font-medium text-muted-foreground">
+                Estado de Membresía
+                </h3>
+                <div className="mt-2 space-y-2">
+                <div className="flex items-center gap-2">
+                    <Checkbox id="active" />
+                    <label htmlFor="active" className="text-sm">
+                    Activo
+                    </label>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Checkbox id="visitor" />
+                    <label htmlFor="visitor" className="text-sm">
+                    Visitante
+                    </label>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Checkbox id="inactive" />
+                    <label htmlFor="inactive" className="text-sm">
+                    Inactivo
+                    </label>
+                </div>
+                </div>
+            </div>
+            <div>
+                <h3 className="text-sm font-medium text-muted-foreground">
+                Grupos
+                </h3>
+                <Select>
+                <SelectTrigger>
+                    <SelectValue placeholder="Todos los Grupos" />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="all">Todos los Grupos</SelectItem>
+                    <SelectItem value="volunteers">Voluntarios</SelectItem>
+                    <SelectItem value="choir">Coro</SelectItem>
+                    <SelectItem value="youth">Grupo de Jóvenes</SelectItem>
+                </SelectContent>
+                </Select>
+            </div>
+            <div>
+                <h3 className="text-sm font-medium text-muted-foreground">Etiquetas</h3>
+                <Input placeholder="Ej. Bautizado, Nuevo" />
+            </div>
+            </div>
+            <div className="mt-8 space-y-2">
+            <Button className="w-full">Aplicar Filtros</Button>
+            <Button variant="ghost" className="w-full">
+                Limpiar Todo
+            </Button>
+            </div>
+        </>
+    )
+}
 
 export default function MembersPage() {
   const [selected, setSelected] = React.useState<number[]>([]);
@@ -87,65 +150,12 @@ export default function MembersPage() {
 
   return (
     <div className="flex min-h-screen w-full">
-      <aside className="w-80 border-r bg-background p-6">
-        <h2 className="text-lg font-semibold">Filtros</h2>
-        <div className="mt-6 space-y-6">
-          <div>
-            <h3 className="text-sm font-medium text-muted-foreground">
-              Estado de Membresía
-            </h3>
-            <div className="mt-2 space-y-2">
-              <div className="flex items-center gap-2">
-                <Checkbox id="active" />
-                <label htmlFor="active" className="text-sm">
-                  Activo
-                </label>
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox id="visitor" />
-                <label htmlFor="visitor" className="text-sm">
-                  Visitante
-                </label>
-              </div>
-              <div className="flex items-center gap-2">
-                <Checkbox id="inactive" />
-                <label htmlFor="inactive" className="text-sm">
-                  Inactivo
-                </label>
-              </div>
-            </div>
-          </div>
-          <div>
-            <h3 className="text-sm font-medium text-muted-foreground">
-              Grupos
-            </h3>
-            <Select>
-              <SelectTrigger>
-                <SelectValue placeholder="Todos los Grupos" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos los Grupos</SelectItem>
-                <SelectItem value="volunteers">Voluntarios</SelectItem>
-                <SelectItem value="choir">Coro</SelectItem>
-                <SelectItem value="youth">Grupo de Jóvenes</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <h3 className="text-sm font-medium text-muted-foreground">Etiquetas</h3>
-            <Input placeholder="Ej. Bautizado, Nuevo" />
-          </div>
-        </div>
-        <div className="mt-8 space-y-2">
-          <Button className="w-full">Aplicar Filtros</Button>
-          <Button variant="ghost" className="w-full">
-            Limpiar Todo
-          </Button>
-        </div>
+      <aside className="w-80 border-r bg-background p-6 hidden md:block">
+        <Filters />
       </aside>
       <main className="flex-1">
-        <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-background px-8">
-            <div>
+        <header className="sticky top-0 z-10 flex h-auto flex-col items-start gap-4 border-b bg-background px-8 py-4 sm:h-16 sm:flex-row sm:items-center sm:justify-between sm:py-0">
+            <div className='flex-1'>
                 <h1 className="text-3xl font-bold">Directorio de Miembros</h1>
                 <p className="text-muted-foreground">
                 Administre perfiles de miembros, información de contacto y membresías de grupos.
@@ -161,32 +171,47 @@ export default function MembersPage() {
         <div className='p-8'>
           <Card>
             <CardHeader>
-              <div className="flex items-center justify-between gap-4">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="relative w-full max-w-sm">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input placeholder="Buscar por nombre, email o teléfono..." className="pl-9" />
                 </div>
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant={view === 'table' ? 'secondary' : 'ghost'}
-                    size="icon"
-                    onClick={() => setView('table')}
-                  >
-                    <List className="h-5 w-5" />
-                  </Button>
-                  <Button
-                    variant={view === 'card' ? 'secondary' : 'ghost'}
-                    size="icon"
-                    onClick={() => setView('card')}
-                  >
-                    <LayoutGrid className="h-5 w-5" />
-                  </Button>
+                <div className="flex w-full sm:w-auto items-center justify-between gap-2">
+                    <Sheet>
+                        <SheetTrigger asChild>
+                            <Button variant="outline" className="md:hidden flex items-center gap-2">
+                                <SlidersHorizontal className="h-4 w-4" />
+                                <span>Filtros</span>
+                            </Button>
+                        </SheetTrigger>
+                        <SheetContent side="left" className="w-[300px]">
+                           <div className="p-6">
+                             <Filters />
+                           </div>
+                        </SheetContent>
+                    </Sheet>
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant={view === 'table' ? 'secondary' : 'ghost'}
+                            size="icon"
+                            onClick={() => setView('table')}
+                        >
+                            <List className="h-5 w-5" />
+                        </Button>
+                        <Button
+                            variant={view === 'card' ? 'secondary' : 'ghost'}
+                            size="icon"
+                            onClick={() => setView('card')}
+                        >
+                            <LayoutGrid className="h-5 w-5" />
+                        </Button>
+                    </div>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
               {selected.length > 0 && (
-                <div className="mb-4 flex items-center justify-between rounded-lg bg-blue-50 p-3">
+                <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between rounded-lg bg-blue-50 p-3 gap-2">
                   <div className="text-sm font-medium">
                     {selected.length} {selected.length > 1 ? 'elementos seleccionados' : 'elemento seleccionado'}
                   </div>
@@ -210,6 +235,7 @@ export default function MembersPage() {
               )}
 
               {view === 'table' ? (
+                <div className="overflow-x-auto">
                  <Table>
                  <TableHeader>
                    <TableRow>
@@ -310,6 +336,7 @@ export default function MembersPage() {
                    ))}
                  </TableBody>
                </Table>
+               </div>
               ) : (
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   {membersData.map((member) => (

@@ -68,8 +68,8 @@ export default function AttendancePage() {
     );
 
   return (
-    <main className="flex-1 bg-muted/20 p-8">
-      <div className="flex items-center justify-between">
+    <main className="flex-1 bg-muted/20 p-4 sm:p-8">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold">Gestión de Asistencia</h1>
         </div>
@@ -80,14 +80,14 @@ export default function AttendancePage() {
       </div>
       <Card className="mt-6">
         <CardContent className="p-4">
-            <div className="flex items-center justify-between gap-4 mb-6">
+            <div className="flex flex-col lg:flex-row items-center justify-between gap-4 mb-6">
                 <div className="relative w-full max-w-sm">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input placeholder="Buscar por nombre de miembro..." className="pl-9" />
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row items-center gap-2 w-full lg:w-auto">
                   <Select>
-                    <SelectTrigger className="w-[180px]">
+                    <SelectTrigger className="w-full lg:w-[180px]">
                       <SelectValue placeholder="Servicio/Evento" />
                     </SelectTrigger>
                     <SelectContent>
@@ -98,7 +98,7 @@ export default function AttendancePage() {
                     </SelectContent>
                   </Select>
                   <Select>
-                    <SelectTrigger className="w-[180px]">
+                    <SelectTrigger className="w-full lg:w-[180px]">
                       <SelectValue placeholder="Grupo Ministerial" />
                     </SelectTrigger>
                     <SelectContent>
@@ -109,7 +109,7 @@ export default function AttendancePage() {
                     </SelectContent>
                   </Select>
                   <Select>
-                    <SelectTrigger className="w-[180px]">
+                    <SelectTrigger className="w-full lg:w-[180px]">
                       <SelectValue placeholder="Rango de Fechas" />
                     </SelectTrigger>
                     <SelectContent>
@@ -121,6 +121,7 @@ export default function AttendancePage() {
                   </Select>
                 </div>
               </div>
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -157,7 +158,8 @@ export default function AttendancePage() {
               ))}
             </TableBody>
           </Table>
-          <div className="flex items-center justify-between pt-4">
+          </div>
+          <div className="flex flex-col sm:flex-row items-center justify-between pt-4 gap-4">
                 <div className="text-sm text-muted-foreground">
                     Mostrando {paginatedData.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} a {Math.min(currentPage * itemsPerPage, attendanceRecords.length)} de {attendanceRecords.length} resultados
                 </div>

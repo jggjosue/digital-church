@@ -53,8 +53,8 @@ const chartConfig = {
 
 export default function FinancialPage() {
   return (
-    <main className="flex-1 space-y-6 p-8">
-    <div className="flex items-center justify-between">
+    <main className="flex-1 space-y-6 p-4 sm:p-8">
+    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <h1 className="text-3xl font-bold tracking-tight">
         Reportes Financieros
         </h1>
@@ -65,7 +65,7 @@ export default function FinancialPage() {
     </div>
 
     <Tabs defaultValue="year-to-date">
-        <TabsList>
+        <TabsList className="grid w-full grid-cols-2 sm:w-auto sm:grid-cols-4">
         <TabsTrigger value="last-month">Mes Pasado</TabsTrigger>
         <TabsTrigger value="this-quarter">Este Trimestre</TabsTrigger>
         <TabsTrigger value="year-to-date">Año Actual</TabsTrigger>
@@ -192,15 +192,16 @@ export default function FinancialPage() {
 
     <Card>
         <CardHeader>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <CardTitle>Transacciones Recientes</CardTitle>
-            <div className="relative w-full max-w-sm">
+            <div className="relative w-full sm:max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input placeholder="Buscar transacciones..." className="pl-9" />
             </div>
         </div>
         </CardHeader>
         <CardContent>
+        <div className="overflow-x-auto">
         <Table>
             <TableHeader>
             <TableRow>
@@ -233,6 +234,7 @@ export default function FinancialPage() {
             ))}
             </TableBody>
         </Table>
+        </div>
         </CardContent>
     </Card>
     </main>

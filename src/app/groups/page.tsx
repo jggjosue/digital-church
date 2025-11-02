@@ -68,15 +68,15 @@ export default function GroupsPage() {
   };
 
   return (
-    <main className="flex-1 bg-muted/20 p-8">
-      <div className="flex items-center justify-between">
+    <main className="flex-1 bg-muted/20 p-4 sm:p-8">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Gestión de Grupos</h1>
           <p className="text-muted-foreground">
             Organice y gestione los grupos de su iglesia y sus miembros.
           </p>
         </div>
-        <Button>
+        <Button className="mt-4 sm:mt-0">
           <Plus className="mr-2 h-4 w-4" /> Crear Nuevo Grupo
         </Button>
       </div>
@@ -104,7 +104,7 @@ export default function GroupsPage() {
                     </div>
                     <Badge
                       variant="outline"
-                      className={`font-normal ${statusColors[group.status]}`}
+                      className={`font-normal whitespace-nowrap ${statusColors[group.status]}`}
                     >
                       {group.status}
                     </Badge>
@@ -119,7 +119,7 @@ export default function GroupsPage() {
         {/* Right Column: Group Details & Members */}
         <div className="lg:col-span-2">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-center gap-4">
                 <div className="bg-blue-50 p-3 rounded-lg">
                     <Users className="h-6 w-6 text-primary" />
@@ -144,7 +144,7 @@ export default function GroupsPage() {
           
           <div className="mt-6">
             <h2 className="text-xl font-semibold">Miembros del Grupo ({groupMembers.length})</h2>
-            <div className="mt-4 flex items-center justify-between gap-4">
+            <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="relative w-full max-w-xs">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -160,6 +160,7 @@ export default function GroupsPage() {
 
           <Card className="mt-4">
             <CardContent className="p-0">
+                <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -225,6 +226,7 @@ export default function GroupsPage() {
                   ))}
                 </TableBody>
               </Table>
+              </div>
             </CardContent>
           </Card>
         </div>

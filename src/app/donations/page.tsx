@@ -104,8 +104,8 @@ export default function DonationsPage() {
       );
 
   return (
-    <main className="flex-1 bg-muted/20 p-8">
-      <div className="flex items-center justify-between">
+    <main className="flex-1 bg-muted/20 p-4 sm:p-8">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold">Donaciones y Ofrendas</h1>
           <p className="text-muted-foreground">
@@ -149,7 +149,7 @@ export default function DonationsPage() {
 
       <div className="mt-6">
         <Tabs defaultValue="donations">
-          <TabsList>
+          <TabsList className="w-full overflow-x-auto">
             <TabsTrigger value="donations">Donaciones</TabsTrigger>
             <TabsTrigger value="pledges">Promesas</TabsTrigger>
             <TabsTrigger value="campaigns">Campañas</TabsTrigger>
@@ -157,7 +157,7 @@ export default function DonationsPage() {
           <TabsContent value="donations">
             <Card>
               <CardContent className="p-4">
-                <div className="flex items-center justify-between gap-4 mb-4">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
                   <div className="relative w-full max-w-sm">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input placeholder="Buscar donaciones..." className="pl-9" />
@@ -175,6 +175,7 @@ export default function DonationsPage() {
                   </div>
                 </div>
 
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -209,7 +210,8 @@ export default function DonationsPage() {
                     ))}
                   </TableBody>
                 </Table>
-                <div className="flex items-center justify-between pt-4">
+                </div>
+                <div className="flex flex-col sm:flex-row items-center justify-between pt-4 gap-4">
                     <div className="text-sm text-muted-foreground">
                         Mostrando {(currentPage - 1) * itemsPerPage + 1} a {Math.min(currentPage * itemsPerPage, totalItems)} de {totalItems} resultados
                     </div>

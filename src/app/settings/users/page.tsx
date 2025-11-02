@@ -64,8 +64,8 @@ export default function UsersPage() {
     );
 
   return (
-    <main className="flex-1 bg-muted/20 p-8">
-      <div className="flex items-center justify-between">
+    <main className="flex-1 bg-muted/20 p-4 sm:p-8">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold">Gestión de Usuarios</h1>
           <p className="text-muted-foreground">
@@ -86,6 +86,7 @@ export default function UsersPage() {
             </div>
         </CardHeader>
         <CardContent>
+            <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -130,7 +131,8 @@ export default function UsersPage() {
               ))}
             </TableBody>
           </Table>
-          <div className="flex items-center justify-between pt-4">
+          </div>
+          <div className="flex flex-col sm:flex-row items-center justify-between pt-4 gap-4">
                 <div className="text-sm text-muted-foreground">
                     Mostrando {paginatedData.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} a {Math.min(currentPage * itemsPerPage, allUsers.length)} de {allUsers.length} resultados
                 </div>

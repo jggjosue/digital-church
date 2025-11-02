@@ -50,7 +50,7 @@ export default function SettingsPage() {
     const [selectedRole, setSelectedRole] = React.useState<Role>(rolesData[0]);
 
     return (
-        <main className="flex-1 bg-muted/20 p-8">
+        <main className="flex-1 bg-muted/20 p-4 sm:p-8">
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold">Roles y Permisos</h1>
@@ -97,89 +97,37 @@ export default function SettingsPage() {
                         </CardHeader>
                         <CardContent>
                             <Accordion type="multiple" defaultValue={['item-1']} className="w-full">
-                                <AccordionItem value="item-1">
-                                    <AccordionTrigger className='font-semibold'>Gestión de Miembros</AccordionTrigger>
-                                    <AccordionContent>
-                                        <div className="grid grid-cols-2 gap-4 p-4">
-                                            <div className="flex items-center space-x-2">
-                                                <Checkbox id="select-all-members" />
-                                                <label
-                                                    htmlFor="select-all-members"
-                                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                                >
-                                                   Seleccionar Todo
-                                                </label>
-                                            </div>
-                                            {permissions['Gestión de Miembros'].map(perm => (
-                                                <div key={perm} className="flex items-center space-x-2">
-                                                    <Checkbox id={perm.toLowerCase().replace(/\s/g, '-')} checked={selectedRole.name === 'Super Administrador'}/>
+                                {Object.entries(permissions).map(([category, perms], index) => (
+                                    <AccordionItem key={category} value={`item-${index + 1}`}>
+                                        <AccordionTrigger className='font-semibold'>{category}</AccordionTrigger>
+                                        <AccordionContent>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4">
+                                                <div className="flex items-center space-x-2 col-span-1 sm:col-span-2">
+                                                    <Checkbox id={`select-all-${category.toLowerCase().replace(/\s/g, '-')}`} checked={selectedRole.name === 'Super Administrador'} />
                                                     <label
-                                                        htmlFor={perm.toLowerCase().replace(/\s/g, '-')}
+                                                        htmlFor={`select-all-${category.toLowerCase().replace(/\s/g, '-')}`}
                                                         className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                                                     >
-                                                        {perm}
+                                                    Seleccionar Todo
                                                     </label>
                                                 </div>
-                                            ))}
-                                        </div>
-                                    </AccordionContent>
-                                </AccordionItem>
-                                <AccordionItem value="item-2">
-                                    <AccordionTrigger className='font-semibold'>Donaciones y Finanzas</AccordionTrigger>
-                                    <AccordionContent>
-                                        <div className="grid grid-cols-2 gap-4 p-4">
-                                             <div className="flex items-center space-x-2">
-                                                <Checkbox id="select-all-donations" />
-                                                <label
-                                                    htmlFor="select-all-donations"
-                                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                                >
-                                                   Seleccionar Todo
-                                                </label>
+                                                {perms.map(perm => (
+                                                    <div key={perm} className="flex items-center space-x-2">
+                                                        <Checkbox id={perm.toLowerCase().replace(/\s/g, '-')} checked={selectedRole.name === 'Super Administrador'}/>
+                                                        <label
+                                                            htmlFor={perm.toLowerCase().replace(/\s/g, '-')}
+                                                            className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                                        >
+                                                            {perm}
+                                                        </label>
+                                                    </div>
+                                                ))}
                                             </div>
-                                            {permissions['Donaciones y Finanzas'].map(perm => (
-                                                <div key={perm} className="flex items-center space-x-2">
-                                                    <Checkbox id={perm.toLowerCase().replace(/\s/g, '-')} checked={selectedRole.name === 'Super Administrador'}/>
-                                                    <label
-                                                        htmlFor={perm.toLowerCase().replace(/\s/g, '-')}
-                                                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                                    >
-                                                        {perm}
-                                                    </label>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </AccordionContent>
-                                </AccordionItem>
-                                <AccordionItem value="item-3">
-                                    <AccordionTrigger className='font-semibold'>Configuración del Sistema</AccordionTrigger>
-                                    <AccordionContent>
-                                    <div className="grid grid-cols-2 gap-4 p-4">
-                                            <div className="flex items-center space-x-2">
-                                                <Checkbox id="select-all-system"/>
-                                                <label
-                                                    htmlFor="select-all-system"
-                                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                                >
-                                                   Seleccionar Todo
-                                                </label>
-                                            </div>
-                                            {permissions['Configuración del Sistema'].map(perm => (
-                                                <div key={perm} className="flex items-center space-x-2">
-                                                    <Checkbox id={perm.toLowerCase().replace(/\s/g, '-')} checked={selectedRole.name === 'Super Administrador'} />
-                                                    <label
-                                                        htmlFor={perm.toLowerCase().replace(/\s/g, '-')}
-                                                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                                                    >
-                                                        {perm}
-                                                    </label>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </AccordionContent>
-                                </AccordionItem>
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                ))}
                             </Accordion>
-                            <div className="mt-8 flex justify-between items-center">
+                            <div className="mt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
                                 <Button variant="link" className="text-destructive p-0 hover:text-destructive/80">
                                     <Trash2 className="mr-2 h-4 w-4" />
                                     Eliminar Rol

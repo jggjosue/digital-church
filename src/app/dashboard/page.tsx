@@ -25,7 +25,7 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-1 flex-col">
-        <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-background px-6">
+        <header className="sticky top-0 z-10 flex h-auto flex-col gap-4 border-b bg-background px-6 py-4 sm:h-16 sm:flex-row sm:items-center sm:justify-between sm:py-0">
             <div>
                 <h1 className="text-3xl font-bold tracking-tight">Panel</h1>
                 <p className="text-muted-foreground">
@@ -42,7 +42,7 @@ export default function DashboardPage() {
             className="w-full sm:w-auto"
             onValueChange={handleTimeRangeChange}
           >
-            <TabsList>
+            <TabsList className="grid w-full grid-cols-2 sm:w-auto sm:grid-cols-4">
               <TabsTrigger value="this-week">Esta Semana</TabsTrigger>
               <TabsTrigger value="this-month">Este Mes</TabsTrigger>
               <TabsTrigger value="this-quarter">Este Trimestre</TabsTrigger>
@@ -50,13 +50,13 @@ export default function DashboardPage() {
             </TabsList>
           </Tabs>
         </div>
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4">
           <TotalMembers timeRange={timeRange} />
           <WeeklyAttendance timeRange={timeRange} />
           <GivingThisMonth timeRange={timeRange} />
           <UpcomingEventsCard />
         </div>
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3">
           <TotalGroups />
           <TotalMinistries />
           <TotalVolunteers />

@@ -33,15 +33,15 @@ export default function VolunteersPage() {
   );
 
   return (
-    <main className="flex h-screen bg-muted/20">
-      <aside className="w-[380px] border-r bg-background flex flex-col">
+    <main className="flex flex-col lg:flex-row h-screen bg-muted/20">
+      <aside className="w-full lg:w-[380px] border-b lg:border-r lg:border-b-0 bg-background flex flex-col">
         <div className="p-6">
           <h1 className="text-3xl font-bold">Gestión de Voluntarios</h1>
           <p className="text-muted-foreground mt-1">
             Vea, gestione y programe a todos los voluntarios de la iglesia.
           </p>
         </div>
-        <div className="px-6 pb-4 flex gap-2">
+        <div className="px-6 pb-4 flex flex-col sm:flex-row gap-2">
             <Button variant="outline" className="w-full">
               <FileText className="mr-2 h-4 w-4" /> Generar Reporte
             </Button>
@@ -54,7 +54,7 @@ export default function VolunteersPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input placeholder="Buscar por nombre de voluntario..." className="pl-9" />
             </div>
-            <div className="flex gap-2 mt-2">
+            <div className="flex flex-col sm:flex-row gap-2 mt-2">
                 <Select>
                     <SelectTrigger>
                     <SelectValue placeholder="Rol: Todos" />
@@ -113,10 +113,10 @@ export default function VolunteersPage() {
         </div>
       </aside>
 
-      <div className="flex-1 p-8 overflow-y-auto">
+      <div className="flex-1 p-4 sm:p-8 overflow-y-auto">
         <Card className="bg-card">
           <CardContent className="p-6">
-            <div className="flex items-start justify-between">
+            <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
                 <div className="flex items-center gap-6">
                     <Avatar className="h-24 w-24">
                         <AvatarImage src={selectedVolunteer.avatarUrl} alt={selectedVolunteer.name} />
@@ -124,8 +124,8 @@ export default function VolunteersPage() {
                     </Avatar>
                     <div>
                         <h2 className="text-2xl font-bold">{selectedVolunteer.name}</h2>
-                        <p className="text-muted-foreground">{selectedVolunteer.email} | {selectedVolunteer.phone}</p>
-                        <div className="flex gap-8 mt-4">
+                        <p className="text-muted-foreground text-sm sm:text-base break-all">{selectedVolunteer.email} | {selectedVolunteer.phone}</p>
+                        <div className="flex flex-col sm:flex-row gap-4 sm:gap-8 mt-4">
                             <div>
                                 <p className="text-sm text-muted-foreground">Horas Servidas</p>
                                 <p className="text-lg font-semibold">{selectedVolunteer.hoursServed}</p>
@@ -174,7 +174,7 @@ export default function VolunteersPage() {
                         <h3 className="font-semibold text-lg">Disponibilidad General</h3>
                         <Button variant="link" className="p-0 h-auto">Editar Disponibilidad</Button>
                     </CardHeader>
-                    <CardContent className="grid grid-cols-3 gap-4">
+                    <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                         {Object.entries(selectedVolunteer.availability).map(([day, times]) => (
                             <Card key={day} className="p-4 bg-muted/50">
                                 <p className="font-semibold">{day}</p>
