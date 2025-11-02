@@ -613,3 +613,34 @@ export const membersData = [
     totalExpenses: 108230.75,
     netIncome: 37290.25,
   };
+
+  export const budgetReportData = {
+    totalBudget: 250000,
+    totalActual: 253751,
+    variance: 3751,
+    previousPeriodBudget: 245000,
+    income: {
+      totalBudget: 145000,
+      totalActual: 145521,
+      items: [
+        { category: 'Tithes & Offerings', budget: 125000, actual: 125450.75 },
+        { category: 'Building Fund', budget: 15000, actual: 15200.00 },
+        { category: 'Other Income', budget: 5000, actual: 4870.25 },
+      ]
+    },
+    expenses: {
+      totalBudget: 110000,
+      totalActual: 108230.75,
+      items: [
+        { category: 'Salaries & Benefits', budget: 70000, actual: 68000 },
+        { category: 'Missions & Outreach', budget: 15000, actual: 16800 },
+        { category: 'Facility & Utilities', budget: 12000, actual: 11470.50 },
+        { category: 'Ministries & Events', budget: 10000, actual: 9400 },
+        { category: 'Administrative Costs', budget: 3000, actual: 2560.25 },
+      ]
+    },
+    netTotal: {
+        budget: 35000,
+        actual: 37290.25
+    }
+  };
