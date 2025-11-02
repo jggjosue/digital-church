@@ -385,7 +385,7 @@ export const membersData = [
         skills: ['Hospitality', 'Communication'],
         availability: {
           Sunday: [{ time: 'Mornings', available: true }, { time: 'Afternoons', available: false }],
-          Wednesday: [{ time: 'Evenings', available: false }],
+          Wednesday: [{ timeoine: 'Evenings', available: false }],
           Saturday: [{ time: 'All Day', available: true }],
         },
         adminNotes: 'Very friendly and welcoming.',
@@ -593,3 +593,23 @@ export const membersData = [
     { id: 4, date: 'Aug 05, 2023', description: 'Tithes & Offerings', category: 'Donation', fund: 'General Fund', amount: 4820.50 },
     { id: 5, date: 'Aug 01, 2023', description: 'Pastoral Salaries', category: 'Salaries', fund: 'Operating Expenses', amount: -8500.00 },
   ];
+
+  export const incomeStatementData = {
+    income: [
+      { label: 'Tithes & Offerings', amount: 125450.75 },
+      { label: 'Building Fund Donations', amount: 15200.00 },
+      { label: 'Event Registrations', amount: 3750.00 },
+      { label: 'Other Income', amount: 1120.25 },
+    ],
+    expenses: [
+      { label: 'Pastoral & Staff Salaries', amount: 68000.00 },
+      { label: 'Missions & Outreach', amount: 16800.00 },
+      { label: 'Utilities', amount: 4320.50 },
+      { label: 'Facility Maintenance', amount: 7150.00 },
+      { label: 'Ministries & Events', amount: 9400.00 },
+      { label: 'Administrative Costs', amount: 2560.25 },
+    ],
+    totalIncome: 145521.00,
+    totalExpenses: 108230.75,
+    netIncome: 37290.25,
+  };
