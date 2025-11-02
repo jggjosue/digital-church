@@ -14,7 +14,8 @@ import {
   ChevronDown,
   UserCog,
   Plus,
-  Church
+  Church,
+  DollarSign
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -41,7 +42,7 @@ const navItems = [
   { href: '/events', icon: Calendar, label: 'Events' },
   { href: '/donations', icon: Heart, label: 'Donations' },
   { href: '/sermons', icon: Video, label: 'Sermons & Media' },
-  { href: '/facilities', icon: Building, label: 'Facilities' },
+  { href: '/facilities', icon: DollarSign, label: 'Financial' },
   { href: '/reports', icon: FileText, label: 'Reports' },
 ];
 
