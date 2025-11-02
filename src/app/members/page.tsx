@@ -311,7 +311,7 @@ export default function MembersPage() {
                         </div>
                         <div className="flex items-center gap-2">
                             <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <FileUp className="h-4 w-4" />
+                            
                             </Button>
                             <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
                                 <Link href={`/members/send-email?ids=${selected.join(',')}`}><Mail className="h-4 w-4" /></Link>
