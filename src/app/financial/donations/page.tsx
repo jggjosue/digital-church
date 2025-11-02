@@ -32,8 +32,18 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { donationReportsData } from '@/lib/data';
+import { donationReportsData, givingData } from '@/lib/data';
 import { cn } from '@/lib/utils';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { Line, LineChart, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
+
+const chartConfig = {
+  donations: {
+    label: "Donaciones",
+    color: "hsl(var(--primary))",
+  },
+};
+
 
 export default function DonationReportsPage() {
   const { totalDonations, averageDonation, newDonors, givingTrends, recentDonations } = donationReportsData;
@@ -140,8 +150,48 @@ export default function DonationReportsPage() {
             <CardTitle>Tendencias de Donaciones</CardTitle>
             <CardDescription>Donaciones mensuales durante el último año</CardDescription>
           </CardHeader>
-          <CardContent className="flex items-center justify-center min-h-[300px] text-muted-foreground bg-muted/50 rounded-lg">
-            El gráfico se mostrará aquí
+          <CardContent>
+            <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
+              <LineChart
+                data={givingData}
+                margin={{
+                  top: 5,
+                  right: 20,
+                  left: 20,
+                  bottom: 5,
+                }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value / 1000}k`} />
+                <Tooltip
+                  content={
+                    <ChartTooltipContent
+                      indicator="dot"
+                      formatter={(value) =>
+                        new Intl.NumberFormat("en-US", {
+                          style: "currency",
+                          currency: "USD",
+                        }).format(value as number)
+                      }
+                    />
+                  }
+                />
+                <Line
+                  dataKey="total"
+                  type="monotone"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth={2}
+                  dot={{
+                    fill: "hsl(var(--primary))",
+                    r: 4,
+                  }}
+                  activeDot={{
+                    r: 6,
+                  }}
+                />
+              </LineChart>
+            </ChartContainer>
           </CardContent>
         </Card>
 
