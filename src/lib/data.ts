@@ -444,3 +444,60 @@ export const membersData = [
         status: 'Archived',
     },
   ];
+
+  export const rolesData = [
+    {
+      id: 1,
+      name: 'Super Administrator',
+      description: 'Full access to all system features and settings.',
+      users: [
+        { id: 1, name: 'User A', avatarUrl: 'https://picsum.photos/seed/u1/40/40' },
+        { id: 2, name: 'User B', avatarUrl: 'https://picsum.photos/seed/u2/40/40' },
+        { id: 3, name: 'User C', avatarUrl: 'https://picsum.photos/seed/u3/40/40' },
+        { id: 4, name: 'User D', avatarUrl: 'https://picsum.photos/seed/u4/40/40' },
+        { id: 5, name: 'User E', avatarUrl: 'https://picsum.photos/seed/u5/40/40' },
+        { id: 6, name: 'User F', avatarUrl: 'https://picsum.photos/seed/u6/40/40' },
+      ],
+    },
+    {
+      id: 2,
+      name: 'Pastor',
+      description: 'Access to member data, events, and sermon management.',
+      users: [{ id: 7, name: 'User G', avatarUrl: 'https://picsum.photos/seed/u7/40/40' },
+        { id: 8, name: 'User H', avatarUrl: 'https://picsum.photos/seed/u8/40/40' },
+    ],
+    },
+    {
+      id: 3,
+      name: 'Office Staff',
+      description: 'Handles daily administrative tasks and member records.',
+      users: [
+        { id: 9, name: 'User I', avatarUrl: 'https://picsum.photos/seed/u9/40/40' },
+        { id: 10, name: 'User J', avatarUrl: 'https://picsum.photos/seed/u10/40/40' },
+        { id: 11, name: 'User K', avatarUrl: 'https://picsum.photos/seed/u11/40/40' },
+        { id: 12, name: 'User L', avatarUrl: 'https://picsum.photos/seed/u12/40/40' },
+        { id: 13, name: 'User M', avatarUrl: 'https://picsum.photos/seed/u13/40/40' },
+        { id: 14, name: 'User N', avatarUrl: 'https://picsum.photos/seed/u14/40/40' },
+        { id: 15, name: 'User O', avatarUrl: 'https://picsum.photos/seed/u15/40/40' },
+        { id: 16, name: 'User P', avatarUrl: 'https://picsum.photos/seed/u16/40/40' },
+        { id: 17, name: 'User Q', avatarUrl: 'https://picsum.photos/seed/u17/40/40' },
+        { id: 18, name: 'User R', avatarUrl: 'https://picsum.photos/seed/u18/40/40' },
+      ],
+    },
+    {
+      id: 4,
+      name: 'Small Group Leader',
+      description: 'Manages specific small groups and related communications.',
+      users: Array.from({ length: 15 }, (_, i) => ({
+        id: 19 + i,
+        name: `User ${String.fromCharCode(83 + i)}`,
+        avatarUrl: `https://picsum.photos/seed/u${19 + i}/40/40`,
+      })),
+    },
+    {
+      id: 5,
+      name: 'Member',
+      description: 'Basic access to personal profile and general church info.',
+      users: 350,
+    },
+  ];
