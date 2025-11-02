@@ -379,7 +379,9 @@ export default function MembersPage() {
                         </TableCell>
                         <TableCell>
                             <div className="flex items-center">
-                            <Button variant="link">Ver</Button>
+                            <Button variant="link" asChild>
+                                <Link href={`/members/${member.id}`}>Ver</Link>
+                            </Button>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="icon">
@@ -422,7 +424,7 @@ export default function MembersPage() {
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </CardHeader>
-                        <CardContent className="flex flex-col items-center justify-center flex-1 text-center p-4 pt-0">
+                        <Link href={`/members/${member.id}`} className="flex flex-col items-center justify-center flex-1 text-center p-4 pt-0">
                             <Avatar className="h-20 w-20 mb-4">
                                 <AvatarImage src={`https://picsum.photos/seed/${member.id}/80/80`} alt={member.name} />
                                 <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
@@ -438,7 +440,7 @@ export default function MembersPage() {
                                 <Badge key={group} variant="outline" className={`font-normal ${groupColors[group as keyof typeof groupColors] || 'bg-gray-100 text-gray-800'}`}>{group}</Badge>
                                 ))}
                             </div>
-                        </CardContent>
+                        </Link>
                     </Card>
                     ))}
                 </div>
