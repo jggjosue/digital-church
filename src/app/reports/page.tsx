@@ -17,7 +17,7 @@ import {
 } from '@/components/ui/card';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
-import { attendanceRecords, membersData } from '@/lib/data';
+import { attendanceRecords, membersData, incomeStatementData } from '@/lib/data';
 
 type AutoTable = {
     autoTable: (options: any) => void;
@@ -104,11 +104,51 @@ export default function ReportsPage() {
         doc.save('reporte_membresia.pdf');
     };
 
+    const generateFinancialReport = () => {
+        const doc = new jsPDF() as jsPDF & AutoTable;
+    
+        doc.text('Reporte Financiero - Estado de Ingresos y Gastos', 14, 20);
+    
+        doc.text('Ingresos', 14, 30);
+        const incomeRows = incomeStatementData.income.map(item => [item.label, `$${item.amount.toFixed(2)}`]);
+        incomeRows.push(['Ingresos Totales', `$${incomeStatementData.totalIncome.toFixed(2)}`]);
+    
+        doc.autoTable({
+          head: [['Descripción', 'Monto']],
+          body: incomeRows,
+          startY: 35,
+          headStyles: { fillColor: [33, 150, 243] }
+        });
+    
+        const finalY = (doc as any).lastAutoTable.finalY;
+    
+        doc.text('Gastos', 14, finalY + 10);
+        const expenseRows = incomeStatementData.expenses.map(item => [item.label, `$${item.amount.toFixed(2)}`]);
+        expenseRows.push(['Gastos Totales', `$${incomeStatementData.totalExpenses.toFixed(2)}`]);
+    
+        doc.autoTable({
+          head: [['Descripción', 'Monto']],
+          body: expenseRows,
+          startY: finalY + 15,
+          headStyles: { fillColor: [244, 67, 54] }
+        });
+
+        const finalY2 = (doc as any).lastAutoTable.finalY;
+
+        doc.setFont('helvetica', 'bold');
+        doc.text('Ingreso Neto', 14, finalY2 + 10);
+        doc.text(`$${incomeStatementData.netIncome.toFixed(2)}`, 150, finalY2 + 10, { align: 'right' });
+    
+        doc.save('reporte_financiero.pdf');
+    };
+
     const handleReportGeneration = (reportId: string) => {
         if (reportId === 'attendance') {
             generateAttendanceReport();
         } else if (reportId === 'membership') {
             generateMembershipReport();
+        } else if (reportId === 'financial') {
+            generateFinancialReport();
         } else {
             alert(`La generación del reporte para "${reportId}" aún no está implementada.`);
         }
