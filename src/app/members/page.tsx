@@ -23,7 +23,6 @@ import {
   Card,
   CardContent,
   CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -51,6 +50,7 @@ import {
 import { membersData } from '@/lib/data';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Label } from '@/components/ui/label';
 
 type Member = (typeof membersData)[0];
 
@@ -67,7 +67,17 @@ const groupColors = {
   'Nuevo Miembro': 'bg-green-100 text-green-800',
 };
 
-function Filters() {
+const allGroups = [...new Set(membersData.flatMap(m => m.groups))];
+
+
+function Filters({ filters, onFilterChange, onApply, onClear }: { filters: any, onFilterChange: any, onApply: any, onClear: any }) {
+    const handleStatusChange = (status: string, checked: boolean) => {
+        const newStatus = checked
+            ? [...filters.status, status]
+            : filters.status.filter((s: string) => s !== status);
+        onFilterChange('status', newStatus);
+    };
+
     return (
         <>
             <h2 className="text-lg font-semibold">Filtros</h2>
@@ -77,52 +87,44 @@ function Filters() {
                 Estado de Membresía
                 </h3>
                 <div className="mt-2 space-y-2">
-                <div className="flex items-center gap-2">
-                    <Checkbox id="active" />
-                    <label htmlFor="active" className="text-sm">
-                    Activo
-                    </label>
-                </div>
-                <div className="flex items-center gap-2">
-                    <Checkbox id="visitor" />
-                    <label htmlFor="visitor" className="text-sm">
-                    Visitante
-                    </label>
-                </div>
-                <div className="flex items-center gap-2">
-                    <Checkbox id="inactive" />
-                    <label htmlFor="inactive" className="text-sm">
-                    Inactivo
-                    </label>
-                </div>
+                    <div className="flex items-center gap-2">
+                        <Checkbox id="active" onCheckedChange={(checked) => handleStatusChange('Activo', !!checked)} checked={filters.status.includes('Activo')} />
+                        <Label htmlFor="active" className="text-sm">Activo</Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Checkbox id="visitor" onCheckedChange={(checked) => handleStatusChange('Visitante', !!checked)} checked={filters.status.includes('Visitante')} />
+                        <Label htmlFor="visitor" className="text-sm">Visitante</Label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <Checkbox id="inactive" onCheckedChange={(checked) => handleStatusChange('Inactivo', !!checked)} checked={filters.status.includes('Inactivo')} />
+                        <Label htmlFor="inactive" className="text-sm">Inactivo</Label>
+                    </div>
                 </div>
             </div>
             <div>
                 <h3 className="text-sm font-medium text-muted-foreground">
                 Grupos
                 </h3>
-                <Select>
-                <SelectTrigger>
-                    <SelectValue placeholder="Todos los Grupos" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="all">Todos los Grupos</SelectItem>
-                    <SelectItem value="volunteers">Voluntarios</SelectItem>
-                    <SelectItem value="choir">Coro</SelectItem>
-                    <SelectItem value="youth">Grupo de Jóvenes</SelectItem>
-                </SelectContent>
+                <Select value={filters.group} onValueChange={(value) => onFilterChange('group', value)}>
+                    <SelectTrigger>
+                        <SelectValue placeholder="Todos los Grupos" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">Todos los Grupos</SelectItem>
+                        {allGroups.map(group => (
+                            <SelectItem key={group} value={group}>{group}</SelectItem>
+                        ))}
+                    </SelectContent>
                 </Select>
             </div>
             <div>
                 <h3 className="text-sm font-medium text-muted-foreground">Etiquetas</h3>
-                <Input placeholder="Ej. Bautizado, Nuevo" />
+                <Input placeholder="Ej. Bautizado, Nuevo" value={filters.tags} onChange={(e) => onFilterChange('tags', e.target.value)} />
             </div>
             </div>
             <div className="mt-8 space-y-2">
-            <Button className="w-full">Aplicar Filtros</Button>
-            <Button variant="ghost" className="w-full">
-                Limpiar Todo
-            </Button>
+                <Button className="w-full" onClick={onApply}>Aplicar Filtros</Button>
+                <Button variant="ghost" className="w-full" onClick={onClear}>Limpiar Todo</Button>
             </div>
         </>
     )
@@ -131,10 +133,61 @@ function Filters() {
 export default function MembersPage() {
   const [selected, setSelected] = React.useState<number[]>([]);
   const [view, setView] = React.useState<'table' | 'card'>('table');
+  const [searchTerm, setSearchTerm] = React.useState('');
+  const [filters, setFilters] = React.useState({
+    status: [] as string[],
+    group: 'all',
+    tags: ''
+  });
+  const [filteredMembers, setFilteredMembers] = React.useState<Member[]>(membersData);
+
+  const handleFilterChange = (key: string, value: any) => {
+    setFilters(prev => ({...prev, [key]: value}));
+  };
+
+  const applyFilters = React.useCallback(() => {
+    let data = membersData;
+
+    // Search term filter
+    if (searchTerm) {
+        data = data.filter(member => 
+            member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            member.phone1.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }
+
+    // Status filter
+    if (filters.status.length > 0) {
+        data = data.filter(member => filters.status.includes(member.status));
+    }
+
+    // Group filter
+    if (filters.group !== 'all') {
+        data = data.filter(member => member.groups.includes(filters.group));
+    }
+
+    setFilteredMembers(data);
+  }, [searchTerm, filters]);
+
+
+  const clearFilters = () => {
+    setFilters({
+        status: [],
+        group: 'all',
+        tags: ''
+    });
+    setSearchTerm('');
+    setFilteredMembers(membersData);
+  };
+  
+  React.useEffect(() => {
+    applyFilters();
+  }, [searchTerm, filters, applyFilters]);
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelected(membersData.map((m) => m.id));
+      setSelected(filteredMembers.map((m) => m.id));
     } else {
       setSelected([]);
     }
@@ -152,7 +205,7 @@ export default function MembersPage() {
     <div className="flex min-h-screen w-full flex-col">
       <div className="flex flex-1 md:grid md:grid-cols-[280px_1fr]">
         <aside className="w-full shrink-0 md:w-80 border-b md:border-r md:border-b-0 bg-background p-6 hidden md:block">
-            <Filters />
+            <Filters filters={filters} onFilterChange={handleFilterChange} onApply={applyFilters} onClear={clearFilters}/>
         </aside>
         <main className="flex-1 flex flex-col">
             <header className="sticky top-0 z-10 flex h-auto flex-col items-start gap-4 border-b bg-background px-6 py-4 sm:flex-row sm:items-center sm:justify-between sm:h-auto">
@@ -175,7 +228,7 @@ export default function MembersPage() {
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="relative w-full max-w-sm">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder="Buscar por nombre, email o teléfono..." className="pl-9" />
+                    <Input placeholder="Buscar por nombre, email o teléfono..." className="pl-9" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                     </div>
                     <div className="flex w-full sm:w-auto items-center justify-between gap-2">
                         <Sheet>
@@ -187,7 +240,7 @@ export default function MembersPage() {
                             </SheetTrigger>
                             <SheetContent side="left" className="w-[300px]">
                             <div className="p-6">
-                                <Filters />
+                                <Filters filters={filters} onFilterChange={handleFilterChange} onApply={applyFilters} onClear={clearFilters}/>
                             </div>
                             </SheetContent>
                         </Sheet>
@@ -210,7 +263,7 @@ export default function MembersPage() {
                     </div>
                 </div>
                 </CardHeader>
-                <CardContent className="flex-1">
+                <CardContent className="flex-1 flex flex-col">
                 {selected.length > 0 && (
                     <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between rounded-lg bg-blue-50 p-3 gap-2">
                     <div className="text-sm font-medium">
@@ -234,8 +287,14 @@ export default function MembersPage() {
                     </div>
                     </div>
                 )}
+                
+                {filteredMembers.length === 0 && (
+                    <div className="flex-1 flex items-center justify-center text-muted-foreground">
+                        No se encontraron miembros que coincidan con sus filtros.
+                    </div>
+                )}
 
-                {view === 'table' ? (
+                {view === 'table' && filteredMembers.length > 0 ? (
                     <div className="overflow-x-auto">
                     <Table>
                     <TableHeader>
@@ -244,7 +303,7 @@ export default function MembersPage() {
                         <Checkbox
                             checked={
                             selected.length > 0 &&
-                            selected.length === membersData.length
+                            selected.length === filteredMembers.length
                             }
                             onCheckedChange={(checked) =>
                             handleSelectAll(!!checked)
@@ -259,7 +318,7 @@ export default function MembersPage() {
                     </TableRow>
                     </TableHeader>
                     <TableBody>
-                    {membersData.map((member) => (
+                    {filteredMembers.map((member) => (
                         <TableRow key={member.id}>
                         <TableCell>
                             <Checkbox
@@ -338,9 +397,9 @@ export default function MembersPage() {
                     </TableBody>
                 </Table>
                 </div>
-                ) : (
+                ) : view === 'card' && filteredMembers.length > 0 ? (
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3">
-                    {membersData.map((member) => (
+                    {filteredMembers.map((member) => (
                     <Card key={member.id} className="relative flex flex-col">
                         <Checkbox
                             checked={selected.includes(member.id)}
@@ -382,7 +441,7 @@ export default function MembersPage() {
                     </Card>
                     ))}
                 </div>
-                )}
+                ) : null}
                 </CardContent>
             </Card>
             </div>
