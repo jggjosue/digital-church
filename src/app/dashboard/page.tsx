@@ -1,0 +1,66 @@
+'use client';
+import * as React from 'react';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { TotalMembers } from '@/components/dashboard/total-members';
+import { WeeklyAttendance } from '@/components/dashboard/weekly-attendance';
+import { GivingThisMonth } from '@/components/dashboard/giving-this-month';
+import { NewVisitors } from '@/components/dashboard/new-visitors';
+import { GivingTrends } from '@/components/dashboard/giving-trends';
+import { MemberDemographics } from '@/components/dashboard/member-demographics';
+import { UpcomingEvents } from '@/components/dashboard/upcoming-events';
+import { PrayerRequests } from '@/components/dashboard/prayer-requests';
+
+export type TimeRange = 'this-week' | 'this-month' | 'this-quarter' | 'this-year';
+
+export default function DashboardPage() {
+  const [timeRange, setTimeRange] = React.useState<TimeRange>('this-week');
+
+  const handleTimeRangeChange = (value: string) => {
+    setTimeRange(value as TimeRange);
+  };
+
+  return (
+    <main className="flex-1 space-y-6 p-4 sm:p-6 md:p-8">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+            <p className="text-muted-foreground">
+              An overview of key church activities and statistics.
+            </p>
+          </div>
+          <Tabs
+            defaultValue="this-week"
+            className="w-full sm:w-auto"
+            onValueChange={handleTimeRangeChange}
+          >
+            <TabsList>
+              <TabsTrigger value="this-week">This Week</TabsTrigger>
+              <TabsTrigger value="this-month">This Month</TabsTrigger>
+              <TabsTrigger value="this-quarter">This Quarter</TabsTrigger>
+              <TabsTrigger value="this-year">This Year</TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <TotalMembers timeRange={timeRange} />
+          <WeeklyAttendance timeRange={timeRange} />
+          <GivingThisMonth timeRange={timeRange} />
+          <NewVisitors timeRange={timeRange} />
+        </div>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+          <div className="lg:col-span-2">
+            <GivingTrends timeRange={timeRange} />
+          </div>
+          <div className="lg:col-span-1">
+            <MemberDemographics />
+          </div>
+          <div className="lg:col-span-2">
+            <div className="grid gap-6">
+              <UpcomingEvents />
+              <PrayerRequests />
+            </div>
+          </div>
+        </div>
+      </main>
+  );
+}

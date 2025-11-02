@@ -1,7 +1,9 @@
-import type {Metadata} from 'next';
+import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { Inter } from 'next/font/google';
+import { cn } from '@/lib/utils';
+import { AppSidebar } from '@/components/app-sidebar';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -17,8 +19,20 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans antialiased`} suppressHydrationWarning>
-        {children}
+      <body
+        className={cn(
+          "min-h-screen bg-background font-sans antialiased",
+          inter.variable
+        )}
+      >
+        <div className="flex min-h-screen w-full flex-col bg-background text-foreground">
+          <div className="flex">
+            <AppSidebar />
+            <div className="flex-1">
+              {children}
+            </div>
+          </div>
+        </div>
         <Toaster />
       </body>
     </html>

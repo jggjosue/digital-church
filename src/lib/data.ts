@@ -70,3 +70,51 @@ export const prayerRequests = [
     { id: 2, request: 'Guidance for the Johnson Family', submitted: 'Submitted 3 days ago' },
     { id: 3, request: 'Job opportunity for David P.', submitted: 'Submitted 5 days ago' },
 ];
+
+export const membersData = [
+    {
+      id: 1,
+      name: 'John Doe',
+      email: 'john.doe@example.com',
+      phone1: '+1 234 567 890',
+      phone2: '',
+      status: 'Active',
+      groups: ['Volunteers', 'Choir'],
+    },
+    {
+      id: 2,
+      name: 'Jane Smith',
+      email: 'jane.smith@example.com',
+      phone1: '+1 987 654 321',
+      phone2: '',
+      status: 'Active',
+      groups: ['Youth Group'],
+    },
+    {
+      id: 3,
+      name: 'Robert Brown',
+      email: 'robert.brown@example.com',
+      phone1: '+1 555 123 456',
+      phone2: '',
+      status: 'Visitor',
+      groups: ['New Member'],
+    },
+    {
+      id: 4,
+      name: 'Emily Davis',
+      email: 'emily.davis@example.com',
+      phone1: '+1 444 555 666',
+      phone2: '',
+      status: 'Active',
+      groups: ['Volunteers'],
+    },
+    {
+      id: 5,
+      name: 'Michael Wilson',
+      email: 'michael.wilson@example.com',
+      phone1: '+1 777 888 999',
+      phone2: '',
+      status: 'Inactive',
+      groups: [],
+    },
+  ];
