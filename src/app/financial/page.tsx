@@ -222,7 +222,7 @@ export default function FinancialPage() {
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
-          Card>
+          </Card>
         </div>
 
         <Card>
