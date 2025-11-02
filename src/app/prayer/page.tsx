@@ -35,6 +35,7 @@ import { Badge } from '@/components/ui/badge';
 import { prayerRequestsData } from '@/lib/data';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Label } from '@/components/ui/label';
+import Link from 'next/link';
 
 type PrayerRequest = typeof prayerRequestsData[0];
 
@@ -69,9 +70,10 @@ export default function PrayerRequestsPage() {
     });
   };
 
-  const applyFilters = () => {
+  const applyFilters = React.useCallback(() => {
     let data = prayerRequestsData;
 
+    // 1. Filter by the selected tab first
     if (selectedTab === 'my-requests') {
         // Assuming 'John Doe' is the current user for demo purposes
         data = data.filter(req => req.submittedBy === 'John Doe');
@@ -79,6 +81,7 @@ export default function PrayerRequestsPage() {
         data = data.filter(req => req.status === 'Respondido');
     }
 
+    // 2. Apply sidebar filters to the already tab-filtered data
     if (activeFilters.status.length > 0) {
         data = data.filter(req => activeFilters.status.includes(req.status));
     }
@@ -88,7 +91,7 @@ export default function PrayerRequestsPage() {
     // Group filter logic would go here if data supported it
 
     setFilteredData(data);
-  };
+  }, [activeFilters, selectedTab]);
 
   const clearFilters = () => {
     setActiveFilters({
@@ -96,12 +99,50 @@ export default function PrayerRequestsPage() {
         privacy: [],
         group: 'all',
     });
-    setFilteredData(prayerRequestsData);
   };
 
+  // Re-apply filters whenever the tab or filters change and the button is clicked.
   React.useEffect(() => {
     applyFilters();
-  }, [selectedTab]);
+  }, [applyFilters]);
+
+  const renderTableBody = (data: PrayerRequest[]) => (
+    <TableBody>
+      {data.map((request) => (
+        <TableRow key={request.id}>
+          <TableCell><Checkbox /></TableCell>
+          <TableCell>
+            <div className="font-medium">{request.title}</div>
+            <div className="text-sm text-muted-foreground">{request.description}</div>
+          </TableCell>
+          <TableCell>
+            <div className="flex items-center gap-2">
+                <Avatar className='h-8 w-8'>
+                    <AvatarImage src={request.submittedByAvatar} alt={request.submittedBy} />
+                    <AvatarFallback>{request.submittedBy.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <span>{request.submittedBy}</span>
+            </div>
+          </TableCell>
+          <TableCell>{request.date}</TableCell>
+          <TableCell>
+            <Badge variant="outline" className={statusColors[request.status as keyof typeof statusColors]}>
+              {request.status}
+            </Badge>
+          </TableCell>
+          <TableCell>
+            <div className="flex items-center gap-2">
+                {privacyIcons[request.privacy as keyof typeof privacyIcons]}
+                <span>{request.privacy}</span>
+            </div>
+          </TableCell>
+          <TableCell className="text-right">
+            <Button variant="link" className="text-primary">Detalles</Button>
+          </TableCell>
+        </TableRow>
+      ))}
+    </TableBody>
+  );
 
 
   return (
@@ -163,7 +204,7 @@ export default function PrayerRequestsPage() {
             </div>
             <div className="flex gap-2">
                 <Button variant="outline"><Users className="mr-2 h-4 w-4" /> Gestionar Grupos</Button>
-                <Button><Plus className="mr-2 h-4 w-4" /> Nueva Petición de Oración</Button>
+                <Button asChild><Link href="/prayer/new"><Plus className="mr-2 h-4 w-4" /> Nueva Petición de Oración</Link></Button>
             </div>
         </div>
 
@@ -195,41 +236,7 @@ export default function PrayerRequestsPage() {
                         <TableHead className="text-right">ACCIONES</TableHead>
                       </TableRow>
                     </TableHeader>
-                    <TableBody>
-                      {filteredData.map((request) => (
-                        <TableRow key={request.id}>
-                          <TableCell><Checkbox /></TableCell>
-                          <TableCell>
-                            <div className="font-medium">{request.title}</div>
-                            <div className="text-sm text-muted-foreground">{request.description}</div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                                <Avatar className='h-8 w-8'>
-                                    <AvatarImage src={request.submittedByAvatar} alt={request.submittedBy} />
-                                    <AvatarFallback>{request.submittedBy.charAt(0)}</AvatarFallback>
-                                </Avatar>
-                                <span>{request.submittedBy}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>{request.date}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className={statusColors[request.status as keyof typeof statusColors]}>
-                              {request.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                                {privacyIcons[request.privacy as keyof typeof privacyIcons]}
-                                <span>{request.privacy}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button variant="link" className="text-primary">Detalles</Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
+                    {renderTableBody(filteredData)}
                   </Table>
                 </div>
               </TabsContent>
@@ -247,41 +254,7 @@ export default function PrayerRequestsPage() {
                         <TableHead className="text-right">ACCIONES</TableHead>
                       </TableRow>
                     </TableHeader>
-                    <TableBody>
-                      {filteredData.map((request) => (
-                        <TableRow key={request.id}>
-                          <TableCell><Checkbox /></TableCell>
-                          <TableCell>
-                            <div className="font-medium">{request.title}</div>
-                            <div className="text-sm text-muted-foreground">{request.description}</div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                                <Avatar className='h-8 w-8'>
-                                    <AvatarImage src={request.submittedByAvatar} alt={request.submittedBy} />
-                                    <AvatarFallback>{request.submittedBy.charAt(0)}</AvatarFallback>
-                                </Avatar>
-                                <span>{request.submittedBy}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>{request.date}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className={statusColors[request.status as keyof typeof statusColors]}>
-                              {request.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                                {privacyIcons[request.privacy as keyof typeof privacyIcons]}
-                                <span>{request.privacy}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button variant="link" className="text-primary">Detalles</Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
+                    {renderTableBody(filteredData)}
                   </Table>
                 </div>
               </TabsContent>
@@ -299,41 +272,7 @@ export default function PrayerRequestsPage() {
                         <TableHead className="text-right">ACCIONES</TableHead>
                       </TableRow>
                     </TableHeader>
-                    <TableBody>
-                      {filteredData.map((request) => (
-                        <TableRow key={request.id}>
-                          <TableCell><Checkbox /></TableCell>
-                          <TableCell>
-                            <div className="font-medium">{request.title}</div>
-                            <div className="text-sm text-muted-foreground">{request.description}</div>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                                <Avatar className='h-8 w-8'>
-                                    <AvatarImage src={request.submittedByAvatar} alt={request.submittedBy} />
-                                    <AvatarFallback>{request.submittedBy.charAt(0)}</AvatarFallback>
-                                </Avatar>
-                                <span>{request.submittedBy}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell>{request.date}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className={statusColors[request.status as keyof typeof statusColors]}>
-                              {request.status}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                                {privacyIcons[request.privacy as keyof typeof privacyIcons]}
-                                <span>{request.privacy}</span>
-                            </div>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button variant="link" className="text-primary">Detalles</Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
+                    {renderTableBody(filteredData)}
                   </Table>
                 </div>
               </TabsContent>
