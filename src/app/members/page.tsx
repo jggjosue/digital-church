@@ -389,7 +389,7 @@ export default function MembersPage() {
                                 </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent>
-                                <DropdownMenuItem>Editar</DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href={`/members/${member.id}/edit`}>Editar</Link></DropdownMenuItem>
                                 <DropdownMenuItem>Eliminar</DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
@@ -419,7 +419,7 @@ export default function MembersPage() {
                                 </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent>
-                                <DropdownMenuItem>Editar</DropdownMenuItem>
+                                <DropdownMenuItem asChild><Link href={`/members/${member.id}/edit`}>Editar</Link></DropdownMenuItem>
                                 <DropdownMenuItem>Eliminar</DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>

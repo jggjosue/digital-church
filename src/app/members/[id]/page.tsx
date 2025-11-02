@@ -100,7 +100,7 @@ export default function MemberProfilePage({ params }: { params: { id: string } }
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline"><Edit className="mr-2 h-4 w-4" /> Editar Perfil</Button>
+          <Button variant="outline" asChild><Link href={`/members/${params.id}/edit`}><Edit className="mr-2 h-4 w-4" /> Editar Perfil</Link></Button>
           <Button><MoreHorizontal className="h-4 w-4" /></Button>
         </div>
       </header>
