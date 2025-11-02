@@ -52,6 +52,8 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+
 
 type Member = (typeof membersData)[0];
 
@@ -141,6 +143,7 @@ export default function MembersPage() {
     tags: ''
   });
   const [filteredMembers, setFilteredMembers] = React.useState<Member[]>(membersData);
+  const [memberToDelete, setMemberToDelete] = React.useState<Member | null>(null);
 
   const handleFilterChange = (key: string, value: any) => {
     setFilters(prev => ({...prev, [key]: value}));
@@ -204,252 +207,278 @@ export default function MembersPage() {
     }
   };
 
+  const handleDeleteMember = () => {
+    if (memberToDelete) {
+        setFilteredMembers(prev => prev.filter(m => m.id !== memberToDelete.id));
+        setSelected(prev => prev.filter(id => id !== memberToDelete.id));
+        setMemberToDelete(null);
+    }
+  };
+
   return (
-    <div className="flex min-h-screen w-full flex-col">
-      <div className="flex flex-1 md:grid md:grid-cols-[280px_1fr]">
-        <aside className="w-full shrink-0 md:w-80 border-b md:border-r md:border-b-0 bg-background p-6 hidden md:block">
-            <Filters filters={filters} onFilterChange={handleFilterChange} onApply={applyFilters} onClear={clearFilters}/>
-        </aside>
-        <main className="flex-1 flex flex-col">
-            <header className="sticky top-0 z-10 flex h-auto flex-col items-start gap-4 border-b bg-background px-6 py-4 sm:flex-row sm:items-center sm:justify-between sm:h-auto">
-                <div className='flex-1'>
-                    <h1 className="text-3xl font-bold">Directorio de Miembros</h1>
-                    <p className="text-muted-foreground">
-                    Administre perfiles de miembros, información de contacto y membresías de grupos.
-                    </p>
-                </div>
-                <div className="flex items-center gap-4">
-                    <Button asChild>
-                        <Link href="/members/new"><Plus className="mr-2" /> Añadir Nuevo Miembro</Link>
-                    </Button>
-                    <ThemeToggle />
-                </div>
-            </header>
-            <div className='flex-1 flex flex-col p-4 sm:p-8'>
-            <Card className="flex-1 flex flex-col">
-                <CardHeader>
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div className="relative w-full max-w-sm">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder="Buscar por nombre, email, teléfono, estado..." className="pl-9" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+    <AlertDialog>
+        <div className="flex min-h-screen w-full flex-col">
+        <div className="flex flex-1 md:grid md:grid-cols-[280px_1fr]">
+            <aside className="w-full shrink-0 md:w-80 border-b md:border-r md:border-b-0 bg-background p-6 hidden md:block">
+                <Filters filters={filters} onFilterChange={handleFilterChange} onApply={applyFilters} onClear={clearFilters}/>
+            </aside>
+            <main className="flex-1 flex flex-col">
+                <header className="sticky top-0 z-10 flex h-auto flex-col items-start gap-4 border-b bg-background px-6 py-4 sm:flex-row sm:items-center sm:justify-between sm:h-auto">
+                    <div className='flex-1'>
+                        <h1 className="text-3xl font-bold">Directorio de Miembros</h1>
+                        <p className="text-muted-foreground">
+                        Administre perfiles de miembros, información de contacto y membresías de grupos.
+                        </p>
                     </div>
-                    <div className="flex w-full sm:w-auto items-center justify-between gap-2">
-                        <Sheet>
-                            <SheetTrigger asChild>
-                                <Button variant="outline" className="md:hidden flex items-center gap-2">
-                                    <SlidersHorizontal className="h-4 w-4" />
-                                    <span>Filtros</span>
+                    <div className="flex items-center gap-4">
+                        <Button asChild>
+                            <Link href="/members/new"><Plus className="mr-2" /> Añadir Nuevo Miembro</Link>
+                        </Button>
+                        <ThemeToggle />
+                    </div>
+                </header>
+                <div className='flex-1 flex flex-col p-4 sm:p-8'>
+                <Card className="flex-1 flex flex-col">
+                    <CardHeader>
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                        <div className="relative w-full max-w-sm">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input placeholder="Buscar por nombre, email, teléfono, estado..." className="pl-9" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                        </div>
+                        <div className="flex w-full sm:w-auto items-center justify-between gap-2">
+                            <Sheet>
+                                <SheetTrigger asChild>
+                                    <Button variant="outline" className="md:hidden flex items-center gap-2">
+                                        <SlidersHorizontal className="h-4 w-4" />
+                                        <span>Filtros</span>
+                                    </Button>
+                                </SheetTrigger>
+                                <SheetContent side="left" className="w-[300px]">
+                                <div className="p-6">
+                                    <Filters filters={filters} onFilterChange={handleFilterChange} onApply={applyFilters} onClear={clearFilters}/>
+                                </div>
+                                </SheetContent>
+                            </Sheet>
+                            <div className="flex items-center gap-2">
+                                <Button
+                                    variant={view === 'table' ? 'secondary' : 'ghost'}
+                                    size="icon"
+                                    onClick={() => setView('table')}
+                                >
+                                    <List className="h-5 w-5" />
                                 </Button>
-                            </SheetTrigger>
-                            <SheetContent side="left" className="w-[300px]">
-                            <div className="p-6">
-                                <Filters filters={filters} onFilterChange={handleFilterChange} onApply={applyFilters} onClear={clearFilters}/>
+                                <Button
+                                    variant={view === 'card' ? 'secondary' : 'ghost'}
+                                    size="icon"
+                                    onClick={() => setView('card')}
+                                >
+                                    <LayoutGrid className="h-5 w-5" />
+                                </Button>
                             </div>
-                            </SheetContent>
-                        </Sheet>
-                        <div className="flex items-center gap-2">
-                            <Button
-                                variant={view === 'table' ? 'secondary' : 'ghost'}
-                                size="icon"
-                                onClick={() => setView('table')}
-                            >
-                                <List className="h-5 w-5" />
-                            </Button>
-                            <Button
-                                variant={view === 'card' ? 'secondary' : 'ghost'}
-                                size="icon"
-                                onClick={() => setView('card')}
-                            >
-                                <LayoutGrid className="h-5 w-5" />
-                            </Button>
                         </div>
                     </div>
-                </div>
-                </CardHeader>
-                <CardContent className="flex-1 flex flex-col">
-                {selected.length > 0 && (
-                    <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between rounded-lg bg-blue-50 p-3 gap-2">
-                    <div className="text-sm font-medium">
-                        {selected.length} {selected.length > 1 ? 'elementos seleccionados' : 'elemento seleccionado'}
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <FileUp className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-                            <Link href={`/members/send-email?ids=${selected.join(',')}`}><Mail className="h-4 w-4" /></Link>
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <UserPlus className="h-4 w-4" />
-                        </Button>
-                        <Button size="sm" asChild>
-                           <Link href="/members/bulk-actions">Acciones Masivas</Link>
-                        </Button>
-                    </div>
-                    </div>
-                )}
-                
-                {filteredMembers.length === 0 && (
-                    <div className="flex-1 flex items-center justify-center text-muted-foreground">
-                        No se encontraron miembros que coincidan con sus filtros.
-                    </div>
-                )}
-
-                {view === 'table' && filteredMembers.length > 0 ? (
-                    <div className="overflow-x-auto flex-1">
-                    <Table>
-                    <TableHeader>
-                    <TableRow>
-                        <TableHead className="w-12">
-                        <Checkbox
-                            checked={
-                            selected.length > 0 &&
-                            selected.length === filteredMembers.length
-                            }
-                            onCheckedChange={(checked) =>
-                            handleSelectAll(!!checked)
-                            }
-                        />
-                        </TableHead>
-                        <TableHead>Nombre</TableHead>
-                        <TableHead>Contacto</TableHead>
-                        <TableHead>Estado</TableHead>
-                        <TableHead>Grupos</TableHead>
-                        <TableHead>Acciones</TableHead>
-                    </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                    {filteredMembers.map((member) => (
-                        <TableRow key={member.id}>
-                        <TableCell>
-                            <Checkbox
-                            checked={selected.includes(member.id)}
-                            onCheckedChange={(checked) =>
-                                handleSelectOne(member.id, !!checked)
-                            }
-                            />
-                        </TableCell>
-                        <TableCell>
-                            <div className="flex items-center gap-3">
-                            <Avatar>
-                                <AvatarImage
-                                src={`https://picsum.photos/seed/${member.id}/40/40`}
-                                alt={member.name}
-                                />
-                                <AvatarFallback>
-                                {member.name.charAt(0)}
-                                </AvatarFallback>
-                            </Avatar>
-                            <div>
-                                <div className="font-medium">{member.name}</div>
-                                <div className="text-sm text-muted-foreground">
-                                {member.email}
-                                </div>
-                            </div>
-                            </div>
-                        </TableCell>
-                        <TableCell>
-                            <div className="text-sm">{member.phone1}</div>
-                            <div className="text-sm text-muted-foreground">
-                            {member.phone2}
-                            </div>
-                        </TableCell>
-                        <TableCell>
-                            <div className="flex items-center gap-2">
-                            <span
-                                className={`h-2 w-2 rounded-full ${
-                                statusColors[member.status as keyof typeof statusColors]
-                                }`}
-                            />
-                            <span className="text-sm">{member.status}</span>
-                            </div>
-                        </TableCell>
-                        <TableCell>
-                            <div className="flex flex-wrap gap-1">
-                            {member.groups.map((group) => (
-                                <Badge
-                                key={group}
-                                variant="outline"
-                                className={`font-normal ${groupColors[group as keyof typeof groupColors] || 'bg-gray-100 text-gray-800'}`}
-                                >
-                                {group}
-                                </Badge>
-                            ))}
-                            </div>
-                        </TableCell>
-                        <TableCell>
-                            <div className="flex items-center">
-                            <Button variant="link" asChild>
-                                <Link href={`/members/${member.id}`}>Ver</Link>
+                    </CardHeader>
+                    <CardContent className="flex-1 flex flex-col">
+                    {selected.length > 0 && (
+                        <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between rounded-lg bg-blue-50 p-3 gap-2">
+                        <div className="text-sm font-medium">
+                            {selected.length} {selected.length > 1 ? 'elementos seleccionados' : 'elemento seleccionado'}
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <FileUp className="h-4 w-4" />
                             </Button>
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent>
-                                <DropdownMenuItem asChild><Link href={`/members/${member.id}/edit`}>Editar</Link></DropdownMenuItem>
-                                <DropdownMenuItem>Eliminar</DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                            </div>
-                        </TableCell>
-                        </TableRow>
-                    ))}
-                    </TableBody>
-                </Table>
-                </div>
-                ) : view === 'card' && filteredMembers.length > 0 ? (
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 flex-1">
-                    {filteredMembers.map((member) => (
-                    <Card key={member.id} className="relative flex flex-col">
-                        <Checkbox
-                            checked={selected.includes(member.id)}
-                            onCheckedChange={(checked) =>
-                                handleSelectOne(member.id, !!checked)
-                            }
-                            className="absolute top-4 left-4"
+                            <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
+                                <Link href={`/members/send-email?ids=${selected.join(',')}`}><Mail className="h-4 w-4" /></Link>
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <UserPlus className="h-4 w-4" />
+                            </Button>
+                            <Button size="sm" asChild>
+                            <Link href="/members/bulk-actions">Acciones Masivas</Link>
+                            </Button>
+                        </div>
+                        </div>
+                    )}
+                    
+                    {filteredMembers.length === 0 && (
+                        <div className="flex-1 flex items-center justify-center text-muted-foreground">
+                            No se encontraron miembros que coincidan con sus filtros.
+                        </div>
+                    )}
+
+                    {view === 'table' && filteredMembers.length > 0 ? (
+                        <div className="overflow-x-auto flex-1">
+                        <Table>
+                        <TableHeader>
+                        <TableRow>
+                            <TableHead className="w-12">
+                            <Checkbox
+                                checked={
+                                selected.length > 0 &&
+                                selected.length === filteredMembers.length
+                                }
+                                onCheckedChange={(checked) =>
+                                handleSelectAll(!!checked)
+                                }
                             />
-                        <CardHeader className="flex flex-row items-start justify-end p-4">
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent>
-                                <DropdownMenuItem asChild><Link href={`/members/${member.id}/edit`}>Editar</Link></DropdownMenuItem>
-                                <DropdownMenuItem>Eliminar</DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </CardHeader>
-                        <Link href={`/members/${member.id}`} className="flex flex-col items-center justify-center flex-1 text-center p-4 pt-0">
-                            <Avatar className="h-20 w-20 mb-4">
-                                <AvatarImage src={`https://picsum.photos/seed/${member.id}/80/80`} alt={member.name} />
-                                <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                            <p className="text-lg font-bold">{member.name}</p>
-                            <p className="text-sm text-muted-foreground truncate">{member.email}</p>
-                            <div className="mt-4 flex items-center gap-2">
-                                <span className={`h-2.5 w-2.5 rounded-full ${statusColors[member.status as keyof typeof statusColors]}`} />
-                                <span className="text-sm font-medium">{member.status}</span>
-                            </div>
-                            <div className="mt-4 flex flex-wrap gap-1 justify-center">
+                            </TableHead>
+                            <TableHead>Nombre</TableHead>
+                            <TableHead>Contacto</TableHead>
+                            <TableHead>Estado</TableHead>
+                            <TableHead>Grupos</TableHead>
+                            <TableHead>Acciones</TableHead>
+                        </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                        {filteredMembers.map((member) => (
+                            <TableRow key={member.id}>
+                            <TableCell>
+                                <Checkbox
+                                checked={selected.includes(member.id)}
+                                onCheckedChange={(checked) =>
+                                    handleSelectOne(member.id, !!checked)
+                                }
+                                />
+                            </TableCell>
+                            <TableCell>
+                                <div className="flex items-center gap-3">
+                                <Avatar>
+                                    <AvatarImage
+                                    src={`https://picsum.photos/seed/${member.id}/40/40`}
+                                    alt={member.name}
+                                    />
+                                    <AvatarFallback>
+                                    {member.name.charAt(0)}
+                                    </AvatarFallback>
+                                </Avatar>
+                                <div>
+                                    <div className="font-medium">{member.name}</div>
+                                    <div className="text-sm text-muted-foreground">
+                                    {member.email}
+                                    </div>
+                                </div>
+                                </div>
+                            </TableCell>
+                            <TableCell>
+                                <div className="text-sm">{member.phone1}</div>
+                                <div className="text-sm text-muted-foreground">
+                                {member.phone2}
+                                </div>
+                            </TableCell>
+                            <TableCell>
+                                <div className="flex items-center gap-2">
+                                <span
+                                    className={`h-2 w-2 rounded-full ${
+                                    statusColors[member.status as keyof typeof statusColors]
+                                    }`}
+                                />
+                                <span className="text-sm">{member.status}</span>
+                                </div>
+                            </TableCell>
+                            <TableCell>
+                                <div className="flex flex-wrap gap-1">
                                 {member.groups.map((group) => (
-                                <Badge key={group} variant="outline" className={`font-normal ${groupColors[group as keyof typeof groupColors] || 'bg-gray-100 text-gray-800'}`}>{group}</Badge>
+                                    <Badge
+                                    key={group}
+                                    variant="outline"
+                                    className={`font-normal ${groupColors[group as keyof typeof groupColors] || 'bg-gray-100 text-gray-800'}`}
+                                    >
+                                    {group}
+                                    </Badge>
                                 ))}
-                            </div>
-                        </Link>
-                    </Card>
-                    ))}
+                                </div>
+                            </TableCell>
+                            <TableCell>
+                                <div className="flex items-center">
+                                <Button variant="link" asChild>
+                                    <Link href={`/members/${member.id}`}>Ver</Link>
+                                </Button>
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon">
+                                        <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent>
+                                    <DropdownMenuItem asChild><Link href={`/members/${member.id}/edit`}>Editar</Link></DropdownMenuItem>
+                                    <AlertDialogTrigger asChild>
+                                        <DropdownMenuItem onSelect={(e) => e.preventDefault()} onClick={() => setMemberToDelete(member)}>Eliminar</DropdownMenuItem>
+                                    </AlertDialogTrigger>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                                </div>
+                            </TableCell>
+                            </TableRow>
+                        ))}
+                        </TableBody>
+                    </Table>
+                    </div>
+                    ) : view === 'card' && filteredMembers.length > 0 ? (
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 flex-1">
+                        {filteredMembers.map((member) => (
+                        <Card key={member.id} className="relative flex flex-col">
+                            <Checkbox
+                                checked={selected.includes(member.id)}
+                                onCheckedChange={(checked) =>
+                                    handleSelectOne(member.id, !!checked)
+                                }
+                                className="absolute top-4 left-4"
+                                />
+                            <CardHeader className="flex flex-row items-start justify-end p-4">
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                                        <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent>
+                                    <DropdownMenuItem asChild><Link href={`/members/${member.id}/edit`}>Editar</Link></DropdownMenuItem>
+                                    <AlertDialogTrigger asChild>
+                                        <DropdownMenuItem onSelect={(e) => e.preventDefault()} onClick={() => setMemberToDelete(member)}>Eliminar</DropdownMenuItem>
+                                    </AlertDialogTrigger>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </CardHeader>
+                            <Link href={`/members/${member.id}`} className="flex flex-col items-center justify-center flex-1 text-center p-4 pt-0">
+                                <Avatar className="h-20 w-20 mb-4">
+                                    <AvatarImage src={`https://picsum.photos/seed/${member.id}/80/80`} alt={member.name} />
+                                    <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <p className="text-lg font-bold">{member.name}</p>
+                                <p className="text-sm text-muted-foreground truncate">{member.email}</p>
+                                <div className="mt-4 flex items-center gap-2">
+                                    <span className={`h-2.5 w-2.5 rounded-full ${statusColors[member.status as keyof typeof statusColors]}`} />
+                                    <span className="text-sm font-medium">{member.status}</span>
+                                </div>
+                                <div className="mt-4 flex flex-wrap gap-1 justify-center">
+                                    {member.groups.map((group) => (
+                                    <Badge key={group} variant="outline" className={`font-normal ${groupColors[group as keyof typeof groupColors] || 'bg-gray-100 text-gray-800'}`}>{group}</Badge>
+                                    ))}
+                                </div>
+                            </Link>
+                        </Card>
+                        ))}
+                    </div>
+                    ) : null}
+                    </CardContent>
+                </Card>
                 </div>
-                ) : null}
-                </CardContent>
-            </Card>
-            </div>
-        </main>
-      </div>
-    </div>
+            </main>
+        </div>
+        </div>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>¿Estás absolutamente seguro?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    Esta acción no se puede deshacer. Esto eliminará permanentemente al miembro <span className='font-bold'>{memberToDelete?.name}</span> y eliminará sus datos de nuestros servidores.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => setMemberToDelete(null)}>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDeleteMember}>Continuar</AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
   );
 }
