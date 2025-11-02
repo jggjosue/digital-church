@@ -149,12 +149,12 @@ export default function MembersPage() {
   };
 
   return (
-    <div className="flex min-h-screen w-full">
-      <aside className="w-80 border-r bg-background p-6 hidden md:block">
+    <div className="flex min-h-screen w-full flex-col md:flex-row">
+      <aside className="w-full md:w-80 border-b md:border-r md:border-b-0 bg-background p-6 hidden md:block">
         <Filters />
       </aside>
-      <main className="flex-1">
-        <header className="sticky top-0 z-10 flex h-auto flex-col items-start gap-4 border-b bg-background px-8 py-4 sm:h-16 sm:flex-row sm:items-center sm:justify-between sm:py-0">
+      <main className="flex-1 flex flex-col">
+        <header className="sticky top-0 z-10 flex h-auto flex-col items-start gap-4 border-b bg-background px-6 py-4 sm:flex-row sm:items-center sm:justify-between sm:h-auto">
             <div className='flex-1'>
                 <h1 className="text-3xl font-bold">Directorio de Miembros</h1>
                 <p className="text-muted-foreground">
@@ -168,7 +168,7 @@ export default function MembersPage() {
                 <ThemeToggle />
             </div>
         </header>
-        <div className='p-8'>
+        <div className='flex-1 p-4 sm:p-8'>
           <Card>
             <CardHeader>
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
