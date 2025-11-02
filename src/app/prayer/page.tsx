@@ -73,22 +73,18 @@ export default function PrayerRequestsPage() {
   const applyFilters = React.useCallback(() => {
     let data = prayerRequestsData;
 
-    // 1. Filter by the selected tab first
     if (selectedTab === 'my-requests') {
-        // Assuming 'John Doe' is the current user for demo purposes
         data = data.filter(req => req.submittedBy === 'John Doe');
     } else if (selectedTab === 'answered') {
         data = data.filter(req => req.status === 'Respondido');
     }
 
-    // 2. Apply sidebar filters to the already tab-filtered data
     if (activeFilters.status.length > 0) {
         data = data.filter(req => activeFilters.status.includes(req.status));
     }
     if (activeFilters.privacy.length > 0) {
         data = data.filter(req => activeFilters.privacy.includes(req.privacy));
     }
-    // Group filter logic would go here if data supported it
 
     setFilteredData(data);
   }, [activeFilters, selectedTab]);
@@ -101,10 +97,10 @@ export default function PrayerRequestsPage() {
     });
   };
 
-  // Re-apply filters whenever the tab or filters change and the button is clicked.
   React.useEffect(() => {
     applyFilters();
-  }, [applyFilters]);
+  }, [activeFilters, applyFilters]);
+
 
   const renderTableBody = (data: PrayerRequest[]) => (
     <TableBody>
