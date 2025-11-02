@@ -118,6 +118,16 @@ export function AppSidebar() {
                     <Plus className="h-4 w-4" />
                     <span>New Role</span>
                 </Link>
+                <Link
+                    href="/settings/users"
+                    className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
+                    pathname === '/settings/users' && 'bg-accent text-accent-foreground font-medium'
+                    )}
+                >
+                    <Users className="h-4 w-4" />
+                    <span>Users</span>
+                </Link>
             </CollapsibleContent>
         </Collapsible>
         {bottomNavItems.map((item) => (
