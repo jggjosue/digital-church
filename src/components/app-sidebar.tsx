@@ -15,7 +15,10 @@ import {
   UserCog,
   Plus,
   Church,
-  DollarSign
+  DollarSign,
+  PiggyBank,
+  Banknote,
+  ClipboardList
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -42,7 +45,6 @@ const navItems = [
   { href: '/events', icon: Calendar, label: 'Events' },
   { href: '/donations', icon: Heart, label: 'Donations' },
   { href: '/sermons', icon: Video, label: 'Sermons & Media' },
-  { href: '/financial', icon: DollarSign, label: 'Financial' },
   { href: '/reports', icon: FileText, label: 'Reports' },
 ];
 
@@ -53,6 +55,7 @@ const bottomNavItems = [
 export function AppSidebar() {
   const pathname = usePathname();
   const [isSettingsOpen, setIsSettingsOpen] = React.useState(pathname.startsWith('/settings'));
+  const [isFinancialOpen, setIsFinancialOpen] = React.useState(pathname.startsWith('/financial'));
 
 
   return (
@@ -83,6 +86,78 @@ export function AppSidebar() {
             <span>{item.label}</span>
           </Link>
         ))}
+         <Collapsible open={isFinancialOpen} onOpenChange={setIsFinancialOpen}>
+            <CollapsibleTrigger className="w-full">
+                <div
+                className={cn(
+                    'flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
+                    isFinancialOpen && 'bg-accent text-accent-foreground font-medium'
+                )}
+                >
+                    <div className="flex items-center gap-3">
+                        <DollarSign className="h-4 w-4" />
+                        <span>Financial</span>
+                    </div>
+                    <ChevronDown className={cn('h-4 w-4 transition-transform', isFinancialOpen && 'rotate-180')} />
+                </div>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-1 pt-1">
+                <Link
+                    href="/financial"
+                    className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
+                    pathname === '/financial' && 'bg-accent text-accent-foreground font-medium'
+                    )}
+                >
+                    <LayoutDashboard className="h-4 w-4" />
+                    <span>Financial Reporting</span>
+                </Link>
+                <Link
+                    href="/financial/income-expense"
+                    className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
+                    pathname === '/financial/income-expense' && 'bg-accent text-accent-foreground font-medium'
+                    )}
+                >
+                    <FileText className="h-4 w-4" />
+                    <span>Income & Expense</span>
+                </Link>
+                <Link
+                    href="/financial/budget"
+                    className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
+                    pathname === '/financial/budget' && 'bg-accent text-accent-foreground font-medium'
+                    )}
+                >
+                    <PiggyBank className="h-4 w-4" />
+                    <span>Budget Report</span>
+                </Link>
+                <Link
+                    href="/financial/funds"
+                    className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
+                    pathname === '/financial/funds' && 'bg-accent text-accent-foreground font-medium'
+                    )}
+                >
+                    <Banknote className="h-4 w-4" />
+                    <span>Fund Balances</span>
+                </Link>
+                <Link
+                    href="/financial/donations"
+                    className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
+                    pathname === '/financial/donations' && 'bg-accent text-accent-foreground font-medium'
+                    )}
+                >
+                    <ClipboardList className="h-4 w-4" />
+                    <span>Donation Reports</span>
+                </Link>
+                <Button variant="ghost" className="w-full justify-start pl-10">
+                    <Plus className="mr-2 h-4 w-4" />
+                    New Transaction
+                </Button>
+            </CollapsibleContent>
+        </Collapsible>
       </nav>
       <div className="mt-auto space-y-1 p-4">
         <Collapsible open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
@@ -109,7 +184,7 @@ export function AppSidebar() {
                     )}
                 >
                     <UserCog className="h-4 w-4" />
-                    <span>Roles &amp; Permisos</span>
+                    <span>Roles & Permisos</span>
                 </Link>
                 <Link
                     href="/settings/new"

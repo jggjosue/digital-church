@@ -5,11 +5,6 @@ import {
   Download,
   Search,
   Plus,
-  LayoutDashboard,
-  FileText,
-  PiggyBank,
-  Banknote,
-  ClipboardList,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -28,7 +23,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import {
   LineChart,
@@ -41,53 +35,6 @@ import {
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { incomeExpenseData, budgetSpendingData, recentTransactions } from '@/lib/data';
 
-const FinancialSidebar = () => {
-  const pathname = '/financial'; // Mock pathname for active link styling
-  const navItems = [
-    { href: '/financial', icon: LayoutDashboard, label: 'Dashboard' },
-    {
-      href: '/financial/income-expense',
-      icon: FileText,
-      label: 'Income & Expense Statement',
-    },
-    { href: '/financial/budget', icon: PiggyBank, label: 'Budget Report' },
-    { href: '/financial/funds', icon: Banknote, label: 'Fund Balances' },
-    {
-      href: '/financial/donations',
-      icon: ClipboardList,
-      label: 'Donation Reports',
-    },
-  ];
-
-  return (
-    <aside className="w-64 flex-shrink-0 border-r bg-background p-4">
-      <div className="flex h-16 items-center gap-3 px-2">
-        <h2 className="font-semibold text-lg">Grace Fellowship</h2>
-      </div>
-      <nav className="flex-1 space-y-1">
-        {navItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={cn(
-              'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
-              pathname === item.href && 'bg-accent text-accent-foreground font-medium'
-            )}
-          >
-            <item.icon className="h-4 w-4" />
-            <span>{item.label}</span>
-          </Link>
-        ))}
-      </nav>
-      <div className="mt-auto p-2">
-        <Button className="w-full">
-          <Plus className="mr-2 h-4 w-4" />
-          New Transaction
-        </Button>
-      </div>
-    </aside>
-  );
-};
 
 const chartConfig = {
   net: {
@@ -107,7 +54,6 @@ const chartConfig = {
 export default function FinancialPage() {
   return (
     <div className="flex min-h-screen w-full bg-muted/20">
-      <FinancialSidebar />
       <main className="flex-1 space-y-6 p-8">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold tracking-tight">
