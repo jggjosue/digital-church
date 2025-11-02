@@ -4,26 +4,26 @@
 
 @layer base {
   :root {
-    --background: 240 10% 97%;
+    --background: 202 50% 98%; /* #F9FBFC - Off-white with a nearly desaturated blue hue */
     --foreground: 240 6% 10%;
     --card: 0 0% 100%;
     --card-foreground: 240 6% 10%;
     --popover: 0 0% 100%;
     --popover-foreground: 240 6% 10%;
-    --primary: 217 91% 60%;
-    --primary-foreground: 0 0% 98%;
+    --primary: 197 51% 85%; /* #B1D4E0 - Light blue */
+    --primary-foreground: 240 6% 10%;
     --secondary: 240 5% 96%;
     --secondary-foreground: 240 6% 10%;
     --muted: 240 5% 90%;
     --muted-foreground: 240 4% 46%;
-    --accent: 240 5% 96%;
-    --accent-foreground: 217 91% 60%;
+    --accent: 197 32% 66%; /* #8CB4C2 - Slightly darker, desaturated blue */
+    --accent-foreground: 240 6% 10%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
     --border: 240 6% 90%;
     --input: 240 6% 90%;
-    --ring: 217 91% 60%;
-    --chart-1: 217 91% 60%;
+    --ring: 197 51% 85%;
+    --chart-1: 197 51% 85%;
     --chart-2: 22 91% 60%;
     --chart-3: 161 91% 60%;
     --chart-4: 280 91% 60%;
@@ -37,20 +37,20 @@
     --card-foreground: 0 0% 98%;
     --popover: 240 4% 12%;
     --popover-foreground: 0 0% 98%;
-    --primary: 217 91% 60%;
-    --primary-foreground: 0 0% 98%;
+    --primary: 197 51% 85%;
+    --primary-foreground: 240 6% 10%;
     --secondary: 240 4% 16%;
     --secondary-foreground: 0 0% 98%;
     --muted: 240 4% 20%;
     --muted-foreground: 240 4% 65%;
-    --accent: 240 4% 16%;
+    --accent: 197 32% 66%;
     --accent-foreground: 0 0% 98%;
     --destructive: 0 63% 31%;
     --destructive-foreground: 0 0% 98%;
     --border: 240 4% 20%;
     --input: 240 4% 20%;
-    --ring: 217 91% 60%;
-    --chart-1: 217 91% 60%;
+    --ring: 197 51% 85%;
+    --chart-1: 197 51% 85%;
     --chart-2: 22 91% 60%;
     --chart-3: 161 91% 60%;
     --chart-4: 280 91% 60%;
@@ -64,5 +64,8 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-sans);
   }
 }
