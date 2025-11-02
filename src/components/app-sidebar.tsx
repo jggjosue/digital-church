@@ -18,7 +18,8 @@ import {
   DollarSign,
   PiggyBank,
   Banknote,
-  ClipboardList
+  ClipboardList,
+  HandHeart,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -44,6 +45,7 @@ const navItems = [
   { href: '/attendance', icon: BarChart, label: 'Asistencia' },
   { href: '/events', icon: Calendar, label: 'Eventos' },
   { href: '/donations', icon: Heart, label: 'Donaciones' },
+  { href: '/prayer', icon: HandHeart, label: 'Peticiones de Oración' },
   { href: '/sermons', icon: Video, label: 'Sermones y Medios' },
   { href: '/reports', icon: FileText, label: 'Reportes' },
 ];

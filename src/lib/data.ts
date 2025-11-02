@@ -684,3 +684,36 @@ export const membersData = [
         { id: 5, donorName: 'Donante Anónimo', donorEmail: 'Donación en Efectivo', date: '18 de Ago, 2023', fund: 'Fondo de Benevolencia', paymentMethod: 'Efectivo', amount: 20.00 },
     ]
   }
+
+  export const prayerRequestsData = [
+    {
+      id: 1,
+      title: 'Sanidad para la Madre de Sarah',
+      description: 'Orando por la recuperación de una cirugía.',
+      submittedBy: 'John Doe',
+      submittedByAvatar: 'https://picsum.photos/seed/u1/40/40',
+      date: '26 de Oct, 2023',
+      status: 'Activo',
+      privacy: 'Público',
+    },
+    {
+      id: 2,
+      title: 'Guía para un Nuevo Trabajo',
+      description: 'Pidiendo sabiduría y claridad.',
+      submittedBy: 'Jane Smith',
+      submittedByAvatar: 'https://picsum.photos/seed/u2/40/40',
+      date: '25 de Oct, 2023',
+      status: 'Activo',
+      privacy: 'Solo Personal',
+    },
+    {
+      id: 3,
+      title: 'Alabanza por el nuevo nieto',
+      description: 'El bebé y la madre están sanos.',
+      submittedBy: 'Robert Brown',
+      submittedByAvatar: 'https://picsum.photos/seed/u3/40/40',
+      date: '22 de Oct, 2023',
+      status: 'Respondido',
+      privacy: 'Público',
+    },
+  ];
