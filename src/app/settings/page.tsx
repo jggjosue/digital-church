@@ -1,8 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Plus, Edit, Trash2 } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Plus, Search, ChevronDown, Check, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -11,92 +10,189 @@ import {
   CardTitle,
   CardDescription,
 } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
+import { Checkbox } from '@/components/ui/checkbox';
 import { rolesData } from '@/lib/data';
 
 type Role = (typeof rolesData)[0];
 
-const OverlappingAvatars = ({ users }: { users: Role['users'] }) => {
-    if (typeof users === 'number') {
-        return <span className="text-sm text-muted-foreground">{users} users</span>;
-    }
-
-    const visibleUsers = users.slice(0, 3);
-    const hiddenUsersCount = users.length - visibleUsers.length;
-
-    return (
-        <div className="flex items-center">
-            {visibleUsers.map((user, index) => (
-                <Avatar key={user.id} className={`h-8 w-8 border-2 border-background ${index > 0 ? '-ml-3' : ''}`}>
-                    <AvatarImage src={user.avatarUrl} alt={user.name} />
-                    <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-                </Avatar>
-            ))}
-            {hiddenUsersCount > 0 && (
-                 <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-semibold -ml-3 border-2 border-background">
-                    +{hiddenUsersCount}
-                </div>
-            )}
-        </div>
-    );
+const permissions = {
+    'Member Management': [
+        'View Members',
+        'Create Members',
+        'Edit Members',
+        'Delete Members',
+        'Export Data',
+    ],
+    'Donations & Financials': [
+        'View Donations',
+        'Enter Donations',
+        'Manage Pledges',
+        'Generate Statements',
+    ],
+    'System Settings': [
+        'Manage Roles',
+        'Manage General Settings',
+        'Manage Integrations',
+    ],
 };
 
 
 export default function SettingsPage() {
-  return (
-    <main className="flex-1 bg-muted/20 p-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Roles & Permissions</h1>
-          <p className="text-muted-foreground">
-            Define and manage user roles, assign permissions, and control access levels.
-          </p>
-        </div>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" /> Add New Role
-        </Button>
-      </div>
+    const [selectedRole, setSelectedRole] = React.useState<Role>(rolesData[0]);
 
-      <Card className="mt-6">
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="pl-6">ROLE NAME</TableHead>
-                <TableHead>DESCRIPTION</TableHead>
-                <TableHead>USERS</TableHead>
-                <TableHead className="text-right pr-6">ACTIONS</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {rolesData.map((role) => (
-                <TableRow key={role.id}>
-                  <TableCell className="font-medium pl-6">{role.name}</TableCell>
-                  <TableCell className="text-muted-foreground">{role.description}</TableCell>
-                  <TableCell>
-                    <OverlappingAvatars users={role.users} />
-                  </TableCell>
-                  <TableCell className="text-right pr-6">
-                    <Button variant="ghost" size="icon">
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive/80">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-    </main>
-  );
+    return (
+        <main className="flex-1 bg-muted/20 p-8">
+            <div className="flex items-center justify-between">
+                <div>
+                    <h1 className="text-3xl font-bold">Roles & Permissions</h1>
+                    <p className="text-muted-foreground">
+                        Define and manage user roles, assign permissions, and control access levels.
+                    </p>
+                </div>
+            </div>
+
+            <div className="mt-6 grid grid-cols-1 gap-8 lg:grid-cols-3">
+                {/* Left Column: Role List */}
+                <div className="lg:col-span-1">
+                    <div className='flex flex-col gap-4'>
+                        <Button>
+                            <Plus className="mr-2 h-4 w-4" /> Add New Role
+                        </Button>
+                        <div className="relative">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input placeholder="Search roles..." className="pl-9" />
+                        </div>
+                        <RadioGroup 
+                            defaultValue={selectedRole.name} 
+                            className="space-y-1"
+                            onValueChange={(value) => setSelectedRole(rolesData.find(r => r.name === value) || rolesData[0])}
+                        >
+                            {rolesData.map((role) => (
+                                <div key={role.id} className={`flex items-center space-x-2 rounded-md p-3 transition-colors ${selectedRole.id === role.id ? 'bg-accent border-primary' : 'hover:bg-accent/50'}`}>
+                                    <RadioGroupItem value={role.name} id={`role-${role.id}`} />
+                                    <Label htmlFor={`role-${role.id}`} className="font-medium cursor-pointer flex-1">{role.name}</Label>
+                                </div>
+                            ))}
+                        </RadioGroup>
+                    </div>
+                </div>
+
+                {/* Right Column: Role Details & Permissions */}
+                <div className="lg:col-span-2">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle className='text-2xl'>{selectedRole.name}</CardTitle>
+                            <CardDescription>
+                                {selectedRole.description} {selectedRole.name === 'Super Administrator' && 'This role should be assigned with caution.'}
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <Accordion type="multiple" defaultValue={['item-1']} className="w-full">
+                                <AccordionItem value="item-1">
+                                    <AccordionTrigger className='font-semibold'>Member Management</AccordionTrigger>
+                                    <AccordionContent>
+                                        <div className="grid grid-cols-2 gap-4 p-4">
+                                            <div className="flex items-center space-x-2">
+                                                <Checkbox id="select-all-members" />
+                                                <label
+                                                    htmlFor="select-all-members"
+                                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                                >
+                                                   Select All
+                                                </label>
+                                            </div>
+                                            {permissions['Member Management'].map(perm => (
+                                                <div key={perm} className="flex items-center space-x-2">
+                                                    <Checkbox id={perm.toLowerCase().replace(/\s/g, '-')} checked={selectedRole.name === 'Super Administrator'}/>
+                                                    <label
+                                                        htmlFor={perm.toLowerCase().replace(/\s/g, '-')}
+                                                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                                    >
+                                                        {perm}
+                                                    </label>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </AccordionContent>
+                                </AccordionItem>
+                                <AccordionItem value="item-2">
+                                    <AccordionTrigger className='font-semibold'>Donations & Financials</AccordionTrigger>
+                                    <AccordionContent>
+                                        <div className="grid grid-cols-2 gap-4 p-4">
+                                             <div className="flex items-center space-x-2">
+                                                <Checkbox id="select-all-donations" />
+                                                <label
+                                                    htmlFor="select-all-donations"
+                                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                                >
+                                                   Select All
+                                                </label>
+                                            </div>
+                                            {permissions['Donations & Financials'].map(perm => (
+                                                <div key={perm} className="flex items-center space-x-2">
+                                                    <Checkbox id={perm.toLowerCase().replace(/\s/g, '-')} checked={selectedRole.name === 'Super Administrator'}/>
+                                                    <label
+                                                        htmlFor={perm.toLowerCase().replace(/\s/g, '-')}
+                                                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                                    >
+                                                        {perm}
+                                                    </label>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </AccordionContent>
+                                </AccordionItem>
+                                <AccordionItem value="item-3">
+                                    <AccordionTrigger className='font-semibold'>System Settings</AccordionTrigger>
+                                    <AccordionContent>
+                                    <div className="grid grid-cols-2 gap-4 p-4">
+                                            <div className="flex items-center space-x-2">
+                                                <Checkbox id="select-all-system"/>
+                                                <label
+                                                    htmlFor="select-all-system"
+                                                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                                >
+                                                   Select All
+                                                </label>
+                                            </div>
+                                            {permissions['System Settings'].map(perm => (
+                                                <div key={perm} className="flex items-center space-x-2">
+                                                    <Checkbox id={perm.toLowerCase().replace(/\s/g, '-')} checked={selectedRole.name === 'Super Administrator'} />
+                                                    <label
+                                                        htmlFor={perm.toLowerCase().replace(/\s/g, '-')}
+                                                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                                    >
+                                                        {perm}
+                                                    </label>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </AccordionContent>
+                                </AccordionItem>
+                            </Accordion>
+                            <div className="mt-8 flex justify-between items-center">
+                                <Button variant="link" className="text-destructive p-0 hover:text-destructive/80">
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Delete Role
+                                </Button>
+                                <div className="flex gap-2">
+                                    <Button variant="outline">Cancel</Button>
+                                    <Button>Save Changes</Button>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            </div>
+        </main>
+    );
 }
