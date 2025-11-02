@@ -501,3 +501,17 @@ export const membersData = [
       users: 350,
     },
   ];
+
+  export const allUsers = [
+    { id: 1, name: 'Admin User', email: 'admin@example.com', role: 'Super Administrator', avatarUrl: 'https://picsum.photos/seed/u1/40/40' },
+    { id: 2, name: 'Pastor John', email: 'pastor.j@example.com', role: 'Pastor', avatarUrl: 'https://picsum.photos/seed/u7/40/40' },
+    { id: 3, name: 'Sarah Miller', email: 'sarah.m@example.com', role: 'Office Staff', avatarUrl: 'https://picsum.photos/seed/u9/40/40' },
+    { id: 4, name: 'David Chen', email: 'david.c@example.com', role: 'Small Group Leader', avatarUrl: 'https://picsum.photos/seed/u19/40/40' },
+    { id: 5, name: 'Regular Member', email: 'member@example.com', role: 'Member', avatarUrl: 'https://picsum.photos/seed/u34/40/40' },
+    { id: 6, name: 'Betty Rubble', email: 'betty@example.com', role: 'Office Staff', avatarUrl: 'https://picsum.photos/seed/u10/40/40' },
+    { id: 7, name: 'Fred Flintstone', email: 'fred@example.com', role: 'Small Group Leader', avatarUrl: 'https://picsum.photos/seed/u20/40/40' },
+    { id: 8, name: 'Wilma Flintstone', email: 'wilma@example.com', role: 'Small Group Leader', avatarUrl: 'https://picsum.photos/seed/u21/40/40' },
+    { id: 9, name: 'Barney Rubble', email: 'barney@example.com', role: 'Member', avatarUrl: 'https://picsum.photos/seed/u35/40/40' },
+    { id: 10, name: 'Pebbles Flintstone', email: 'pebbles@example.com', role: 'Member', avatarUrl: 'https://picsum.photos/seed/u36/40/40' },
+    { id: 11, name: 'Bamm-Bamm Rubble', email: 'bammbamm@example.com', role: 'Member', avatarUrl: 'https://picsum.photos/seed/u37/40/40' },
+  ];
