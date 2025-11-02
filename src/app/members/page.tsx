@@ -53,6 +53,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 
 
 type Member = (typeof membersData)[0];
@@ -144,6 +145,8 @@ export default function MembersPage() {
   });
   const [filteredMembers, setFilteredMembers] = React.useState<Member[]>(membersData);
   const [memberToDelete, setMemberToDelete] = React.useState<Member | null>(null);
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const itemsPerPage = 20;
 
   const handleFilterChange = (key: string, value: any) => {
     setFilters(prev => ({...prev, [key]: value}));
@@ -174,6 +177,7 @@ export default function MembersPage() {
     }
 
     setFilteredMembers(data);
+    setCurrentPage(1); // Reset to first page on filter change
   }, [searchTerm, filters]);
 
 
@@ -185,6 +189,7 @@ export default function MembersPage() {
     });
     setSearchTerm('');
     setFilteredMembers(membersData);
+    setCurrentPage(1);
   };
   
   React.useEffect(() => {
@@ -193,7 +198,7 @@ export default function MembersPage() {
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelected(filteredMembers.map((m) => m.id));
+      setSelected(paginatedMembers.map((m) => m.id));
     } else {
       setSelected([]);
     }
@@ -214,6 +219,20 @@ export default function MembersPage() {
         setMemberToDelete(null);
     }
   };
+
+  const totalPages = Math.ceil(filteredMembers.length / itemsPerPage);
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const paginatedMembers = filteredMembers.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
 
   return (
     <AlertDialog>
@@ -316,7 +335,7 @@ export default function MembersPage() {
                             <Checkbox
                                 checked={
                                 selected.length > 0 &&
-                                selected.length === filteredMembers.length
+                                selected.length === paginatedMembers.length
                                 }
                                 onCheckedChange={(checked) =>
                                 handleSelectAll(!!checked)
@@ -331,7 +350,7 @@ export default function MembersPage() {
                         </TableRow>
                         </TableHeader>
                         <TableBody>
-                        {filteredMembers.map((member) => (
+                        {paginatedMembers.map((member) => (
                             <TableRow key={member.id}>
                             <TableCell>
                                 <Checkbox
@@ -416,7 +435,7 @@ export default function MembersPage() {
                     </div>
                     ) : view === 'card' && filteredMembers.length > 0 ? (
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 flex-1">
-                        {filteredMembers.map((member) => (
+                        {paginatedMembers.map((member) => (
                         <Card key={member.id} className="relative flex flex-col">
                             <Checkbox
                                 checked={selected.includes(member.id)}
@@ -461,6 +480,28 @@ export default function MembersPage() {
                         ))}
                     </div>
                     ) : null}
+                     <div className="flex flex-col sm:flex-row items-center justify-between pt-4 gap-4">
+                        <div className="text-sm text-muted-foreground">
+                            Mostrando {paginatedMembers.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} a {Math.min(currentPage * itemsPerPage, filteredMembers.length)} de {filteredMembers.length} resultados
+                        </div>
+                        <Pagination>
+                            <PaginationContent>
+                            <PaginationItem>
+                                <PaginationPrevious href="#" onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }} />
+                            </PaginationItem>
+                            {[...Array(totalPages)].map((_, i) => (
+                                <PaginationItem key={i}>
+                                <PaginationLink href="#" isActive={i + 1 === currentPage} onClick={(e) => { e.preventDefault(); handlePageChange(i + 1); }}>
+                                    {i + 1}
+                                </PaginationLink>
+                                </PaginationItem>
+                            ))}
+                            <PaginationItem>
+                                <PaginationNext href="#" onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }}/>
+                            </PaginationItem>
+                            </PaginationContent>
+                        </Pagination>
+                    </div>
                     </CardContent>
                 </Card>
                 </div>
