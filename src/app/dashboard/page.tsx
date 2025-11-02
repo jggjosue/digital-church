@@ -61,14 +61,14 @@ export default function DashboardPage() {
           <TotalMinistries />
           <TotalVolunteers />
         </div>
+        <div className="grid grid-cols-1 gap-6">
+          <GivingTrends timeRange={timeRange} />
+        </div>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
           <div className="lg:col-span-2">
-            <GivingTrends timeRange={timeRange} />
-          </div>
-          <div className="lg:col-span-1">
             <MemberDemographics />
           </div>
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-3">
             <div className="grid gap-6">
               <UpcomingEvents />
               <PrayerRequests />
