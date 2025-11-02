@@ -9,7 +9,8 @@ import {
   Settings,
   Users,
   HelpCircle,
-  FileText
+  FileText,
+  Video
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -32,6 +33,7 @@ const navItems = [
   { href: '/attendance', icon: BarChart, label: 'Attendance' },
   { href: '/events', icon: Calendar, label: 'Events' },
   { href: '/donations', icon: Heart, label: 'Donations' },
+  { href: '/sermons', icon: Video, label: 'Sermons & Media' },
   { href: '/facilities', icon: Building, label: 'Facilities' },
   { href: '/reports', icon: FileText, label: 'Reports' },
 ];

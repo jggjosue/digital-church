@@ -409,3 +409,38 @@ export const membersData = [
         adminNotes: 'Great with the preschoolers.',
       },
   ];
+
+  export const sermonsData = [
+    {
+        id: 1,
+        title: 'The Power of Forgiveness',
+        speaker: 'Pastor John Doe',
+        series: 'Gospel of John',
+        date: 'Oct 29, 2023',
+        status: 'Published',
+    },
+    {
+        id: 2,
+        title: 'Faith in Action',
+        speaker: 'Pastor Jane Smith',
+        series: 'Book of James',
+        date: 'Nov 05, 2023',
+        status: 'Scheduled',
+    },
+    {
+        id: 3,
+        title: 'Living with Purpose',
+        speaker: 'Guest Speaker Mark',
+        series: 'Special Event',
+        date: 'Oct 22, 2023',
+        status: 'Draft',
+    },
+    {
+        id: 4,
+        title: 'The Prodigal Son',
+        speaker: 'Pastor John Doe',
+        series: 'Parables of Jesus',
+        date: 'Sep 17, 2023',
+        status: 'Archived',
+    },
+  ];
