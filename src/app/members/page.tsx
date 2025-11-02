@@ -11,6 +11,7 @@ import {
   Search,
   UserPlus,
   SlidersHorizontal,
+  Trash2,
 } from 'lucide-react';
 import {
   Avatar,
@@ -145,6 +146,7 @@ export default function MembersPage() {
   });
   const [filteredMembers, setFilteredMembers] = React.useState<Member[]>(membersData);
   const [memberToDelete, setMemberToDelete] = React.useState<Member | null>(null);
+  const [isBulkDelete, setIsBulkDelete] = React.useState(false);
   const [currentPage, setCurrentPage] = React.useState(1);
   const itemsPerPage = 20;
 
@@ -212,12 +214,16 @@ export default function MembersPage() {
     }
   };
 
-  const handleDeleteMember = () => {
-    if (memberToDelete) {
+  const handleDelete = () => {
+    if (isBulkDelete) {
+        setFilteredMembers(prev => prev.filter(m => !selected.includes(m.id)));
+        setSelected([]);
+    } else if (memberToDelete) {
         setFilteredMembers(prev => prev.filter(m => m.id !== memberToDelete.id));
         setSelected(prev => prev.filter(id => id !== memberToDelete.id));
-        setMemberToDelete(null);
     }
+    setMemberToDelete(null);
+    setIsBulkDelete(false);
   };
 
   const totalPages = Math.ceil(filteredMembers.length / itemsPerPage);
@@ -313,6 +319,11 @@ export default function MembersPage() {
                             <Button variant="ghost" size="icon" className="h-8 w-8">
                             <UserPlus className="h-4 w-4" />
                             </Button>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="destructive-ghost" size="icon" className="h-8 w-8" onClick={() => setIsBulkDelete(true)}>
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </AlertDialogTrigger>
                             <Button size="sm" asChild>
                             <Link href="/members/bulk-actions">Acciones Masivas</Link>
                             </Button>
@@ -422,7 +433,7 @@ export default function MembersPage() {
                                     <DropdownMenuContent>
                                     <DropdownMenuItem asChild><Link href={`/members/${member.id}/edit`}>Editar</Link></DropdownMenuItem>
                                     <AlertDialogTrigger asChild>
-                                        <DropdownMenuItem onSelect={(e) => e.preventDefault()} onClick={() => setMemberToDelete(member)}>Eliminar</DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={(e) => {e.preventDefault(); setIsBulkDelete(false); setMemberToDelete(member);}}>Eliminar</DropdownMenuItem>
                                     </AlertDialogTrigger>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
@@ -454,7 +465,7 @@ export default function MembersPage() {
                                     <DropdownMenuContent>
                                     <DropdownMenuItem asChild><Link href={`/members/${member.id}/edit`}>Editar</Link></DropdownMenuItem>
                                     <AlertDialogTrigger asChild>
-                                        <DropdownMenuItem onSelect={(e) => e.preventDefault()} onClick={() => setMemberToDelete(member)}>Eliminar</DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={(e) => {e.preventDefault(); setIsBulkDelete(false); setMemberToDelete(member);}}>Eliminar</DropdownMenuItem>
                                     </AlertDialogTrigger>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
@@ -512,12 +523,15 @@ export default function MembersPage() {
             <AlertDialogHeader>
                 <AlertDialogTitle>¿Estás absolutamente seguro?</AlertDialogTitle>
                 <AlertDialogDescription>
-                    Esta acción no se puede deshacer. Esto eliminará permanentemente al miembro <span className='font-bold'>{memberToDelete?.name}</span> y eliminará sus datos de nuestros servidores.
+                    {isBulkDelete 
+                        ? `Esta acción no se puede deshacer. Esto eliminará permanentemente a los ${selected.length} miembros seleccionados.`
+                        : `Esta acción no se puede deshacer. Esto eliminará permanentemente al miembro ${memberToDelete?.name} y eliminará sus datos de nuestros servidores.`
+                    }
                 </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-                <AlertDialogCancel onClick={() => setMemberToDelete(null)}>Cancelar</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDeleteMember}>Continuar</AlertDialogAction>
+                <AlertDialogCancel onClick={() => {setMemberToDelete(null); setIsBulkDelete(false)}}>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete}>Continuar</AlertDialogAction>
             </AlertDialogFooter>
         </AlertDialogContent>
     </AlertDialog>
