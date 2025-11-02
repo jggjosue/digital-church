@@ -64,8 +64,8 @@ export function GivingTrends({ timeRange }: GivingTrendsProps) {
         <div className="text-3xl font-bold">${totalGiving.toLocaleString()} <span className="text-sm font-normal text-green-600">+4.2%</span></div>
       </CardHeader>
       <CardContent>
-        <div className="h-[200px] w-full">
-          <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
+        <div className="h-[250px] w-full">
+          <ChartContainer config={chartConfig} className="min-h-[250px] w-full">
             <BarChart accessibilityLayer data={filteredData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
               <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />
               <ChartTooltip
