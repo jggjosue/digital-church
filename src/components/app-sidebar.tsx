@@ -13,7 +13,8 @@ import {
   Video,
   ChevronDown,
   UserCog,
-  Plus
+  Plus,
+  Church
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -34,6 +35,7 @@ const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/members', icon: Users, label: 'People' },
   { href: '/groups', icon: Users, label: 'Groups' },
+  { href: '/ministries', icon: Church, label: 'Ministries' },
   { href: '/volunteers', icon: Users, label: 'Volunteers' },
   { href: '/attendance', icon: BarChart, label: 'Attendance' },
   { href: '/events', icon: Calendar, label: 'Events' },

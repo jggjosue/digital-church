@@ -515,3 +515,54 @@ export const membersData = [
     { id: 10, name: 'Pebbles Flintstone', email: 'pebbles@example.com', role: 'Member', avatarUrl: 'https://picsum.photos/seed/u36/40/40' },
     { id: 11, name: 'Bamm-Bamm Rubble', email: 'bammbamm@example.com', role: 'Member', avatarUrl: 'https://picsum.photos/seed/u37/40/40' },
   ];
+
+  export const ministriesData = [
+    {
+      id: 1,
+      name: 'Worship Team',
+      description: 'Leads the congregation in worship during services.',
+      members: 15,
+      leader: 'John Doe',
+      memberAvatars: [
+        'https://picsum.photos/seed/m1/40/40',
+        'https://picsum.photos/seed/m2/40/40',
+        'https://picsum.photos/seed/m3/40/40',
+      ],
+    },
+    {
+      id: 2,
+      name: 'Youth Group',
+      description: 'Mentoring and activities for teens.',
+      members: 32,
+      leader: 'Jane Smith',
+      memberAvatars: [
+        'https://picsum.photos/seed/m4/40/40',
+        'https://picsum.photos/seed/m5/40/40',
+        'https://picsum.photos/seed/m6/40/40',
+      ],
+    },
+    {
+      id: 3,
+      name: 'Community Outreach',
+      description: 'Serving the local community through various projects.',
+      members: 25,
+      leader: 'Robert Brown',
+      memberAvatars: [
+        'https://picsum.photos/seed/m7/40/40',
+        'https://picsum.photos/seed/m8/40/40',
+        'https://picsum.photos/seed/m9/40/40',
+      ],
+    },
+    {
+        id: 4,
+        name: "Children's Church",
+        description: 'Sunday school and activities for children.',
+        members: 18,
+        leader: 'Susan White',
+        memberAvatars: [
+            'https://picsum.photos/seed/m10/40/40',
+            'https://picsum.photos/seed/m11/40/40',
+            'https://picsum.photos/seed/m12/40/40',
+        ],
+    }
+  ];
