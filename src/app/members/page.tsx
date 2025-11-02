@@ -52,16 +52,16 @@ import { membersData } from '@/lib/data';
 type Member = (typeof membersData)[0];
 
 const statusColors = {
-  Active: 'bg-green-500',
-  Visitor: 'bg-yellow-500',
-  Inactive: 'bg-red-500',
+  Activo: 'bg-green-500',
+  Visitante: 'bg-yellow-500',
+  Inactivo: 'bg-red-500',
 };
 
 const groupColors = {
-  Volunteers: 'bg-blue-100 text-blue-800',
-  Choir: 'bg-yellow-100 text-yellow-800',
-  'Youth Group': 'bg-purple-100 text-purple-800',
-  'New Member': 'bg-green-100 text-green-800',
+  Voluntarios: 'bg-blue-100 text-blue-800',
+  Coro: 'bg-yellow-100 text-yellow-800',
+  'Grupo de Jóvenes': 'bg-purple-100 text-purple-800',
+  'Nuevo Miembro': 'bg-green-100 text-green-800',
 };
 
 export default function MembersPage() {
@@ -87,72 +87,71 @@ export default function MembersPage() {
   return (
     <div className="flex min-h-screen w-full">
       <aside className="w-80 border-r bg-background p-6">
-        <h2 className="text-lg font-semibold">Filters</h2>
+        <h2 className="text-lg font-semibold">Filtros</h2>
         <div className="mt-6 space-y-6">
           <div>
             <h3 className="text-sm font-medium text-muted-foreground">
-              Membership Status
+              Estado de Membresía
             </h3>
             <div className="mt-2 space-y-2">
               <div className="flex items-center gap-2">
                 <Checkbox id="active" />
                 <label htmlFor="active" className="text-sm">
-                  Active
+                  Activo
                 </label>
               </div>
               <div className="flex items-center gap-2">
                 <Checkbox id="visitor" />
                 <label htmlFor="visitor" className="text-sm">
-                  Visitor
+                  Visitante
                 </label>
               </div>
               <div className="flex items-center gap-2">
                 <Checkbox id="inactive" />
                 <label htmlFor="inactive" className="text-sm">
-                  Inactive
+                  Inactivo
                 </label>
               </div>
             </div>
           </div>
           <div>
             <h3 className="text-sm font-medium text-muted-foreground">
-              Groups
+              Grupos
             </h3>
             <Select>
               <SelectTrigger>
-                <SelectValue placeholder="All Groups" />
+                <SelectValue placeholder="Todos los Grupos" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Groups</SelectItem>
-                <SelectItem value="volunteers">Volunteers</SelectItem>
-                <SelectItem value="choir">Choir</SelectItem>
-                <SelectItem value="youth">Youth Group</SelectItem>
+                <SelectItem value="all">Todos los Grupos</SelectItem>
+                <SelectItem value="volunteers">Voluntarios</SelectItem>
+                <SelectItem value="choir">Coro</SelectItem>
+                <SelectItem value="youth">Grupo de Jóvenes</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div>
-            <h3 className="text-sm font-medium text-muted-foreground">Tags</h3>
-            <Input placeholder="e.g. Baptized, New" />
+            <h3 className="text-sm font-medium text-muted-foreground">Etiquetas</h3>
+            <Input placeholder="Ej. Bautizado, Nuevo" />
           </div>
         </div>
         <div className="mt-8 space-y-2">
-          <Button className="w-full">Apply Filters</Button>
+          <Button className="w-full">Aplicar Filtros</Button>
           <Button variant="ghost" className="w-full">
-            Clear All
+            Limpiar Todo
           </Button>
         </div>
       </aside>
       <main className="flex-1 p-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Member Directory</h1>
+            <h1 className="text-3xl font-bold">Directorio de Miembros</h1>
             <p className="text-muted-foreground">
-              Manage member profiles, contact information, and group
-              memberships.
+              Administre perfiles de miembros, información de contacto y membresías de grupos.
             </p>
           </div>
           <Button>
-            <Plus className="mr-2" /> Add New Member
+            <Plus className="mr-2" /> Añadir Nuevo Miembro
           </Button>
         </div>
         <div className="mt-6">
@@ -161,7 +160,7 @@ export default function MembersPage() {
               <div className="flex items-center justify-between gap-4">
                 <div className="relative w-full max-w-sm">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Search by name, email, or phone..." className="pl-9" />
+                  <Input placeholder="Buscar por nombre, email o teléfono..." className="pl-9" />
                 </div>
                 <div className="flex items-center gap-2">
                   <Button
@@ -185,8 +184,7 @@ export default function MembersPage() {
               {selected.length > 0 && (
                 <div className="mb-4 flex items-center justify-between rounded-lg bg-blue-50 p-3">
                   <div className="text-sm font-medium">
-                    {selected.length} item{selected.length > 1 ? 's' : ''}{' '}
-                    selected
+                    {selected.length} {selected.length > 1 ? 'elementos seleccionados' : 'elemento seleccionado'}
                   </div>
                   <div className="flex items-center gap-2">
                     <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -200,7 +198,7 @@ export default function MembersPage() {
                     </Button>
                     <div className="ml-4">
                       <Button size="sm">
-                        Bulk Actions
+                        Acciones Masivas
                       </Button>
                     </div>
                   </div>
@@ -222,11 +220,11 @@ export default function MembersPage() {
                          }
                        />
                      </TableHead>
-                     <TableHead>Name</TableHead>
-                     <TableHead>Contact</TableHead>
-                     <TableHead>Status</TableHead>
-                     <TableHead>Groups</TableHead>
-                     <TableHead>Actions</TableHead>
+                     <TableHead>Nombre</TableHead>
+                     <TableHead>Contacto</TableHead>
+                     <TableHead>Estado</TableHead>
+                     <TableHead>Grupos</TableHead>
+                     <TableHead>Acciones</TableHead>
                    </TableRow>
                  </TableHeader>
                  <TableBody>
@@ -290,7 +288,7 @@ export default function MembersPage() {
                        </TableCell>
                        <TableCell>
                          <div className="flex items-center">
-                           <Button variant="link">View</Button>
+                           <Button variant="link">Ver</Button>
                            <DropdownMenu>
                              <DropdownMenuTrigger asChild>
                                <Button variant="ghost" size="icon">
@@ -298,8 +296,8 @@ export default function MembersPage() {
                                </Button>
                              </DropdownMenuTrigger>
                              <DropdownMenuContent>
-                               <DropdownMenuItem>Edit</DropdownMenuItem>
-                               <DropdownMenuItem>Delete</DropdownMenuItem>
+                               <DropdownMenuItem>Editar</DropdownMenuItem>
+                               <DropdownMenuItem>Eliminar</DropdownMenuItem>
                              </DropdownMenuContent>
                            </DropdownMenu>
                          </div>
@@ -337,8 +335,8 @@ export default function MembersPage() {
                              </Button>
                            </DropdownMenuTrigger>
                            <DropdownMenuContent>
-                             <DropdownMenuItem>Edit</DropdownMenuItem>
-                             <DropdownMenuItem>Delete</DropdownMenuItem>
+                             <DropdownMenuItem>Editar</DropdownMenuItem>
+                             <DropdownMenuItem>Eliminar</DropdownMenuItem>
                            </DropdownMenuContent>
                          </DropdownMenu>
                       </CardHeader>

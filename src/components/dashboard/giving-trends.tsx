@@ -1,6 +1,6 @@
 "use client"
 import { Bar, BarChart, XAxis, YAxis } from "recharts"
-import type { TimeRange } from '@/app/page';
+import type { TimeRange } from '@/app/dashboard/page';
 
 import {
   Card,
@@ -34,20 +34,20 @@ const getTitle = (timeRange: TimeRange) => {
     switch (timeRange) {
         case 'this-week':
         case 'this-month':
-            return "Last 6 Months";
+            return "Últimos 6 Meses";
         case 'this-quarter':
-            return "Last Quarter";
+            return "Último Trimestre";
         case 'this-year':
-            return "This Year";
+            return "Este Año";
         default:
-             return "Last 6 Months";
+             return "Últimos 6 Meses";
     }
 }
 
 
 const chartConfig = {
   total: {
-    label: "Giving",
+    label: "Ofrendas",
     color: "hsl(var(--primary))",
   },
 }
@@ -59,7 +59,7 @@ export function GivingTrends({ timeRange }: GivingTrendsProps) {
   return (
     <Card className="h-full">
       <CardHeader>
-        <CardTitle>Giving Trends</CardTitle>
+        <CardTitle>Tendencias de Ofrendas</CardTitle>
         <CardDescription>{getTitle(timeRange)}</CardDescription>
         <div className="text-3xl font-bold">${totalGiving.toLocaleString()} <span className="text-sm font-normal text-green-600">+4.2%</span></div>
       </CardHeader>

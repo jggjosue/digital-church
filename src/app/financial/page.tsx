@@ -38,15 +38,15 @@ import { incomeExpenseData, budgetSpendingData, recentTransactions } from '@/lib
 
 const chartConfig = {
   net: {
-    label: 'Net',
+    label: 'Neto',
     color: 'hsl(var(--primary))',
   },
   spent: {
-    label: 'Spent',
+    label: 'Gastado',
     color: 'hsl(var(--primary))',
   },
   budget: {
-    label: 'Budget',
+    label: 'Presupuesto',
     color: 'hsl(var(--muted))',
   },
 };
@@ -57,20 +57,20 @@ export default function FinancialPage() {
       <main className="flex-1 space-y-6 p-8">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold tracking-tight">
-            Financial Reporting
+            Reportes Financieros
           </h1>
           <Button variant="outline">
             <Download className="mr-2 h-4 w-4" />
-            Export Report
+            Exportar Reporte
           </Button>
         </div>
 
         <Tabs defaultValue="year-to-date">
           <TabsList>
-            <TabsTrigger value="last-month">Last Month</TabsTrigger>
-            <TabsTrigger value="this-quarter">This Quarter</TabsTrigger>
-            <TabsTrigger value="year-to-date">Year to Date</TabsTrigger>
-            <TabsTrigger value="custom-range">Custom Range</TabsTrigger>
+            <TabsTrigger value="last-month">Mes Pasado</TabsTrigger>
+            <TabsTrigger value="this-quarter">Este Trimestre</TabsTrigger>
+            <TabsTrigger value="year-to-date">Año Actual</TabsTrigger>
+            <TabsTrigger value="custom-range">Rango Personalizado</TabsTrigger>
           </TabsList>
         </Tabs>
 
@@ -78,32 +78,32 @@ export default function FinancialPage() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">
-                Total Tithes & Offerings
+                Total de Diezmos y Ofrendas
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">$45,280.50</div>
-              <p className="text-xs text-green-600">+5.2% from last year</p>
+              <p className="text-xs text-green-600">+5.2% del año pasado</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium">
-                Total Expenses
+                Gastos Totales
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">$21,745.00</div>
-              <p className="text-xs text-red-600">+8.1% from last year</p>
+              <p className="text-xs text-red-600">+8.1% del año pasado</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium">Net Position</CardTitle>
+              <CardTitle className="text-sm font-medium">Posición Neta</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">$23,535.50</div>
-              <p className="text-xs text-green-600">+2.3% from last year</p>
+              <p className="text-xs text-green-600">+2.3% del año pasado</p>
             </CardContent>
           </Card>
         </div>
@@ -111,8 +111,8 @@ export default function FinancialPage() {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <Card>
             <CardHeader>
-              <CardTitle>Income vs. Expenses Over Time</CardTitle>
-              <p className="text-2xl font-bold text-muted-foreground">$23,535.50 <span className='text-lg'>Net</span></p>
+              <CardTitle>Ingresos vs. Gastos a lo Largo del Tiempo</CardTitle>
+              <p className="text-2xl font-bold text-muted-foreground">$23,535.50 <span className='text-lg'>Neto</span></p>
             </CardHeader>
             <CardContent>
               <ChartContainer config={chartConfig} className="min-h-[250px] w-full">
@@ -152,8 +152,8 @@ export default function FinancialPage() {
           </Card>
           <Card>
             <CardHeader>
-              <CardTitle>Budget vs. Actual Spending</CardTitle>
-               <p className="text-2xl font-bold text-muted-foreground">$15,800 <span className='text-lg'>Spent this month</span></p>
+              <CardTitle>Presupuesto vs. Gasto Real</CardTitle>
+               <p className="text-2xl font-bold text-muted-foreground">$15,800 <span className='text-lg'>Gastado este mes</span></p>
             </CardHeader>
             <CardContent>
               <ChartContainer config={chartConfig} className="min-h-[250px] w-full">
@@ -194,10 +194,10 @@ export default function FinancialPage() {
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle>Recent Transactions</CardTitle>
+              <CardTitle>Transacciones Recientes</CardTitle>
               <div className="relative w-full max-w-sm">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search transactions..." className="pl-9" />
+                <Input placeholder="Buscar transacciones..." className="pl-9" />
               </div>
             </div>
           </CardHeader>
@@ -205,11 +205,11 @@ export default function FinancialPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Description</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Fund</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead>Fecha</TableHead>
+                  <TableHead>Descripción</TableHead>
+                  <TableHead>Categoría</TableHead>
+                  <TableHead>Fondo</TableHead>
+                  <TableHead className="text-right">Monto</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

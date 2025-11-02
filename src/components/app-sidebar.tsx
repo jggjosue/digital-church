@@ -36,20 +36,20 @@ import { Button } from './ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 
 const navItems = [
-  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/members', icon: Users, label: 'People' },
-  { href: '/groups', icon: Users, label: 'Groups' },
-  { href: '/ministries', icon: Church, label: 'Ministries' },
-  { href: '/volunteers', icon: Users, label: 'Volunteers' },
-  { href: '/attendance', icon: BarChart, label: 'Attendance' },
-  { href: '/events', icon: Calendar, label: 'Events' },
-  { href: '/donations', icon: Heart, label: 'Donations' },
-  { href: '/sermons', icon: Video, label: 'Sermons & Media' },
-  { href: '/reports', icon: FileText, label: 'Reports' },
+  { href: '/dashboard', icon: LayoutDashboard, label: 'Panel' },
+  { href: '/members', icon: Users, label: 'Gente' },
+  { href: '/groups', icon: Users, label: 'Grupos' },
+  { href: '/ministries', icon: Church, label: 'Ministerios' },
+  { href: '/volunteers', icon: Users, label: 'Voluntarios' },
+  { href: '/attendance', icon: BarChart, label: 'Asistencia' },
+  { href: '/events', icon: Calendar, label: 'Eventos' },
+  { href: '/donations', icon: Heart, label: 'Donaciones' },
+  { href: '/sermons', icon: Video, label: 'Sermones y Medios' },
+  { href: '/reports', icon: FileText, label: 'Reportes' },
 ];
 
 const bottomNavItems = [
-    { href: '/help', icon: HelpCircle, label: 'Help' },
+    { href: '/help', icon: HelpCircle, label: 'Ayuda' },
 ]
 
 export function AppSidebar() {
@@ -67,7 +67,7 @@ export function AppSidebar() {
         </Avatar>
         <div>
             <p className="font-semibold text-foreground">Grace Church</p>
-            <p className="text-sm text-muted-foreground">Admin Portal</p>
+            <p className="text-sm text-muted-foreground">Portal de Administración</p>
         </div>
       </div>
       <nav className="flex-1 space-y-1 px-4 py-2">
@@ -96,7 +96,7 @@ export function AppSidebar() {
                 >
                     <div className="flex items-center gap-3">
                         <DollarSign className="h-4 w-4" />
-                        <span>Financial</span>
+                        <span>Finanzas</span>
                     </div>
                     <ChevronDown className={cn('h-4 w-4 transition-transform', isFinancialOpen && 'rotate-180')} />
                 </div>
@@ -110,7 +110,7 @@ export function AppSidebar() {
                     )}
                 >
                     <LayoutDashboard className="h-4 w-4" />
-                    <span>Financial Reporting</span>
+                    <span>Reportes Financieros</span>
                 </Link>
                 <Link
                     href="/financial/income-expense"
@@ -120,7 +120,7 @@ export function AppSidebar() {
                     )}
                 >
                     <FileText className="h-4 w-4" />
-                    <span>Income & Expense</span>
+                    <span>Ingresos y Gastos</span>
                 </Link>
                 <Link
                     href="/financial/budget"
@@ -130,7 +130,7 @@ export function AppSidebar() {
                     )}
                 >
                     <PiggyBank className="h-4 w-4" />
-                    <span>Budget Report</span>
+                    <span>Reporte de Presupuesto</span>
                 </Link>
                 <Link
                     href="/financial/funds"
@@ -140,7 +140,7 @@ export function AppSidebar() {
                     )}
                 >
                     <Banknote className="h-4 w-4" />
-                    <span>Fund Balances</span>
+                    <span>Saldos de Fondos</span>
                 </Link>
                 <Link
                     href="/financial/donations"
@@ -150,7 +150,7 @@ export function AppSidebar() {
                     )}
                 >
                     <ClipboardList className="h-4 w-4" />
-                    <span>Donation Reports</span>
+                    <span>Reportes de Donaciones</span>
                 </Link>
                 <Link
                     href="/financial/new-transaction"
@@ -160,7 +160,7 @@ export function AppSidebar() {
                     )}
                 >
                     <Plus className="mr-2 h-4 w-4" />
-                    New Transaction
+                    Nueva Transacción
                 </Link>
             </CollapsibleContent>
         </Collapsible>
@@ -176,7 +176,7 @@ export function AppSidebar() {
                 >
                     <div className="flex items-center gap-3">
                         <Settings className="h-4 w-4" />
-                        <span>Settings</span>
+                        <span>Configuración</span>
                     </div>
                     <ChevronDown className={cn('h-4 w-4 transition-transform', isSettingsOpen && 'rotate-180')} />
                 </div>
@@ -190,7 +190,7 @@ export function AppSidebar() {
                     )}
                 >
                     <UserCog className="h-4 w-4" />
-                    <span>Roles & Permisos</span>
+                    <span>Roles y Permisos</span>
                 </Link>
                 <Link
                     href="/settings/new"
@@ -200,7 +200,7 @@ export function AppSidebar() {
                     )}
                 >
                     <Plus className="h-4 w-4" />
-                    <span>New Role</span>
+                    <span>Nuevo Rol</span>
                 </Link>
                 <Link
                     href="/settings/users"
@@ -210,7 +210,7 @@ export function AppSidebar() {
                     )}
                 >
                     <Users className="h-4 w-4" />
-                    <span>Users</span>
+                    <span>Usuarios</span>
                 </Link>
             </CollapsibleContent>
         </Collapsible>

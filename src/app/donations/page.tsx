@@ -39,51 +39,51 @@ const donationsData = [
   {
     id: 1,
     donorName: 'John & Jane Smith',
-    date: 'Oct 28, 2023',
+    date: '28 de Oct, 2023',
     amount: 250.0,
-    fund: 'General Fund',
-    paymentMethod: 'Credit Card',
+    fund: 'Fondo General',
+    paymentMethod: 'Tarjeta de Crédito',
   },
   {
     id: 2,
     donorName: 'David Lee',
-    date: 'Oct 27, 2023',
+    date: '27 de Oct, 2023',
     amount: 1000.0,
-    fund: 'Building Campaign',
-    paymentMethod: 'Check',
+    fund: 'Campaña de Construcción',
+    paymentMethod: 'Cheque',
   },
   {
     id: 3,
     donorName: 'Maria Garcia',
-    date: 'Oct 25, 2023',
+    date: '25 de Oct, 2023',
     amount: 75.0,
-    fund: 'Missions Fund',
-    paymentMethod: 'Online Giving',
+    fund: 'Fondo de Misiones',
+    paymentMethod: 'Donación en Línea',
   },
   {
     id: 4,
-    donorName: 'Anonymous',
-    date: 'Oct 24, 2023',
+    donorName: 'Anónimo',
+    date: '24 de Oct, 2023',
     amount: 500.0,
-    fund: 'General Fund',
-    paymentMethod: 'Cash',
+    fund: 'Fondo General',
+    paymentMethod: 'Efectivo',
   },
   {
     id: 5,
-    donorName: 'The Williams Family',
-    date: 'Oct 22, 2023',
+    donorName: 'La Familia Williams',
+    date: '22 de Oct, 2023',
     amount: 150.0,
-    fund: 'Youth Ministry',
-    paymentMethod: 'Bank Transfer',
+    fund: 'Ministerio Juvenil',
+    paymentMethod: 'Transferencia Bancaria',
   },
   // Add more data for pagination
-  { id: 6, donorName: 'Chris Green', date: 'Oct 21, 2023', amount: 100.00, fund: 'General Fund', paymentMethod: 'Credit Card' },
-  { id: 7, donorName: 'Patricia Hall', date: 'Oct 20, 2023', amount: 200.00, fund: 'Building Campaign', paymentMethod: 'Check' },
-  { id: 8, donorName: 'Jennifer Allen', date: 'Oct 19, 2023', amount: 50.00, fund: 'Missions Fund', paymentMethod: 'Online Giving' },
-  { id: 9, donorName: 'James Young', date: 'Oct 18, 2023', amount: 300.00, fund: 'General Fund', paymentMethod: 'Cash' },
-  { id: 10, donorName: 'Linda King', date: 'Oct 17, 2023', amount: 450.00, fund: 'Youth Ministry', paymentMethod: 'Bank Transfer' },
-  { id: 11, donorName: 'Richard Wright', date: 'Oct 16, 2023', amount: 50.00, fund: 'General Fund', paymentMethod: 'Credit Card' },
-  { id: 12, donorName: 'Susan Hill', date: 'Oct 15, 2023', amount: 120.00, fund: 'Building Campaign', paymentMethod: 'Check' },
+  { id: 6, donorName: 'Chris Green', date: '21 de Oct, 2023', amount: 100.00, fund: 'Fondo General', paymentMethod: 'Tarjeta de Crédito' },
+  { id: 7, donorName: 'Patricia Hall', date: '20 de Oct, 2023', amount: 200.00, fund: 'Campaña de Construcción', paymentMethod: 'Cheque' },
+  { id: 8, donorName: 'Jennifer Allen', date: '19 de Oct, 2023', amount: 50.00, fund: 'Fondo de Misiones', paymentMethod: 'Donación en Línea' },
+  { id: 9, donorName: 'James Young', date: '18 de Oct, 2023', amount: 300.00, fund: 'Fondo General', paymentMethod: 'Efectivo' },
+  { id: 10, donorName: 'Linda King', date: '17 de Oct, 2023', amount: 450.00, fund: 'Ministerio Juvenil', paymentMethod: 'Transferencia Bancaria' },
+  { id: 11, donorName: 'Richard Wright', date: '16 de Oct, 2023', amount: 50.00, fund: 'Fondo General', paymentMethod: 'Tarjeta de Crédito' },
+  { id: 12, donorName: 'Susan Hill', date: '15 de Oct, 2023', amount: 120.00, fund: 'Campaña de Construcción', paymentMethod: 'Cheque' },
 ];
 
 export default function DonationsPage() {
@@ -107,20 +107,20 @@ export default function DonationsPage() {
     <main className="flex-1 bg-muted/20 p-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Donations & Giving</h1>
+          <h1 className="text-3xl font-bold">Donaciones y Ofrendas</h1>
           <p className="text-muted-foreground">
-            Manage donations, pledges, and generate giving statements.
+            Gestione donaciones, promesas de donación y genere estados de cuenta.
           </p>
         </div>
         <Button variant="outline">
-          <FileText className="mr-2 h-4 w-4" /> Generate Statement
+          <FileText className="mr-2 h-4 w-4" /> Generar Estado de Cuenta
         </Button>
       </div>
 
       <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Giving This Month</CardTitle>
+            <CardTitle className="text-sm font-medium">Ofrendas Totales Este Mes</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">$15,480.50</div>
@@ -129,7 +129,7 @@ export default function DonationsPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Pledge Fulfillment Rate</CardTitle>
+            <CardTitle className="text-sm font-medium">Tasa de Cumplimiento de Promesas</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">88%</div>
@@ -138,7 +138,7 @@ export default function DonationsPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Active Campaigns</CardTitle>
+            <CardTitle className="text-sm font-medium">Campañas Activas</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">4</div>
@@ -150,9 +150,9 @@ export default function DonationsPage() {
       <div className="mt-6">
         <Tabs defaultValue="donations">
           <TabsList>
-            <TabsTrigger value="donations">Donations</TabsTrigger>
-            <TabsTrigger value="pledges">Pledges</TabsTrigger>
-            <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
+            <TabsTrigger value="donations">Donaciones</TabsTrigger>
+            <TabsTrigger value="pledges">Promesas</TabsTrigger>
+            <TabsTrigger value="campaigns">Campañas</TabsTrigger>
           </TabsList>
           <TabsContent value="donations">
             <Card>
@@ -160,7 +160,7 @@ export default function DonationsPage() {
                 <div className="flex items-center justify-between gap-4 mb-4">
                   <div className="relative w-full max-w-sm">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder="Search donations..." className="pl-9" />
+                    <Input placeholder="Buscar donaciones..." className="pl-9" />
                   </div>
                   <div className="flex items-center gap-2">
                     <Button variant="ghost" size="icon">
@@ -170,7 +170,7 @@ export default function DonationsPage() {
                       <Download className="h-4 w-4" />
                     </Button>
                     <Button>
-                      <Plus className="mr-2 h-4 w-4" /> Add Donation
+                      <Plus className="mr-2 h-4 w-4" /> Añadir Donación
                     </Button>
                   </div>
                 </div>
@@ -181,12 +181,12 @@ export default function DonationsPage() {
                       <TableHead className="w-12">
                         <Checkbox />
                       </TableHead>
-                      <TableHead>DONOR NAME</TableHead>
-                      <TableHead>DATE</TableHead>
-                      <TableHead>AMOUNT</TableHead>
-                      <TableHead>FUND/CAMPAIGN</TableHead>
-                      <TableHead>PAYMENT METHOD</TableHead>
-                      <TableHead className="text-right">ACTIONS</TableHead>
+                      <TableHead>NOMBRE DEL DONANTE</TableHead>
+                      <TableHead>FECHA</TableHead>
+                      <TableHead>MONTO</TableHead>
+                      <TableHead>FONDO/CAMPAÑA</TableHead>
+                      <TableHead>MÉTODO DE PAGO</TableHead>
+                      <TableHead className="text-right">ACCIONES</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -202,7 +202,7 @@ export default function DonationsPage() {
                         <TableCell>{donation.paymentMethod}</TableCell>
                         <TableCell className="text-right">
                           <Button variant="link" className="text-primary">
-                            View
+                            Ver
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -211,7 +211,7 @@ export default function DonationsPage() {
                 </Table>
                 <div className="flex items-center justify-between pt-4">
                     <div className="text-sm text-muted-foreground">
-                        Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, totalItems)} of {totalItems} results
+                        Mostrando {(currentPage - 1) * itemsPerPage + 1} a {Math.min(currentPage * itemsPerPage, totalItems)} de {totalItems} resultados
                     </div>
                     <Pagination>
                         <PaginationContent>
@@ -236,12 +236,12 @@ export default function DonationsPage() {
           </TabsContent>
           <TabsContent value="pledges">
             <div className="p-6 text-center text-muted-foreground">
-              Pledge management coming soon.
+              La gestión de promesas estará disponible próximamente.
             </div>
           </TabsContent>
           <TabsContent value="campaigns">
             <div className="p-6 text-center text-muted-foreground">
-              Campaign management coming soon.
+              La gestión de campañas estará disponible próximamente.
             </div>
           </TabsContent>
         </Tabs>

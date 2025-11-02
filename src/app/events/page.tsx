@@ -23,10 +23,10 @@ import { events as allEvents } from '@/lib/data';
 type Event = (typeof allEvents)[0];
 
 const eventCategoryColors: { [key: string]: string } = {
-  'Bible Study': 'bg-purple-100 text-purple-800 border-purple-200',
-  'Sunday Service': 'bg-blue-100 text-blue-800 border-blue-200',
-  'Youth Group': 'bg-green-100 text-green-800 border-green-200',
-  'Community Outreach': 'bg-orange-100 text-orange-800 border-orange-200',
+  'Estudio Bíblico': 'bg-purple-100 text-purple-800 border-purple-200',
+  'Servicio Dominical': 'bg-blue-100 text-blue-800 border-blue-200',
+  'Grupo de Jóvenes': 'bg-green-100 text-green-800 border-green-200',
+  'Alcance Comunitario': 'bg-orange-100 text-orange-800 border-orange-200',
 };
 
 const getDaysInMonth = (year: number, month: number) => {
@@ -77,28 +77,30 @@ export default function EventsPage() {
     setCurrentDate(new Date(year, month + 1, 1));
   };
 
+  const dayNames = ['DOM', 'LUN', 'MAR', 'MIÉ', 'JUE', 'VIE', 'SÁB'];
+
   return (
     <main className="flex min-h-screen w-full bg-muted/20">
       <div className="flex-1 p-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Church Events</h1>
+            <h1 className="text-3xl font-bold">Eventos de la Iglesia</h1>
             <p className="text-muted-foreground">
-              View, create, and manage all church events and activities.
+              Vea, cree y gestione todos los eventos y actividades de la iglesia.
             </p>
           </div>
           <Button>
-            <Plus className="mr-2 h-4 w-4" /> Create New Event
+            <Plus className="mr-2 h-4 w-4" /> Crear Nuevo Evento
           </Button>
         </div>
 
         <div className="mt-6 flex items-center justify-between gap-4">
           <div className="relative w-full max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search for an event by name..." className="pl-9" />
+            <Input placeholder="Buscar un evento por nombre..." className="pl-9" />
           </div>
           <Button variant="outline">
-            <ListFilter className="mr-2 h-4 w-4" /> Filters
+            <ListFilter className="mr-2 h-4 w-4" /> Filtros
           </Button>
         </div>
 
@@ -110,22 +112,22 @@ export default function EventsPage() {
                   <ChevronLeft className="h-5 w-5" />
                 </Button>
                 <h2 className="text-xl font-semibold">
-                  {currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
+                  {currentDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' })}
                 </h2>
                 <Button variant="ghost" size="icon" onClick={handleNextMonth}>
                   <ChevronRight className="h-5 w-5" />
                 </Button>
               </div>
               <div className="flex items-center gap-1 rounded-lg bg-muted p-1">
-                <Button variant="ghost" size="sm" className="bg-background shadow-sm">Month</Button>
-                <Button variant="ghost" size="sm">Week</Button>
-                <Button variant="ghost" size="sm">Day</Button>
+                <Button variant="ghost" size="sm" className="bg-background shadow-sm">Mes</Button>
+                <Button variant="ghost" size="sm">Semana</Button>
+                <Button variant="ghost" size="sm">Día</Button>
               </div>
             </div>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-7 gap-px border-t border-l bg-border">
-              {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map((day) => (
+              {dayNames.map((day) => (
                 <div key={day} className="py-2 text-center text-xs font-medium text-muted-foreground bg-card">
                   {day}
                 </div>
@@ -145,7 +147,7 @@ export default function EventsPage() {
                     <div className="mt-1 space-y-1">
                         {dayEvents.map(event => (
                             <div key={event.id} className={`p-1 rounded-md text-xs cursor-pointer ${eventCategoryColors[event.category]} ${selectedEvent.id === event.id ? 'ring-2 ring-primary' : ''}`}>
-                                {event.title.split(' ')[0]} {event.title.split(' ')[1]}
+                                {event.title.split(' ').slice(0,2).join(' ')}
                             </div>
                         ))}
                     </div>
@@ -158,9 +160,9 @@ export default function EventsPage() {
       </div>
 
       <aside className="w-96 border-l bg-background p-6">
-        <h2 className="text-lg font-semibold">Event Details</h2>
+        <h2 className="text-lg font-semibold">Detalles del Evento</h2>
         <p className="text-sm text-muted-foreground">
-          Selected: {new Date(year, month, selectedDay).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric'})}
+          Seleccionado: {new Date(year, month, selectedDay).toLocaleDateString('es-ES', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric'})}
         </p>
 
         {selectedEvent && (
@@ -184,23 +186,23 @@ export default function EventsPage() {
                 <div className="flex items-start gap-4">
                     <CalendarIcon className="h-5 w-5 text-muted-foreground mt-1" />
                     <div>
-                        <p className="font-semibold">Date & Time</p>
-                        <p className="text-muted-foreground">{new Date(selectedEvent.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                        <p className="font-semibold">Fecha y Hora</p>
+                        <p className="text-muted-foreground">{new Date(selectedEvent.date).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
                         <p className="text-muted-foreground">{selectedEvent.time}</p>
                     </div>
                 </div>
                 <div className="flex items-start gap-4">
                     <MapPin className="h-5 w-5 text-muted-foreground mt-1" />
                     <div>
-                        <p className="font-semibold">Location</p>
+                        <p className="font-semibold">Ubicación</p>
                         <p className="text-muted-foreground">{selectedEvent.location}</p>
                         <p className="text-muted-foreground">{selectedEvent.address}</p>
                     </div>
                 </div>
             </div>
             <div className="mt-8 flex gap-2">
-                <Button variant="outline" className="w-full"><Edit className="mr-2 h-4 w-4"/>Edit</Button>
-                <Button variant="destructive" className="w-full"><Trash2 className="mr-2 h-4 w-4"/>Delete</Button>
+                <Button variant="outline" className="w-full"><Edit className="mr-2 h-4 w-4"/>Editar</Button>
+                <Button variant="destructive" className="w-full"><Trash2 className="mr-2 h-4 w-4"/>Eliminar</Button>
             </div>
           </div>
         )}

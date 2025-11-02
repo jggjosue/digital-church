@@ -35,14 +35,14 @@ type Group = (typeof groupData)[0];
 type GroupMember = (typeof groupMembers)[0];
 
 const statusColors: { [key: string]: string } = {
-  Active: 'bg-green-100 text-green-800 border-green-200',
-  'On Hold': 'bg-yellow-100 text-yellow-800 border-yellow-200',
-  Inactive: 'bg-red-100 text-red-800 border-red-200',
+  Activo: 'bg-green-100 text-green-800 border-green-200',
+  'En Pausa': 'bg-yellow-100 text-yellow-800 border-yellow-200',
+  Inactivo: 'bg-red-100 text-red-800 border-red-200',
 };
 
 const roleColors: { [key: string]: string } = {
-    Leader: 'bg-blue-100 text-blue-800 border-blue-200',
-    Member: 'bg-gray-100 text-gray-800 border-gray-200',
+    Líder: 'bg-blue-100 text-blue-800 border-blue-200',
+    Miembro: 'bg-gray-100 text-gray-800 border-gray-200',
   };
 
 export default function GroupsPage() {
@@ -71,23 +71,23 @@ export default function GroupsPage() {
     <main className="flex-1 bg-muted/20 p-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Group Management</h1>
+          <h1 className="text-3xl font-bold">Gestión de Grupos</h1>
           <p className="text-muted-foreground">
-            Organize and manage your church&apos;s groups and their members.
+            Organice y gestione los grupos de su iglesia y sus miembros.
           </p>
         </div>
         <Button>
-          <Plus className="mr-2 h-4 w-4" /> Create New Group
+          <Plus className="mr-2 h-4 w-4" /> Crear Nuevo Grupo
         </Button>
       </div>
 
       <div className="mt-6 grid grid-cols-1 gap-8 lg:grid-cols-3">
         {/* Left Column: Group List */}
         <div className="lg:col-span-1">
-          <h2 className="text-xl font-semibold">All Groups</h2>
+          <h2 className="text-xl font-semibold">Todos los Grupos</h2>
           <div className="relative mt-4">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search groups..." className="pl-9" />
+            <Input placeholder="Buscar grupos..." className="pl-9" />
           </div>
           <div className="mt-4 space-y-3">
             {groupData.map((group) => (
@@ -100,7 +100,7 @@ export default function GroupsPage() {
                   <div className="flex justify-between items-start">
                     <div>
                         <h3 className="font-semibold">{group.name}</h3>
-                        <p className="text-sm text-muted-foreground">{group.members} Members</p>
+                        <p className="text-sm text-muted-foreground">{group.members} Miembros</p>
                     </div>
                     <Badge
                       variant="outline"
@@ -143,17 +143,17 @@ export default function GroupsPage() {
           </Card>
           
           <div className="mt-6">
-            <h2 className="text-xl font-semibold">Group Members ({groupMembers.length})</h2>
+            <h2 className="text-xl font-semibold">Miembros del Grupo ({groupMembers.length})</h2>
             <div className="mt-4 flex items-center justify-between gap-4">
               <div className="relative w-full max-w-xs">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search members..."
+                  placeholder="Buscar miembros..."
                   className="pl-9"
                 />
               </div>
               <Button>
-                <UserPlus className="mr-2 h-4 w-4" /> Add Member
+                <UserPlus className="mr-2 h-4 w-4" /> Añadir Miembro
               </Button>
             </div>
           </div>
@@ -172,10 +172,10 @@ export default function GroupsPage() {
                         onCheckedChange={(checked) => handleSelectAll(!!checked)}
                       />
                     </TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Contact</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead>Nombre</TableHead>
+                    <TableHead>Contacto</TableHead>
+                    <TableHead>Rol</TableHead>
+                    <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -218,7 +218,7 @@ export default function GroupsPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <Button variant="link" className="text-destructive hover:text-destructive/80">
-                          Remove
+                          Eliminar
                         </Button>
                       </TableCell>
                     </TableRow>

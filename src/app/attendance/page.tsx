@@ -38,15 +38,15 @@ import { attendanceRecords } from '@/lib/data';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 
 const statusColors: { [key: string]: string } = {
-    Present: 'bg-green-100 text-green-800 border-green-200',
-    Absent: 'bg-gray-100 text-gray-800 border-gray-200',
-    Excused: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    Presente: 'bg-green-100 text-green-800 border-green-200',
+    Ausente: 'bg-gray-100 text-gray-800 border-gray-200',
+    Justificado: 'bg-yellow-100 text-yellow-800 border-yellow-200',
 };
 
 const statusDotColors: { [key: string]: string } = {
-    Present: 'bg-green-500',
-    Absent: 'bg-gray-400',
-    Excused: 'bg-yellow-500',
+    Presente: 'bg-green-500',
+    Ausente: 'bg-gray-400',
+    Justificado: 'bg-yellow-500',
 };
 
 
@@ -71,11 +71,11 @@ export default function AttendancePage() {
     <main className="flex-1 bg-muted/20 p-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Attendance Management</h1>
+          <h1 className="text-3xl font-bold">Gestión de Asistencia</h1>
         </div>
         <div className="flex gap-2">
-            <Button variant="outline"><BarChart className="mr-2 h-4 w-4" /> Generate Report</Button>
-            <Button><Plus className="mr-2 h-4 w-4" /> Record New Attendance</Button>
+            <Button variant="outline"><BarChart className="mr-2 h-4 w-4" /> Generar Reporte</Button>
+            <Button><Plus className="mr-2 h-4 w-4" /> Registrar Nueva Asistencia</Button>
         </div>
       </div>
       <Card className="mt-6">
@@ -83,40 +83,40 @@ export default function AttendancePage() {
             <div className="flex items-center justify-between gap-4 mb-6">
                 <div className="relative w-full max-w-sm">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Search by member name..." className="pl-9" />
+                  <Input placeholder="Buscar por nombre de miembro..." className="pl-9" />
                 </div>
                 <div className="flex items-center gap-2">
                   <Select>
                     <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Service/Event" />
+                      <SelectValue placeholder="Servicio/Evento" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Services/Events</SelectItem>
-                      <SelectItem value="sunday">Sunday Morning Service</SelectItem>
-                      <SelectItem value="youth">Youth Group Meeting</SelectItem>
-                      <SelectItem value="bible-study">Midweek Bible Study</SelectItem>
+                      <SelectItem value="all">Todos los Servicios/Eventos</SelectItem>
+                      <SelectItem value="sunday">Servicio Dominical</SelectItem>
+                      <SelectItem value="youth">Reunión de Jóvenes</SelectItem>
+                      <SelectItem value="bible-study">Estudio Bíblico Semanal</SelectItem>
                     </SelectContent>
                   </Select>
                   <Select>
                     <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Ministry Group" />
+                      <SelectValue placeholder="Grupo Ministerial" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Groups</SelectItem>
-                      <SelectItem value="youth">Youth Group</SelectItem>
-                      <SelectItem value="choir">Choir</SelectItem>
-                      <SelectItem value="volunteers">Volunteers</SelectItem>
+                      <SelectItem value="all">Todos los Grupos</SelectItem>
+                      <SelectItem value="youth">Grupo de Jóvenes</SelectItem>
+                      <SelectItem value="choir">Coro</SelectItem>
+                      <SelectItem value="volunteers">Voluntarios</SelectItem>
                     </SelectContent>
                   </Select>
                   <Select>
                     <SelectTrigger className="w-[180px]">
-                      <SelectValue placeholder="Date Range" />
+                      <SelectValue placeholder="Rango de Fechas" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="today">Today</SelectItem>
-                      <SelectItem value="this-week">This Week</SelectItem>
-                      <SelectItem value="this-month">This Month</SelectItem>
-                      <SelectItem value="this-year">This Year</SelectItem>
+                      <SelectItem value="today">Hoy</SelectItem>
+                      <SelectItem value="this-week">Esta Semana</SelectItem>
+                      <SelectItem value="this-month">Este Mes</SelectItem>
+                      <SelectItem value="this-year">Este Año</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -124,12 +124,12 @@ export default function AttendancePage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Service/Event Name</TableHead>
-                <TableHead>Member Name</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Check-in Time</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>Fecha</TableHead>
+                <TableHead>Nombre del Servicio/Evento</TableHead>
+                <TableHead>Nombre del Miembro</TableHead>
+                <TableHead>Estado</TableHead>
+                <TableHead>Hora de Entrada</TableHead>
+                <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -159,7 +159,7 @@ export default function AttendancePage() {
           </Table>
           <div className="flex items-center justify-between pt-4">
                 <div className="text-sm text-muted-foreground">
-                    Showing {paginatedData.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} to {Math.min(currentPage * itemsPerPage, attendanceRecords.length)} of {attendanceRecords.length} results
+                    Mostrando {paginatedData.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} a {Math.min(currentPage * itemsPerPage, attendanceRecords.length)} de {attendanceRecords.length} resultados
                 </div>
                 <Pagination>
                     <PaginationContent>

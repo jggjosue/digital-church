@@ -39,7 +39,7 @@ export default function DonationReportsPage() {
   const { totalDonations, averageDonation, newDonors, givingTrends, recentDonations } = donationReportsData;
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('es-ES', {
       style: 'currency',
       currency: 'USD',
     }).format(amount);
@@ -49,9 +49,9 @@ export default function DonationReportsPage() {
     <main className="flex-1 space-y-6 p-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Donation Reports</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Reportes de Donaciones</h1>
           <p className="text-muted-foreground">
-            Generate and view donation activity
+            Genere y vea la actividad de donaciones
           </p>
         </div>
       </div>
@@ -61,43 +61,43 @@ export default function DonationReportsPage() {
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="relative w-full max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Search by donor..." className="pl-9" />
+              <Input placeholder="Buscar por donante..." className="pl-9" />
             </div>
             <div className="flex items-center gap-2">
                 <Select>
                     <SelectTrigger className="w-full sm:w-[140px]">
-                        <SelectValue placeholder="This Year" />
+                        <SelectValue placeholder="Este Año" />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="this-year">This Year</SelectItem>
-                        <SelectItem value="last-year">Last Year</SelectItem>
+                        <SelectItem value="this-year">Este Año</SelectItem>
+                        <SelectItem value="last-year">Año Pasado</SelectItem>
                     </SelectContent>
                 </Select>
                  <Select>
                     <SelectTrigger className="w-full sm:w-[140px]">
-                        <SelectValue placeholder="All Funds" />
+                        <SelectValue placeholder="Todos los Fondos" />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="all">All Funds</SelectItem>
-                        <SelectItem value="general">General Fund</SelectItem>
-                        <SelectItem value="building">Building Fund</SelectItem>
+                        <SelectItem value="all">Todos los Fondos</SelectItem>
+                        <SelectItem value="general">Fondo General</SelectItem>
+                        <SelectItem value="building">Fondo de Construcción</SelectItem>
                     </SelectContent>
                 </Select>
                  <Select>
                     <SelectTrigger className="w-full sm:w-[140px]">
-                        <SelectValue placeholder="All Campaigns" />
+                        <SelectValue placeholder="Todas las Campañas" />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="all">All Campaigns</SelectItem>
+                        <SelectItem value="all">Todas las Campañas</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
             <div className="flex items-center gap-2">
               <Button variant="outline">
-                <FileText className="mr-2 h-4 w-4" /> Statements
+                <FileText className="mr-2 h-4 w-4" /> Estados de Cuenta
               </Button>
               <Button>
-                <Download className="mr-2 h-4 w-4" /> Export
+                <Download className="mr-2 h-4 w-4" /> Exportar
               </Button>
             </div>
           </div>
@@ -107,7 +107,7 @@ export default function DonationReportsPage() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Donations</CardTitle>
+            <CardTitle className="text-sm font-medium">Donaciones Totales</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{formatCurrency(totalDonations.amount)}</div>
@@ -116,7 +116,7 @@ export default function DonationReportsPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Average Donation</CardTitle>
+            <CardTitle className="text-sm font-medium">Donación Promedio</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{formatCurrency(averageDonation.amount)}</div>
@@ -125,7 +125,7 @@ export default function DonationReportsPage() {
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">New Donors</CardTitle>
+            <CardTitle className="text-sm font-medium">Nuevos Donantes</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{formatCurrency(newDonors.amount)}</div>
@@ -137,11 +137,11 @@ export default function DonationReportsPage() {
       <div className="grid grid-cols-1 gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Giving Trends</CardTitle>
-            <CardDescription>Monthly donations over the past year</CardDescription>
+            <CardTitle>Tendencias de Donaciones</CardTitle>
+            <CardDescription>Donaciones mensuales durante el último año</CardDescription>
           </CardHeader>
           <CardContent className="flex items-center justify-center min-h-[300px] text-muted-foreground bg-muted/50 rounded-lg">
-            Chart will be displayed here
+            El gráfico se mostrará aquí
           </CardContent>
         </Card>
 
@@ -150,11 +150,11 @@ export default function DonationReportsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Donor</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Fund</TableHead>
-                  <TableHead>Payment Method</TableHead>
-                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead>Donante</TableHead>
+                  <TableHead>Fecha</TableHead>
+                  <TableHead>Fondo</TableHead>
+                  <TableHead>Método de Pago</TableHead>
+                  <TableHead className="text-right">Monto</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>

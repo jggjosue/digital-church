@@ -25,23 +25,23 @@ import { rolesData } from '@/lib/data';
 type Role = (typeof rolesData)[0];
 
 const permissions = {
-    'Member Management': [
-        'View Members',
-        'Create Members',
-        'Edit Members',
-        'Delete Members',
-        'Export Data',
+    'Gestión de Miembros': [
+        'Ver Miembros',
+        'Crear Miembros',
+        'Editar Miembros',
+        'Eliminar Miembros',
+        'Exportar Datos',
     ],
-    'Donations & Financials': [
-        'View Donations',
-        'Enter Donations',
-        'Manage Pledges',
-        'Generate Statements',
+    'Donaciones y Finanzas': [
+        'Ver Donaciones',
+        'Ingresar Donaciones',
+        'Gestionar Promesas',
+        'Generar Estados de Cuenta',
     ],
-    'System Settings': [
-        'Manage Roles',
-        'Manage General Settings',
-        'Manage Integrations',
+    'Configuración del Sistema': [
+        'Gestionar Roles',
+        'Gestionar Configuración General',
+        'Gestionar Integraciones',
     ],
 };
 
@@ -53,9 +53,9 @@ export default function SettingsPage() {
         <main className="flex-1 bg-muted/20 p-8">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-3xl font-bold">Roles & Permissions</h1>
+                    <h1 className="text-3xl font-bold">Roles y Permisos</h1>
                     <p className="text-muted-foreground">
-                        Define and manage user roles, assign permissions, and control access levels.
+                        Defina y gestione roles de usuario, asigne permisos y controle los niveles de acceso.
                     </p>
                 </div>
             </div>
@@ -65,11 +65,11 @@ export default function SettingsPage() {
                 <div className="lg:col-span-1">
                     <div className='flex flex-col gap-4'>
                         <Button>
-                            <Plus className="mr-2 h-4 w-4" /> Add New Role
+                            <Plus className="mr-2 h-4 w-4" /> Añadir Nuevo Rol
                         </Button>
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                            <Input placeholder="Search roles..." className="pl-9" />
+                            <Input placeholder="Buscar roles..." className="pl-9" />
                         </div>
                         <RadioGroup 
                             defaultValue={selectedRole.name} 
@@ -92,13 +92,13 @@ export default function SettingsPage() {
                         <CardHeader>
                             <CardTitle className='text-2xl'>{selectedRole.name}</CardTitle>
                             <CardDescription>
-                                {selectedRole.description} {selectedRole.name === 'Super Administrator' && 'This role should be assigned with caution.'}
+                                {selectedRole.description} {selectedRole.name === 'Super Administrador' && 'Este rol debe asignarse con precaución.'}
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
                             <Accordion type="multiple" defaultValue={['item-1']} className="w-full">
                                 <AccordionItem value="item-1">
-                                    <AccordionTrigger className='font-semibold'>Member Management</AccordionTrigger>
+                                    <AccordionTrigger className='font-semibold'>Gestión de Miembros</AccordionTrigger>
                                     <AccordionContent>
                                         <div className="grid grid-cols-2 gap-4 p-4">
                                             <div className="flex items-center space-x-2">
@@ -107,12 +107,12 @@ export default function SettingsPage() {
                                                     htmlFor="select-all-members"
                                                     className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                                                 >
-                                                   Select All
+                                                   Seleccionar Todo
                                                 </label>
                                             </div>
-                                            {permissions['Member Management'].map(perm => (
+                                            {permissions['Gestión de Miembros'].map(perm => (
                                                 <div key={perm} className="flex items-center space-x-2">
-                                                    <Checkbox id={perm.toLowerCase().replace(/\s/g, '-')} checked={selectedRole.name === 'Super Administrator'}/>
+                                                    <Checkbox id={perm.toLowerCase().replace(/\s/g, '-')} checked={selectedRole.name === 'Super Administrador'}/>
                                                     <label
                                                         htmlFor={perm.toLowerCase().replace(/\s/g, '-')}
                                                         className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
@@ -125,7 +125,7 @@ export default function SettingsPage() {
                                     </AccordionContent>
                                 </AccordionItem>
                                 <AccordionItem value="item-2">
-                                    <AccordionTrigger className='font-semibold'>Donations & Financials</AccordionTrigger>
+                                    <AccordionTrigger className='font-semibold'>Donaciones y Finanzas</AccordionTrigger>
                                     <AccordionContent>
                                         <div className="grid grid-cols-2 gap-4 p-4">
                                              <div className="flex items-center space-x-2">
@@ -134,12 +134,12 @@ export default function SettingsPage() {
                                                     htmlFor="select-all-donations"
                                                     className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                                                 >
-                                                   Select All
+                                                   Seleccionar Todo
                                                 </label>
                                             </div>
-                                            {permissions['Donations & Financials'].map(perm => (
+                                            {permissions['Donaciones y Finanzas'].map(perm => (
                                                 <div key={perm} className="flex items-center space-x-2">
-                                                    <Checkbox id={perm.toLowerCase().replace(/\s/g, '-')} checked={selectedRole.name === 'Super Administrator'}/>
+                                                    <Checkbox id={perm.toLowerCase().replace(/\s/g, '-')} checked={selectedRole.name === 'Super Administrador'}/>
                                                     <label
                                                         htmlFor={perm.toLowerCase().replace(/\s/g, '-')}
                                                         className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
@@ -152,7 +152,7 @@ export default function SettingsPage() {
                                     </AccordionContent>
                                 </AccordionItem>
                                 <AccordionItem value="item-3">
-                                    <AccordionTrigger className='font-semibold'>System Settings</AccordionTrigger>
+                                    <AccordionTrigger className='font-semibold'>Configuración del Sistema</AccordionTrigger>
                                     <AccordionContent>
                                     <div className="grid grid-cols-2 gap-4 p-4">
                                             <div className="flex items-center space-x-2">
@@ -161,12 +161,12 @@ export default function SettingsPage() {
                                                     htmlFor="select-all-system"
                                                     className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                                                 >
-                                                   Select All
+                                                   Seleccionar Todo
                                                 </label>
                                             </div>
-                                            {permissions['System Settings'].map(perm => (
+                                            {permissions['Configuración del Sistema'].map(perm => (
                                                 <div key={perm} className="flex items-center space-x-2">
-                                                    <Checkbox id={perm.toLowerCase().replace(/\s/g, '-')} checked={selectedRole.name === 'Super Administrator'} />
+                                                    <Checkbox id={perm.toLowerCase().replace(/\s/g, '-')} checked={selectedRole.name === 'Super Administrador'} />
                                                     <label
                                                         htmlFor={perm.toLowerCase().replace(/\s/g, '-')}
                                                         className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
@@ -182,11 +182,11 @@ export default function SettingsPage() {
                             <div className="mt-8 flex justify-between items-center">
                                 <Button variant="link" className="text-destructive p-0 hover:text-destructive/80">
                                     <Trash2 className="mr-2 h-4 w-4" />
-                                    Delete Role
+                                    Eliminar Rol
                                 </Button>
                                 <div className="flex gap-2">
-                                    <Button variant="outline">Cancel</Button>
-                                    <Button>Save Changes</Button>
+                                    <Button variant="outline">Cancelar</Button>
+                                    <Button>Guardar Cambios</Button>
                                 </div>
                             </div>
                         </CardContent>

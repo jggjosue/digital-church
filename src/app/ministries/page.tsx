@@ -32,29 +32,29 @@ export default function MinistriesPage() {
     <main className="flex-1 bg-muted/20 p-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Ministries</h1>
+          <h1 className="text-3xl font-bold">Ministerios</h1>
           <p className="text-muted-foreground">
-            Manage church ministries and their members.
+            Gestione los ministerios de la iglesia y sus miembros.
           </p>
         </div>
         <Button>
-          <Plus className="mr-2 h-4 w-4" /> Add New Ministry
+          <Plus className="mr-2 h-4 w-4" /> Añadir Nuevo Ministerio
         </Button>
       </div>
 
       <div className="mt-6 flex items-center justify-between gap-4">
         <div className="relative w-full max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search ministries..." className="pl-9" />
+            <Input placeholder="Buscar ministerios..." className="pl-9" />
         </div>
         <div className="w-[180px]">
             <Select>
                 <SelectTrigger>
-                    <SelectValue placeholder="Sort by: Name" />
+                    <SelectValue placeholder="Ordenar por: Nombre" />
                 </SelectTrigger>
                 <SelectContent>
-                    <SelectItem value="name">Sort by: Name</SelectItem>
-                    <SelectItem value="members">Sort by: Members</SelectItem>
+                    <SelectItem value="name">Ordenar por: Nombre</SelectItem>
+                    <SelectItem value="members">Ordenar por: Miembros</SelectItem>
                 </SelectContent>
             </Select>
         </div>
@@ -77,11 +77,11 @@ export default function MinistriesPage() {
                         <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                             <div className="flex items-center text-sm text-muted-foreground">
                                 <Users className="h-4 w-4 mr-2" />
-                                {ministry.members} Members
+                                {ministry.members} Miembros
                             </div>
                             <div className="flex items-center text-sm text-muted-foreground">
                                 <UserPlus className="h-4 w-4 mr-2" />
-                                Leader: {ministry.leader}
+                                Líder: {ministry.leader}
                             </div>
                             <div className="flex items-center">
                                 {ministry.memberAvatars.slice(0, 3).map((avatar, index) => (
@@ -98,8 +98,8 @@ export default function MinistriesPage() {
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
-                            <Button>View Details</Button>
-                            <Button variant="outline">Assign Members</Button>
+                            <Button>Ver Detalles</Button>
+                            <Button variant="outline">Asignar Miembros</Button>
                         </div>
                     </div>
                 </CardContent>

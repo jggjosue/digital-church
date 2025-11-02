@@ -6,7 +6,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { givingData } from "@/lib/data"
-import type { TimeRange } from '@/app/page';
+import type { TimeRange } from '@/app/dashboard/page';
 
 interface GivingThisMonthProps {
   timeRange: TimeRange;
@@ -37,7 +37,7 @@ export function GivingThisMonth({ timeRange }: GivingThisMonthProps) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium">Giving</CardTitle>
+        <CardTitle className="text-sm font-medium">Ofrendas</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">${value.toLocaleString(undefined, {

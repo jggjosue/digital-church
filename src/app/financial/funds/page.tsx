@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 
 const formatCurrency = (amount: number, showSign = false) => {
-    const formatted = new Intl.NumberFormat('en-US', {
+    const formatted = new Intl.NumberFormat('es-ES', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 2,
@@ -35,8 +35,8 @@ const formatCurrency = (amount: number, showSign = false) => {
 };
 
 const statusColors: { [key: string]: string } = {
-    Active: 'bg-green-100 text-green-800 border-green-200',
-    Inactive: 'bg-gray-100 text-gray-800 border-gray-200',
+    Activo: 'bg-green-100 text-green-800 border-green-200',
+    Inactivo: 'bg-gray-100 text-gray-800 border-gray-200',
 };
 
 export default function FundBalancesPage() {
@@ -45,15 +45,15 @@ export default function FundBalancesPage() {
     <main className="flex-1 space-y-6 p-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Fund Balances</h1>
-          <p className="text-muted-foreground">As of August 31, 2023</p>
+          <h1 className="text-3xl font-bold tracking-tight">Saldos de Fondos</h1>
+          <p className="text-muted-foreground">Al 31 de Agosto de 2023</p>
         </div>
         <div className="flex items-center gap-2">
             <Button variant="outline">
-                <RefreshCw className="mr-2 h-4 w-4" /> Reconcile
+                <RefreshCw className="mr-2 h-4 w-4" /> Reconciliar
             </Button>
             <Button>
-                <Plus className="mr-2 h-4 w-4" /> Add New Fund
+                <Plus className="mr-2 h-4 w-4" /> Añadir Nuevo Fondo
             </Button>
         </div>
       </div>
@@ -61,17 +61,17 @@ export default function FundBalancesPage() {
       <div className="flex items-center space-x-2">
         <div className="relative w-full max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Search funds..." className="pl-9" />
+            <Input placeholder="Buscar fondos..." className="pl-9" />
         </div>
         <Select>
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="All Fund Types" />
+            <SelectValue placeholder="Todos los Tipos de Fondos" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Fund Types</SelectItem>
-            <SelectItem value="unrestricted">Unrestricted</SelectItem>
-            <SelectItem value="designated">Designated</SelectItem>
-            <SelectItem value="restricted">Restricted</SelectItem>
+            <SelectItem value="all">Todos los Tipos de Fondos</SelectItem>
+            <SelectItem value="unrestricted">No Restringido</SelectItem>
+            <SelectItem value="designated">Designado</SelectItem>
+            <SelectItem value="restricted">Restringido</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -79,29 +79,29 @@ export default function FundBalancesPage() {
       <div className="grid gap-6 md:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Fund Balance</CardTitle>
+            <CardTitle className="text-sm font-medium">Saldo Total de Fondos</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{formatCurrency(totalBalance)}</div>
-            <p className="text-xs text-muted-foreground">Across {activeFunds} active funds</p>
+            <p className="text-xs text-muted-foreground">en {activeFunds} fondos activos</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Inflows (YTD)</CardTitle>
+            <CardTitle className="text-sm font-medium">Entradas Totales (YTD)</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-green-600">{formatCurrency(totalInflows)}</div>
-            <p className="text-xs text-muted-foreground">Year to Date Inflows</p>
+            <p className="text-xs text-muted-foreground">Entradas del Año hasta la Fecha</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Outflows (YTD)</CardTitle>
+            <CardTitle className="text-sm font-medium">Salidas Totales (YTD)</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-red-600">{formatCurrency(totalOutflows)}</div>
-            <p className="text-xs text-muted-foreground">Year to Date Outflows</p>
+            <p className="text-xs text-muted-foreground">Salidas del Año hasta la Fecha</p>
           </CardContent>
         </Card>
       </div>
@@ -112,12 +112,12 @@ export default function FundBalancesPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-muted/50">
-                  <th className="p-4 text-left font-semibold">Fund Name</th>
-                  <th className="p-4 text-left font-semibold">Fund Type</th>
-                  <th className="p-4 text-right font-semibold">Current Balance</th>
-                  <th className="p-4 text-right font-semibold">YTD Inflows</th>
-                  <th className="p-4 text-right font-semibold">YTD Outflows</th>
-                  <th className="p-4 text-center font-semibold">Status</th>
+                  <th className="p-4 text-left font-semibold">Nombre del Fondo</th>
+                  <th className="p-4 text-left font-semibold">Tipo de Fondo</th>
+                  <th className="p-4 text-right font-semibold">Saldo Actual</th>
+                  <th className="p-4 text-right font-semibold">Entradas YTD</th>
+                  <th className="p-4 text-right font-semibold">Salidas YTD</th>
+                  <th className="p-4 text-center font-semibold">Estado</th>
                 </tr>
               </thead>
               <tbody>

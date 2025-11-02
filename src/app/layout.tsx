@@ -13,7 +13,7 @@ const ptSans = PT_Sans({
 
 export const metadata: Metadata = {
   title: 'Churchlytics',
-  description: 'An overview of key church activities and statistics.',
+  description: 'Un resumen de las actividades y estadísticas clave de la iglesia.',
 };
 
 export default function RootLayout({
@@ -22,7 +22,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="es">
       <body
         className={cn(
           "min-h-screen bg-background font-sans antialiased",

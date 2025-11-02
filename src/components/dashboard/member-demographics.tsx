@@ -9,36 +9,32 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
+import { memberDemographics as demographicsData } from "@/lib/data";
 
-const memberDemographics = [
-  { name: '18-25', value: 35, fill: 'var(--color-chart-2)' },
-  { name: '26-40', value: 25, fill: 'var(--color-chart-1)' },
-  { name: '41-60', value: 20, fill: 'var(--color-chart-3)' },
-  { name: '60+', value: 20, fill: 'var(--color-chart-4)' },
-]
-const totalMembers = 1204;
+const totalMembers = demographicsData.reduce((acc, curr) => acc + curr.value, 0);
 
 const chartConfig = {
-  '18-25': { label: '18-25', color: 'hsl(var(--chart-2))' },
-  '26-40': { label: '26-40', color: 'hsl(var(--chart-1))' },
-  '41-60': { label: '41-60', color: 'hsl(var(--chart-3))' },
-  '60+': { label: '60+', color: 'hsl(var(--chart-4))' },
+  'Niños (0-12)': { label: 'Niños (0-12)', color: 'hsl(var(--chart-1))' },
+  'Jóvenes (13-18)': { label: 'Jóvenes (13-18)', color: 'hsl(var(--chart-2))' },
+  'Adultos Jóvenes (19-35)': { label: 'Adultos Jóvenes (19-35)', color: 'hsl(var(--chart-3))' },
+  'Adultos (36-60)': { label: 'Adultos (36-60)', color: 'hsl(var(--chart-4))' },
+  'Adultos Mayores (60+)': { label: 'Adultos Mayores (60+)', color: 'hsl(var(--chart-5))' },
 }
 
 export function MemberDemographics() {
   return (
     <Card className="h-full">
       <CardHeader>
-        <CardTitle>Member Demographics</CardTitle>
-        <CardDescription>Distribution by age group</CardDescription>
+        <CardTitle>Demografía de Miembros</CardTitle>
+        <CardDescription>Distribución por grupo de edad</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col items-center">
         <div className="h-[200px] w-full relative">
           <ChartContainer config={chartConfig} className="min-h-[200px] w-full">
             <PieChart>
               <ChartTooltip content={<ChartTooltipContent hideLabel />} />
-              <Pie data={memberDemographics} dataKey="value" nameKey="name" innerRadius={60} outerRadius={80} paddingAngle={2}>
-                 {memberDemographics.map((entry, index) => (
+              <Pie data={demographicsData} dataKey="value" nameKey="name" innerRadius={60} outerRadius={80} paddingAngle={2}>
+                 {demographicsData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.fill} />
                   ))}
               </Pie>
@@ -46,7 +42,7 @@ export function MemberDemographics() {
           </ChartContainer>
           <div className="absolute inset-0 flex flex-col items-center justify-center">
              <div className="text-3xl font-bold">{totalMembers}</div>
-             <div className="text-sm text-muted-foreground">Members</div>
+             <div className="text-sm text-muted-foreground">Miembros</div>
           </div>
         </div>
         <ChartContainer config={chartConfig} className="w-full">

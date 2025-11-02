@@ -38,11 +38,11 @@ import {
 import { allUsers } from '@/lib/data';
 
 const roleColors: { [key: string]: string } = {
-    'Super Administrator': 'bg-red-100 text-red-800 border-red-200',
+    'Super Administrador': 'bg-red-100 text-red-800 border-red-200',
     'Pastor': 'bg-blue-100 text-blue-800 border-blue-200',
-    'Office Staff': 'bg-green-100 text-green-800 border-green-200',
-    'Small Group Leader': 'bg-purple-100 text-purple-800 border-purple-200',
-    'Member': 'bg-gray-100 text-gray-800 border-gray-200',
+    'Personal de Oficina': 'bg-green-100 text-green-800 border-green-200',
+    'Líder de Grupo Pequeño': 'bg-purple-100 text-purple-800 border-purple-200',
+    'Miembro': 'bg-gray-100 text-gray-800 border-gray-200',
 };
 
 
@@ -67,13 +67,13 @@ export default function UsersPage() {
     <main className="flex-1 bg-muted/20 p-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">User Management</h1>
+          <h1 className="text-3xl font-bold">Gestión de Usuarios</h1>
           <p className="text-muted-foreground">
-            View and manage all users with access to the admin portal.
+            Ver y gestionar todos los usuarios con acceso al portal de administración.
           </p>
         </div>
         <div className="flex gap-2">
-            <Button><Plus className="mr-2 h-4 w-4" /> Add New User</Button>
+            <Button><Plus className="mr-2 h-4 w-4" /> Añadir Nuevo Usuario</Button>
         </div>
       </div>
       <Card className="mt-6">
@@ -81,7 +81,7 @@ export default function UsersPage() {
             <div className="flex items-center justify-between gap-4">
                 <div className="relative w-full max-w-sm">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Search by name or email..." className="pl-9" />
+                  <Input placeholder="Buscar por nombre o email..." className="pl-9" />
                 </div>
             </div>
         </CardHeader>
@@ -89,10 +89,10 @@ export default function UsersPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>User</TableHead>
+                <TableHead>Usuario</TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead>Rol</TableHead>
+                <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -132,7 +132,7 @@ export default function UsersPage() {
           </Table>
           <div className="flex items-center justify-between pt-4">
                 <div className="text-sm text-muted-foreground">
-                    Showing {paginatedData.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} to {Math.min(currentPage * itemsPerPage, allUsers.length)} of {allUsers.length} results
+                    Mostrando {paginatedData.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} a {Math.min(currentPage * itemsPerPage, allUsers.length)} de {allUsers.length} resultados
                 </div>
                 <Pagination>
                     <PaginationContent>

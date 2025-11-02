@@ -11,8 +11,8 @@ export function UpcomingEvents() {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-base font-medium">Upcoming Events</CardTitle>
-        <Button variant="link" className="p-0 h-auto">View All</Button>
+        <CardTitle className="text-base font-medium">Próximos Eventos</CardTitle>
+        <Button variant="link" className="p-0 h-auto">Ver Todos</Button>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">

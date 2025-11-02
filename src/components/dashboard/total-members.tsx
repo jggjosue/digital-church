@@ -6,7 +6,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { memberDemographics } from "@/lib/data"
-import type { TimeRange } from '@/app/page';
+import type { TimeRange } from '@/app/dashboard/page';
 
 interface TotalMembersProps {
     timeRange: TimeRange;
@@ -30,7 +30,7 @@ export function TotalMembers({ timeRange }: TotalMembersProps) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium">Total Members</CardTitle>
+        <CardTitle className="text-sm font-medium">Miembros Totales</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">{totalMembers.toLocaleString()}</div>

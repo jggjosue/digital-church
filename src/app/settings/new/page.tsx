@@ -23,23 +23,23 @@ import { Checkbox } from '@/components/ui/checkbox';
 import Link from 'next/link';
 
 const permissions = {
-    'Member Management': [
-        'View Members',
-        'Create Members',
-        'Edit Members',
-        'Delete Members',
-        'Export Data',
+    'Gestión de Miembros': [
+        'Ver Miembros',
+        'Crear Miembros',
+        'Editar Miembros',
+        'Eliminar Miembros',
+        'Exportar Datos',
     ],
-    'Donations & Financials': [
-        'View Donations',
-        'Enter Donations',
-        'Manage Pledges',
-        'Generate Statements',
+    'Donaciones y Finanzas': [
+        'Ver Donaciones',
+        'Ingresar Donaciones',
+        'Gestionar Promesas',
+        'Generar Estados de Cuenta',
     ],
-    'System Settings': [
-        'Manage Roles',
-        'Manage General Settings',
-        'Manage Integrations',
+    'Configuración del Sistema': [
+        'Gestionar Roles',
+        'Gestionar Configuración General',
+        'Gestionar Integraciones',
     ],
 };
 
@@ -53,9 +53,9 @@ export default function NewRolePage() {
                     <Link href="/settings"><ArrowLeft className="h-4 w-4" /></Link>
                 </Button>
                 <div>
-                    <h1 className="text-3xl font-bold">Create New Role</h1>
+                    <h1 className="text-3xl font-bold">Crear Nuevo Rol</h1>
                     <p className="text-muted-foreground">
-                        Define a new user role and configure its permissions.
+                        Defina un nuevo rol de usuario y configure sus permisos.
                     </p>
                 </div>
             </div>
@@ -63,28 +63,28 @@ export default function NewRolePage() {
             <div className="mt-6 max-w-4xl mx-auto">
                 <Card>
                     <CardHeader>
-                        <CardTitle className='text-2xl'>Role Details</CardTitle>
+                        <CardTitle className='text-2xl'>Detalles del Rol</CardTitle>
                         <CardDescription>
-                            Provide a name and a brief description for this new role.
+                            Proporcione un nombre y una breve descripción para este nuevo rol.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="space-y-2">
-                            <Label htmlFor="role-name">Role Name</Label>
-                            <Input id="role-name" placeholder="e.g., Content Manager" />
+                            <Label htmlFor="role-name">Nombre del Rol</Label>
+                            <Input id="role-name" placeholder="Ej., Administrador de Contenido" />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="role-description">Role Description</Label>
-                            <Textarea id="role-description" placeholder="Describe what users with this role can do." />
+                            <Label htmlFor="role-description">Descripción del Rol</Label>
+                            <Textarea id="role-description" placeholder="Describa lo que los usuarios con este rol pueden hacer." />
                         </div>
                     </CardContent>
                 </Card>
 
                 <Card className='mt-6'>
                         <CardHeader>
-                            <CardTitle className='text-2xl'>Permissions</CardTitle>
+                            <CardTitle className='text-2xl'>Permisos</CardTitle>
                             <CardDescription>
-                                Select the permissions for this role.
+                                Seleccione los permisos para este rol.
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
@@ -100,7 +100,7 @@ export default function NewRolePage() {
                                                         htmlFor={`select-all-${category.toLowerCase().replace(/\s/g, '-')}`}
                                                         className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                                                     >
-                                                    Select All
+                                                    Seleccionar Todo
                                                     </label>
                                                 </div>
                                                 {perms.map(perm => (
@@ -120,8 +120,8 @@ export default function NewRolePage() {
                                 ))}
                             </Accordion>
                             <div className="mt-8 flex justify-end gap-2">
-                                <Button variant="outline">Cancel</Button>
-                                <Button>Create Role</Button>
+                                <Button variant="outline">Cancelar</Button>
+                                <Button>Crear Rol</Button>
                             </div>
                         </CardContent>
                     </Card>

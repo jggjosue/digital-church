@@ -36,53 +36,53 @@ export default function VolunteersPage() {
     <main className="flex h-screen bg-muted/20">
       <aside className="w-[380px] border-r bg-background flex flex-col">
         <div className="p-6">
-          <h1 className="text-3xl font-bold">Volunteer Management</h1>
+          <h1 className="text-3xl font-bold">Gestión de Voluntarios</h1>
           <p className="text-muted-foreground mt-1">
-            View, manage, and schedule all church volunteers.
+            Vea, gestione y programe a todos los voluntarios de la iglesia.
           </p>
         </div>
         <div className="px-6 pb-4 flex gap-2">
             <Button variant="outline" className="w-full">
-              <FileText className="mr-2 h-4 w-4" /> Generate Report
+              <FileText className="mr-2 h-4 w-4" /> Generar Reporte
             </Button>
             <Button className="w-full">
-              <Plus className="mr-2 h-4 w-4" /> Add New Volunteer
+              <Plus className="mr-2 h-4 w-4" /> Añadir Nuevo Voluntario
             </Button>
         </div>
         <div className="px-6 pb-4">
             <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Search by volunteer name..." className="pl-9" />
+                <Input placeholder="Buscar por nombre de voluntario..." className="pl-9" />
             </div>
             <div className="flex gap-2 mt-2">
                 <Select>
                     <SelectTrigger>
-                    <SelectValue placeholder="Role: All" />
+                    <SelectValue placeholder="Rol: Todos" />
                     </SelectTrigger>
                     <SelectContent>
-                    <SelectItem value="all">All Roles</SelectItem>
-                    <SelectItem value="leader">Youth Group Leader</SelectItem>
-                    <SelectItem value="tech">AV Tech</SelectItem>
+                    <SelectItem value="all">Todos los Roles</SelectItem>
+                    <SelectItem value="leader">Líder de Grupo de Jóvenes</SelectItem>
+                    <SelectItem value="tech">Técnico de AV</SelectItem>
                     </SelectContent>
                 </Select>
                 <Select>
                     <SelectTrigger>
-                    <SelectValue placeholder="Skill: All" />
+                    <SelectValue placeholder="Habilidad: Todas" />
                     </SelectTrigger>
                     <SelectContent>
-                    <SelectItem value="all">All Skills</SelectItem>
-                    <SelectItem value="childcare">Childcare</SelectItem>
-                    <SelectItem value="leadership">Leadership</SelectItem>
+                    <SelectItem value="all">Todas las Habilidades</SelectItem>
+                    <SelectItem value="childcare">Cuidado de Niños</SelectItem>
+                    <SelectItem value="leadership">Liderazgo</SelectItem>
                     </SelectContent>
                 </Select>
                 <Select>
                     <SelectTrigger>
-                    <SelectValue placeholder="Availability: All" />
+                    <SelectValue placeholder="Disponibilidad: Toda" />
                     </SelectTrigger>
                     <SelectContent>
-                    <SelectItem value="all">Any Availability</SelectItem>
-                    <SelectItem value="sunday-morning">Sunday Mornings</SelectItem>
-                    <SelectItem value="wed-evening">Wednesday Evenings</SelectItem>
+                    <SelectItem value="all">Cualquier Disponibilidad</SelectItem>
+                    <SelectItem value="sunday-morning">Domingos por la Mañana</SelectItem>
+                    <SelectItem value="wed-evening">Miércoles por la Tarde</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
@@ -127,16 +127,16 @@ export default function VolunteersPage() {
                         <p className="text-muted-foreground">{selectedVolunteer.email} | {selectedVolunteer.phone}</p>
                         <div className="flex gap-8 mt-4">
                             <div>
-                                <p className="text-sm text-muted-foreground">Hours Served</p>
+                                <p className="text-sm text-muted-foreground">Horas Servidas</p>
                                 <p className="text-lg font-semibold">{selectedVolunteer.hoursServed}</p>
                             </div>
                             <div>
-                                <p className="text-sm text-muted-foreground">Next Serving</p>
+                                <p className="text-sm text-muted-foreground">Próximo Servicio</p>
                                 <p className="text-lg font-semibold">{selectedVolunteer.nextServing}</p>
                             </div>
                             <div>
-                                <p className="text-sm text-muted-foreground">Background Check</p>
-                                <Badge variant={selectedVolunteer.backgroundCheck === 'Passed' ? 'default' : 'destructive'} className={selectedVolunteer.backgroundCheck === 'Passed' ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-100 text-red-800 border-red-200'}>
+                                <p className="text-sm text-muted-foreground">Verificación de Antecedentes</p>
+                                <Badge variant={selectedVolunteer.backgroundCheck === 'Aprobado' ? 'default' : 'destructive'} className={selectedVolunteer.backgroundCheck === 'Aprobado' ? 'bg-green-100 text-green-800 border-green-200' : 'bg-red-100 text-red-800 border-red-200'}>
                                     {selectedVolunteer.backgroundCheck}
                                 </Badge>
                             </div>
@@ -150,16 +150,16 @@ export default function VolunteersPage() {
 
         <Tabs defaultValue="profile" className="mt-6">
           <TabsList>
-            <TabsTrigger value="profile">Profile</TabsTrigger>
-            <TabsTrigger value="schedule">Schedule</TabsTrigger>
-            <TabsTrigger value="assignments">Assignments</TabsTrigger>
+            <TabsTrigger value="profile">Perfil</TabsTrigger>
+            <TabsTrigger value="schedule">Horario</TabsTrigger>
+            <TabsTrigger value="assignments">Asignaciones</TabsTrigger>
           </TabsList>
           <TabsContent value="profile">
             <div className="grid grid-cols-1 gap-6 mt-4">
                 <Card>
                     <CardHeader className='flex flex-row items-center justify-between'>
-                        <h3 className="font-semibold text-lg">Skills & Interests</h3>
-                        <Button variant="link" className="p-0 h-auto">Add Skill</Button>
+                        <h3 className="font-semibold text-lg">Habilidades e Intereses</h3>
+                        <Button variant="link" className="p-0 h-auto">Añadir Habilidad</Button>
                     </CardHeader>
                     <CardContent>
                         <div className="flex flex-wrap gap-2">
@@ -171,8 +171,8 @@ export default function VolunteersPage() {
                 </Card>
                 <Card>
                     <CardHeader className='flex flex-row items-center justify-between'>
-                        <h3 className="font-semibold text-lg">General Availability</h3>
-                        <Button variant="link" className="p-0 h-auto">Edit Availability</Button>
+                        <h3 className="font-semibold text-lg">Disponibilidad General</h3>
+                        <Button variant="link" className="p-0 h-auto">Editar Disponibilidad</Button>
                     </CardHeader>
                     <CardContent className="grid grid-cols-3 gap-4">
                         {Object.entries(selectedVolunteer.availability).map(([day, times]) => (
@@ -192,12 +192,12 @@ export default function VolunteersPage() {
                 </Card>
                  <Card>
                     <CardHeader className='flex flex-row items-center justify-between'>
-                        <h3 className="font-semibold text-lg">Admin Notes</h3>
-                        <Button variant="link" className="p-0 h-auto">Add Note</Button>
+                        <h3 className="font-semibold text-lg">Notas Administrativas</h3>
+                        <Button variant="link" className="p-0 h-auto">Añadir Nota</Button>
                     </CardHeader>
                     <CardContent>
                         <p className="text-sm text-muted-foreground">
-                            {selectedVolunteer.adminNotes || 'No admin notes for this volunteer.'}
+                            {selectedVolunteer.adminNotes || 'No hay notas administrativas para este voluntario.'}
                         </p>
                     </CardContent>
                 </Card>
@@ -205,12 +205,12 @@ export default function VolunteersPage() {
           </TabsContent>
           <TabsContent value="schedule">
             <div className="p-6 text-center text-muted-foreground">
-                Volunteer schedule management coming soon.
+                La gestión de horarios de voluntarios estará disponible próximamente.
             </div>
           </TabsContent>
           <TabsContent value="assignments">
             <div className="p-6 text-center text-muted-foreground">
-                Volunteer assignment tracking coming soon.
+                El seguimiento de asignaciones de voluntarios estará disponible próximamente.
             </div>
           </TabsContent>
         </Tabs>

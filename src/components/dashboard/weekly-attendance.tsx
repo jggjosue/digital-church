@@ -6,7 +6,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { attendanceData } from "@/lib/data"
-import type { TimeRange } from '@/app/page';
+import type { TimeRange } from '@/app/dashboard/page';
 
 interface WeeklyAttendanceProps {
   timeRange: TimeRange;
@@ -39,7 +39,7 @@ export function WeeklyAttendance({ timeRange }: WeeklyAttendanceProps) {
     <Card>
       <CardHeader className="pb-2">
         <CardTitle className="text-sm font-medium">
-            {timeRange === 'this-week' ? 'Weekly Attendance' : 'Total Attendance'}
+            {timeRange === 'this-week' ? 'Asistencia Semanal' : 'Asistencia Total'}
         </CardTitle>
       </CardHeader>
       <CardContent>

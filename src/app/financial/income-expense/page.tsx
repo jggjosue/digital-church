@@ -15,7 +15,7 @@ import { CalendarIcon, Download, SlidersHorizontal, Landmark } from 'lucide-reac
 import { incomeStatementData } from '@/lib/data';
 
 const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('es-ES', {
     style: 'currency',
     currency: 'USD',
   }).format(amount);
@@ -29,35 +29,35 @@ export default function IncomeExpensePage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">
-            Income & Expense Statement
+            Estado de Ingresos y Gastos
           </h1>
-          <p className="text-muted-foreground">January 1, 2023 - August 31, 2023</p>
+          <p className="text-muted-foreground">1 de Enero, 2023 - 31 de Agosto, 2023</p>
         </div>
         <Button>
           <Download className="mr-2 h-4 w-4" />
-          Export PDF
+          Exportar PDF
         </Button>
       </div>
 
       <div className="flex items-center space-x-2">
         <Button variant="outline" className="flex items-center gap-2">
           <CalendarIcon className="h-4 w-4" />
-          <span>Jan 1, 2023 - Aug 31, 2023</span>
+          <span>1 de Ene, 2023 - 31 de Ago, 2023</span>
         </Button>
         <Select>
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="All Categories" />
+            <SelectValue placeholder="Todas las Categorías" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Categories</SelectItem>
+            <SelectItem value="all">Todas las Categorías</SelectItem>
           </SelectContent>
         </Select>
         <Select>
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="All Funds" />
+            <SelectValue placeholder="Todos los Fondos" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Funds</SelectItem>
+            <SelectItem value="all">Todos los Fondos</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -67,7 +67,7 @@ export default function IncomeExpensePage() {
             <div className="space-y-6">
                 {/* Income Section */}
                 <div>
-                    <h2 className="text-2xl font-semibold mb-4">Income</h2>
+                    <h2 className="text-2xl font-semibold mb-4">Ingresos</h2>
                     <div className="space-y-3">
                         {income.map((item, index) => (
                             <div key={index} className="flex justify-between items-center">
@@ -78,14 +78,14 @@ export default function IncomeExpensePage() {
                     </div>
                     <Separator className="my-4" />
                     <div className="flex justify-between items-center font-bold">
-                        <p>Total Income</p>
+                        <p>Ingresos Totales</p>
                         <p className="text-green-600">{formatCurrency(totalIncome)}</p>
                     </div>
                 </div>
 
                  {/* Expenses Section */}
                  <div>
-                    <h2 className="text-2xl font-semibold mb-4">Expenses</h2>
+                    <h2 className="text-2xl font-semibold mb-4">Gastos</h2>
                     <div className="space-y-3">
                         {expenses.map((item, index) => (
                             <div key={index} className="flex justify-between items-center">
@@ -96,7 +96,7 @@ export default function IncomeExpensePage() {
                     </div>
                     <Separator className="my-4" />
                     <div className="flex justify-between items-center font-bold">
-                        <p>Total Expenses</p>
+                        <p>Gastos Totales</p>
                         <p className="text-red-600">{formatCurrency(totalExpenses)}</p>
                     </div>
                 </div>
@@ -104,7 +104,7 @@ export default function IncomeExpensePage() {
             
             <div className="mt-8 bg-muted/50 p-4 rounded-lg">
                  <div className="flex justify-between items-center font-bold text-xl">
-                    <p>Net Income</p>
+                    <p>Ingreso Neto</p>
                     <p>{formatCurrency(netIncome)}</p>
                 </div>
             </div>

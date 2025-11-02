@@ -15,12 +15,12 @@ export function TotalMinistries() {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium">Total Ministries</CardTitle>
+        <CardTitle className="text-sm font-medium">Ministerios Totales</CardTitle>
         <Church className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">{totalMinistries}</div>
-         <p className="text-xs text-muted-foreground">Active church ministries</p>
+         <p className="text-xs text-muted-foreground">Ministerios activos de la iglesia</p>
       </CardContent>
     </Card>
   )

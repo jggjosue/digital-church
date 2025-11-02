@@ -31,10 +31,10 @@ export default function NewTransactionPage() {
     <main className="flex-1 space-y-6 p-8">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">
-          New Financial Transaction
+          Nueva Transacción Financiera
         </h1>
         <p className="text-muted-foreground">
-          Record a new income or expense for the church.
+          Registre un nuevo ingreso o gasto para la iglesia.
         </p>
       </div>
 
@@ -42,28 +42,28 @@ export default function NewTransactionPage() {
         <CardContent className="p-6">
           <div className="max-w-2xl mx-auto space-y-8">
             <div className="space-y-2">
-                <Label>Transaction Type</Label>
+                <Label>Tipo de Transacción</Label>
                 <div className="grid grid-cols-2 gap-4">
                     <Button
                         variant={transactionType === 'income' ? 'default' : 'outline'}
                         onClick={() => setTransactionType('income')}
                         className={cn("py-6 text-base", transactionType === 'income' && "ring-2 ring-primary-focus")}
                     >
-                        <ArrowDown className="mr-2 h-5 w-5" /> Income
+                        <ArrowDown className="mr-2 h-5 w-5" /> Ingreso
                     </Button>
                     <Button
                         variant={transactionType === 'expense' ? 'default' : 'outline'}
                         onClick={() => setTransactionType('expense')}
                         className={cn("py-6 text-base", transactionType === 'expense' && "ring-2 ring-primary-focus")}
                     >
-                        <ArrowUp className="mr-2 h-5 w-5" /> Expense
+                        <ArrowUp className="mr-2 h-5 w-5" /> Gasto
                     </Button>
                 </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                    <Label htmlFor="date">Date</Label>
+                    <Label htmlFor="date">Fecha</Label>
                     <Popover>
                         <PopoverTrigger asChild>
                         <Button
@@ -74,7 +74,7 @@ export default function NewTransactionPage() {
                             )}
                         >
                             <CalendarIcon className="mr-2 h-4 w-4" />
-                            {date ? format(date, "PPP") : <span>Pick a date</span>}
+                            {date ? format(date, "PPP") : <span>Seleccione una fecha</span>}
                         </Button>
                         </PopoverTrigger>
                         <PopoverContent className="w-auto p-0">
@@ -88,7 +88,7 @@ export default function NewTransactionPage() {
                     </Popover>
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="amount">Amount</Label>
+                    <Label htmlFor="amount">Monto</Label>
                     <div className="relative">
                         <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-muted-foreground">$</span>
                         <Input id="amount" type="number" placeholder="0.00" className="pl-7" />
@@ -97,48 +97,48 @@ export default function NewTransactionPage() {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="category">Category</Label>
+              <Label htmlFor="category">Categoría</Label>
               <Select>
                 <SelectTrigger id="category">
-                  <SelectValue placeholder="Select a category" />
+                  <SelectValue placeholder="Seleccione una categoría" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="tithes">Tithes & Offerings</SelectItem>
-                  <SelectItem value="salaries">Salaries & Benefits</SelectItem>
-                  <SelectItem value="utilities">Utilities</SelectItem>
-                  <SelectItem value="maintenance">Facility Maintenance</SelectItem>
+                  <SelectItem value="tithes">Diezmos y Ofrendas</SelectItem>
+                  <SelectItem value="salaries">Salarios y Beneficios</SelectItem>
+                  <SelectItem value="utilities">Servicios Públicos</SelectItem>
+                  <SelectItem value="maintenance">Mantenimiento de Instalaciones</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="fund">Fund / Ministry</Label>
+              <Label htmlFor="fund">Fondo / Ministerio</Label>
               <Select>
                 <SelectTrigger id="fund">
-                  <SelectValue placeholder="Select a fund or ministry" />
+                  <SelectValue placeholder="Seleccione un fondo o ministerio" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="general">General Fund</SelectItem>
-                  <SelectItem value="building">Building Fund</SelectItem>
-                  <SelectItem value="missions">Missions Fund</SelectItem>
-                  <SelectItem value="youth">Youth Ministry</SelectItem>
+                  <SelectItem value="general">Fondo General</SelectItem>
+                  <SelectItem value="building">Fondo de Construcción</SelectItem>
+                  <SelectItem value="missions">Fondo de Misiones</SelectItem>
+                  <SelectItem value="youth">Ministerio Juvenil</SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="payee">Payee / Payer (Optional)</Label>
-              <Input id="payee" placeholder="e.g., John Smith, Office Supplies Inc." />
+              <Label htmlFor="payee">Beneficiario / Pagador (Opcional)</Label>
+              <Input id="payee" placeholder="Ej., John Smith, Office Supplies Inc." />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="notes">Notes (Optional)</Label>
-              <Textarea id="notes" placeholder="Add a description or any relevant details..." />
+              <Label htmlFor="notes">Notas (Opcional)</Label>
+              <Textarea id="notes" placeholder="Añada una descripción o cualquier detalle relevante..." />
             </div>
 
             <div className="flex justify-end gap-2">
-                <Button variant="outline">Cancel</Button>
-                <Button>Save Transaction</Button>
+                <Button variant="outline">Cancelar</Button>
+                <Button>Guardar Transacción</Button>
             </div>
           </div>
         </CardContent>

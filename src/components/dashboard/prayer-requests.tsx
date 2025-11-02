@@ -17,8 +17,8 @@ export function PrayerRequests() {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-base font-medium">Recent Prayer Requests</CardTitle>
-        <Button variant="link" className="p-0 h-auto">View All</Button>
+        <CardTitle className="text-base font-medium">Peticiones de Oración Recientes</CardTitle>
+        <Button variant="link" className="p-0 h-auto">Ver Todas</Button>
       </CardHeader>
       <CardContent>
         <div className="space-y-2">

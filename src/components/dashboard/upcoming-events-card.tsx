@@ -15,12 +15,12 @@ export function UpcomingEventsCard() {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium">Upcoming Events</CardTitle>
+        <CardTitle className="text-sm font-medium">Próximos Eventos</CardTitle>
         <Calendar className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">{totalEvents}</div>
-        <p className="text-xs text-muted-foreground">Events this month</p>
+        <p className="text-xs text-muted-foreground">Eventos este mes</p>
       </CardContent>
     </Card>
   )

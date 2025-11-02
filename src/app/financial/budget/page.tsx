@@ -17,7 +17,7 @@ import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 
 const formatCurrency = (amount: number, showSign = false) => {
-    const formatted = new Intl.NumberFormat('en-US', {
+    const formatted = new Intl.NumberFormat('es-ES', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 2,
@@ -42,34 +42,34 @@ export default function BudgetReportPage() {
     <main className="flex-1 space-y-6 p-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Budget Report</h1>
-          <p className="text-muted-foreground">January 1, 2023 - August 31, 2023</p>
+          <h1 className="text-3xl font-bold tracking-tight">Reporte de Presupuesto</h1>
+          <p className="text-muted-foreground">1 de Enero, 2023 - 31 de Agosto, 2023</p>
         </div>
         <Button>
           <Download className="mr-2 h-4 w-4" />
-          Export PDF
+          Exportar PDF
         </Button>
       </div>
 
       <div className="flex items-center space-x-2">
         <Button variant="outline" className="flex items-center gap-2">
           <CalendarIcon className="h-4 w-4" />
-          <span>Jan 1, 2023 - Aug 31, 2023</span>
+          <span>1 de Ene, 2023 - 31 de Ago, 2023</span>
         </Button>
         <Select>
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="All Categories" />
+            <SelectValue placeholder="Todas las Categorías" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Categories</SelectItem>
+            <SelectItem value="all">Todas las Categorías</SelectItem>
           </SelectContent>
         </Select>
         <Select>
             <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="All Ministries" />
+                <SelectValue placeholder="Todos los Ministerios" />
             </SelectTrigger>
             <SelectContent>
-                <SelectItem value="all">All Ministries</SelectItem>
+                <SelectItem value="all">Todos los Ministerios</SelectItem>
             </SelectContent>
         </Select>
       </div>
@@ -77,29 +77,29 @@ export default function BudgetReportPage() {
       <div className="grid gap-6 md:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Budget</CardTitle>
+            <CardTitle className="text-sm font-medium">Presupuesto Total</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{formatCurrency(totalBudget)}</div>
-            <p className="text-xs text-muted-foreground">vs {formatCurrency(previousPeriodBudget)} Previous Period</p>
+            <p className="text-xs text-muted-foreground">vs {formatCurrency(previousPeriodBudget)} Período Anterior</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Actual</CardTitle>
+            <CardTitle className="text-sm font-medium">Real Total</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">{formatCurrency(totalActual)}</div>
-            <p className="text-xs text-muted-foreground">Income - Expenses</p>
+            <p className="text-xs text-muted-foreground">Ingresos - Gastos</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Variance</CardTitle>
+            <CardTitle className="text-sm font-medium">Variación</CardTitle>
           </CardHeader>
           <CardContent>
             <div className={cn("text-3xl font-bold", variance > 0 ? "text-green-600" : "text-red-600")}>{formatCurrency(variance)}</div>
-            <p className="text-xs text-muted-foreground">+1.5% Over Budget</p>
+            <p className="text-xs text-muted-foreground">+1.5% Sobre el Presupuesto</p>
           </CardContent>
         </Card>
       </div>
@@ -110,16 +110,16 @@ export default function BudgetReportPage() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b">
-                  <th className="p-4 text-left font-semibold">Category</th>
-                  <th className="p-4 text-right font-semibold">Budget</th>
-                  <th className="p-4 text-right font-semibold">Actual</th>
-                  <th className="p-4 text-right font-semibold">Variance</th>
-                  <th className="p-4 text-left font-semibold">% of Budget Used</th>
+                  <th className="p-4 text-left font-semibold">Categoría</th>
+                  <th className="p-4 text-right font-semibold">Presupuesto</th>
+                  <th className="p-4 text-right font-semibold">Real</th>
+                  <th className="p-4 text-right font-semibold">Variación</th>
+                  <th className="p-4 text-left font-semibold">% del Presupuesto Usado</th>
                 </tr>
               </thead>
               <tbody>
                 <tr className="font-bold bg-muted/50">
-                  <td className="p-4">Income</td>
+                  <td className="p-4">Ingresos</td>
                   <td className="p-4 text-right">{formatCurrency(income.totalBudget)}</td>
                   <td className="p-4 text-right">{formatCurrency(income.totalActual)}</td>
                   <td className={cn("p-4 text-right", (income.totalActual - income.totalBudget) > 0 ? 'text-green-600' : 'text-red-600')}>{formatCurrency(income.totalActual - income.totalBudget)}</td>
@@ -138,7 +138,7 @@ export default function BudgetReportPage() {
                     )
                 })}
                  <tr className="font-bold bg-muted/50">
-                  <td className="p-4">Expenses</td>
+                  <td className="p-4">Gastos</td>
                   <td className="p-4 text-right">{formatCurrency(expenses.totalBudget)}</td>
                   <td className="p-4 text-right">{formatCurrency(expenses.totalActual)}</td>
                   <td className={cn("p-4 text-right", (expenses.totalBudget - expenses.totalActual) > 0 ? 'text-green-600' : 'text-red-600')}>{formatCurrency(expenses.totalBudget - expenses.totalActual)}</td>
@@ -158,7 +158,7 @@ export default function BudgetReportPage() {
                      )
                 })}
                 <tr className="font-bold bg-muted/50 border-t-2">
-                    <td className="p-4">Net Total</td>
+                    <td className="p-4">Total Neto</td>
                     <td className="p-4 text-right">{formatCurrency(netTotal.budget)}</td>
                     <td className="p-4 text-right">{formatCurrency(netTotal.actual)}</td>
                     <td className={cn("p-4 text-right", (netTotal.actual - netTotal.budget) > 0 ? 'text-green-600' : 'text-red-600')}>{formatCurrency(netTotal.actual - netTotal.budget)}</td>
