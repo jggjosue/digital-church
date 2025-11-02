@@ -1,0 +1,210 @@
+'use client';
+
+import * as React from 'react';
+import {
+  Plus,
+  Search,
+  ListFilter,
+  Calendar as CalendarIcon,
+  MapPin,
+  Edit,
+  Trash2,
+  ChevronLeft,
+  ChevronRight,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import Image from 'next/image';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
+import { events as allEvents } from '@/lib/data';
+
+type Event = (typeof allEvents)[0];
+
+const eventCategoryColors: { [key: string]: string } = {
+  'Bible Study': 'bg-purple-100 text-purple-800 border-purple-200',
+  'Sunday Service': 'bg-blue-100 text-blue-800 border-blue-200',
+  'Youth Group': 'bg-green-100 text-green-800 border-green-200',
+  'Community Outreach': 'bg-orange-100 text-orange-800 border-orange-200',
+};
+
+const getDaysInMonth = (year: number, month: number) => {
+  return new Date(year, month + 1, 0).getDate();
+};
+
+const getFirstDayOfMonth = (year: number, month: number) => {
+  return new Date(year, month, 1).getDay();
+};
+
+export default function EventsPage() {
+  const [currentDate, setCurrentDate] = React.useState(new Date(2024, 9, 11)); // October 11, 2024
+  const [selectedEvent, setSelectedEvent] = React.useState<Event>(allEvents.find(e => e.id === 3) as Event);
+  const [selectedDay, setSelectedDay] = React.useState<number>(11);
+
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
+
+  const daysInMonth = getDaysInMonth(year, month);
+  const firstDay = getFirstDayOfMonth(year, month);
+
+  const calendarDays = Array.from({ length: firstDay }, (_, i) => ({
+    day: new Date(year, month, i - firstDay + 1).getDate(),
+    isCurrentMonth: false,
+  }));
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    calendarDays.push({ day, isCurrentMonth: true });
+  }
+
+  const remainingDays = 42 - calendarDays.length;
+  for (let i = 1; i <= remainingDays; i++) {
+    calendarDays.push({ day: i, isCurrentMonth: false });
+  }
+
+  const handleSelectEvent = (event: Event | null, day: number) => {
+    if (event) {
+        setSelectedEvent(event);
+        setSelectedDay(day);
+    }
+  };
+  
+  const handlePrevMonth = () => {
+    setCurrentDate(new Date(year, month - 1, 1));
+  };
+
+  const handleNextMonth = () => {
+    setCurrentDate(new Date(year, month + 1, 1));
+  };
+
+  return (
+    <main className="flex min-h-screen w-full bg-muted/20">
+      <div className="flex-1 p-8">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Church Events</h1>
+            <p className="text-muted-foreground">
+              View, create, and manage all church events and activities.
+            </p>
+          </div>
+          <Button>
+            <Plus className="mr-2 h-4 w-4" /> Create New Event
+          </Button>
+        </div>
+
+        <div className="mt-6 flex items-center justify-between gap-4">
+          <div className="relative w-full max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input placeholder="Search for an event by name..." className="pl-9" />
+          </div>
+          <Button variant="outline">
+            <ListFilter className="mr-2 h-4 w-4" /> Filters
+          </Button>
+        </div>
+
+        <Card className="mt-6">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <Button variant="ghost" size="icon" onClick={handlePrevMonth}>
+                  <ChevronLeft className="h-5 w-5" />
+                </Button>
+                <h2 className="text-xl font-semibold">
+                  {currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
+                </h2>
+                <Button variant="ghost" size="icon" onClick={handleNextMonth}>
+                  <ChevronRight className="h-5 w-5" />
+                </Button>
+              </div>
+              <div className="flex items-center gap-1 rounded-lg bg-muted p-1">
+                <Button variant="ghost" size="sm" className="bg-background shadow-sm">Month</Button>
+                <Button variant="ghost" size="sm">Week</Button>
+                <Button variant="ghost" size="sm">Day</Button>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-7 gap-px border-t border-l bg-border">
+              {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map((day) => (
+                <div key={day} className="py-2 text-center text-xs font-medium text-muted-foreground bg-card">
+                  {day}
+                </div>
+              ))}
+              {calendarDays.map((date, index) => {
+                 const dayEvents = allEvents.filter(event => {
+                    const eventDate = new Date(event.date);
+                    return eventDate.getFullYear() === year && eventDate.getMonth() === month && eventDate.getDate() === date.day && date.isCurrentMonth;
+                });
+
+                return (
+                  <div key={index} className={`relative h-28 p-2 bg-card border-r border-b ${date.isCurrentMonth ? '' : 'bg-muted/50 text-muted-foreground'}`}
+                       onClick={() => dayEvents.length > 0 && handleSelectEvent(dayEvents[0], date.day)}>
+                    <div className={`text-sm ${selectedDay === date.day && date.isCurrentMonth ? 'font-bold text-primary' : ''}`}>
+                      {date.day}
+                    </div>
+                    <div className="mt-1 space-y-1">
+                        {dayEvents.map(event => (
+                            <div key={event.id} className={`p-1 rounded-md text-xs cursor-pointer ${eventCategoryColors[event.category]} ${selectedEvent.id === event.id ? 'ring-2 ring-primary' : ''}`}>
+                                {event.title.split(' ')[0]} {event.title.split(' ')[1]}
+                            </div>
+                        ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <aside className="w-96 border-l bg-background p-6">
+        <h2 className="text-lg font-semibold">Event Details</h2>
+        <p className="text-sm text-muted-foreground">
+          Selected: {new Date(year, month, selectedDay).toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric'})}
+        </p>
+
+        {selectedEvent && (
+          <div className="mt-6">
+            <Image
+              src={PlaceHolderImages.find(p => p.id === 'event-bible-study')?.imageUrl || ''}
+              alt={selectedEvent.title}
+              width={400}
+              height={200}
+              className="rounded-lg object-cover"
+              data-ai-hint="people studying"
+            />
+            <Badge variant="outline" className={`mt-4 ${eventCategoryColors[selectedEvent.category]}`}>
+              {selectedEvent.category}
+            </Badge>
+            <h3 className="mt-2 text-2xl font-bold">{selectedEvent.title}</h3>
+            <p className="mt-2 text-muted-foreground">
+                {selectedEvent.description}
+            </p>
+            <div className="mt-6 space-y-4">
+                <div className="flex items-start gap-4">
+                    <CalendarIcon className="h-5 w-5 text-muted-foreground mt-1" />
+                    <div>
+                        <p className="font-semibold">Date & Time</p>
+                        <p className="text-muted-foreground">{new Date(selectedEvent.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                        <p className="text-muted-foreground">{selectedEvent.time}</p>
+                    </div>
+                </div>
+                <div className="flex items-start gap-4">
+                    <MapPin className="h-5 w-5 text-muted-foreground mt-1" />
+                    <div>
+                        <p className="font-semibold">Location</p>
+                        <p className="text-muted-foreground">{selectedEvent.location}</p>
+                        <p className="text-muted-foreground">{selectedEvent.address}</p>
+                    </div>
+                </div>
+            </div>
+            <div className="mt-8 flex gap-2">
+                <Button variant="outline" className="w-full"><Edit className="mr-2 h-4 w-4"/>Edit</Button>
+                <Button variant="destructive" className="w-full"><Trash2 className="mr-2 h-4 w-4"/>Delete</Button>
+            </div>
+          </div>
+        )}
+      </aside>
+    </main>
+  );
+}

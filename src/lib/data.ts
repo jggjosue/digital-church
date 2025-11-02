@@ -263,3 +263,56 @@ export const membersData = [
         checkInTime: '7:08 PM',
       },
   ];
+
+  export const events = [
+    {
+      id: 1,
+      title: 'Youth Group',
+      category: 'Youth Group',
+      date: '2024-10-04T18:30:00',
+      time: '6:30 PM - 8:00 PM',
+      location: 'Youth Hall',
+      address: '123 Church Street, Anytown, USA',
+      description: 'A fun night for teens to connect and grow in their faith.'
+    },
+    {
+      id: 2,
+      title: 'Sunday Service',
+      category: 'Sunday Service',
+      date: '2024-10-06T10:00:00',
+      time: '10:00 AM - 11:30 AM',
+      location: 'Main Sanctuary',
+      address: '123 Church Street, Anytown, USA',
+      description: 'Join us for our weekly worship service.'
+    },
+    {
+      id: 3,
+      title: 'Weekly Bible Study Group',
+      category: 'Bible Study',
+      date: '2024-10-11T19:00:00',
+      time: '7:00 PM - 8:30 PM',
+      location: 'Fellowship Hall',
+      address: '123 Church Street, Anytown, USA',
+      description: "Join us for an in-depth study of the book of Romans. All are welcome, from new believers to seasoned scholars. It's a great opportunity for fellowship and growing in your faith."
+    },
+    {
+      id: 4,
+      title: 'Community Outreach',
+      category: 'Community Outreach',
+      date: '2024-10-10T09:00:00',
+      time: '9:00 AM - 12:00 PM',
+      location: 'City Park',
+      address: '456 Park Avenue, Anytown, USA',
+      description: 'Serving our community by cleaning up the local park.'
+    },
+    {
+      id: 5,
+      title: 'Sunday Service',
+      category: 'Sunday Service',
+      date: '2024-10-13T10:00:00',
+      time: '10:00 AM - 11:30 AM',
+      location: 'Main Sanctuary',
+      address: '123 Church Street, Anytown, USA',
+      description: 'Join us for our weekly worship service.'
+    }
+  ];
