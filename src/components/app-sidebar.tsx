@@ -28,6 +28,7 @@ const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/members', icon: Users, label: 'People' },
   { href: '/groups', icon: Users, label: 'Groups' },
+  { href: '/attendance', icon: BarChart, label: 'Attendance' },
   { href: '/events', icon: Calendar, label: 'Events' },
   { href: '/finances', icon: Coins, label: 'Finances' },
 ];
