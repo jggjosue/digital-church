@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { useSearchParams } from 'next/navigation';
-import { ArrowLeft, Send } from 'lucide-react';
+import { ArrowLeft, Send, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -17,19 +17,46 @@ import { Textarea } from '@/components/ui/textarea';
 import Link from 'next/link';
 import { membersData } from '@/lib/data';
 import { Badge } from '@/components/ui/badge';
-import { X } from 'lucide-react';
+
+type Member = (typeof membersData)[0];
 
 export default function SendEmailPage() {
   const searchParams = useSearchParams();
   const idsParam = searchParams.get('ids');
   const memberIds = idsParam ? idsParam.split(',').map(id => parseInt(id, 10)) : [];
   
-  const [recipients, setRecipients] = React.useState(() => 
+  const [recipients, setRecipients] = React.useState<Member[]>(() => 
     membersData.filter(m => memberIds.includes(m.id))
   );
 
+  const [searchTerm, setSearchTerm] = React.useState('');
+  const [filteredMembers, setFilteredMembers] = React.useState<Member[]>([]);
+
+  React.useEffect(() => {
+    if (searchTerm) {
+      const recipientIds = recipients.map(r => r.id);
+      setFilteredMembers(
+        membersData.filter(
+          m =>
+            !recipientIds.includes(m.id) &&
+            (m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            m.email.toLowerCase().includes(searchTerm.toLowerCase()))
+        ).slice(0, 5) // Limit results for performance
+      );
+    } else {
+      setFilteredMembers([]);
+    }
+  }, [searchTerm, recipients]);
+
+
   const handleRemoveRecipient = (id: number) => {
     setRecipients(prev => prev.filter(r => r.id !== id));
+  };
+
+  const handleAddRecipient = (member: Member) => {
+    setRecipients(prev => [...prev, member]);
+    setSearchTerm('');
+    setFilteredMembers([]);
   };
 
   const recipientEmails = recipients.map(r => r.email).join(', ');
@@ -60,16 +87,38 @@ export default function SendEmailPage() {
         <CardContent className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="recipients">Para</Label>
-            <div className="min-h-10 rounded-md border border-input p-2 flex flex-wrap gap-2">
+            <div className="min-h-10 rounded-md border border-input p-2 flex flex-wrap gap-2 items-center">
               {recipients.map(recipient => (
-                <Badge key={recipient.id} variant="secondary" className="flex items-center gap-1.5 py-1">
-                  <span className="font-medium">{recipient.name}</span>
-                  <span className="text-muted-foreground">({recipient.email})</span>
-                  <button onClick={() => handleRemoveRecipient(recipient.id)} className="rounded-full hover:bg-black/10 dark:hover:bg-white/10">
+                <Badge key={recipient.id} variant="secondary" className="flex items-center gap-1.5 py-1 text-sm">
+                  <span>{recipient.name}</span>
+                  <button onClick={() => handleRemoveRecipient(recipient.id)} className="rounded-full hover:bg-black/10 dark:hover:bg-white/10 p-0.5">
                     <X className="h-3 w-3" />
                   </button>
                 </Badge>
               ))}
+              <div className="relative flex-grow">
+                 <Input 
+                    id="recipients-input"
+                    placeholder="Añadir más destinatarios..."
+                    className="border-none focus-visible:ring-0 shadow-none h-auto py-0 px-1"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                {filteredMembers.length > 0 && (
+                    <div className="absolute top-full left-0 mt-2 w-full bg-background border rounded-md shadow-lg z-10">
+                        {filteredMembers.map(member => (
+                             <div 
+                                key={member.id} 
+                                className="p-2 hover:bg-accent cursor-pointer"
+                                onClick={() => handleAddRecipient(member)}
+                            >
+                                <p className="font-medium">{member.name}</p>
+                                <p className="text-sm text-muted-foreground">{member.email}</p>
+                            </div>
+                        ))}
+                    </div>
+                )}
+              </div>
             </div>
             <Input id="recipients" value={recipientEmails} className="hidden" readOnly/>
           </div>
