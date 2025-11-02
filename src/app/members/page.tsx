@@ -151,10 +151,12 @@ export default function MembersPage() {
 
     // Search term filter
     if (searchTerm) {
+        const lowercasedFilter = searchTerm.toLowerCase();
         data = data.filter(member => 
-            member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (member.phone1 && member.phone1.toLowerCase().includes(searchTerm.toLowerCase()))
+            member.name.toLowerCase().includes(lowercasedFilter) ||
+            member.email.toLowerCase().includes(lowercasedFilter) ||
+            (member.phone1 && member.phone1.toLowerCase().includes(lowercasedFilter)) ||
+            member.status.toLowerCase().includes(lowercasedFilter)
         );
     }
 
@@ -229,7 +231,7 @@ export default function MembersPage() {
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="relative w-full max-w-sm">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input placeholder="Buscar por nombre, email o teléfono..." className="pl-9" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                    <Input placeholder="Buscar por nombre, email, teléfono, estado..." className="pl-9" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                     </div>
                     <div className="flex w-full sm:w-auto items-center justify-between gap-2">
                         <Sheet>
