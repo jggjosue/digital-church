@@ -116,7 +116,7 @@ export function AppSidebar() {
                     )}
                 >
                     <Plus className="h-4 w-4" />
-                    <span>Alta</span>
+                    <span>New Role</span>
                 </Link>
             </CollapsibleContent>
         </Collapsible>
