@@ -58,7 +58,8 @@ export function AppSidebar() {
   const [isFinancialOpen, setIsFinancialOpen] = React.useState(pathname.startsWith('/financial'));
   const [isPrayerOpen, setIsPrayerOpen] = React.useState(pathname.startsWith('/prayer'));
   const [isMembersOpen, setIsMembersOpen] = React.useState(pathname.startsWith('/members'));
-  const [isReportsOpen, setIsReportsOpen] = React.useState(pathname.startsWith('/reports') || pathname.startsWith('/attendance'));
+  const [isReportsOpen, setIsReportsOpen] = React.useState(pathname.startsWith('/reports'));
+  const [isAttendanceOpen, setIsAttendanceOpen] = React.useState(pathname.startsWith('/attendance'));
 
 
   return (
@@ -254,6 +255,34 @@ export function AppSidebar() {
                 </Link>
             </CollapsibleContent>
         </Collapsible>
+        <Collapsible open={isAttendanceOpen} onOpenChange={setIsAttendanceOpen}>
+            <CollapsibleTrigger className="w-full">
+                <div
+                className={cn(
+                    'flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
+                    isAttendanceOpen && 'bg-accent text-accent-foreground font-medium'
+                )}
+                >
+                    <div className="flex items-center gap-3">
+                        <BarChart className="h-4 w-4" />
+                        <span>Asistencia</span>
+                    </div>
+                    <ChevronDown className={cn('h-4 w-4 transition-transform', isAttendanceOpen && 'rotate-180')} />
+                </div>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-1 pt-1">
+                <Link
+                    href="/attendance"
+                    className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
+                    pathname === '/attendance' && 'bg-accent text-accent-foreground font-medium'
+                    )}
+                >
+                    <ClipboardList className="h-4 w-4" />
+                    <span>Gestión</span>
+                </Link>
+            </CollapsibleContent>
+        </Collapsible>
         <Collapsible open={isReportsOpen} onOpenChange={setIsReportsOpen}>
             <CollapsibleTrigger className="w-full">
                 <div
@@ -279,16 +308,6 @@ export function AppSidebar() {
                 >
                     <FileText className="h-4 w-4" />
                     <span>Generador de Reportes</span>
-                </Link>
-                <Link
-                    href="/attendance"
-                    className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
-                    pathname === '/attendance' && 'bg-accent text-accent-foreground font-medium'
-                    )}
-                >
-                    <BarChart className="h-4 w-4" />
-                    <span>Asistencia</span>
                 </Link>
             </CollapsibleContent>
         </Collapsible>
