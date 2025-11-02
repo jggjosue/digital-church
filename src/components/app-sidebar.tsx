@@ -10,10 +10,14 @@ import {
   Users,
   HelpCircle,
   FileText,
-  Video
+  Video,
+  ChevronDown,
+  UserCog,
+  Plus
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import * as React from 'react';
 
 import {
   Tooltip,
@@ -24,6 +28,7 @@ import {
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -39,12 +44,13 @@ const navItems = [
 ];
 
 const bottomNavItems = [
-    { href: '/settings', icon: Settings, label: 'Settings' },
     { href: '/help', icon: HelpCircle, label: 'Help' },
 ]
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const [isSettingsOpen, setIsSettingsOpen] = React.useState(pathname.startsWith('/settings'));
+
 
   return (
     <aside className="flex h-screen w-64 flex-col border-r bg-background">
@@ -65,8 +71,9 @@ export function AppSidebar() {
             href={item.href}
             className={cn(
               'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
-              pathname.startsWith(item.href) &&
-                'bg-accent text-accent-foreground font-medium'
+              pathname.startsWith(item.href) && item.href !== '/' &&
+                'bg-accent text-accent-foreground font-medium',
+              pathname === '/' && item.href === '/dashboard' && 'bg-accent text-accent-foreground font-medium'
             )}
           >
             <item.icon className="h-4 w-4" />
@@ -75,7 +82,45 @@ export function AppSidebar() {
         ))}
       </nav>
       <div className="mt-auto space-y-1 p-4">
-      {bottomNavItems.map((item) => (
+        <Collapsible open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+            <CollapsibleTrigger className="w-full">
+                <div
+                className={cn(
+                    'flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
+                    isSettingsOpen && 'bg-accent text-accent-foreground font-medium'
+                )}
+                >
+                    <div className="flex items-center gap-3">
+                        <Settings className="h-4 w-4" />
+                        <span>Settings</span>
+                    </div>
+                    <ChevronDown className={cn('h-4 w-4 transition-transform', isSettingsOpen && 'rotate-180')} />
+                </div>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-1 pt-1">
+                <Link
+                    href="/settings"
+                    className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
+                    pathname === '/settings' && 'bg-accent text-accent-foreground font-medium'
+                    )}
+                >
+                    <UserCog className="h-4 w-4" />
+                    <span>Roles &amp; Permisos</span>
+                </Link>
+                <Link
+                    href="/settings/new"
+                    className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
+                    pathname === '/settings/new' && 'bg-accent text-accent-foreground font-medium'
+                    )}
+                >
+                    <Plus className="h-4 w-4" />
+                    <span>Alta</span>
+                </Link>
+            </CollapsibleContent>
+        </Collapsible>
+        {bottomNavItems.map((item) => (
           <Link
             key={item.href}
             href={item.href}
