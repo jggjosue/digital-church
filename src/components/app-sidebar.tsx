@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -42,11 +43,9 @@ const navItems = [
   { href: '/groups', icon: Users, label: 'Grupos' },
   { href: '/ministries', icon: Church, label: 'Ministerios' },
   { href: '/volunteers', icon: Users, label: 'Voluntarios' },
-  { href: '/attendance', icon: BarChart, label: 'Asistencia' },
   { href: '/events', icon: Calendar, label: 'Eventos' },
   { href: '/donations', icon: Heart, label: 'Donaciones' },
   { href: '/sermons', icon: Video, label: 'Sermones y Medios' },
-  { href: '/reports', icon: FileText, label: 'Reportes' },
 ];
 
 const bottomNavItems = [
@@ -59,6 +58,7 @@ export function AppSidebar() {
   const [isFinancialOpen, setIsFinancialOpen] = React.useState(pathname.startsWith('/financial'));
   const [isPrayerOpen, setIsPrayerOpen] = React.useState(pathname.startsWith('/prayer'));
   const [isMembersOpen, setIsMembersOpen] = React.useState(pathname.startsWith('/members'));
+  const [isReportsOpen, setIsReportsOpen] = React.useState(pathname.startsWith('/reports') || pathname.startsWith('/attendance'));
 
 
   return (
@@ -254,6 +254,44 @@ export function AppSidebar() {
                 </Link>
             </CollapsibleContent>
         </Collapsible>
+        <Collapsible open={isReportsOpen} onOpenChange={setIsReportsOpen}>
+            <CollapsibleTrigger className="w-full">
+                <div
+                className={cn(
+                    'flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
+                    isReportsOpen && 'bg-accent text-accent-foreground font-medium'
+                )}
+                >
+                    <div className="flex items-center gap-3">
+                        <FileText className="h-4 w-4" />
+                        <span>Reportes</span>
+                    </div>
+                    <ChevronDown className={cn('h-4 w-4 transition-transform', isReportsOpen && 'rotate-180')} />
+                </div>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-1 pt-1">
+                <Link
+                    href="/reports"
+                    className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
+                    pathname === '/reports' && 'bg-accent text-accent-foreground font-medium'
+                    )}
+                >
+                    <FileText className="h-4 w-4" />
+                    <span>Generador de Reportes</span>
+                </Link>
+                <Link
+                    href="/attendance"
+                    className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
+                    pathname === '/attendance' && 'bg-accent text-accent-foreground font-medium'
+                    )}
+                >
+                    <BarChart className="h-4 w-4" />
+                    <span>Asistencia</span>
+                </Link>
+            </CollapsibleContent>
+        </Collapsible>
       </nav>
       <div className="mt-auto space-y-1 p-4">
         <Collapsible open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
@@ -322,3 +360,5 @@ export function AppSidebar() {
     </aside>
   );
 }
+
+    
