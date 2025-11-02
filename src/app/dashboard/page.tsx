@@ -13,6 +13,7 @@ import { TotalMinistries } from '@/components/dashboard/total-ministries';
 import { TotalVolunteers } from '@/components/dashboard/total-volunteers';
 import { UpcomingEventsCard } from '@/components/dashboard/upcoming-events-card';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { MemberGrowthChart } from '@/components/dashboard/member-growth-chart';
 
 export type TimeRange = 'this-week' | 'this-month' | 'this-quarter' | 'this-year';
 
@@ -61,8 +62,9 @@ export default function DashboardPage() {
           <TotalMinistries />
           <TotalVolunteers />
         </div>
-        <div className="grid grid-cols-1 gap-6">
-          <GivingTrends timeRange={timeRange} />
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <GivingTrends timeRange={timeRange} />
+            <MemberGrowthChart timeRange={timeRange} />
         </div>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
           <div className="lg:col-span-2">

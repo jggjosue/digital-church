@@ -6,6 +6,21 @@ export const memberDemographics = [
   { name: 'Adultos Mayores (60+)', value: 250, fill: 'var(--color-chart-5)' },
 ];
 
+export const memberGrowthData = [
+    { month: 'Ene', members: 2100 },
+    { month: 'Feb', members: 2120 },
+    { month: 'Mar', members: 2150 },
+    { month: 'Abr', members: 2180 },
+    { month: 'May', members: 2210 },
+    { month: 'Jun', members: 2240 },
+    { month: 'Jul', members: 2270 },
+    { month: 'Ago', members: 2290 },
+    { month: 'Sep', members: 2310 },
+    { month: 'Oct', members: 2330 },
+    { month: 'Nov', members: 2340 },
+    { month: 'Dic', members: 2350 },
+];
+
 export const attendanceData = [
     // Year Data
     { week: 1, month: 'Ene', attendance: 420 }, { week: 2, month: 'Ene', attendance: 430 }, { week: 3, month: 'Ene', attendance: 440 }, { week: 4, month: 'Ene', attendance: 450 },
