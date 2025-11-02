@@ -45,7 +45,6 @@ const navItems = [
   { href: '/attendance', icon: BarChart, label: 'Asistencia' },
   { href: '/events', icon: Calendar, label: 'Eventos' },
   { href: '/donations', icon: Heart, label: 'Donaciones' },
-  { href: '/prayer', icon: HandHeart, label: 'Peticiones de Oración' },
   { href: '/sermons', icon: Video, label: 'Sermones y Medios' },
   { href: '/reports', icon: FileText, label: 'Reportes' },
 ];
@@ -58,6 +57,7 @@ export function AppSidebar() {
   const pathname = usePathname();
   const [isSettingsOpen, setIsSettingsOpen] = React.useState(pathname.startsWith('/settings'));
   const [isFinancialOpen, setIsFinancialOpen] = React.useState(pathname.startsWith('/financial'));
+  const [isPrayerOpen, setIsPrayerOpen] = React.useState(pathname.startsWith('/prayer'));
 
 
   return (
@@ -88,6 +88,44 @@ export function AppSidebar() {
             <span>{item.label}</span>
           </Link>
         ))}
+         <Collapsible open={isPrayerOpen} onOpenChange={setIsPrayerOpen}>
+            <CollapsibleTrigger className="w-full">
+                <div
+                className={cn(
+                    'flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
+                    isPrayerOpen && 'bg-accent text-accent-foreground font-medium'
+                )}
+                >
+                    <div className="flex items-center gap-3">
+                        <HandHeart className="h-4 w-4" />
+                        <span>Peticiones de Oración</span>
+                    </div>
+                    <ChevronDown className={cn('h-4 w-4 transition-transform', isPrayerOpen && 'rotate-180')} />
+                </div>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-1 pt-1">
+                <Link
+                    href="/prayer"
+                    className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
+                    pathname === '/prayer' && 'bg-accent text-accent-foreground font-medium'
+                    )}
+                >
+                    <ClipboardList className="h-4 w-4" />
+                    <span>Peticiones</span>
+                </Link>
+                <Link
+                    href="/prayer/new"
+                    className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
+                    pathname === '/prayer/new' && 'bg-accent text-accent-foreground font-medium'
+                    )}
+                >
+                    <Plus className="h-4 w-4" />
+                    <span>Nueva Oración</span>
+                </Link>
+            </CollapsibleContent>
+        </Collapsible>
          <Collapsible open={isFinancialOpen} onOpenChange={setIsFinancialOpen}>
             <CollapsibleTrigger className="w-full">
                 <div
