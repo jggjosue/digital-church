@@ -35,12 +35,10 @@ import {
   Line,
   XAxis,
   YAxis,
-  ResponsiveContainer,
-  Tooltip,
   BarChart,
   Bar,
 } from 'recharts';
-import { ChartTooltipContent } from '@/components/ui/chart';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { incomeExpenseData, budgetSpendingData, recentTransactions } from '@/lib/data';
 
 const FinancialSidebar = () => {
@@ -89,6 +87,21 @@ const FinancialSidebar = () => {
       </div>
     </aside>
   );
+};
+
+const chartConfig = {
+  net: {
+    label: 'Net',
+    color: 'hsl(var(--primary))',
+  },
+  spent: {
+    label: 'Spent',
+    color: 'hsl(var(--primary))',
+  },
+  budget: {
+    label: 'Budget',
+    color: 'hsl(var(--muted))',
+  },
 };
 
 export default function FinancialPage() {
@@ -156,8 +169,15 @@ export default function FinancialPage() {
               <p className="text-2xl font-bold text-muted-foreground">$23,535.50 <span className='text-lg'>Net</span></p>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={250}>
-                <LineChart data={incomeExpenseData}>
+              <ChartContainer config={chartConfig} className="min-h-[250px] w-full">
+                <LineChart
+                  accessibilityLayer
+                  data={incomeExpenseData}
+                  margin={{
+                    left: 12,
+                    right: 12,
+                  }}
+                >
                   <XAxis
                     dataKey="month"
                     stroke="hsl(var(--muted-foreground))"
@@ -172,16 +192,16 @@ export default function FinancialPage() {
                     axisLine={false}
                     tickFormatter={(value) => `$${value / 1000}k`}
                   />
-                  <Tooltip content={<ChartTooltipContent />} />
+                  <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
                   <Line
-                    type="monotone"
                     dataKey="net"
+                    type="natural"
                     stroke="hsl(var(--primary))"
                     strokeWidth={2}
                     dot={false}
                   />
                 </LineChart>
-              </ResponsiveContainer>
+              </ChartContainer>
             </CardContent>
           </Card>
           <Card>
@@ -190,8 +210,8 @@ export default function FinancialPage() {
                <p className="text-2xl font-bold text-muted-foreground">$15,800 <span className='text-lg'>Spent this month</span></p>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={budgetSpendingData}>
+              <ChartContainer config={chartConfig} className="min-h-[250px] w-full">
+                <BarChart accessibilityLayer data={budgetSpendingData}>
                   <XAxis
                     dataKey="name"
                     stroke="hsl(var(--muted-foreground))"
@@ -206,7 +226,7 @@ export default function FinancialPage() {
                     axisLine={false}
                     tickFormatter={(value) => `$${value / 1000}k`}
                   />
-                  <Tooltip cursor={{fill: 'hsla(var(--muted))'}} content={<ChartTooltipContent />} />
+                  <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
                   <Bar
                     dataKey="spent"
                     stackId="a"
@@ -220,7 +240,7 @@ export default function FinancialPage() {
                     radius={[4, 4, 0, 0]}
                   />
                 </BarChart>
-              </ResponsiveContainer>
+              </ChartContainer>
             </CardContent>
           </Card>
         </div>
