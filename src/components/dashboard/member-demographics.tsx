@@ -45,9 +45,23 @@ export function MemberDemographics() {
           </div>
         </div>
         <ChartContainer config={chartConfig} className="w-full">
-            <ChartLegend
-                content={<ChartLegendContent nameKey="name" />}
-                className="-mt-4 flex-wrap"
+             <ChartLegend
+                content={
+                    <ChartLegendContent 
+                        nameKey="name"
+                        className="grid grid-cols-2 gap-x-8 gap-y-2"
+                        formatter={(value, entry) => {
+                            const item = demographicsData.find(d => d.name === value);
+                            const percentage = item ? Math.round((item.value / totalMembers) * 100) : 0;
+                            return (
+                                <div className="flex items-center gap-2 text-sm">
+                                    <span>{value}</span>
+                                    <span style={{ color: item?.fill }} className="font-bold">{percentage}%</span>
+                                </div>
+                            )
+                        }}
+                    />
+                }
             />
         </ChartContainer>
       </CardContent>
