@@ -29,12 +29,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 const member = {
     id: 1,
     name: 'John Doe',
+    fullName: 'John Michael Doe',
+    preferredName: 'John',
+    gender: 'Male',
+    maritalStatus: 'Married',
+    baptismDate: 'April 12, 2010',
     status: 'Active Member',
     avatarUrl: 'https://picsum.photos/seed/1/100/100',
     email: 'john.doe@example.com',
     phone: '+1 234 567 890',
     address: '123 Main St, Anytown, USA 12345',
-    dob: 'January 1, 1980',
+    dob: 'October 25, 1985',
     family: [
         { id: 1, name: 'Jane Doe', relation: 'Spouse', avatarUrl: 'https://picsum.photos/seed/2/40/40' },
         { id: 2, name: 'Jimmy Doe', relation: 'Child', avatarUrl: 'https://picsum.photos/seed/3/40/40' },
@@ -45,7 +50,19 @@ const member = {
         { id: 2, type: 'Added to group Volunteers', by: '', date: 'Feb 10, 2023', icon: Users },
         { id: 3, type: 'Sent email: "Welcome to the Choir!"', by: '', date: 'Mar 05, 2023', icon: MessageSquare },
         { id: 4, type: 'Note added by Jane Smith', by: '', date: 'Apr 12, 2023', icon: FileText },
-    ]
+    ],
+    attendance: {
+        overall: '85%',
+        last3Months: '92%',
+        absencesYTD: 4,
+        lastAttended: 'Oct 29, 2023',
+    },
+    giving: {
+        ytd: 2400.00,
+        lastYear: 3250.00,
+        lastGiftAmount: 100.00,
+        lastGiftDate: 'Oct 22, 2023',
+    }
 };
 
 const groupColors: { [key: string]: string } = {
@@ -90,23 +107,45 @@ export default function MemberProfilePage({ params }: { params: { id: string } }
             <CardHeader>
               <CardTitle>Información Personal</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center gap-3">
-                <Mail className="h-5 w-5 text-muted-foreground" />
-                <span className="text-sm">{member.email}</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <Phone className="h-5 w-5 text-muted-foreground" />
-                <span className="text-sm">{member.phone}</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <Home className="h-5 w-5 text-muted-foreground" />
-                <span className="text-sm">{member.address}</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <Cake className="h-5 w-5 text-muted-foreground" />
-                <span className="text-sm">{member.dob}</span>
-              </div>
+            <CardContent>
+                <div className='grid grid-cols-2 gap-4 text-sm'>
+                    <div>
+                        <p className='text-muted-foreground'>Nombre Completo</p>
+                        <p className='font-medium'>{member.fullName}</p>
+                    </div>
+                    <div>
+                        <p className='text-muted-foreground'>Nombre Preferido</p>
+                        <p className='font-medium'>{member.preferredName}</p>
+                    </div>
+                    <div>
+                        <p className='text-muted-foreground'>Fecha de Nacimiento</p>
+                        <p className='font-medium'>{member.dob}</p>
+                    </div>
+                    <div>
+                        <p className='text-muted-foreground'>Género</p>
+                        <p className='font-medium'>{member.gender}</p>
+                    </div>
+                     <div>
+                        <p className='text-muted-foreground'>Estado Civil</p>
+                        <p className='font-medium'>{member.maritalStatus}</p>
+                    </div>
+                     <div>
+                        <p className='text-muted-foreground'>Fecha de Bautismo</p>
+                        <p className='font-medium'>{member.baptismDate}</p>
+                    </div>
+                    <div className='col-span-2'>
+                        <p className='text-muted-foreground'>Correo Electrónico</p>
+                        <p className='font-medium'>{member.email}</p>
+                    </div>
+                    <div className='col-span-2'>
+                        <p className='text-muted-foreground'>Teléfono</p>
+                        <p className='font-medium'>{member.phone}</p>
+                    </div>
+                    <div className='col-span-2'>
+                        <p className='text-muted-foreground'>Dirección</p>
+                        <p className='font-medium'>{member.address}</p>
+                    </div>
+                </div>
             </CardContent>
           </Card>
 
@@ -142,7 +181,54 @@ export default function MemberProfilePage({ params }: { params: { id: string } }
           </Card>
         </div>
 
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-2 space-y-6">
+            <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle>Resumen de Asistencia</CardTitle>
+                    <Button variant="link" className='p-0 h-auto'>Ver Historial Completo</Button>
+                </CardHeader>
+                <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className='bg-muted/50 p-4 rounded-lg text-center'>
+                        <p className='text-3xl font-bold'>{member.attendance.overall}</p>
+                        <p className='text-sm text-muted-foreground'>Total</p>
+                    </div>
+                    <div className='bg-muted/50 p-4 rounded-lg text-center'>
+                        <p className='text-3xl font-bold'>{member.attendance.last3Months}</p>
+                        <p className='text-sm text-muted-foreground'>Últimos 3 Meses</p>
+                    </div>
+                    <div className='bg-muted/50 p-4 rounded-lg text-center'>
+                        <p className='text-3xl font-bold'>{member.attendance.absencesYTD}</p>
+                        <p className='text-sm text-muted-foreground'>Ausencias (YTD)</p>
+                    </div>
+                    <div className='bg-muted/50 p-4 rounded-lg text-center'>
+                        <p className='text-lg font-bold'>{member.attendance.lastAttended}</p>
+                        <p className='text-sm text-muted-foreground'>Última Asistencia</p>
+                    </div>
+                </CardContent>
+            </Card>
+
+             <Card>
+                <CardHeader className="flex flex-row items-center justify-between">
+                    <CardTitle>Resumen de Donaciones</CardTitle>
+                     <Button variant="link" className='p-0 h-auto'>Ver Historial Completo</Button>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className='bg-muted/50 p-4 rounded-lg'>
+                        <p className='text-sm text-muted-foreground'>Donaciones YTD</p>
+                        <p className='text-2xl font-bold'>${member.giving.ytd.toFixed(2)}</p>
+                    </div>
+                    <div className='bg-muted/50 p-4 rounded-lg'>
+                        <p className='text-sm text-muted-foreground'>Donaciones del Año Pasado</p>
+                        <p className='text-2xl font-bold'>${member.giving.lastYear.toFixed(2)}</p>
+                    </div>
+                    <div className='bg-muted/50 p-4 rounded-lg'>
+                        <p className='text-sm text-muted-foreground'>Última Donación</p>
+                        <p className='text-lg font-bold'>${member.giving.lastGiftAmount.toFixed(2)} el {member.giving.lastGiftDate}</p>
+                    </div>
+                </CardContent>
+            </Card>
+
+
           <Card>
             <CardContent className="p-4">
                 <Tabs defaultValue="activity">
@@ -185,3 +271,5 @@ export default function MemberProfilePage({ params }: { params: { id: string } }
     </main>
   );
 }
+
+    
