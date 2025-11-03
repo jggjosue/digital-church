@@ -104,7 +104,7 @@ export default function MinistriesPage() {
                             <Button asChild>
                                 <Link href={`/ministries/${ministry.id}`}>Ver Detalles</Link>
                             </Button>
-                            <Button variant="outline">Asignar Miembros</Button>
+                            <Button variant="outline" asChild><Link href="/ministries/assign-members">Asignar Miembros</Link></Button>
                         </div>
                     </div>
                 </CardContent>
