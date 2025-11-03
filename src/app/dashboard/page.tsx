@@ -30,7 +30,7 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-1 flex-col">
-        <header className="sticky top-0 z-10 flex h-auto flex-col items-start gap-4 border-b bg-background px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:h-16 sm:px-6">
+        <header className="sticky top-0 z-10 flex h-auto flex-col items-start gap-4 border-b bg-background p-6 sm:flex-row sm:items-center sm:justify-between sm:h-16 sm:px-6">
             <div className="flex items-center gap-4">
                  <Sheet>
                     <SheetTrigger asChild>
@@ -53,7 +53,7 @@ export default function DashboardPage() {
             <div className="flex w-full items-center justify-between sm:w-auto">
                 <Tabs
                     defaultValue="this-week"
-                    className="w-full sm:w-auto"
+                    className="w-full sm:w-auto hidden sm:block"
                     onValueChange={handleTimeRangeChange}
                 >
                     <TabsList className="grid w-full grid-cols-2 sm:w-auto sm:grid-cols-4">
@@ -69,7 +69,7 @@ export default function DashboardPage() {
             </div>
         </header>
         <main className="flex-1 space-y-6 p-4 sm:p-6">
-        <div className="hidden sm:flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <Tabs
             defaultValue="this-week"
             className="w-full sm:w-auto"
