@@ -110,7 +110,7 @@ export function AppSidebar() {
                     )}
                 >
                     <Users className="h-4 w-4" />
-                    <span>Directorio</span>
+                    <span>Miembros</span>
                 </Link>
                 <Link
                     href="/members/new"
