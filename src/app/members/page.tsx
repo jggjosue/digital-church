@@ -310,20 +310,14 @@ export default function MembersPage() {
                             {selected.length} {selected.length > 1 ? 'elementos seleccionados' : 'elemento seleccionado'}
                         </div>
                         <div className="flex items-center gap-2">
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                            
-                            </Button>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setIsBulkDelete(true)}>
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </AlertDialogTrigger>
                             <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
                                 <Link href={`/members/send-email?ids=${selected.join(',')}`}><Mail className="h-4 w-4" /></Link>
                             </Button>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                            
-                            </Button>
-                            <AlertDialogTrigger asChild>
-                                <Button variant="destructive" size="sm" onClick={() => setIsBulkDelete(true)}>
-                                    Eliminar
-                                </Button>
-                            </AlertDialogTrigger>
                             <Button size="sm" asChild>
                             <Link href="/members/bulk-actions">Acciones Masivas</Link>
                             </Button>
