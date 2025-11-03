@@ -40,7 +40,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collap
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Panel' },
-  { href: '/groups', icon: Users, label: 'Grupos' },
   { href: '/ministries', icon: Church, label: 'Ministerios' },
   { href: '/volunteers', icon: Users, label: 'Voluntarios' },
   { href: '/events', icon: Calendar, label: 'Eventos' },
@@ -60,6 +59,7 @@ export function AppSidebar() {
   const [isMembersOpen, setIsMembersOpen] = React.useState(pathname.startsWith('/members'));
   const [isReportsOpen, setIsReportsOpen] = React.useState(pathname.startsWith('/reports'));
   const [isAttendanceOpen, setIsAttendanceOpen] = React.useState(pathname.startsWith('/attendance'));
+  const [isGroupsOpen, setIsGroupsOpen] = React.useState(pathname.startsWith('/groups'));
 
 
   return (
@@ -124,8 +124,56 @@ export function AppSidebar() {
                 </Link>
             </CollapsibleContent>
         </Collapsible>
+        <Collapsible open={isGroupsOpen} onOpenChange={setIsGroupsOpen}>
+            <CollapsibleTrigger className="w-full">
+                <div
+                className={cn(
+                    'flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
+                    isGroupsOpen && 'bg-accent text-accent-foreground font-medium'
+                )}
+                >
+                    <div className="flex items-center gap-3">
+                        <Users className="h-4 w-4" />
+                        <span>Grupos</span>
+                    </div>
+                    <ChevronDown className={cn('h-4 w-4 transition-transform', isGroupsOpen && 'rotate-180')} />
+                </div>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-1 pt-1">
+                <Link
+                    href="/groups"
+                    className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
+                    pathname === '/groups' && 'bg-accent text-accent-foreground font-medium'
+                    )}
+                >
+                    <Users className="h-4 w-4" />
+                    <span>Directorio de Grupos</span>
+                </Link>
+                <Link
+                    href="/groups/new"
+                    className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
+                    pathname === '/groups/new' && 'bg-accent text-accent-foreground font-medium'
+                    )}
+                >
+                    <Plus className="h-4 w-4" />
+                    <span>Nuevo Grupo</span>
+                </Link>
+                 <Link
+                    href="/groups/add-members"
+                    className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
+                    pathname === '/groups/add-members' && 'bg-accent text-accent-foreground font-medium'
+                    )}
+                >
+                    <UserPlus className="h-4 w-4" />
+                    <span>Agregar Miembros</span>
+                </Link>
+            </CollapsibleContent>
+        </Collapsible>
         {navItems.map((item) => (
-          (item.href !== '/dashboard' && item.href !== '/members') && <Link
+          (item.href !== '/dashboard' && item.href !== '/members' && item.href !== '/groups') && <Link
             key={item.href}
             href={item.href}
             className={cn(
@@ -380,4 +428,5 @@ export function AppSidebar() {
   );
 }
 
+    
     
