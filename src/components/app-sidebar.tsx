@@ -54,6 +54,7 @@ export function AppSidebar() {
   const [isPrayerOpen, setIsPrayerOpen] = React.useState(pathname.startsWith('/prayer'));
   const [isMembersOpen, setIsMembersOpen] = React.useState(pathname.startsWith('/members'));
   const [isReportsOpen, setIsReportsOpen] = React.useState(pathname.startsWith('/reports'));
+  const [isFacilitiesOpen, setIsFacilitiesOpen] = React.useState(pathname.startsWith('/facilities'));
   const [isAttendanceOpen, setIsAttendanceOpen] = React.useState(pathname.startsWith('/attendance'));
   const [isGroupsOpen, setIsGroupsOpen] = React.useState(pathname.startsWith('/groups'));
   const [isMinistriesOpen, setIsMinistriesOpen] = React.useState(pathname.startsWith('/ministries'));
@@ -592,6 +593,25 @@ export function AppSidebar() {
                     <Users className="h-4 w-4" />
                     <span>Voluntarios</span>
                 </Link>
+            </CollapsibleContent>
+        </Collapsible>
+        <Collapsible open={isFacilitiesOpen} onOpenChange={setIsFacilitiesOpen}>
+            <CollapsibleTrigger className="w-full">
+                <div
+                className={cn(
+                    'flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
+                    isFacilitiesOpen && 'bg-accent text-accent-foreground font-medium'
+                )}
+                >
+                    <div className="flex items-center gap-3">
+                        <Building className="h-4 w-4" />
+                        <span>Instalaciones</span>
+                    </div>
+                    <ChevronDown className={cn('h-4 w-4 transition-transform', isFacilitiesOpen && 'rotate-180')} />
+                </div>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-1 pt-1">
+                {/* Future sub-items for Facilities will go here */}
             </CollapsibleContent>
         </Collapsible>
       </nav>
