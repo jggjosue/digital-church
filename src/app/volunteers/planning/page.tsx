@@ -29,9 +29,34 @@ import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
-const availableVolunteers = volunteersData.slice(0, 3);
+type Volunteer = (typeof volunteersData)[0];
 
-const scheduleData = {
+interface ScheduledVolunteer {
+    name: string;
+    avatarUrl: string;
+    conflict?: boolean;
+}
+
+interface Role {
+    name: string;
+    assigned: number;
+    needed: number;
+    volunteers: ScheduledVolunteer[];
+}
+
+interface ScheduleEvent {
+    service: string;
+    time: string;
+    totalVolunteers: number;
+    neededVolunteers: number;
+    roles: Role[];
+}
+
+interface ScheduleData {
+    [key: string]: ScheduleEvent[];
+}
+
+const initialScheduleData: ScheduleData = {
   '2023-10-22': [
     {
       service: 'Sunday Morning Service',
@@ -85,9 +110,68 @@ const scheduleData = {
 export default function VolunteerSchedulingPage() {
   const [date, setDate] = React.useState<Date | undefined>(new Date('2023-10-22T00:00:00'));
   const [view, setView] = React.useState('calendar');
+  const [scheduleData, setScheduleData] = React.useState<ScheduleData>(initialScheduleData);
+  const [availableVolunteers, setAvailableVolunteers] = React.useState<Volunteer[]>(volunteersData.slice(0,3));
 
   const selectedDateString = date ? date.toISOString().split('T')[0] : '';
   const todaysSchedule = scheduleData[selectedDateString as keyof typeof scheduleData] || [];
+
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, volunteer: Volunteer) => {
+    e.dataTransfer.setData('volunteerId', volunteer.id.toString());
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>, eventIndex: number, roleIndex: number) => {
+    const volunteerId = parseInt(e.dataTransfer.getData('volunteerId'), 10);
+    const draggedVolunteer = volunteersData.find(v => v.id === volunteerId);
+    
+    if (!draggedVolunteer) return;
+
+    setScheduleData(prevData => {
+        const newScheduleData = JSON.parse(JSON.stringify(prevData));
+        const scheduleForDay = newScheduleData[selectedDateString] as ScheduleEvent[] | undefined;
+        if (!scheduleForDay) return prevData;
+
+        const event = scheduleForDay[eventIndex];
+        const role = event.roles[roleIndex];
+        
+        if (role.assigned < role.needed) {
+            role.volunteers.push({ name: draggedVolunteer.name, avatarUrl: draggedVolunteer.avatarUrl });
+            role.assigned += 1;
+            event.totalVolunteers += 1;
+        }
+
+        return newScheduleData;
+    });
+
+    setAvailableVolunteers(prev => prev.filter(v => v.id !== volunteerId));
+  };
+  
+  const handleRemoveVolunteer = (eventIndex: number, roleIndex: number, volunteerIndex: number) => {
+    setScheduleData(prevData => {
+      const newScheduleData = JSON.parse(JSON.stringify(prevData));
+      const scheduleForDay = newScheduleData[selectedDateString] as ScheduleEvent[] | undefined;
+      if (!scheduleForDay) return prevData;
+
+      const event = scheduleForDay[eventIndex];
+      const role = event.roles[roleIndex];
+      
+      const removedVolunteer = role.volunteers.splice(volunteerIndex, 1)[0];
+      role.assigned -= 1;
+      event.totalVolunteers -= 1;
+
+      const originalVolunteer = volunteersData.find(v => v.name === removedVolunteer.name);
+      if (originalVolunteer) {
+        setAvailableVolunteers(prev => [...prev, originalVolunteer].sort((a,b) => a.id - b.id));
+      }
+
+      return newScheduleData;
+    });
+  };
+
 
   return (
     <main className="flex flex-col lg:flex-row h-[calc(100vh-theme(spacing.16))] bg-muted/20">
@@ -143,18 +227,20 @@ export default function VolunteerSchedulingPage() {
             <h3 className="text-base font-semibold">Voluntarios Disponibles</h3>
             <div className="mt-2 space-y-2">
                 {availableVolunteers.map(v => (
-                    <Card key={v.id} className="p-3">
-                        <div className="flex items-center gap-3">
-                            <Avatar className="h-9 w-9">
-                                <AvatarImage src={v.avatarUrl} alt={v.name} />
-                                <AvatarFallback>{v.name.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                            <div>
-                                <p className="font-medium text-sm">{v.name}</p>
-                                <p className="text-xs text-muted-foreground">{v.role}</p>
+                    <div key={v.id} draggable onDragStart={(e) => handleDragStart(e, v)}>
+                        <Card className="p-3 cursor-grab active:cursor-grabbing">
+                            <div className="flex items-center gap-3">
+                                <Avatar className="h-9 w-9">
+                                    <AvatarImage src={v.avatarUrl} alt={v.name} />
+                                    <AvatarFallback>{v.name.charAt(0)}</AvatarFallback>
+                                </Avatar>
+                                <div>
+                                    <p className="font-medium text-sm">{v.name}</p>
+                                    <p className="text-xs text-muted-foreground">{v.role}</p>
+                                </div>
                             </div>
-                        </div>
-                    </Card>
+                        </Card>
+                    </div>
                 ))}
             </div>
         </div>
@@ -177,8 +263,8 @@ export default function VolunteerSchedulingPage() {
          </div>
 
          <div className="mt-6 space-y-6">
-            {todaysSchedule.map((event, index) => (
-                <Card key={index}>
+            {todaysSchedule.map((event, eventIndex) => (
+                <Card key={eventIndex}>
                     <CardHeader>
                         <div className="flex flex-col sm:flex-row justify-between sm:items-center">
                             <CardTitle className="text-lg">{event.service}</CardTitle>
@@ -192,11 +278,11 @@ export default function VolunteerSchedulingPage() {
                     <CardContent>
                       {view === 'calendar' ? (
                           <div className="grid grid-cols-1 gap-4">
-                              {event.roles.map(role => (
+                              {event.roles.map((role, roleIndex) => (
                                   <Card key={role.name} className="p-4 bg-muted/50">
                                       <h4 className="font-semibold text-sm">{role.name} ({role.assigned}/{role.needed})</h4>
                                       <div className="mt-3 space-y-2">
-                                          {role.volunteers.map(v => (
+                                          {role.volunteers.map((v, volunteerIndex) => (
                                               <Card key={v.name} className="p-2 bg-card">
                                                   <div className="flex items-center justify-between">
                                                       <div className="flex items-center gap-2">
@@ -208,13 +294,15 @@ export default function VolunteerSchedulingPage() {
                                                       </div>
                                                       <div className="flex items-center gap-1">
                                                         {v.conflict && <Badge variant="destructive" className="h-5"><AlertTriangle className="h-3 w-3 mr-1"/>Conflicto</Badge>}
-                                                        <Button variant="ghost" size="icon" className="h-6 w-6"><X className="h-3 w-3" /></Button>
+                                                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleRemoveVolunteer(eventIndex, roleIndex, volunteerIndex)}>
+                                                            <X className="h-3 w-3" />
+                                                        </Button>
                                                       </div>
                                                   </div>
                                               </Card>
                                           ))}
                                           {Array.from({ length: role.needed - role.assigned }).map((_, i) => (
-                                               <div key={i} className="h-10 rounded-lg border-2 border-dashed flex items-center justify-center text-muted-foreground text-sm">
+                                               <div key={i} onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, eventIndex, roleIndex)} className="h-10 rounded-lg border-2 border-dashed flex items-center justify-center text-muted-foreground text-sm">
                                                   Arrastre voluntario aquí
                                                </div>
                                           ))}
@@ -234,26 +322,29 @@ export default function VolunteerSchedulingPage() {
                               </TableRow>
                             </TableHeader>
                             <TableBody>
-                              {event.roles.map(role => (
+                              {event.roles.map((role, roleIndex) => (
                                 <TableRow key={role.name}>
                                   <TableCell className='font-semibold'>{role.name}</TableCell>
                                   <TableCell>{role.needed}</TableCell>
                                   <TableCell>{role.assigned}</TableCell>
                                   <TableCell>
-                                    <div className='flex flex-wrap gap-2'>
-                                      {role.volunteers.map(v => (
-                                        <div key={v.name} className='flex items-center gap-2'>
+                                    <div className='flex flex-wrap items-center gap-4'>
+                                      {role.volunteers.map((v, volunteerIndex) => (
+                                        <div key={v.name} className='flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-md'>
                                           <Avatar className="h-7 w-7">
                                               <AvatarImage src={v.avatarUrl} alt={v.name} />
                                               <AvatarFallback>{v.name.charAt(0)}</AvatarFallback>
                                           </Avatar>
                                           <span className="text-sm font-medium">{v.name}</span>
                                           {v.conflict && <Badge variant="destructive" className="h-5"><AlertTriangle className="h-3 w-3 mr-1"/>Conflicto</Badge>}
+                                           <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleRemoveVolunteer(eventIndex, roleIndex, volunteerIndex)}>
+                                              <X className="h-3 w-3" />
+                                          </Button>
                                         </div>
                                       ))}
                                       {Array.from({ length: role.needed - role.assigned }).map((_, i) => (
-                                           <div key={i} className="h-10 w-40 rounded-lg border-2 border-dashed flex items-center justify-center text-muted-foreground text-sm">
-                                              Puesto Vacante
+                                           <div key={i} onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, eventIndex, roleIndex)} className="h-10 w-48 rounded-lg border-2 border-dashed flex items-center justify-center text-muted-foreground text-sm">
+                                              Arrastre voluntario aquí
                                            </div>
                                       ))}
                                     </div>
