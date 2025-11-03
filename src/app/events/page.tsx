@@ -22,6 +22,7 @@ import { events as allEvents } from '@/lib/data';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import Link from 'next/link';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 type Event = (typeof allEvents)[0];
 
@@ -40,7 +41,7 @@ const getFirstDayOfMonth = (year: number, month: number) => {
   return new Date(year, month, 1).getDay();
 };
 
-function EventDetails({ event, date }: { event: Event | null, date: Date | null }) {
+function EventDetails({ event, date, onEventDelete }: { event: Event | null, date: Date | null, onEventDelete: (event: Event) => void }) {
     if (!event || !date) return null;
     return (
         <div className="mt-6">
@@ -79,17 +80,21 @@ function EventDetails({ event, date }: { event: Event | null, date: Date | null 
             </div>
             <div className="mt-8 flex gap-2">
                 <Button variant="outline" className="w-full" asChild><Link href={`/events/${event.id}/edit`}><Edit className="mr-2 h-4 w-4"/>Editar</Link></Button>
-                <Button variant="destructive" className="w-full"><Trash2 className="mr-2 h-4 w-4"/>Eliminar</Button>
+                 <AlertDialogTrigger asChild>
+                    <Button variant="destructive" className="w-full" onClick={() => onEventDelete(event)}><Trash2 className="mr-2 h-4 w-4"/>Eliminar</Button>
+                </AlertDialogTrigger>
             </div>
         </div>
     )
 }
 
 export default function EventsPage() {
+  const [events, setEvents] = React.useState<Event[]>(allEvents);
   const [currentDate, setCurrentDate] = React.useState(new Date(2024, 9, 11)); // October 11, 2024
-  const [selectedEvent, setSelectedEvent] = React.useState<Event | null>(allEvents.find(e => e.id === 3) as Event);
+  const [selectedEvent, setSelectedEvent] = React.useState<Event | null>(events.find(e => e.id === 3) as Event);
   const [selectedDay, setSelectedDay] = React.useState<number>(11);
   const isDesktop = useMediaQuery("(min-width: 1024px)");
+  const [eventToDelete, setEventToDelete] = React.useState<Event | null>(null);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -130,7 +135,18 @@ export default function EventsPage() {
 
   const selectedDate = new Date(year, month, selectedDay);
 
+  const handleDelete = () => {
+    if (eventToDelete) {
+      setEvents(events.filter(e => e.id !== eventToDelete.id));
+      if (selectedEvent?.id === eventToDelete.id) {
+        setSelectedEvent(null);
+      }
+      setEventToDelete(null);
+    }
+  };
+
   return (
+    <AlertDialog>
     <main className="flex flex-col lg:flex-row min-h-screen w-full bg-muted/20">
       <div className="flex-1 p-4 sm:p-8">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
@@ -186,7 +202,7 @@ export default function EventsPage() {
                 </div>
               ))}
               {calendarDays.map((date, index) => {
-                 const dayEvents = allEvents.filter(event => {
+                 const dayEvents = events.filter(event => {
                     const eventDate = new Date(event.date);
                     return eventDate.getFullYear() === year && eventDate.getMonth() === month && eventDate.getDate() === date.day && date.isCurrentMonth;
                 });
@@ -217,7 +233,7 @@ export default function EventsPage() {
                             <p className="text-sm text-muted-foreground">
                             Seleccionado: {new Date(year, month, selectedDay).toLocaleDateString('es-ES', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric'})}
                             </p>
-                            <EventDetails event={eventToDisplay} date={selectedDate} />
+                            <EventDetails event={eventToDisplay} date={selectedDate} onEventDelete={setEventToDelete} />
                         </SheetContent>
                     )}
                   </Sheet>
@@ -234,8 +250,26 @@ export default function EventsPage() {
           Seleccionado: {selectedDate.toLocaleDateString('es-ES', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric'})}
         </p>
 
-        <EventDetails event={selectedEvent} date={selectedDate} />
+        <EventDetails event={selectedEvent} date={selectedDate} onEventDelete={setEventToDelete} />
       </aside>
+
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+                    <Trash2 className="h-6 w-6 text-red-600" />
+                </div>
+                <AlertDialogTitle className='text-center'>Eliminar Evento</AlertDialogTitle>
+                <AlertDialogDescription className='text-center'>
+                    ¿Estás seguro de que quieres eliminar el evento "{eventToDelete?.title}"? Esta acción no se puede deshacer.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="sm:justify-center">
+                <AlertDialogCancel onClick={() => setEventToDelete(null)}>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Confirmar Eliminación</AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+
     </main>
+    </AlertDialog>
   );
 }
