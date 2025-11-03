@@ -16,6 +16,7 @@ import {
   UserPlus,
   Plus,
   List,
+  PiggyBank,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -79,7 +80,17 @@ const navItems = [
       { href: '/events/activities', icon: List, label: 'Actividades' },
     ]
   },
-  { href: '/donations', icon: Heart, label: 'Ofrendas' },
+  { 
+    label: 'Ofrendas', 
+    icon: Heart, 
+    subItems: [
+      { href: '/donations', icon: Heart, label: 'Donaciones y ofrendas' },
+      { href: '/donations/pledges', icon: List, label: 'Gestión de Promesas' },
+      { href: '/donations/giving-statement', icon: FileText, label: 'Declaración de Donación' },
+      { href: '/donations/fundraising', icon: PiggyBank, label: 'Recaudación de Fondos' },
+      { href: '/donations/new', icon: Plus, label: 'Nueva Donación' },
+    ]
+  },
   { href: '/sermons', icon: Video, label: 'Biblioteca' },
   { href: '/prayer', icon: Heart, label: 'Peticiones' },
   { href: '/financial', icon: BarChart, label: 'Finanzas' },
@@ -94,7 +105,7 @@ const bottomNavItems = [
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const [openCollapsibles, setOpenCollapsibles] = React.useState<string[]>(['Directorio', 'Grupos', 'Ministerios', 'Voluntarios', 'Eventos']);
+  const [openCollapsibles, setOpenCollapsibles] = React.useState<string[]>(['Directorio', 'Grupos', 'Ministerios', 'Voluntarios', 'Eventos', 'Ofrendas']);
 
   const isSubItemActive = (subItems: any[]) => {
     return subItems.some(subItem => pathname.startsWith(subItem.href));
