@@ -30,6 +30,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { groupData, groupMembers } from '@/lib/data';
+import Link from 'next/link';
 
 type Group = (typeof groupData)[0];
 type GroupMember = (typeof groupMembers)[0];
@@ -76,8 +77,8 @@ export default function GroupsPage() {
             Organice y gestione los grupos de su iglesia y sus miembros.
           </p>
         </div>
-        <Button className="mt-4 sm:mt-0">
-          <Plus className="mr-2 h-4 w-4" /> Crear Nuevo Grupo
+        <Button className="mt-4 sm:mt-0" asChild>
+          <Link href="/groups/new"><Plus className="mr-2 h-4 w-4" /> Crear Nuevo Grupo</Link>
         </Button>
       </div>
 
