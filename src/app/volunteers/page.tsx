@@ -24,6 +24,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { volunteersData } from '@/lib/data';
 import { Separator } from '@/components/ui/separator';
+import Link from 'next/link';
 
 type Volunteer = (typeof volunteersData)[0];
 
@@ -143,7 +144,11 @@ export default function VolunteersPage() {
                         </div>
                     </div>
                 </div>
-                <Button variant="outline" size="icon"><Edit className="h-4 w-4" /></Button>
+                <Button variant="outline" size="icon" asChild>
+                  <Link href={`/volunteers/${selectedVolunteer.id}/edit`}>
+                    <Edit className="h-4 w-4" />
+                  </Link>
+                </Button>
             </div>
           </CardContent>
         </Card>
