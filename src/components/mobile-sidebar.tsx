@@ -17,6 +17,9 @@ import {
   Plus,
   List,
   PiggyBank,
+  Landmark,
+  DollarSign,
+  LayoutGrid,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -100,7 +103,18 @@ const navItems = [
       { href: '/prayer/new', icon: Plus, label: 'Nueva Oración' },
     ]
   },
-  { href: '/financial', icon: BarChart, label: 'Finanzas' },
+  { 
+    label: 'Finanzas', 
+    icon: DollarSign, 
+    subItems: [
+      { href: '/financial', icon: LayoutGrid, label: 'Reportes Financieros' },
+      { href: '/financial/income-expense', icon: FileText, label: 'Ingresos y Gastos' },
+      { href: '/financial/budget', icon: PiggyBank, label: 'Reporte de Presupuesto' },
+      { href: '/financial/funds', icon: Landmark, label: 'Saldos de Fondos' },
+      { href: '/financial/donations', icon: FileText, label: 'Reportes de Donaciones' },
+      { href: '/financial/new-transaction', icon: Plus, label: 'Nueva Transacción' },
+    ]
+  },
   { href: '/attendance', icon: BarChart, label: 'Asistencia' },
   { href: '/reports', icon: FileText, label: 'Reportes' },
   { href: '/settings', icon: Settings, label: 'Configuración' },
@@ -112,7 +126,7 @@ const bottomNavItems = [
 
 export function MobileSidebar() {
   const pathname = usePathname();
-  const [openCollapsibles, setOpenCollapsibles] = React.useState<string[]>(['Directorio', 'Grupos', 'Ministerios', 'Voluntarios', 'Eventos', 'Ofrendas', 'Peticiones']);
+  const [openCollapsibles, setOpenCollapsibles] = React.useState<string[]>(['Directorio', 'Grupos', 'Ministerios', 'Voluntarios', 'Eventos', 'Ofrendas', 'Peticiones', 'Finanzas']);
 
   const isSubItemActive = (subItems: any[]) => {
     return subItems.some(subItem => pathname.startsWith(subItem.href));
