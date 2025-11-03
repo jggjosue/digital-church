@@ -21,6 +21,7 @@ import {
   DollarSign,
   LayoutGrid,
   ClipboardList,
+  UserCog,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -131,7 +132,15 @@ const navItems = [
       { href: '/reports/volunteers', icon: Users, label: 'Voluntarios' },
     ]
   },
-  { href: '/settings', icon: Settings, label: 'Configuración' },
+  { 
+    label: 'Configuración', 
+    icon: Settings, 
+    subItems: [
+      { href: '/settings', icon: UserCog, label: 'Roles y Permisos' },
+      { href: '/settings/new', icon: Plus, label: 'Nuevo Rol' },
+      { href: '/settings/users', icon: Users, label: 'Usuarios' },
+    ]
+  },
 ];
 
 const bottomNavItems = [
@@ -140,7 +149,7 @@ const bottomNavItems = [
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const [openCollapsibles, setOpenCollapsibles] = React.useState<string[]>(['Directorio', 'Grupos', 'Ministerios', 'Voluntarios', 'Eventos', 'Ofrendas', 'Peticiones', 'Finanzas', 'Asistencia', 'Reportes']);
+  const [openCollapsibles, setOpenCollapsibles] = React.useState<string[]>(['Directorio', 'Grupos', 'Ministerios', 'Voluntarios', 'Eventos', 'Ofrendas', 'Peticiones', 'Finanzas', 'Asistencia', 'Reportes', 'Configuración']);
 
   const isSubItemActive = (subItems: any[]) => {
     return subItems.some(subItem => pathname.startsWith(subItem.href));
