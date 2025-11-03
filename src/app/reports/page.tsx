@@ -205,7 +205,7 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {reportTypes.map((report, index) => (
           <Card key={index} className="flex flex-col">
             <CardHeader>
