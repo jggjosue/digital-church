@@ -95,7 +95,7 @@ export function AppSidebar() {
                 >
                     <div className="flex items-center gap-3">
                         <Users className="h-4 w-4" />
-                        <span>Miembros</span>
+                        <span>Directorio</span>
                     </div>
                     <ChevronDown className={cn('h-4 w-4 transition-transform', isMembersOpen && 'rotate-180')} />
                 </div>
