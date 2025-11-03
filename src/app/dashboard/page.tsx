@@ -26,7 +26,7 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-1 flex-col">
-        <header className="sticky top-0 z-10 flex h-auto flex-col items-start gap-4 border-b bg-background p-6 sm:flex-row sm:items-center sm:justify-between sm:h-16 sm:px-6">
+        <header className="sticky top-0 z-10 flex h-auto flex-col items-start gap-4 border-b bg-background p-6 sm:flex-row sm:items-center sm:justify-between sm:h-16">
             <div className="flex items-center gap-4">
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Panel</h1>
