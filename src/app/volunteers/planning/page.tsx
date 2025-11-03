@@ -190,7 +190,7 @@ export default function VolunteerSchedulingPage() {
                     </CardHeader>
                     <CardContent>
                       {view === 'calendar' ? (
-                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                               {event.roles.map(role => (
                                   <Card key={role.name} className="p-4 bg-muted/50">
                                       <h4 className="font-semibold text-sm">{role.name} ({role.assigned}/{role.needed})</h4>
