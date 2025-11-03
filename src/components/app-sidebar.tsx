@@ -40,7 +40,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collap
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Panel' },
-  { href: '/ministries', icon: Church, label: 'Ministerios' },
   { href: '/volunteers', icon: Users, label: 'Voluntarios' },
   { href: '/events', icon: Calendar, label: 'Eventos' },
   { href: '/donations', icon: Heart, label: 'Donaciones' },
@@ -60,6 +59,7 @@ export function AppSidebar() {
   const [isReportsOpen, setIsReportsOpen] = React.useState(pathname.startsWith('/reports'));
   const [isAttendanceOpen, setIsAttendanceOpen] = React.useState(pathname.startsWith('/attendance'));
   const [isGroupsOpen, setIsGroupsOpen] = React.useState(pathname.startsWith('/groups'));
+  const [isMinistriesOpen, setIsMinistriesOpen] = React.useState(pathname.startsWith('/ministries'));
 
 
   return (
@@ -172,8 +172,46 @@ export function AppSidebar() {
                 </Link>
             </CollapsibleContent>
         </Collapsible>
+        <Collapsible open={isMinistriesOpen} onOpenChange={setIsMinistriesOpen}>
+            <CollapsibleTrigger className="w-full">
+                <div
+                className={cn(
+                    'flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
+                    isMinistriesOpen && 'bg-accent text-accent-foreground font-medium'
+                )}
+                >
+                    <div className="flex items-center gap-3">
+                        <Church className="h-4 w-4" />
+                        <span>Ministerios</span>
+                    </div>
+                    <ChevronDown className={cn('h-4 w-4 transition-transform', isMinistriesOpen && 'rotate-180')} />
+                </div>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-1 pt-1">
+                <Link
+                    href="/ministries"
+                    className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
+                    pathname === '/ministries' && 'bg-accent text-accent-foreground font-medium'
+                    )}
+                >
+                    <ClipboardList className="h-4 w-4" />
+                    <span>Gestionar</span>
+                </Link>
+                <Link
+                    href="/ministries/new"
+                    className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
+                    pathname === '/ministries/new' && 'bg-accent text-accent-foreground font-medium'
+                    )}
+                >
+                    <Plus className="h-4 w-4" />
+                    <span>Nuevo Ministerio</span>
+                </Link>
+            </CollapsibleContent>
+        </Collapsible>
         {navItems.map((item) => (
-          (item.href !== '/dashboard' && item.href !== '/members' && item.href !== '/groups') && <Link
+          (item.href !== '/dashboard' && item.href !== '/members' && item.href !== '/groups' && item.href !== '/ministries') && <Link
             key={item.href}
             href={item.href}
             className={cn(
@@ -427,6 +465,3 @@ export function AppSidebar() {
     </aside>
   );
 }
-
-    
-    
