@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -87,15 +88,15 @@ export function SendEmailForm() {
 
   return (
     <main className="flex-1 bg-muted/20 p-4 sm:p-8">
-      <div className="flex items-center gap-4">
-        <Button variant="outline" size="icon" asChild>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+        <Button variant="outline" size="icon" asChild className="shrink-0">
           <Link href="/members">
             <ArrowLeft className="h-4 w-4" />
           </Link>
         </Button>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Enviar Correo a Miembros</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Enviar Correo a Miembros</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">
             Redacte y envíe un correo electrónico a los miembros seleccionados.
           </p>
         </div>
