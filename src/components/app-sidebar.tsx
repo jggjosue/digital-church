@@ -40,7 +40,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collap
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Panel' },
-  { href: '/sermons', icon: Video, label: 'Biblioteca Digital' },
+  { href: '/sermons', icon: Video, label: 'Biblioteca' },
 ];
 
 const bottomNavItems = [
