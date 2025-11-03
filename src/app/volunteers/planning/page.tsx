@@ -11,6 +11,7 @@ import {
   LayoutGrid,
   Users,
   AlertTriangle,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
@@ -190,7 +191,7 @@ export default function VolunteerSchedulingPage() {
                     </CardHeader>
                     <CardContent>
                       {view === 'calendar' ? (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                               {event.roles.map(role => (
                                   <Card key={role.name} className="p-4 bg-muted/50">
                                       <h4 className="font-semibold text-sm">{role.name} ({role.assigned}/{role.needed})</h4>
@@ -205,7 +206,10 @@ export default function VolunteerSchedulingPage() {
                                                           </Avatar>
                                                           <span className="text-sm font-medium">{v.name}</span>
                                                       </div>
-                                                      {v.conflict && <Badge variant="destructive" className="h-5"><AlertTriangle className="h-3 w-3 mr-1"/>Conflicto</Badge>}
+                                                      <div className="flex items-center gap-1">
+                                                        {v.conflict && <Badge variant="destructive" className="h-5"><AlertTriangle className="h-3 w-3 mr-1"/>Conflicto</Badge>}
+                                                        <Button variant="ghost" size="icon" className="h-6 w-6"><X className="h-3 w-3" /></Button>
+                                                      </div>
                                                   </div>
                                               </Card>
                                           ))}
