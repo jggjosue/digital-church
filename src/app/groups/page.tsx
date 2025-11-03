@@ -145,8 +145,10 @@ export default function GroupsPage() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Button variant="ghost" size="icon">
-                  <Edit className="h-4 w-4" />
+                <Button variant="ghost" size="icon" asChild>
+                  <Link href={`/groups/${selectedGroup.id}/edit`}>
+                    <Edit className="h-4 w-4" />
+                  </Link>
                 </Button>
                 <Button variant="ghost" size="icon">
                   <Trash2 className="h-4 w-4" />
