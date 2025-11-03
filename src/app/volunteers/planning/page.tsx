@@ -113,7 +113,7 @@ export default function VolunteerSchedulingPage() {
   const [scheduleData, setScheduleData] = React.useState<ScheduleData>(initialScheduleData);
   const [availableVolunteers, setAvailableVolunteers] = React.useState<Volunteer[]>(volunteersData.slice(3));
 
-  React.useEffect(() => {
+   React.useEffect(() => {
     setDate(new Date('2023-10-22T00:00:00'));
   }, []);
 
@@ -180,7 +180,7 @@ export default function VolunteerSchedulingPage() {
   return (
     <main className="flex flex-col lg:flex-row h-[calc(100vh-theme(spacing.16))] bg-muted/20">
       <aside className="w-full lg:w-[320px] border-b lg:border-r lg:border-b-0 bg-background flex flex-col p-6">
-        <h2 className="text-xl font-bold">Planificación de Voluntarios</h2>
+        <h2 className="text-xl font-bold">Planeación de Voluntarios</h2>
         <p className="text-sm text-muted-foreground">Asigne voluntarios a eventos y gestione los horarios.</p>
         
         <div className="mt-6">

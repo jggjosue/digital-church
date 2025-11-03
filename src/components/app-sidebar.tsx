@@ -275,7 +275,7 @@ export function AppSidebar() {
                     )}
                 >
                     <Calendar className="h-4 w-4" />
-                    <span>Planificación</span>
+                    <span>Planeación</span>
                 </Link>
             </CollapsibleContent>
         </Collapsible>
