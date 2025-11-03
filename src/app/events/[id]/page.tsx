@@ -20,7 +20,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { events as allEvents } from '@/lib/data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { notFound }s from 'next/navigation';
+import { notFound } from 'next/navigation';
 
 const eventCategoryColors: { [key: string]: string } = {
   'Estudio Bíblico': 'bg-purple-100 text-purple-800 border-purple-200',
