@@ -26,6 +26,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 const availableVolunteers = volunteersData.slice(0, 3);
 
@@ -82,7 +83,7 @@ const scheduleData = {
 
 export default function VolunteerSchedulingPage() {
   const [date, setDate] = React.useState<Date | undefined>(new Date('2023-10-22T00:00:00'));
-  const [view, setView] = React.useState('calendar');
+  const [view, setView] = React.useState('list');
 
   const selectedDateString = date ? date.toISOString().split('T')[0] : '';
   const todaysSchedule = scheduleData[selectedDateString as keyof typeof scheduleData] || [];
@@ -187,33 +188,78 @@ export default function VolunteerSchedulingPage() {
                             <span>{event.totalVolunteers} / {event.neededVolunteers} voluntarios</span>
                         </div>
                     </CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {event.roles.map(role => (
-                            <Card key={role.name} className="p-4 bg-muted/50">
-                                <h4 className="font-semibold text-sm">{role.name} ({role.assigned}/{role.needed})</h4>
-                                <div className="mt-3 space-y-2">
-                                    {role.volunteers.map(v => (
-                                        <Card key={v.name} className="p-2 bg-card">
-                                            <div className="flex items-center justify-between">
-                                                <div className="flex items-center gap-2">
-                                                    <Avatar className="h-7 w-7">
-                                                        <AvatarImage src={v.avatarUrl} alt={v.name} />
-                                                        <AvatarFallback>{v.name.charAt(0)}</AvatarFallback>
-                                                    </Avatar>
-                                                    <span className="text-sm font-medium">{v.name}</span>
-                                                </div>
-                                                {v.conflict && <Badge variant="destructive" className="h-5"><AlertTriangle className="h-3 w-3 mr-1"/>Conflicto</Badge>}
-                                            </div>
-                                        </Card>
-                                    ))}
-                                    {Array.from({ length: role.needed - role.assigned }).map((_, i) => (
-                                         <div key={i} className="h-10 rounded-lg border-2 border-dashed flex items-center justify-center text-muted-foreground text-sm">
-                                            Arrastre voluntario aquí
-                                         </div>
-                                    ))}
-                                </div>
-                            </Card>
-                        ))}
+                    <CardContent>
+                      {view === 'calendar' ? (
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                              {event.roles.map(role => (
+                                  <Card key={role.name} className="p-4 bg-muted/50">
+                                      <h4 className="font-semibold text-sm">{role.name} ({role.assigned}/{role.needed})</h4>
+                                      <div className="mt-3 space-y-2">
+                                          {role.volunteers.map(v => (
+                                              <Card key={v.name} className="p-2 bg-card">
+                                                  <div className="flex items-center justify-between">
+                                                      <div className="flex items-center gap-2">
+                                                          <Avatar className="h-7 w-7">
+                                                              <AvatarImage src={v.avatarUrl} alt={v.name} />
+                                                              <AvatarFallback>{v.name.charAt(0)}</AvatarFallback>
+                                                          </Avatar>
+                                                          <span className="text-sm font-medium">{v.name}</span>
+                                                      </div>
+                                                      {v.conflict && <Badge variant="destructive" className="h-5"><AlertTriangle className="h-3 w-3 mr-1"/>Conflicto</Badge>}
+                                                  </div>
+                                              </Card>
+                                          ))}
+                                          {Array.from({ length: role.needed - role.assigned }).map((_, i) => (
+                                               <div key={i} className="h-10 rounded-lg border-2 border-dashed flex items-center justify-center text-muted-foreground text-sm">
+                                                  Arrastre voluntario aquí
+                                               </div>
+                                          ))}
+                                      </div>
+                                  </Card>
+                              ))}
+                          </div>
+                      ) : (
+                        <div className='overflow-x-auto'>
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Rol</TableHead>
+                                <TableHead>Necesarios</TableHead>
+                                <TableHead>Asignados</TableHead>
+                                <TableHead>Voluntarios</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {event.roles.map(role => (
+                                <TableRow key={role.name}>
+                                  <TableCell className='font-semibold'>{role.name}</TableCell>
+                                  <TableCell>{role.needed}</TableCell>
+                                  <TableCell>{role.assigned}</TableCell>
+                                  <TableCell>
+                                    <div className='flex flex-wrap gap-2'>
+                                      {role.volunteers.map(v => (
+                                        <div key={v.name} className='flex items-center gap-2'>
+                                          <Avatar className="h-7 w-7">
+                                              <AvatarImage src={v.avatarUrl} alt={v.name} />
+                                              <AvatarFallback>{v.name.charAt(0)}</AvatarFallback>
+                                          </Avatar>
+                                          <span className="text-sm font-medium">{v.name}</span>
+                                          {v.conflict && <Badge variant="destructive" className="h-5"><AlertTriangle className="h-3 w-3 mr-1"/>Conflicto</Badge>}
+                                        </div>
+                                      ))}
+                                      {Array.from({ length: role.needed - role.assigned }).map((_, i) => (
+                                           <div key={i} className="h-10 w-40 rounded-lg border-2 border-dashed flex items-center justify-center text-muted-foreground text-sm">
+                                              Puesto Vacante
+                                           </div>
+                                      ))}
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      )}
                     </CardContent>
                 </Card>
             ))}
