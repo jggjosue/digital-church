@@ -355,14 +355,14 @@ export function AppSidebar() {
                     <span>Donaciones y ofrendas</span>
                 </Link>
                 <Link
-                    href="/donations/statements"
+                    href="/donations/pledges"
                     className={cn(
                     'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
-                    pathname === '/donations/statements' && 'bg-accent text-accent-foreground font-medium'
+                    pathname === '/donations/pledges' && 'bg-accent text-accent-foreground font-medium'
                     )}
                 >
-                    <FileText className="h-4 w-4" />
-                    <span>Estado de Cuenta</span>
+                    <ClipboardList className="h-4 w-4" />
+                    <span>Gestión de Promesas</span>
                 </Link>
                  <Link
                     href="/donations/giving-statement"
