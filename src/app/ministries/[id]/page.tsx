@@ -69,7 +69,7 @@ export default function MinistryDetailsPage({ params }: { params: { id: string }
         </div>
         <div className="flex items-center gap-2">
             <Button variant="outline" asChild><Link href={`/ministries/${ministry.id}/edit`}><Edit className="mr-2 h-4 w-4" />Editar Ministerio</Link></Button>
-            <Button><Plus className="mr-2 h-4 w-4" /> Añadir Miembros</Button>
+            <Button asChild><Link href={`/ministries/assign-members?ministryId=${ministry.id}`}><Plus className="mr-2 h-4 w-4" /> Añadir Miembros</Link></Button>
         </div>
       </div>
       
