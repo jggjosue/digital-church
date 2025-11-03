@@ -101,7 +101,9 @@ export default function MinistriesPage() {
                             </div>
                         </div>
                         <div className="flex items-center gap-2">
-                            <Button>Ver Detalles</Button>
+                            <Button asChild>
+                                <Link href={`/ministries/${ministry.id}`}>Ver Detalles</Link>
+                            </Button>
                             <Button variant="outline">Asignar Miembros</Button>
                         </div>
                     </div>
