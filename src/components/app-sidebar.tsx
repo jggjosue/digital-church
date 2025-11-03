@@ -41,7 +41,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collap
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Panel' },
-  { href: '/volunteers', icon: Users, label: 'Voluntarios' },
   { href: '/events', icon: Calendar, label: 'Eventos' },
   { href: '/donations', icon: Heart, label: 'Donaciones' },
   { href: '/sermons', icon: Video, label: 'Sermones y Medios' },
@@ -61,6 +60,7 @@ export function AppSidebar() {
   const [isAttendanceOpen, setIsAttendanceOpen] = React.useState(pathname.startsWith('/attendance'));
   const [isGroupsOpen, setIsGroupsOpen] = React.useState(pathname.startsWith('/groups'));
   const [isMinistriesOpen, setIsMinistriesOpen] = React.useState(pathname.startsWith('/ministries'));
+  const [isVolunteersOpen, setIsVolunteersOpen] = React.useState(pathname.startsWith('/volunteers'));
 
 
   return (
@@ -218,6 +218,44 @@ export function AppSidebar() {
                 >
                     <UserPlus className="h-4 w-4" />
                     <span>Asignar Miembros</span>
+                </Link>
+            </CollapsibleContent>
+        </Collapsible>
+        <Collapsible open={isVolunteersOpen} onOpenChange={setIsVolunteersOpen}>
+            <CollapsibleTrigger className="w-full">
+                <div
+                className={cn(
+                    'flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
+                    isVolunteersOpen && 'bg-accent text-accent-foreground font-medium'
+                )}
+                >
+                    <div className="flex items-center gap-3">
+                        <HandHeart className="h-4 w-4" />
+                        <span>Voluntarios</span>
+                    </div>
+                    <ChevronDown className={cn('h-4 w-4 transition-transform', isVolunteersOpen && 'rotate-180')} />
+                </div>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-1 pt-1">
+                <Link
+                    href="/volunteers"
+                    className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
+                    pathname === '/volunteers' && 'bg-accent text-accent-foreground font-medium'
+                    )}
+                >
+                    <ClipboardList className="h-4 w-4" />
+                    <span>Gestión</span>
+                </Link>
+                <Link
+                    href="/volunteers/new"
+                    className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
+                    pathname === '/volunteers/new' && 'bg-accent text-accent-foreground font-medium'
+                    )}
+                >
+                    <Plus className="h-4 w-4" />
+                    <span>Agregar Voluntario</span>
                 </Link>
             </CollapsibleContent>
         </Collapsible>
