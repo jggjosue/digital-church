@@ -14,6 +14,7 @@ import {
   Video,
   ChevronDown,
   UserPlus,
+  Plus,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -41,7 +42,15 @@ const navItems = [
       { href: '/members/pastoral', icon: Heart, label: 'Pastoral' },
     ]
   },
-  { href: '/groups', icon: Users, label: 'Grupos' },
+  { 
+    label: 'Grupos', 
+    icon: Users, 
+    subItems: [
+      { href: '/groups', icon: Users, label: 'Directorio de Grupos' },
+      { href: '/groups/new', icon: Plus, label: 'Nuevo Grupo' },
+      { href: '/groups/add-members', icon: UserPlus, label: 'Agregar Miembros' },
+    ]
+  },
   { href: '/ministries', icon: Users, label: 'Ministerios' },
   { href: '/volunteers', icon: Heart, label: 'Voluntarios' },
   { href: '/events', icon: Calendar, label: 'Eventos' },
@@ -63,7 +72,7 @@ const bottomNavItems = [
 
 export function MobileSidebar() {
   const pathname = usePathname();
-  const [openCollapsibles, setOpenCollapsibles] = React.useState<string[]>(['Directorio']);
+  const [openCollapsibles, setOpenCollapsibles] = React.useState<string[]>(['Directorio', 'Grupos']);
 
   const isSubItemActive = (subItems: any[]) => {
     return subItems.some(subItem => pathname.startsWith(subItem.href));
