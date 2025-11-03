@@ -55,6 +55,7 @@ import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import { useMediaQuery } from '@/hooks/use-media-query';
 
 
 type Member = (typeof membersData)[0];
@@ -136,6 +137,7 @@ function Filters({ filters, onFilterChange, onApply, onClear }: { filters: any, 
 }
 
 export default function MembersPage() {
+  const isDesktop = useMediaQuery("(min-width: 768px)");
   const [selected, setSelected] = React.useState<number[]>([]);
   const [view, setView] = React.useState<'table' | 'card'>('table');
   const [searchTerm, setSearchTerm] = React.useState('');
@@ -149,6 +151,10 @@ export default function MembersPage() {
   const [isBulkDelete, setIsBulkDelete] = React.useState(false);
   const [currentPage, setCurrentPage] = React.useState(1);
   const itemsPerPage = 20;
+
+  React.useEffect(() => {
+    setView(isDesktop ? 'table' : 'card');
+  }, [isDesktop]);
 
   const handleFilterChange = (key: string, value: any) => {
     setFilters(prev => ({...prev, [key]: value}));
@@ -289,6 +295,7 @@ export default function MembersPage() {
                                     variant={view === 'table' ? 'secondary' : 'ghost'}
                                     size="icon"
                                     onClick={() => setView('table')}
+                                    className="hidden md:inline-flex"
                                 >
                                     <List className="h-5 w-5" />
                                 </Button>
@@ -296,6 +303,7 @@ export default function MembersPage() {
                                     variant={view === 'card' ? 'secondary' : 'ghost'}
                                     size="icon"
                                     onClick={() => setView('card')}
+                                    className="hidden md:inline-flex"
                                 >
                                     <LayoutGrid className="h-5 w-5" />
                                 </Button>
@@ -519,5 +527,3 @@ export default function MembersPage() {
     </AlertDialog>
   );
 }
-
-    
