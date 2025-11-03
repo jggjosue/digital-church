@@ -114,8 +114,10 @@ export default function DonationsPage() {
             Gestione donaciones, promesas de donación y genere estados de cuenta.
           </p>
         </div>
-        <Button variant="outline">
-          <FileText className="mr-2 h-4 w-4" /> Generar Estado de Cuenta
+        <Button variant="outline" asChild>
+          <Link href="/donations/giving-statement">
+            <FileText className="mr-2 h-4 w-4" /> Generar Estado de Cuenta
+          </Link>
         </Button>
       </div>
 
