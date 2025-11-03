@@ -12,6 +12,8 @@ import {
   HelpCircle,
   FileText,
   Video,
+  ChevronDown,
+  UserPlus,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -26,10 +28,19 @@ import {
 import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from './ui/collapsible';
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Panel' },
-  { href: '/members', icon: Users, label: 'Directorio' },
+  { 
+    label: 'Directorio', 
+    icon: Users, 
+    subItems: [
+      { href: '/members', icon: Users, label: 'Miembros' },
+      { href: '/members/new', icon: UserPlus, label: 'Nuevo' },
+      { href: '/members/pastoral', icon: Heart, label: 'Pastoral' },
+    ]
+  },
   { href: '/groups', icon: Users, label: 'Grupos' },
   { href: '/ministries', icon: Users, label: 'Ministerios' },
   { href: '/volunteers', icon: Heart, label: 'Voluntarios' },
@@ -52,6 +63,18 @@ const bottomNavItems = [
 
 export function MobileSidebar() {
   const pathname = usePathname();
+  const [openCollapsibles, setOpenCollapsibles] = React.useState<string[]>(['Directorio']);
+
+  const isSubItemActive = (subItems: any[]) => {
+    return subItems.some(subItem => pathname.startsWith(subItem.href));
+  };
+
+  const toggleCollapsible = (label: string) => {
+    setOpenCollapsibles(prev => 
+      prev.includes(label) ? prev.filter(l => l !== label) : [...prev, label]
+    );
+  };
+
   return (
     <div className="flex h-full w-full flex-col bg-background">
       <div className="flex h-16 items-center gap-3 px-6 border-b">
@@ -66,19 +89,53 @@ export function MobileSidebar() {
       </div>
       <nav className="flex-1 space-y-1 px-4 py-2 overflow-y-auto">
         {navItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={cn(
-              'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
-              pathname.startsWith(item.href) && item.href !== '/' &&
-                'bg-accent text-accent-foreground font-medium',
-              pathname === '/' && item.href === '/dashboard' && 'bg-accent text-accent-foreground font-medium'
-            )}
-          >
-            <item.icon className="h-4 w-4" />
-            <span>{item.label}</span>
-          </Link>
+          item.subItems ? (
+            <Collapsible key={item.label} open={openCollapsibles.includes(item.label)} onOpenChange={() => toggleCollapsible(item.label)}>
+              <CollapsibleTrigger asChild>
+                <div
+                  className={cn(
+                    'flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground cursor-pointer',
+                    isSubItemActive(item.subItems) && 'bg-accent text-accent-foreground font-medium'
+                  )}
+                >
+                  <div className='flex items-center gap-3'>
+                    <item.icon className="h-4 w-4" />
+                    <span>{item.label}</span>
+                  </div>
+                  <ChevronDown className={cn("h-4 w-4 transition-transform", openCollapsibles.includes(item.label) && "rotate-180")} />
+                </div>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-1 pt-1">
+                {item.subItems.map(subItem => (
+                  <Link
+                    key={subItem.href}
+                    href={subItem.href}
+                    className={cn(
+                      'flex items-center gap-3 rounded-lg py-2 pl-9 pr-3 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
+                      pathname === subItem.href && 'bg-accent/50 text-accent-foreground'
+                    )}
+                  >
+                    <subItem.icon className="h-4 w-4" />
+                    <span>{subItem.label}</span>
+                  </Link>
+                ))}
+              </CollapsibleContent>
+            </Collapsible>
+          ) : (
+            <Link
+              key={item.href}
+              href={item.href!}
+              className={cn(
+                'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
+                pathname.startsWith(item.href!) && item.href !== '/' &&
+                  'bg-accent text-accent-foreground font-medium',
+                pathname === '/' && item.href === '/dashboard' && 'bg-accent text-accent-foreground font-medium'
+              )}
+            >
+              <item.icon className="h-4 w-4" />
+              <span>{item.label}</span>
+            </Link>
+          )
         ))}
       </nav>
       <div className="mt-auto space-y-1 p-4">
