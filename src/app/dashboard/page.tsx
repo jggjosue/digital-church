@@ -14,6 +14,10 @@ import { TotalVolunteers } from '@/components/dashboard/total-volunteers';
 import { UpcomingEventsCard } from '@/components/dashboard/upcoming-events-card';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { MemberGrowthChart } from '@/components/dashboard/member-growth-chart';
+import { Sheet, SheetTrigger, SheetContent } from '@/components/ui/sheet';
+import { Button } from '@/components/ui/button';
+import { PanelLeft } from 'lucide-react';
+import { MobileSidebar } from '@/components/mobile-sidebar';
 
 export type TimeRange = 'this-week' | 'this-month' | 'this-quarter' | 'this-year';
 
@@ -26,14 +30,27 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-1 flex-col">
-        <header className="sticky top-0 z-10 flex h-auto flex-col gap-4 border-b bg-background px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-4">
-            <div>
-                <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Panel</h1>
-                <p className="text-sm text-muted-foreground sm:text-base">
-                Un resumen de las actividades y estadísticas clave de la iglesia.
-                </p>
+        <header className="sticky top-0 z-10 flex h-16 flex-row items-center justify-between gap-4 border-b bg-background px-4 py-4 sm:px-6">
+            <div className="flex items-center gap-4">
+                 <Sheet>
+                    <SheetTrigger asChild>
+                        <Button size="icon" variant="outline" className="md:hidden">
+                        <PanelLeft className="h-5 w-5" />
+                        <span className="sr-only">Toggle Menu</span>
+                        </Button>
+                    </SheetTrigger>
+                    <SheetContent side="left" className="sm:max-w-xs p-0">
+                        <MobileSidebar />
+                    </SheetContent>
+                </Sheet>
+                <div>
+                    <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Panel</h1>
+                    <p className="text-sm text-muted-foreground sm:text-base">
+                    Un resumen de las actividades y estadísticas clave de la iglesia.
+                    </p>
+                </div>
             </div>
-            <div className="self-end sm:self-center">
+            <div className="flex items-center gap-2">
               <ThemeToggle />
             </div>
         </header>

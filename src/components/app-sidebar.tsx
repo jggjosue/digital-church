@@ -22,6 +22,7 @@ import {
   HandHeart,
   UserPlus,
   Landmark,
+  PanelLeft,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -37,9 +38,14 @@ import { cn } from '@/lib/utils';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
+import { useMediaQuery } from '@/hooks/use-media-query';
+
 
 const navItems = [
   { href: '/sermons', icon: Video, label: 'Biblioteca' },
+  { href: '/facilities', icon: Building, label: 'Instalaciones' },
+  { href: '/temples', icon: Landmark, label: 'Templos' },
+  { href: '/documentation', icon: FileText, label: 'Documentación' },
 ];
 
 const bottomNavItems = [
@@ -48,6 +54,9 @@ const bottomNavItems = [
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const isDesktop = useMediaQuery("(min-width: 768px)");
+  const [isCollapsed, setIsCollapsed] = React.useState(false);
+
   const [isSettingsOpen, setIsSettingsOpen] = React.useState(pathname.startsWith('/settings'));
   const [isFinancialOpen, setIsFinancialOpen] = React.useState(pathname.startsWith('/financial'));
   const [isPrayerOpen, setIsPrayerOpen] = React.useState(pathname.startsWith('/prayer'));
@@ -60,47 +69,66 @@ export function AppSidebar() {
   const [isEventsOpen, setIsEventsOpen] = React.useState(pathname.startsWith('/events'));
   const [isDonationsOpen, setIsDonationsOpen] = React.useState(pathname.startsWith('/donations'));
 
+  if (!isDesktop) {
+    return null;
+  }
 
   return (
-    <aside className="flex h-screen w-64 flex-col border-r bg-background">
-      <div className="flex h-16 items-center gap-3 px-6">
+    <aside className={cn("flex h-screen flex-col border-r bg-background transition-all duration-300 ease-in-out", isCollapsed ? "w-16" : "w-64")}>
+      <div className={cn("flex h-16 items-center gap-3 px-6", isCollapsed && "px-3 justify-center")}>
         <Avatar className="h-8 w-8">
             <AvatarImage src="https://picsum.photos/seed/logo/32/32" alt="Grace Church"/>
             <AvatarFallback>GC</AvatarFallback>
         </Avatar>
-        <div>
+        <div className={cn("flex flex-col", isCollapsed && "hidden")}>
             <p className="font-semibold text-foreground">Grace Church</p>
             <p className="text-sm text-muted-foreground">Portal de Administración</p>
         </div>
       </div>
       <nav className="flex-1 space-y-1 px-4 py-2">
-        <Link
-          href="/dashboard"
-          className={cn(
-            'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
-            (pathname === '/dashboard' || pathname === '/') &&
-              'bg-accent text-accent-foreground font-medium'
-          )}
-        >
-          <LayoutDashboard className="h-4 w-4" />
-          <span>Panel</span>
-        </Link>
+        <TooltipProvider>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Link
+                    href="/dashboard"
+                    className={cn(
+                        'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
+                        (pathname === '/dashboard' || pathname === '/') &&
+                        'bg-accent text-accent-foreground font-medium',
+                        isCollapsed && "justify-center"
+                    )}
+                    >
+                    <LayoutDashboard className="h-4 w-4" />
+                    <span className={cn(isCollapsed && "hidden")}>Panel</span>
+                    </Link>
+                </TooltipTrigger>
+                 {isCollapsed && <TooltipContent side="right">Panel</TooltipContent>}
+            </Tooltip>
+        </TooltipProvider>
         <Collapsible open={isMembersOpen} onOpenChange={setIsMembersOpen}>
-            <CollapsibleTrigger className="w-full">
-                <div
-                className={cn(
-                    'flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
-                    isMembersOpen && 'bg-accent text-accent-foreground font-medium'
-                )}
-                >
-                    <div className="flex items-center gap-3">
-                        <Users className="h-4 w-4" />
-                        <span>Directorio</span>
-                    </div>
-                    <ChevronDown className={cn('h-4 w-4 transition-transform', isMembersOpen && 'rotate-180')} />
-                </div>
+            <CollapsibleTrigger className="w-full" asChild>
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <div
+                            className={cn(
+                                'flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
+                                pathname.startsWith('/members') && 'bg-accent text-accent-foreground font-medium',
+                                isCollapsed && "justify-center"
+                            )}
+                            >
+                                <div className="flex items-center gap-3">
+                                    <Users className="h-4 w-4" />
+                                    <span className={cn(isCollapsed && "hidden")}>Directorio</span>
+                                </div>
+                                <ChevronDown className={cn('h-4 w-4 transition-transform', isMembersOpen && 'rotate-180', isCollapsed && "hidden")} />
+                            </div>
+                        </TooltipTrigger>
+                         {isCollapsed && <TooltipContent side="right">Directorio</TooltipContent>}
+                    </Tooltip>
+                </TooltipProvider>
             </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-1 pt-1">
+            <CollapsibleContent className={cn("space-y-1 pt-1", isCollapsed && "hidden")}>
                 <Link
                     href="/members"
                     className={cn(
@@ -121,7 +149,7 @@ export function AppSidebar() {
                     <UserPlus className="h-4 w-4" />
                     <span>Nuevo</span>
                 </Link>
-                 <Link
+                <Link
                     href="/members/pastoral"
                     className={cn(
                     'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
@@ -133,570 +161,125 @@ export function AppSidebar() {
                 </Link>
             </CollapsibleContent>
         </Collapsible>
-        <Collapsible open={isGroupsOpen} onOpenChange={setIsGroupsOpen}>
-            <CollapsibleTrigger className="w-full">
-                <div
-                className={cn(
-                    'flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
-                    isGroupsOpen && 'bg-accent text-accent-foreground font-medium'
-                )}
-                >
-                    <div className="flex items-center gap-3">
-                        <Users className="h-4 w-4" />
-                        <span>Grupos</span>
-                    </div>
-                    <ChevronDown className={cn('h-4 w-4 transition-transform', isGroupsOpen && 'rotate-180')} />
-                </div>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-1 pt-1">
-                <Link
-                    href="/groups"
-                    className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
-                    pathname === '/groups' && 'bg-accent text-accent-foreground font-medium'
-                    )}
-                >
-                    <Users className="h-4 w-4" />
-                    <span>Directorio de Grupos</span>
-                </Link>
-                <Link
-                    href="/groups/new"
-                    className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
-                    pathname === '/groups/new' && 'bg-accent text-accent-foreground font-medium'
-                    )}
-                >
-                    <Plus className="h-4 w-4" />
-                    <span>Nuevo Grupo</span>
-                </Link>
-                 <Link
-                    href="/groups/add-members"
-                    className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
-                    pathname === '/groups/add-members' && 'bg-accent text-accent-foreground font-medium'
-                    )}
-                >
-                    <UserPlus className="h-4 w-4" />
-                    <span>Agregar Miembros</span>
-                </Link>
-            </CollapsibleContent>
-        </Collapsible>
-        <Collapsible open={isMinistriesOpen} onOpenChange={setIsMinistriesOpen}>
-            <CollapsibleTrigger className="w-full">
-                <div
-                className={cn(
-                    'flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
-                    isMinistriesOpen && 'bg-accent text-accent-foreground font-medium'
-                )}
-                >
-                    <div className="flex items-center gap-3">
-                        <Church className="h-4 w-4" />
-                        <span>Ministerios</span>
-                    </div>
-                    <ChevronDown className={cn('h-4 w-4 transition-transform', isMinistriesOpen && 'rotate-180')} />
-                </div>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-1 pt-1">
-                <Link
-                    href="/ministries"
-                    className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
-                    pathname === '/ministries' && 'bg-accent text-accent-foreground font-medium'
-                    )}
-                >
-                    <ClipboardList className="h-4 w-4" />
-                    <span>Gestionar</span>
-                </Link>
-                <Link
-                    href="/ministries/new"
-                    className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
-                    pathname === '/ministries/new' && 'bg-accent text-accent-foreground font-medium'
-                    )}
-                >
-                    <Plus className="h-4 w-4" />
-                    <span>Nuevo Ministerio</span>
-                </Link>
-                <Link
-                    href="/ministries/assign-members"
-                    className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
-                    pathname === '/ministries/assign-members' && 'bg-accent text-accent-foreground font-medium'
-                    )}
-                >
-                    <UserPlus className="h-4 w-4" />
-                    <span>Asignar Miembros</span>
-                </Link>
-            </CollapsibleContent>
-        </Collapsible>
-        <Collapsible open={isVolunteersOpen} onOpenChange={setIsVolunteersOpen}>
-            <CollapsibleTrigger className="w-full">
-                <div
-                className={cn(
-                    'flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
-                    isVolunteersOpen && 'bg-accent text-accent-foreground font-medium'
-                )}
-                >
-                    <div className="flex items-center gap-3">
-                        <HandHeart className="h-4 w-4" />
-                        <span>Voluntarios</span>
-                    </div>
-                    <ChevronDown className={cn('h-4 w-4 transition-transform', isVolunteersOpen && 'rotate-180')} />
-                </div>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-1 pt-1">
-                <Link
-                    href="/volunteers"
-                    className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
-                    pathname === '/volunteers' && 'bg-accent text-accent-foreground font-medium'
-                    )}
-                >
-                    <ClipboardList className="h-4 w-4" />
-                    <span>Gestión</span>
-                </Link>
-                <Link
-                    href="/volunteers/new"
-                    className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
-                    pathname === '/volunteers/new' && 'bg-accent text-accent-foreground font-medium'
-                    )}
-                >
-                    <Plus className="h-4 w-4" />
-                    <span>Agregar Voluntario</span>
-                </Link>
-                 <Link
-                    href="/volunteers/tasks"
-                    className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
-                    pathname === '/volunteers/tasks' && 'bg-accent text-accent-foreground font-medium'
-                    )}
-                >
-                    <ClipboardList className="h-4 w-4" />
-                    <span>Tareas</span>
-                </Link>
-                 <Link
-                    href="/volunteers/planning"
-                    className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
-                    pathname === '/volunteers/planning' && 'bg-accent text-accent-foreground font-medium'
-                    )}
-                >
-                    <Calendar className="h-4 w-4" />
-                    <span>Planeación</span>
-                </Link>
-            </CollapsibleContent>
-        </Collapsible>
-
-        <Collapsible open={isEventsOpen} onOpenChange={setIsEventsOpen}>
-            <CollapsibleTrigger className="w-full">
-                <div
-                className={cn(
-                    'flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
-                    isEventsOpen && 'bg-accent text-accent-foreground font-medium'
-                )}
-                >
-                    <div className="flex items-center gap-3">
-                        <Calendar className="h-4 w-4" />
-                        <span>Eventos</span>
-                    </div>
-                    <ChevronDown className={cn('h-4 w-4 transition-transform', isEventsOpen && 'rotate-180')} />
-                </div>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-1 pt-1">
-                <Link
-                    href="/events"
-                    className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
-                    pathname === '/events' && 'bg-accent text-accent-foreground font-medium'
-                    )}
-                >
-                    <ClipboardList className="h-4 w-4" />
-                    <span>Gestionar</span>
-                </Link>
-                <Link
-                    href="/events/new"
-                    className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
-                    pathname === '/events/new' && 'bg-accent text-accent-foreground font-medium'
-                    )}
-                >
-                    <Plus className="h-4 w-4" />
-                    <span>Nuevo Evento</span>
-                </Link>
-                 <Link
-                    href="/events/activities"
-                    className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
-                    pathname === '/events/activities' && 'bg-accent text-accent-foreground font-medium'
-                    )}
-                >
-                    <ClipboardList className="h-4 w-4" />
-                    <span>Actividades</span>
-                </Link>
-            </CollapsibleContent>
-        </Collapsible>
-        
-        <Collapsible open={isDonationsOpen} onOpenChange={setIsDonationsOpen}>
-            <CollapsibleTrigger className="w-full">
-                <div
-                className={cn(
-                    'flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
-                    pathname.startsWith('/donations') && 'bg-accent text-accent-foreground font-medium'
-                )}
-                >
-                    <div className="flex items-center gap-3">
-                        <Heart className="h-4 w-4" />
-                        <span>Ofrendas</span>
-                    </div>
-                    <ChevronDown className={cn('h-4 w-4 transition-transform', isDonationsOpen && 'rotate-180')} />
-                </div>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-1 pt-1">
-                <Link
-                    href="/donations"
-                    className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
-                    pathname === '/donations' && 'bg-accent text-accent-foreground font-medium'
-                    )}
-                >
-                    <Heart className="h-4 w-4" />
-                    <span>Donaciones y ofrendas</span>
-                </Link>
-                <Link
-                    href="/donations/pledges"
-                    className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
-                    pathname === '/donations/pledges' && 'bg-accent text-accent-foreground font-medium'
-                    )}
-                >
-                    <ClipboardList className="h-4 w-4" />
-                    <span>Gestión de Promesas</span>
-                </Link>
-                 <Link
-                    href="/donations/giving-statement"
-                    className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
-                    pathname === '/donations/giving-statement' && 'bg-accent text-accent-foreground font-medium'
-                    )}
-                >
-                    <FileText className="h-4 w-4" />
-                    <span>Declaración de Donación</span>
-                </Link>
-                 <Link
-                    href="/donations/fundraising"
-                    className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
-                    pathname === '/donations/fundraising' && 'bg-accent text-accent-foreground font-medium'
-                    )}
-                >
-                    <PiggyBank className="h-4 w-4" />
-                    <span>Recaudación de Fondos</span>
-                </Link>
-                 <Link
-                    href="/donations/new"
-                    className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
-                    pathname === '/donations/new' && 'bg-accent text-accent-foreground font-medium'
-                    )}
-                >
-                    <Plus className="h-4 w-4" />
-                    <span>Nueva Donación</span>
-                </Link>
-            </CollapsibleContent>
-        </Collapsible>
-        
-        {navItems.map((item) => (
-          (item.href !== '/dashboard' && item.href !== '/donations' && item.href !== '/members' && item.href !== '/groups' && item.href !== '/ministries') && <Link
-            key={item.href}
-            href={item.href}
-            className={cn(
-              'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
-              pathname.startsWith(item.href) && item.href !== '/' &&
-                'bg-accent text-accent-foreground font-medium',
-              pathname === '/' && item.href === '/dashboard' && 'bg-accent text-accent-foreground font-medium'
-            )}
-          >
-            <item.icon className="h-4 w-4" />
-            <span>{item.label}</span>
-          </Link>
+        {/* Other menu items */}
+        {Object.entries({
+            Groups: { hook: isGroupsOpen, setter: setIsGroupsOpen, icon: Users, path: '/groups', sub: [ {path: '/groups', label: 'Directorio de Grupos', icon: Users}, {path: '/groups/new', label: 'Nuevo Grupo', icon: Plus}, {path: '/groups/add-members', label: 'Agregar Miembros', icon: UserPlus} ] },
+            Ministries: { hook: isMinistriesOpen, setter: setIsMinistriesOpen, icon: Church, path: '/ministries', label: 'Ministerios', sub: [ {path: '/ministries', label: 'Gestionar', icon: ClipboardList}, {path: '/ministries/new', label: 'Nuevo Ministerio', icon: Plus}, {path: '/ministries/assign-members', label: 'Asignar Miembros', icon: UserPlus} ] },
+            Volunteers: { hook: isVolunteersOpen, setter: setIsVolunteersOpen, icon: HandHeart, path: '/volunteers', label: 'Voluntarios', sub: [ {path: '/volunteers', label: 'Gestión', icon: ClipboardList}, {path: '/volunteers/new', label: 'Agregar Voluntario', icon: Plus}, {path: '/volunteers/tasks', label: 'Tareas', icon: ClipboardList}, {path: '/volunteers/planning', label: 'Planeación', icon: Calendar} ] },
+            Events: { hook: isEventsOpen, setter: setIsEventsOpen, icon: Calendar, path: '/events', label: 'Eventos', sub: [ {path: '/events', label: 'Gestionar', icon: ClipboardList}, {path: '/events/new', label: 'Nuevo Evento', icon: Plus}, {path: '/events/activities', label: 'Actividades', icon: ClipboardList} ] },
+            Donations: { hook: isDonationsOpen, setter: setIsDonationsOpen, icon: Heart, path: '/donations', label: 'Ofrendas', sub: [ {path: '/donations', label: 'Donaciones y ofrendas', icon: Heart}, {path: '/donations/pledges', label: 'Gestión de Promesas', icon: ClipboardList}, {path: '/donations/giving-statement', label: 'Declaración de Donación', icon: FileText}, {path: '/donations/fundraising', label: 'Recaudación de Fondos', icon: PiggyBank}, {path: '/donations/new', label: 'Nueva Donación', icon: Plus} ] },
+            Prayer: { hook: isPrayerOpen, setter: setIsPrayerOpen, icon: HandHeart, path: '/prayer', label: 'Peticiones', sub: [ {path: '/prayer', label: 'Peticiones', icon: ClipboardList}, {path: '/prayer/new', label: 'Nueva Oración', icon: Plus} ] },
+            Financial: { hook: isFinancialOpen, setter: setIsFinancialOpen, icon: DollarSign, path: '/financial', label: 'Finanzas', sub: [ {path: '/financial', label: 'Reportes Financieros', icon: LayoutDashboard}, {path: '/financial/income-expense', label: 'Ingresos y Gastos', icon: FileText}, {path: '/financial/budget', label: 'Reporte de Presupuesto', icon: PiggyBank}, {path: '/financial/funds', label: 'Saldos de Fondos', icon: Banknote}, {path: '/financial/donations', label: 'Reportes de Donaciones', icon: ClipboardList}, {path: '/financial/new-transaction', label: 'Nueva Transacción', icon: Plus} ] },
+            Attendance: { hook: isAttendanceOpen, setter: setIsAttendanceOpen, icon: BarChart, path: '/attendance', label: 'Asistencia', sub: [ {path: '/attendance', label: 'Gestión', icon: ClipboardList} ] },
+            Reports: { hook: isReportsOpen, setter: setIsReportsOpen, icon: FileText, path: '/reports', label: 'Reportes', sub: [ {path: '/reports', label: 'Generador de Reportes', icon: FileText}, {path: '/reports/volunteers', label: 'Voluntarios', icon: Users} ] },
+        }).map(([key, item]) => (
+            <Collapsible key={key} open={item.hook} onOpenChange={item.setter}>
+                <CollapsibleTrigger className="w-full" asChild>
+                    <TooltipProvider>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <div className={cn('flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground', pathname.startsWith(item.path) && 'bg-accent text-accent-foreground font-medium', isCollapsed && "justify-center")}>
+                                    <div className="flex items-center gap-3">
+                                        <item.icon className="h-4 w-4" />
+                                        <span className={cn(isCollapsed && "hidden")}>{item.label || key}</span>
+                                    </div>
+                                    <ChevronDown className={cn('h-4 w-4 transition-transform', item.hook && 'rotate-180', isCollapsed && "hidden")} />
+                                </div>
+                            </TooltipTrigger>
+                            {isCollapsed && <TooltipContent side="right">{item.label || key}</TooltipContent>}
+                        </Tooltip>
+                    </TooltipProvider>
+                </CollapsibleTrigger>
+                <CollapsibleContent className={cn("space-y-1 pt-1", isCollapsed && "hidden")}>
+                    {item.sub.map(subItem => (
+                        <Link key={subItem.path} href={subItem.path} className={cn('flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10', pathname === subItem.path && 'bg-accent text-accent-foreground font-medium')}>
+                            <subItem.icon className="h-4 w-4" />
+                            <span>{subItem.label}</span>
+                        </Link>
+                    ))}
+                </CollapsibleContent>
+            </Collapsible>
         ))}
-         <Collapsible open={isPrayerOpen} onOpenChange={setIsPrayerOpen}>
-            <CollapsibleTrigger className="w-full">
-                <div
-                className={cn(
-                    'flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
-                    isPrayerOpen && 'bg-accent text-accent-foreground font-medium'
-                )}
-                >
-                    <div className="flex items-center gap-3">
-                        <HandHeart className="h-4 w-4" />
-                        <span>Peticiones</span>
-                    </div>
-                    <ChevronDown className={cn('h-4 w-4 transition-transform', isPrayerOpen && 'rotate-180')} />
-                </div>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-1 pt-1">
-                <Link
-                    href="/prayer"
-                    className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
-                    pathname === '/prayer' && 'bg-accent text-accent-foreground font-medium'
-                    )}
-                >
-                    <ClipboardList className="h-4 w-4" />
-                    <span>Peticiones</span>
-                </Link>
-                <Link
-                    href="/prayer/new"
-                    className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
-                    pathname === '/prayer/new' && 'bg-accent text-accent-foreground font-medium'
-                    )}
-                >
-                    <Plus className="h-4 w-4" />
-                    <span>Nueva Oración</span>
-                </Link>
-            </CollapsibleContent>
-        </Collapsible>
-         <Collapsible open={isFinancialOpen} onOpenChange={setIsFinancialOpen}>
-            <CollapsibleTrigger className="w-full">
-                <div
-                className={cn(
-                    'flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
-                    isFinancialOpen && 'bg-accent text-accent-foreground font-medium'
-                )}
-                >
-                    <div className="flex items-center gap-3">
-                        <DollarSign className="h-4 w-4" />
-                        <span>Finanzas</span>
-                    </div>
-                    <ChevronDown className={cn('h-4 w-4 transition-transform', isFinancialOpen && 'rotate-180')} />
-                </div>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-1 pt-1">
-                <Link
-                    href="/financial"
-                    className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
-                    pathname === '/financial' && 'bg-accent text-accent-foreground font-medium'
-                    )}
-                >
-                    <LayoutDashboard className="h-4 w-4" />
-                    <span>Reportes Financieros</span>
-                </Link>
-                <Link
-                    href="/financial/income-expense"
-                    className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
-                    pathname === '/financial/income-expense' && 'bg-accent text-accent-foreground font-medium'
-                    )}
-                >
-                    <FileText className="h-4 w-4" />
-                    <span>Ingresos y Gastos</span>
-                </Link>
-                <Link
-                    href="/financial/budget"
-                    className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
-                    pathname === '/financial/budget' && 'bg-accent text-accent-foreground font-medium'
-                    )}
-                >
-                    <PiggyBank className="h-4 w-4" />
-                    <span>Reporte de Presupuesto</span>
-                </Link>
-                <Link
-                    href="/financial/funds"
-                    className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
-                    pathname === '/financial/funds' && 'bg-accent text-accent-foreground font-medium'
-                    )}
-                >
-                    <Banknote className="h-4 w-4" />
-                    <span>Saldos de Fondos</span>
-                </Link>
-                <Link
-                    href="/financial/donations"
-                    className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
-                    pathname === '/financial/donations' && 'bg-accent text-accent-foreground font-medium'
-                    )}
-                >
-                    <ClipboardList className="h-4 w-4" />
-                    <span>Reportes de Donaciones</span>
-                </Link>
-                <Link
-                    href="/financial/new-transaction"
-                    className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
-                    pathname === '/financial/new-transaction' && 'bg-accent text-accent-foreground font-medium'
-                    )}
-                >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Nueva Transacción
-                </Link>
-            </CollapsibleContent>
-        </Collapsible>
-        <Collapsible open={isAttendanceOpen} onOpenChange={setIsAttendanceOpen}>
-            <CollapsibleTrigger className="w-full">
-                <div
-                className={cn(
-                    'flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
-                    isAttendanceOpen && 'bg-accent text-accent-foreground font-medium'
-                )}
-                >
-                    <div className="flex items-center gap-3">
-                        <BarChart className="h-4 w-4" />
-                        <span>Asistencia</span>
-                    </div>
-                    <ChevronDown className={cn('h-4 w-4 transition-transform', isAttendanceOpen && 'rotate-180')} />
-                </div>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-1 pt-1">
-                <Link
-                    href="/attendance"
-                    className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
-                    pathname === '/attendance' && 'bg-accent text-accent-foreground font-medium'
-                    )}
-                >
-                    <ClipboardList className="h-4 w-4" />
-                    <span>Gestión</span>
-                </Link>
-            </CollapsibleContent>
-        </Collapsible>
-        <Collapsible open={isReportsOpen} onOpenChange={setIsReportsOpen}>
-            <CollapsibleTrigger className="w-full">
-                <div
-                className={cn(
-                    'flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
-                    isReportsOpen && 'bg-accent text-accent-foreground font-medium'
-                )}
-                >
-                    <div className="flex items-center gap-3">
-                        <FileText className="h-4 w-4" />
-                        <span>Reportes</span>
-                    </div>
-                    <ChevronDown className={cn('h-4 w-4 transition-transform', isReportsOpen && 'rotate-180')} />
-                </div>
-            </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-1 pt-1">
-                <Link
-                    href="/reports"
-                    className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
-                    pathname === '/reports' && 'bg-accent text-accent-foreground font-medium'
-                    )}
-                >
-                    <FileText className="h-4 w-4" />
-                    <span>Generador de Reportes</span>
-                </Link>
-                 <Link
-                    href="/reports/volunteers"
-                    className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
-                    pathname === '/reports/volunteers' && 'bg-accent text-accent-foreground font-medium'
-                    )}
-                >
-                    <Users className="h-4 w-4" />
-                    <span>Voluntarios</span>
-                </Link>
-            </CollapsibleContent>
-        </Collapsible>
-        <Link
-          href="/facilities"
-          className={cn(
-            'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
-            pathname.startsWith('/facilities') && 'bg-accent text-accent-foreground font-medium'
-          )}
-        >
-          <Building className="h-4 w-4" />
-          <span>Instalaciones</span>
-        </Link>
-        <Link
-          href="/temples"
-          className={cn(
-            'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
-            pathname.startsWith('/temples') && 'bg-accent text-accent-foreground font-medium'
-          )}
-        >
-          <Landmark className="h-4 w-4" />
-          <span>Templos</span>
-        </Link>
-        <Link
-          href="/documentation"
-          className={cn(
-            'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
-            pathname.startsWith('/documentation') && 'bg-accent text-accent-foreground font-medium'
-          )}
-        >
-          <FileText className="h-4 w-4" />
-          <span>Documentación</span>
-        </Link>
+
+        {navItems.map((item) => (
+            (item.href !== '/dashboard' && item.href !== '/donations' && item.href !== '/members' && item.href !== '/groups' && item.href !== '/ministries') &&
+            <TooltipProvider key={item.href}>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Link
+                            href={item.href}
+                            className={cn(
+                            'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
+                            pathname.startsWith(item.href) && item.href !== '/' && 'bg-accent text-accent-foreground font-medium',
+                            isCollapsed && "justify-center"
+                            )}
+                        >
+                            <item.icon className="h-4 w-4" />
+                            <span className={cn(isCollapsed && "hidden")}>{item.label}</span>
+                        </Link>
+                    </TooltipTrigger>
+                     {isCollapsed && <TooltipContent side="right">{item.label}</TooltipContent>}
+                </Tooltip>
+            </TooltipProvider>
+        ))}
       </nav>
       <div className="mt-auto space-y-1 p-4">
         <Collapsible open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
-            <CollapsibleTrigger className="w-full">
-                <div
-                className={cn(
-                    'flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
-                    isSettingsOpen && 'bg-accent text-accent-foreground font-medium'
-                )}
-                >
-                    <div className="flex items-center gap-3">
-                        <Settings className="h-4 w-4" />
-                        <span>Configuración</span>
-                    </div>
-                    <ChevronDown className={cn('h-4 w-4 transition-transform', isSettingsOpen && 'rotate-180')} />
-                </div>
+            <CollapsibleTrigger className="w-full" asChild>
+                <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <div className={cn('flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground', isSettingsOpen && 'bg-accent text-accent-foreground font-medium', isCollapsed && "justify-center")}>
+                                <div className="flex items-center gap-3">
+                                    <Settings className="h-4 w-4" />
+                                    <span className={cn(isCollapsed && "hidden")}>Configuración</span>
+                                </div>
+                                <ChevronDown className={cn('h-4 w-4 transition-transform', isSettingsOpen && 'rotate-180', isCollapsed && "hidden")} />
+                            </div>
+                        </TooltipTrigger>
+                        {isCollapsed && <TooltipContent side="right">Configuración</TooltipContent>}
+                    </Tooltip>
+                </TooltipProvider>
             </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-1 pt-1">
-                <Link
-                    href="/settings"
-                    className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
-                    pathname === '/settings' && 'bg-accent text-accent-foreground font-medium'
-                    )}
-                >
+            <CollapsibleContent className={cn("space-y-1 pt-1", isCollapsed && "hidden")}>
+                <Link href="/settings" className={cn('flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10', pathname === '/settings' && 'bg-accent text-accent-foreground font-medium')}>
                     <UserCog className="h-4 w-4" />
                     <span>Roles y Permisos</span>
                 </Link>
-                <Link
-                    href="/settings/new"
-                    className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
-                    pathname === '/settings/new' && 'bg-accent text-accent-foreground font-medium'
-                    )}
-                >
+                <Link href="/settings/new" className={cn('flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10', pathname === '/settings/new' && 'bg-accent text-accent-foreground font-medium')}>
                     <Plus className="h-4 w-4" />
                     <span>Nuevo Rol</span>
                 </Link>
-                <Link
-                    href="/settings/users"
-                    className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
-                    pathname === '/settings/users' && 'bg-accent text-accent-foreground font-medium'
-                    )}
-                >
+                <Link href="/settings/users" className={cn('flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10', pathname === '/settings/users' && 'bg-accent text-accent-foreground font-medium')}>
                     <Users className="h-4 w-4" />
                     <span>Usuarios</span>
                 </Link>
             </CollapsibleContent>
         </Collapsible>
         {bottomNavItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={cn(
-              'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
-              pathname.startsWith(item.href) &&
-                'bg-accent text-accent-foreground font-medium'
-            )}
-          >
-            <item.icon className="h-4 w-4" />
-            <span>{item.label}</span>
-          </Link>
+            <TooltipProvider key={item.href}>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Link
+                            href={item.href}
+                            className={cn(
+                            'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
+                            pathname.startsWith(item.href) && 'bg-accent text-accent-foreground font-medium',
+                            isCollapsed && "justify-center"
+                            )}
+                        >
+                            <item.icon className="h-4 w-4" />
+                            <span className={cn(isCollapsed && "hidden")}>{item.label}</span>
+                        </Link>
+                    </TooltipTrigger>
+                    {isCollapsed && <TooltipContent side="right">{item.label}</TooltipContent>}
+                </Tooltip>
+            </TooltipProvider>
         ))}
+         <Button variant="ghost" className="w-full justify-start gap-3 rounded-lg px-3 py-2" onClick={() => setIsCollapsed(!isCollapsed)}>
+            <PanelLeft className="h-4 w-4" />
+            <span className={cn(isCollapsed && "hidden")}>Colapsar</span>
+        </Button>
       </div>
     </aside>
   );
