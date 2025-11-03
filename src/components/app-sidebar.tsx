@@ -21,6 +21,7 @@ import {
   ClipboardList,
   HandHeart,
   UserPlus,
+  Landmark,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -39,7 +40,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collap
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Panel' },
-  { href: '/donations', icon: Heart, label: 'Ofrendas' },
   { href: '/sermons', icon: Video, label: 'Sermones y Medios' },
 ];
 
@@ -59,6 +59,7 @@ export function AppSidebar() {
   const [isMinistriesOpen, setIsMinistriesOpen] = React.useState(pathname.startsWith('/ministries'));
   const [isVolunteersOpen, setIsVolunteersOpen] = React.useState(pathname.startsWith('/volunteers'));
   const [isEventsOpen, setIsEventsOpen] = React.useState(pathname.startsWith('/events'));
+  const [isDonationsOpen, setIsDonationsOpen] = React.useState(pathname.startsWith('/donations'));
 
 
   return (
@@ -327,8 +328,67 @@ export function AppSidebar() {
             </CollapsibleContent>
         </Collapsible>
         
+        <Collapsible open={isDonationsOpen} onOpenChange={setIsDonationsOpen}>
+            <CollapsibleTrigger className="w-full">
+                <div
+                className={cn(
+                    'flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
+                    isDonationsOpen && 'bg-accent text-accent-foreground font-medium'
+                )}
+                >
+                    <div className="flex items-center gap-3">
+                        <Heart className="h-4 w-4" />
+                        <span>Ofrendas</span>
+                    </div>
+                    <ChevronDown className={cn('h-4 w-4 transition-transform', isDonationsOpen && 'rotate-180')} />
+                </div>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-1 pt-1">
+                <Link
+                    href="/donations"
+                    className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
+                    pathname === '/donations' && 'bg-accent text-accent-foreground font-medium'
+                    )}
+                >
+                    <Heart className="h-4 w-4" />
+                    <span>Donaciones y ofrendas</span>
+                </Link>
+                <Link
+                    href="/donations/statements"
+                    className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
+                    pathname === '/donations/statements' && 'bg-accent text-accent-foreground font-medium'
+                    )}
+                >
+                    <FileText className="h-4 w-4" />
+                    <span>Estado de Cuenta</span>
+                </Link>
+                 <Link
+                    href="/donations/fundraising"
+                    className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
+                    pathname === '/donations/fundraising' && 'bg-accent text-accent-foreground font-medium'
+                    )}
+                >
+                    <PiggyBank className="h-4 w-4" />
+                    <span>Recaudación de Fondos</span>
+                </Link>
+                 <Link
+                    href="/donations/new"
+                    className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
+                    pathname === '/donations/new' && 'bg-accent text-accent-foreground font-medium'
+                    )}
+                >
+                    <Plus className="h-4 w-4" />
+                    <span>Nueva Donación</span>
+                </Link>
+            </CollapsibleContent>
+        </Collapsible>
+        
         {navItems.map((item) => (
-          (item.href !== '/dashboard' && item.href !== '/members' && item.href !== '/groups' && item.href !== '/ministries') && <Link
+          (item.href !== '/dashboard' && item.href !== '/donations' && item.href !== '/members' && item.href !== '/groups' && item.href !== '/ministries') && <Link
             key={item.href}
             href={item.href}
             className={cn(
