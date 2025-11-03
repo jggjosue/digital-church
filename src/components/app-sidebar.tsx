@@ -41,7 +41,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collap
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Panel' },
-  { href: '/events', icon: Calendar, label: 'Eventos' },
   { href: '/donations', icon: Heart, label: 'Donaciones' },
   { href: '/sermons', icon: Video, label: 'Sermones y Medios' },
 ];
@@ -61,6 +60,7 @@ export function AppSidebar() {
   const [isGroupsOpen, setIsGroupsOpen] = React.useState(pathname.startsWith('/groups'));
   const [isMinistriesOpen, setIsMinistriesOpen] = React.useState(pathname.startsWith('/ministries'));
   const [isVolunteersOpen, setIsVolunteersOpen] = React.useState(pathname.startsWith('/volunteers'));
+  const [isEventsOpen, setIsEventsOpen] = React.useState(pathname.startsWith('/events'));
 
 
   return (
@@ -279,6 +279,46 @@ export function AppSidebar() {
                 </Link>
             </CollapsibleContent>
         </Collapsible>
+
+        <Collapsible open={isEventsOpen} onOpenChange={setIsEventsOpen}>
+            <CollapsibleTrigger className="w-full">
+                <div
+                className={cn(
+                    'flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
+                    isEventsOpen && 'bg-accent text-accent-foreground font-medium'
+                )}
+                >
+                    <div className="flex items-center gap-3">
+                        <Calendar className="h-4 w-4" />
+                        <span>Eventos</span>
+                    </div>
+                    <ChevronDown className={cn('h-4 w-4 transition-transform', isEventsOpen && 'rotate-180')} />
+                </div>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="space-y-1 pt-1">
+                <Link
+                    href="/events"
+                    className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
+                    pathname === '/events' && 'bg-accent text-accent-foreground font-medium'
+                    )}
+                >
+                    <ClipboardList className="h-4 w-4" />
+                    <span>Gestionar</span>
+                </Link>
+                <Link
+                    href="/events/new"
+                    className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
+                    pathname === '/events/new' && 'bg-accent text-accent-foreground font-medium'
+                    )}
+                >
+                    <Plus className="h-4 w-4" />
+                    <span>Nuevo Evento</span>
+                </Link>
+            </CollapsibleContent>
+        </Collapsible>
+        
         {navItems.map((item) => (
           (item.href !== '/dashboard' && item.href !== '/members' && item.href !== '/groups' && item.href !== '/ministries') && <Link
             key={item.href}
