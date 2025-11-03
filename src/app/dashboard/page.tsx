@@ -26,17 +26,19 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-1 flex-col">
-        <header className="sticky top-0 z-10 flex h-auto flex-col gap-4 border-b bg-background px-6 py-4 sm:h-16 sm:flex-row sm:items-center sm:justify-between sm:py-0">
+        <header className="sticky top-0 z-10 flex h-auto flex-col gap-4 border-b bg-background px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-4">
             <div>
-                <h1 className="text-3xl font-bold tracking-tight">Panel</h1>
-                <p className="text-muted-foreground">
+                <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Panel</h1>
+                <p className="text-sm text-muted-foreground sm:text-base">
                 Un resumen de las actividades y estadísticas clave de la iglesia.
                 </p>
             </div>
-            <ThemeToggle />
+            <div className="self-end sm:self-center">
+              <ThemeToggle />
+            </div>
         </header>
-        <main className="flex-1 space-y-6 p-6">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <main className="flex-1 space-y-6 p-4 sm:p-6">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           
           <Tabs
             defaultValue="this-week"
@@ -51,13 +53,13 @@ export default function DashboardPage() {
             </TabsList>
           </Tabs>
         </div>
-        <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
           <TotalMembers timeRange={timeRange} />
           <WeeklyAttendance timeRange={timeRange} />
           <GivingThisMonth timeRange={timeRange} />
           <UpcomingEventsCard />
         </div>
-        <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 grid-cols-1 sm:grid-cols-3">
           <TotalGroups />
           <TotalMinistries />
           <TotalVolunteers />
