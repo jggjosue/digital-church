@@ -6,6 +6,7 @@ import {
   Plus,
   Search,
   ChevronDown,
+  Trash2,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -30,10 +31,11 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { sermonsData } from '@/lib/data';
+import { sermonsData as initialSermonsData } from '@/lib/data';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
-type Sermon = (typeof sermonsData)[0];
+type Sermon = (typeof initialSermonsData)[0];
 
 const statusColors: { [key: string]: string } = {
     Publicado: 'bg-green-100 text-green-800 border-green-200',
@@ -43,9 +45,11 @@ const statusColors: { [key: string]: string } = {
 };
 
 export default function SermonsPage() {
+  const [sermonsData, setSermonsData] = React.useState<Sermon[]>(initialSermonsData);
   const [selected, setSelected] = React.useState<number[]>([]);
   const [currentPage, setCurrentPage] = React.useState(1);
   const itemsPerPage = 20;
+  const [sermonToDelete, setSermonToDelete] = React.useState<Sermon | null>(null);
 
   const totalPages = Math.ceil(sermonsData.length / itemsPerPage);
 
@@ -76,8 +80,16 @@ export default function SermonsPage() {
       setSelected(selected.filter((i) => i !== id));
     }
   };
+  
+  const handleDeleteSermon = () => {
+    if (sermonToDelete) {
+      setSermonsData(prev => prev.filter(s => s.id !== sermonToDelete.id));
+      setSermonToDelete(null);
+    }
+  };
 
   return (
+    <AlertDialog>
     <main className="flex-1 bg-muted/20 p-4 sm:p-8">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
@@ -168,9 +180,11 @@ export default function SermonsPage() {
                           <DropdownMenuContent>
                             <DropdownMenuItem>Editar</DropdownMenuItem>
                             <DropdownMenuItem>Ver</DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive">
-                              Eliminar
-                            </DropdownMenuItem>
+                            <AlertDialogTrigger asChild>
+                                <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()} onClick={() => setSermonToDelete(sermon)}>
+                                Eliminar
+                                </DropdownMenuItem>
+                            </AlertDialogTrigger>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
@@ -206,5 +220,23 @@ export default function SermonsPage() {
         </CardContent>
       </Card>
     </main>
+
+    <AlertDialogContent>
+        <AlertDialogHeader>
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+                <Trash2 className="h-6 w-6 text-red-600" />
+            </div>
+            <AlertDialogTitle className="text-center text-xl">Eliminar Sermón</AlertDialogTitle>
+            <AlertDialogDescription className="text-center">
+                ¿Estás seguro de que quieres eliminar el sermón <span className="font-bold">&quot;{sermonToDelete?.title}&quot;</span>? Esta acción es permanente y no se puede deshacer.
+            </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter className="sm:justify-center">
+            <AlertDialogCancel onClick={() => setSermonToDelete(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteSermon} className="bg-destructive hover:bg-destructive/90">Confirmar Eliminación</AlertDialogAction>
+        </AlertDialogFooter>
+    </AlertDialogContent>
+
+    </AlertDialog>
   );
 }
