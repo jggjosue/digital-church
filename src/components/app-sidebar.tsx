@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -143,8 +144,7 @@ export function AppSidebar() {
                 <CollapsibleContent className={cn("space-y-1 pt-1", isCollapsed && "hidden")}>
                     {item.sub.map(subItem => (
                         <Link key={subItem.path} href={subItem.path} className={cn('flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10', pathname === subItem.path && 'bg-accent text-accent-foreground font-medium')}>
-                            <subItem.icon className="h-4 w-4" />
-                            <span>{subItem.label}</span>
+                            {subItem.label}
                         </Link>
                     ))}
                 </CollapsibleContent>
