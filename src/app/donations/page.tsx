@@ -35,6 +35,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
+import Link from 'next/link';
 
 const donationsData = [
   {
@@ -170,8 +171,10 @@ export default function DonationsPage() {
                     <Button variant="ghost" size="icon">
                       <Download className="h-4 w-4" />
                     </Button>
-                    <Button>
-                      <Plus className="mr-2 h-4 w-4" /> Añadir Donación
+                    <Button asChild>
+                      <Link href="/donations/new">
+                        <Plus className="mr-2 h-4 w-4" /> Añadir Donación
+                      </Link>
                     </Button>
                   </div>
                 </div>
@@ -206,9 +209,11 @@ export default function DonationsPage() {
                           <Button variant="link" className="text-primary">
                             Ver
                           </Button>
-                          <Button variant="link">
-                            <Edit className="h-4 w-4 mr-1" />
-                            Editar
+                          <Button variant="link" asChild>
+                            <Link href={`/donations/${donation.id}/edit`}>
+                                <Edit className="h-4 w-4 mr-1" />
+                                Editar
+                            </Link>
                           </Button>
                         </TableCell>
                       </TableRow>
