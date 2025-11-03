@@ -44,6 +44,7 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination';
 import { volunteerAssignments } from '@/lib/data';
+import { Label } from '@/components/ui/label';
 
 type Assignment = typeof volunteerAssignments[0];
 
