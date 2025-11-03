@@ -20,6 +20,7 @@ import {
   Landmark,
   DollarSign,
   LayoutGrid,
+  ClipboardList,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -115,7 +116,13 @@ const navItems = [
       { href: '/financial/new-transaction', icon: Plus, label: 'Nueva Transacción' },
     ]
   },
-  { href: '/attendance', icon: BarChart, label: 'Asistencia' },
+  { 
+    label: 'Asistencia', 
+    icon: BarChart, 
+    subItems: [
+      { href: '/attendance', icon: ClipboardList, label: 'Gestión' },
+    ]
+  },
   { href: '/reports', icon: FileText, label: 'Reportes' },
   { href: '/settings', icon: Settings, label: 'Configuración' },
 ];
@@ -126,7 +133,7 @@ const bottomNavItems = [
 
 export function MobileSidebar() {
   const pathname = usePathname();
-  const [openCollapsibles, setOpenCollapsibles] = React.useState<string[]>(['Directorio', 'Grupos', 'Ministerios', 'Voluntarios', 'Eventos', 'Ofrendas', 'Peticiones', 'Finanzas']);
+  const [openCollapsibles, setOpenCollapsibles] = React.useState<string[]>(['Directorio', 'Grupos', 'Ministerios', 'Voluntarios', 'Eventos', 'Ofrendas', 'Peticiones', 'Finanzas', 'Asistencia']);
 
   const isSubItemActive = (subItems: any[]) => {
     return subItems.some(subItem => pathname.startsWith(subItem.href));
