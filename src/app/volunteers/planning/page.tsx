@@ -359,7 +359,7 @@ export default function VolunteerSchedulingPage() {
                 </Card>
             ))}
          </div>
-          <Card className="mt-6">
+        <Card className="mt-6">
             <CardHeader>
                 <CardTitle>Voluntarios Disponibles</CardTitle>
             </CardHeader>
@@ -367,8 +367,8 @@ export default function VolunteerSchedulingPage() {
                 {availableVolunteers.map(v => (
                     <div key={v.id} draggable onDragStart={(e) => handleDragStart(e, v)}>
                         <Card className="p-3 cursor-grab active:cursor-grabbing hover:shadow-md transition-shadow">
-                            <div className="flex items-center gap-3">
-                                <Avatar className="h-10 w-10">
+                            <div className="flex flex-col items-center text-center gap-2">
+                                <Avatar className="h-12 w-12">
                                     <AvatarImage src={v.avatarUrl} alt={v.name} />
                                     <AvatarFallback>{v.name.charAt(0)}</AvatarFallback>
                                 </Avatar>
