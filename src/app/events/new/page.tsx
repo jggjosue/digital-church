@@ -33,9 +33,13 @@ import Link from 'next/link';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { AlertCircle } from 'lucide-react';
 
 export default function NewEventPage() {
-    const [date, setDate] = React.useState<Date | undefined>();
+    const [startDate, setStartDate] = React.useState<Date | undefined>();
+    const [endDate, setEndDate] = React.useState<Date | undefined>();
 
   return (
     <main className="flex-1 space-y-6 p-4 sm:p-8 bg-muted/20">
@@ -48,13 +52,13 @@ export default function NewEventPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Crear Nuevo Evento</h1>
           <p className="text-muted-foreground">
-            Complete los detalles a continuación para programar un nuevo evento.
+            Complete el siguiente formulario para agregar un nuevo evento al calendario de la iglesia.
           </p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-3">
             <Card>
                 <CardHeader>
                     <CardTitle>Detalles del Evento</CardTitle>
@@ -62,97 +66,133 @@ export default function NewEventPage() {
                 <CardContent className="space-y-6">
                     <div className="space-y-2">
                         <Label htmlFor="event-title">Título del Evento</Label>
-                        <Input id="event-title" placeholder="Ej., Servicio Dominical, Estudio Bíblico..." />
+                        <Input id="event-title" placeholder="Ej., Picnic Anual de la Iglesia" />
+                    </div>
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                            <Label>Fecha y Hora de Inicio</Label>
+                            <div className="flex gap-2">
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                    <Button
+                                        variant={"outline"}
+                                        className={cn(
+                                        "w-full justify-start text-left font-normal",
+                                        !startDate && "text-muted-foreground"
+                                        )}
+                                    >
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {startDate ? format(startDate, "PPP") : <span>mm/dd/yyyy</span>}
+                                    </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0">
+                                    <Calendar
+                                        mode="single"
+                                        selected={startDate}
+                                        onSelect={setStartDate}
+                                        initialFocus
+                                    />
+                                    </PopoverContent>
+                                </Popover>
+                                <Input type="time" className="w-[140px]" />
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                            <Label>Fecha y Hora de Finalización</Label>
+                             <div className="flex gap-2">
+                                <Popover>
+                                    <PopoverTrigger asChild>
+                                    <Button
+                                        variant={"outline"}
+                                        className={cn(
+                                        "w-full justify-start text-left font-normal",
+                                        !endDate && "text-muted-foreground"
+                                        )}
+                                    >
+                                        <CalendarIcon className="mr-2 h-4 w-4" />
+                                        {endDate ? format(endDate, "PPP") : <span>mm/dd/yyyy</span>}
+                                    </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto p-0">
+                                    <Calendar
+                                        mode="single"
+                                        selected={endDate}
+                                        onSelect={setEndDate}
+                                        initialFocus
+                                    />
+                                    </PopoverContent>
+                                </Popover>
+                                <Input type="time" className="w-[140px]" />
+                            </div>
+                        </div>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="location">Ubicación</Label>
+                        <Input id="location" placeholder="Ej., Salón de Confraternidad o 123 Church St" />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="description">Descripción del Evento</Label>
-                        <Textarea id="description" placeholder="Proporcione una breve descripción del evento." rows={5} />
+                        <Textarea id="description" placeholder="Proporcione una descripción detallada del evento..." rows={5} />
                     </div>
-                    <div className="space-y-2">
-                        <Label>Imagen del Evento</Label>
-                        <div className="flex items-center justify-center w-full">
-                            <Label htmlFor="dropzone-file" className="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer bg-card hover:bg-muted">
-                                <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                                    <Upload className="w-8 h-8 mb-4 text-muted-foreground" />
-                                    <p className="mb-2 text-sm text-muted-foreground"><span className="font-semibold">Haga clic para cargar</span> o arrastre y suelte</p>
-                                    <p className="text-xs text-muted-foreground">SVG, PNG, JPG o GIF (MÁX. 800x400px)</p>
-                                </div>
-                                <Input id="dropzone-file" type="file" className="hidden" />
-                            </Label>
-                        </div> 
-                    </div>
-                </CardContent>
-            </Card>
-        </div>
-        <div className="lg:col-span-1 space-y-6">
-            <Card>
-                <CardHeader>
-                    <CardTitle>Programación</CardTitle>
-                </CardHeader>
-                 <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="event-date">Fecha del Evento</Label>
-                         <Popover>
-                            <PopoverTrigger asChild>
-                            <Button
-                                variant={"outline"}
-                                className={cn(
-                                "w-full justify-start text-left font-normal",
-                                !date && "text-muted-foreground"
-                                )}
-                            >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {date ? format(date, "PPP") : <span>Seleccione una fecha</span>}
-                            </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0">
-                            <Calendar
-                                mode="single"
-                                selected={date}
-                                onSelect={setDate}
-                                initialFocus
-                            />
-                            </PopoverContent>
-                        </Popover>
-                    </div>
-                     <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="start-time">Hora de Inicio</Label>
-                            <Input id="start-time" type="time" defaultValue="10:00" />
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                         <div className="space-y-2">
+                            <Label htmlFor="category">Categoría del Evento</Label>
+                            <Select>
+                                <SelectTrigger id="category">
+                                    <SelectValue placeholder="Seleccione una categoría" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="servicio-dominical">Servicio Dominical</SelectItem>
+                                    <SelectItem value="estudio-biblico">Estudio Bíblico</SelectItem>
+                                    <SelectItem value="grupo-jovenes">Grupo de Jóvenes</SelectItem>
+                                    <SelectItem value="alcance-comunitario">Alcance Comunitario</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="end-time">Hora de Finalización</Label>
-                            <Input id="end-time" type="time" defaultValue="11:30" />
+                            <Label htmlFor="recurrence">Recurrencia</Label>
+                            <Select>
+                                <SelectTrigger id="recurrence">
+                                    <SelectValue placeholder="No se repite" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none">No se repite</SelectItem>
+                                    <SelectItem value="daily">Diariamente</SelectItem>
+                                    <SelectItem value="weekly">Semanalmente</SelectItem>
+                                    <SelectItem value="monthly">Mensualmente</SelectItem>
+                                    <SelectItem value="yearly">Anualmente</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="associate">Asociar con Ministerio/Grupo</Label>
+                            <Select>
+                                <SelectTrigger id="associate">
+                                    <SelectValue placeholder="Ninguno" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none">Ninguno</SelectItem>
+                                    <SelectItem value="youth-group">Grupo de Jóvenes</SelectItem>
+                                    <SelectItem value="choir">Coro</SelectItem>
+                                </SelectContent>
+                            </Select>
                         </div>
                     </div>
-                 </CardContent>
-            </Card>
-             <Card>
-                <CardHeader>
-                    <CardTitle>Detalles Adicionales</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                        <Label htmlFor="category">Categoría</Label>
-                        <Select>
-                            <SelectTrigger id="category">
-                                <SelectValue placeholder="Seleccione una categoría" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="servicio-dominical">Servicio Dominical</SelectItem>
-                                <SelectItem value="estudio-biblico">Estudio Bíblico</SelectItem>
-                                <SelectItem value="grupo-jovenes">Grupo de Jóvenes</SelectItem>
-                                <SelectItem value="alcance-comunitario">Alcance Comunitario</SelectItem>
-                            </SelectContent>
-                        </Select>
+                    <div className="flex items-center space-x-2">
+                        <Checkbox id="all-day" />
+                        <Label htmlFor="all-day">Evento de todo el día</Label>
                     </div>
-                     <div className="space-y-2">
-                        <Label htmlFor="location">Ubicación</Label>
-                        <Input id="location" placeholder="Ej., Santuario Principal" />
-                    </div>
+
+                    <Alert variant="destructive">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>Por favor corrija los errores</AlertTitle>
+                        <AlertDescription>
+                           El título del evento no puede estar vacío.
+                        </AlertDescription>
+                    </Alert>
                 </CardContent>
-             </Card>
-              <div className="flex justify-end gap-2">
+            </Card>
+            <div className="flex justify-end gap-2 mt-6">
                 <Button variant="outline">Cancelar</Button>
                 <Button>Crear Evento</Button>
             </div>
