@@ -79,8 +79,8 @@ export default function MemberProfilePage({ params }: { params: { id: string } }
   // In a real app, you would fetch the member data based on params.id
   
   return (
-    <main className="flex-1 bg-muted/20 p-4 sm:p-8 space-y-6">
-      <header className="flex flex-col sm:flex-row items-center justify-between gap-4">
+    <main className="flex-1 bg-muted/20 p-8 space-y-6">
+      <header className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button variant="outline" size="icon" asChild>
             <Link href="/members">
@@ -88,12 +88,12 @@ export default function MemberProfilePage({ params }: { params: { id: string } }
             </Link>
           </Button>
           <div className="flex items-center gap-4">
-            <Avatar className="h-14 w-14">
+            <Avatar className="h-16 w-16">
                 <AvatarImage src={member.avatarUrl} alt={member.name} />
                 <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
             </Avatar>
             <div>
-                <h1 className="text-2xl sm:text-3xl font-bold">{member.name}</h1>
+                <h1 className="text-3xl font-bold">{member.name}</h1>
                 <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200 font-medium">
                 <span className="h-2 w-2 rounded-full mr-2 bg-green-500"></span>
                 {member.status}
@@ -101,56 +101,54 @@ export default function MemberProfilePage({ params }: { params: { id: string } }
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2 self-start sm:self-center">
+        <div className="flex items-center gap-2">
           <Button variant="outline" asChild><Link href={`/members/${params.id}/edit`}><Edit className="mr-2 h-4 w-4" /> Editar Perfil</Link></Button>
           <Button><MoreHorizontal className="h-4 w-4" /></Button>
         </div>
       </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1 space-y-6">
+      <div className="grid grid-cols-3 gap-6">
+        <div className="col-span-1 space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Información Personal</CardTitle>
+              <CardTitle>Información de Contacto</CardTitle>
             </CardHeader>
-            <CardContent>
-                <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm'>
-                    <div>
-                        <p className='text-muted-foreground'>Nombre Completo</p>
-                        <p className='font-medium'>{member.fullName}</p>
-                    </div>
-                    <div>
-                        <p className='text-muted-foreground'>Nombre Preferido</p>
-                        <p className='font-medium'>{member.preferredName}</p>
-                    </div>
-                    <div>
-                        <p className='text-muted-foreground'>Fecha de Nacimiento</p>
-                        <p className='font-medium'>{member.dob}</p>
-                    </div>
-                    <div>
-                        <p className='text-muted-foreground'>Género</p>
-                        <p className='font-medium'>{member.gender}</p>
-                    </div>
-                     <div>
-                        <p className='text-muted-foreground'>Estado Civil</p>
-                        <p className='font-medium'>{member.maritalStatus}</p>
-                    </div>
-                     <div>
-                        <p className='text-muted-foreground'>Fecha de Bautismo</p>
-                        <p className='font-medium'>{member.baptismDate}</p>
-                    </div>
-                    <div className='col-span-1 sm:col-span-2'>
-                        <p className='text-muted-foreground'>Correo Electrónico</p>
-                        <p className='font-medium'>{member.email}</p>
-                    </div>
-                    <div className='col-span-1 sm:col-span-2'>
-                        <p className='text-muted-foreground'>Teléfono</p>
-                        <p className='font-medium'>{member.phone}</p>
-                    </div>
-                    <div className='col-span-1 sm:col-span-2'>
-                        <p className='text-muted-foreground'>Dirección</p>
-                        <p className='font-medium'>{member.address}</p>
-                    </div>
+            <CardContent className="space-y-3 text-sm">
+                <div className="flex items-center gap-3">
+                    <Mail className="h-4 w-4 text-muted-foreground" />
+                    <span>{member.email}</span>
+                </div>
+                 <div className="flex items-center gap-3">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <span>{member.phone}</span>
+                </div>
+                 <div className="flex items-center gap-3">
+                    <Home className="h-4 w-4 text-muted-foreground" />
+                    <span>{member.address}</span>
+                </div>
+            </CardContent>
+          </Card>
+
+           <Card>
+            <CardHeader>
+              <CardTitle>Detalles</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3 text-sm">
+                <div className="flex items-start justify-between">
+                    <span className="text-muted-foreground">Fecha de Nacimiento</span>
+                    <span className="font-medium">{member.dob}</span>
+                </div>
+                <div className="flex items-start justify-between">
+                    <span className="text-muted-foreground">Fecha de Bautismo</span>
+                    <span className="font-medium">{member.baptismDate}</span>
+                </div>
+                 <div className="flex items-start justify-between">
+                    <span className="text-muted-foreground">Género</span>
+                    <span className="font-medium">{member.gender}</span>
+                </div>
+                 <div className="flex items-start justify-between">
+                    <span className="text-muted-foreground">Estado Civil</span>
+                    <span className="font-medium">{member.maritalStatus}</span>
                 </div>
             </CardContent>
           </Card>
@@ -187,56 +185,58 @@ export default function MemberProfilePage({ params }: { params: { id: string } }
           </Card>
         </div>
 
-        <div className="lg:col-span-2 space-y-6">
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle>Resumen de Asistencia</CardTitle>
-                    <Button variant="link" className='p-0 h-auto' asChild>
-                        <Link href={`/members/${params.id}/attendance`}>Ver Historial Completo</Link>
-                    </Button>
-                </CardHeader>
-                <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className='bg-muted/50 p-4 rounded-lg text-center'>
-                        <p className='text-2xl sm:text-3xl font-bold'>{member.attendance.overall}</p>
-                        <p className='text-sm text-muted-foreground'>Total</p>
-                    </div>
-                    <div className='bg-muted/50 p-4 rounded-lg text-center'>
-                        <p className='text-2xl sm:text-3xl font-bold'>{member.attendance.last3Months}</p>
-                        <p className='text-sm text-muted-foreground'>Últimos 3 Meses</p>
-                    </div>
-                    <div className='bg-muted/50 p-4 rounded-lg text-center'>
-                        <p className='text-2xl sm:text-3xl font-bold'>{member.attendance.absencesYTD}</p>
-                        <p className='text-sm text-muted-foreground'>Ausencias (YTD)</p>
-                    </div>
-                    <div className='bg-muted/50 p-4 rounded-lg text-center'>
-                        <p className='text-md sm:text-lg font-bold'>{member.attendance.lastAttended}</p>
-                        <p className='text-sm text-muted-foreground'>Última Asistencia</p>
-                    </div>
-                </CardContent>
-            </Card>
+        <div className="col-span-2 space-y-6">
+            <div className='grid grid-cols-2 gap-6'>
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <CardTitle>Resumen de Asistencia</CardTitle>
+                        <Button variant="link" className='p-0 h-auto' asChild>
+                            <Link href={`/members/${params.id}/attendance`}>Ver Historial Completo</Link>
+                        </Button>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-2 gap-4">
+                        <div className='bg-muted/50 p-4 rounded-lg'>
+                            <p className='text-2xl font-bold'>{member.attendance.overall}</p>
+                            <p className='text-sm text-muted-foreground'>Total</p>
+                        </div>
+                        <div className='bg-muted/50 p-4 rounded-lg'>
+                            <p className='text-2xl font-bold'>{member.attendance.last3Months}</p>
+                            <p className='text-sm text-muted-foreground'>Últimos 3 Meses</p>
+                        </div>
+                        <div className='bg-muted/50 p-4 rounded-lg'>
+                            <p className='text-2xl font-bold'>{member.attendance.absencesYTD}</p>
+                            <p className='text-sm text-muted-foreground'>Ausencias (YTD)</p>
+                        </div>
+                        <div className='bg-muted/50 p-4 rounded-lg'>
+                            <p className='text-lg font-bold'>{member.attendance.lastAttended}</p>
+                            <p className='text-sm text-muted-foreground'>Última Asistencia</p>
+                        </div>
+                    </CardContent>
+                </Card>
 
-             <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle>Resumen de Donaciones</CardTitle>
-                     <Button variant="link" className='p-0 h-auto' asChild>
-                        <Link href={`/members/${params.id}/donations`}>Ver Historial Completo</Link>
-                    </Button>
-                </CardHeader>
-                <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className='bg-muted/50 p-4 rounded-lg'>
-                        <p className='text-sm text-muted-foreground'>Donaciones YTD</p>
-                        <p className='text-xl sm:text-2xl font-bold'>${member.giving.ytd.toFixed(2)}</p>
-                    </div>
-                    <div className='bg-muted/50 p-4 rounded-lg'>
-                        <p className='text-sm text-muted-foreground'>Donaciones del Año Pasado</p>
-                        <p className='text-xl sm:text-2xl font-bold'>${member.giving.lastYear.toFixed(2)}</p>
-                    </div>
-                    <div className='md:col-span-2 bg-muted/50 p-4 rounded-lg'>
-                        <p className='text-sm text-muted-foreground'>Última Donación</p>
-                        <p className='text-lg font-bold'>${member.giving.lastGiftAmount.toFixed(2)} el {member.giving.lastGiftDate}</p>
-                    </div>
-                </CardContent>
-            </Card>
+                 <Card>
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <CardTitle>Resumen de Donaciones</CardTitle>
+                         <Button variant="link" className='p-0 h-auto' asChild>
+                            <Link href={`/members/${params.id}/donations`}>Ver Historial Completo</Link>
+                        </Button>
+                    </CardHeader>
+                    <CardContent className="grid grid-cols-2 gap-4">
+                         <div className='bg-muted/50 p-4 rounded-lg'>
+                            <p className='text-2xl font-bold'>${member.giving.ytd.toFixed(2)}</p>
+                            <p className='text-sm text-muted-foreground'>Donaciones YTD</p>
+                        </div>
+                         <div className='bg-muted/50 p-4 rounded-lg'>
+                            <p className='text-2xl font-bold'>${member.giving.lastYear.toFixed(2)}</p>
+                            <p className='text-sm text-muted-foreground'>Donaciones del Año Pasado</p>
+                        </div>
+                        <div className='col-span-2 bg-muted/50 p-4 rounded-lg'>
+                            <p className='text-lg font-bold'>${member.giving.lastGiftAmount.toFixed(2)} el {member.giving.lastGiftDate}</p>
+                            <p className='text-sm text-muted-foreground'>Última Donación</p>
+                        </div>
+                    </CardContent>
+                </Card>
+            </div>
 
 
           <Card>
@@ -254,9 +254,9 @@ export default function MemberProfilePage({ params }: { params: { id: string } }
                                     <div className="flex-shrink-0 h-10 w-10 rounded-full bg-muted flex items-center justify-center">
                                         <item.icon className="h-5 w-5 text-muted-foreground" />
                                     </div>
-                                    <div className="flex-grow flex flex-col sm:flex-row sm:items-center sm:justify-between pt-2">
+                                    <div className="flex-grow flex items-center justify-between pt-2">
                                         <p className="text-sm">{item.type} <span className="font-medium">{item.by}</span></p>
-                                        <p className="text-xs text-muted-foreground mt-1 sm:mt-0">{item.date}</p>
+                                        <p className="text-xs text-muted-foreground">{item.date}</p>
                                     </div>
                                 </li>
                             ))}

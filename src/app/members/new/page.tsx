@@ -56,20 +56,15 @@ export default function NewMemberPage() {
     }
 
   return (
-    <main className="flex-1 space-y-6 p-4 sm:p-8 bg-muted/20">
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className='flex items-center gap-4'>
-            <Button variant="outline" size="icon" className="sm:hidden" asChild>
-                <Link href="/members"><ArrowLeft className="h-4 w-4" /></Link>
-            </Button>
-            <div>
-            <h1 className="text-3xl font-bold tracking-tight">
-                Añadir Nuevo Miembro
-            </h1>
-            <p className="text-muted-foreground">
-                Ingrese los detalles a continuación para crear un nuevo perfil de miembro.
-            </p>
-            </div>
+    <main className="flex-1 space-y-6 p-8 bg-muted/20">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Añadir Nuevo Miembro
+          </h1>
+          <p className="text-muted-foreground">
+            Ingrese los detalles a continuación para crear un nuevo perfil de miembro.
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="ghost" asChild>
@@ -95,7 +90,7 @@ export default function NewMemberPage() {
                           <p className="text-xs text-muted-foreground mt-2">PNG, JPG, GIF hasta 10MB.</p>
                       </div>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-2 gap-6">
                       <div className="space-y-2">
                           <Label htmlFor="first-name">Nombre</Label>
                           <Input id="first-name" defaultValue="John" />
@@ -105,7 +100,7 @@ export default function NewMemberPage() {
                           <Input id="last-name" defaultValue="Doe" />
                       </div>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-2 gap-6">
                       <div className="space-y-2">
                           <Label htmlFor="email">Correo Electrónico</Label>
                           <Input id="email" type="email" defaultValue="john.doe@example.com" />
@@ -119,7 +114,7 @@ export default function NewMemberPage() {
                       <Label htmlFor="address">Dirección</Label>
                       <Input id="address" defaultValue="123 Main St, Anytown, USA" />
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-2 gap-6">
                       <div className="space-y-2">
                           <Label htmlFor="dob">Fecha de Nacimiento</Label>
                           <Popover>

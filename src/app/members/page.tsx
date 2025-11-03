@@ -55,7 +55,6 @@ import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
-import { useMediaQuery } from '@/hooks/use-media-query';
 
 
 type Member = (typeof membersData)[0];
@@ -137,7 +136,6 @@ function Filters({ filters, onFilterChange, onApply, onClear }: { filters: any, 
 }
 
 export default function MembersPage() {
-  const isDesktop = useMediaQuery("(min-width: 768px)");
   const [selected, setSelected] = React.useState<number[]>([]);
   const [view, setView] = React.useState<'table' | 'card'>('table');
   const [searchTerm, setSearchTerm] = React.useState('');
@@ -151,10 +149,6 @@ export default function MembersPage() {
   const [isBulkDelete, setIsBulkDelete] = React.useState(false);
   const [currentPage, setCurrentPage] = React.useState(1);
   const itemsPerPage = 20;
-
-  React.useEffect(() => {
-    setView(isDesktop ? 'table' : 'card');
-  }, [isDesktop]);
 
   const handleFilterChange = (key: string, value: any) => {
     setFilters(prev => ({...prev, [key]: value}));
@@ -248,35 +242,34 @@ export default function MembersPage() {
 
   return (
     <AlertDialog>
-        <div className="flex min-h-screen w-full flex-col">
+        <div className="flex min-h-screen w-full flex-col bg-background">
+        <header className="sticky top-0 z-10 flex h-auto flex-col items-start gap-4 border-b bg-background p-6 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+                <h1 className="text-3xl font-bold">Directorio de Miembros</h1>
+                <p className="text-muted-foreground">
+                Administre perfiles de miembros, información de contacto y membresías de grupos.
+                </p>
+            </div>
+            <div className="flex items-center gap-4">
+                <Button asChild>
+                    <Link href="/members/new"><Plus className="mr-2" /> Añadir Nuevo Miembro</Link>
+                </Button>
+                <ThemeToggle />
+            </div>
+        </header>
         <div className="flex flex-1 md:grid md:grid-cols-[280px_1fr]">
-            <aside className="w-full shrink-0 md:w-80 border-b md:border-r md:border-b-0 bg-background p-6 hidden md:block">
+            <aside className="hidden w-80 border-r bg-background p-6 md:block">
                 <Filters filters={filters} onFilterChange={handleFilterChange} onApply={applyFilters} onClear={clearFilters}/>
             </aside>
-            <main className="flex-1 flex flex-col">
-                <header className="sticky top-0 z-10 flex h-auto flex-col items-start gap-4 border-b bg-background px-6 py-4 sm:flex-row sm:items-center sm:justify-between sm:h-auto">
-                    <div className='flex-1'>
-                        <h1 className="text-3xl font-bold">Directorio de Miembros</h1>
-                        <p className="text-muted-foreground">
-                        Administre perfiles de miembros, información de contacto y membresías de grupos.
-                        </p>
-                    </div>
-                    <div className="flex items-center gap-4">
-                        <Button asChild>
-                            <Link href="/members/new"><Plus className="mr-2" /> Añadir Nuevo Miembro</Link>
-                        </Button>
-                        <ThemeToggle />
-                    </div>
-                </header>
-                <div className='flex-1 flex flex-col p-4 sm:p-8'>
-                <Card className="flex-1 flex flex-col">
+            <main className="flex-1 p-8">
+                <Card>
                     <CardHeader>
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                        <div className="relative w-full max-w-sm">
+                    <div className="flex items-center justify-between">
+                        <div className="relative max-w-sm flex-1">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input placeholder="Buscar por nombre, email, teléfono, estado..." className="pl-9" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
                         </div>
-                        <div className="flex w-full sm:w-auto items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
                             <Sheet>
                                 <SheetTrigger asChild>
                                     <Button variant="outline" className="md:hidden flex items-center gap-2">
@@ -290,30 +283,26 @@ export default function MembersPage() {
                                 </div>
                                 </SheetContent>
                             </Sheet>
-                            <div className="flex items-center gap-2">
-                                <Button
-                                    variant={view === 'table' ? 'secondary' : 'ghost'}
-                                    size="icon"
-                                    onClick={() => setView('table')}
-                                    className="hidden md:inline-flex"
-                                >
-                                    <List className="h-5 w-5" />
-                                </Button>
-                                <Button
-                                    variant={view === 'card' ? 'secondary' : 'ghost'}
-                                    size="icon"
-                                    onClick={() => setView('card')}
-                                    className="hidden md:inline-flex"
-                                >
-                                    <LayoutGrid className="h-5 w-5" />
-                                </Button>
-                            </div>
+                            <Button
+                                variant={view === 'table' ? 'secondary' : 'ghost'}
+                                size="icon"
+                                onClick={() => setView('table')}
+                            >
+                                <List className="h-5 w-5" />
+                            </Button>
+                            <Button
+                                variant={view === 'card' ? 'secondary' : 'ghost'}
+                                size="icon"
+                                onClick={() => setView('card')}
+                            >
+                                <LayoutGrid className="h-5 w-5" />
+                            </Button>
                         </div>
                     </div>
                     </CardHeader>
-                    <CardContent className="flex-1 flex flex-col">
+                    <CardContent>
                     {selected.length > 0 && (
-                        <div className="mb-4 flex flex-col sm:flex-row items-start sm:items-center justify-between rounded-lg bg-blue-50 p-3 gap-2">
+                        <div className="mb-4 flex items-center justify-between rounded-lg bg-blue-50 p-3">
                         <div className="text-sm font-medium">
                             {selected.length} {selected.length > 1 ? 'elementos seleccionados' : 'elemento seleccionado'}
                         </div>
@@ -334,13 +323,13 @@ export default function MembersPage() {
                     )}
                     
                     {filteredMembers.length === 0 && (
-                        <div className="flex-1 flex items-center justify-center text-muted-foreground">
+                        <div className="text-center py-12 text-muted-foreground">
                             No se encontraron miembros que coincidan con sus filtros.
                         </div>
                     )}
 
                     {view === 'table' && filteredMembers.length > 0 ? (
-                        <div className="overflow-x-auto flex-1">
+                        <div className="overflow-x-auto">
                         <Table>
                         <TableHeader>
                         <TableRow>
@@ -447,9 +436,9 @@ export default function MembersPage() {
                     </Table>
                     </div>
                     ) : view === 'card' && filteredMembers.length > 0 ? (
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 flex-1">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                         {paginatedMembers.map((member) => (
-                        <Card key={member.id} className="relative flex flex-col">
+                        <Card key={member.id} className="relative">
                             <Checkbox
                                 checked={selected.includes(member.id)}
                                 onCheckedChange={(checked) =>
@@ -457,10 +446,8 @@ export default function MembersPage() {
                                 }
                                 className="absolute top-4 left-4"
                                 />
-                            <CardHeader className="flex flex-row items-start justify-end p-4">
-                                
-                            </CardHeader>
-                            <Link href={`/members/${member.id}`} className="flex flex-col items-center justify-center flex-1 text-center p-4 pt-0">
+                            <Link href={`/members/${member.id}`}>
+                                <CardContent className="flex flex-col items-center justify-center text-center p-6">
                                 <Avatar className="h-20 w-20 mb-4">
                                     <AvatarImage src={`https://picsum.photos/seed/${member.id}/80/80`} alt={member.name} />
                                     <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
@@ -476,12 +463,13 @@ export default function MembersPage() {
                                     <Badge key={group} variant="outline" className={`font-normal ${groupColors[group as keyof typeof groupColors] || 'bg-gray-100 text-gray-800'}`}>{group}</Badge>
                                     ))}
                                 </div>
+                                </CardContent>
                             </Link>
                         </Card>
                         ))}
                     </div>
                     ) : null}
-                     <div className="flex flex-col sm:flex-row items-center justify-between pt-4 gap-4">
+                     <div className="flex items-center justify-between pt-4">
                         <div className="text-sm text-muted-foreground">
                             Mostrando {paginatedMembers.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} a {Math.min(currentPage * itemsPerPage, filteredMembers.length)} de {filteredMembers.length} resultados
                         </div>
@@ -505,7 +493,6 @@ export default function MembersPage() {
                     </div>
                     </CardContent>
                 </Card>
-                </div>
             </main>
         </div>
         </div>
