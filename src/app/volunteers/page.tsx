@@ -25,6 +25,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { volunteersData } from '@/lib/data';
 import { Separator } from '@/components/ui/separator';
 import Link from 'next/link';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Slider } from '@/components/ui/slider';
 
 type Volunteer = (typeof volunteersData)[0];
 
@@ -32,6 +35,7 @@ export default function VolunteersPage() {
   const [selectedVolunteer, setSelectedVolunteer] = React.useState<Volunteer>(
     volunteersData[0]
   );
+  const [isAddSkillOpen, setIsAddSkillOpen] = React.useState(false);
 
   return (
     <main className="flex flex-col lg:flex-row h-screen bg-muted/20">
@@ -164,7 +168,48 @@ export default function VolunteersPage() {
                 <Card>
                     <CardHeader className='flex flex-row items-center justify-between'>
                         <h3 className="font-semibold text-lg">Habilidades e Intereses</h3>
-                        <Button variant="link" className="p-0 h-auto">Añadir Habilidad</Button>
+                        <Dialog open={isAddSkillOpen} onOpenChange={setIsAddSkillOpen}>
+                            <DialogTrigger asChild>
+                                <Button variant="link" className="p-0 h-auto">Añadir Habilidad</Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Añadir Habilidad a {selectedVolunteer.name}</DialogTitle>
+                                    <DialogDescription>
+                                        Seleccione o ingrese una nueva habilidad y califique la competencia.
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <div className="space-y-4 py-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="skill-name">Nombre de la Habilidad</Label>
+                                        <Select>
+                                            <SelectTrigger id="skill-name">
+                                                <SelectValue placeholder="Música (Guitarra)" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="music-piano">Música (Piano)</SelectItem>
+                                                <SelectItem value="music-guitar">Música (Guitarra)</SelectItem>
+                                                <SelectItem value="music-vocals">Música (Voz)</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label>Nivel de Competencia</Label>
+                                        <Slider defaultValue={[2]} max={4} step={1} />
+                                        <div className="flex justify-between text-xs text-muted-foreground">
+                                            <span>Principiante</span>
+                                            <span>Intermedio</span>
+                                            <span>Avanzado</span>
+                                            <span>Experto</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <DialogFooter>
+                                    <Button variant="outline" onClick={() => setIsAddSkillOpen(false)}>Cancelar</Button>
+                                    <Button onClick={() => setIsAddSkillOpen(false)}>Añadir Habilidad</Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
                     </CardHeader>
                     <CardContent>
                         <div className="flex flex-wrap gap-2">
