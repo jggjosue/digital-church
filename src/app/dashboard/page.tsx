@@ -14,10 +14,6 @@ import { TotalVolunteers } from '@/components/dashboard/total-volunteers';
 import { UpcomingEventsCard } from '@/components/dashboard/upcoming-events-card';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { MemberGrowthChart } from '@/components/dashboard/member-growth-chart';
-import { Sheet, SheetTrigger, SheetContent } from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
-import { PanelLeft } from 'lucide-react';
-import { MobileSidebar } from '@/components/mobile-sidebar';
 
 export type TimeRange = 'this-week' | 'this-month' | 'this-quarter' | 'this-year';
 
@@ -32,17 +28,6 @@ export default function DashboardPage() {
     <div className="flex flex-1 flex-col">
         <header className="sticky top-0 z-10 flex h-auto flex-col items-start gap-4 border-b bg-background p-6 sm:flex-row sm:items-center sm:justify-between sm:h-16 sm:px-6">
             <div className="flex items-center gap-4">
-                 <Sheet>
-                    <SheetTrigger asChild>
-                        <Button size="icon" variant="outline" className="md:hidden">
-                        <PanelLeft className="h-5 w-5" />
-                        <span className="sr-only">Toggle Menu</span>
-                        </Button>
-                    </SheetTrigger>
-                    <SheetContent side="left" className="sm:max-w-xs p-0">
-                        <MobileSidebar />
-                    </SheetContent>
-                </Sheet>
                 <div>
                     <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Panel</h1>
                     <p className="text-sm text-muted-foreground sm:text-base">
@@ -50,7 +35,7 @@ export default function DashboardPage() {
                     </p>
                 </div>
             </div>
-            <div className="flex w-full items-center justify-between sm:w-auto">
+            <div className="flex w-full items-center justify-end sm:w-auto sm:justify-between gap-2">
                 <Tabs
                     defaultValue="this-week"
                     className="w-full sm:w-auto hidden sm:block"
@@ -69,13 +54,13 @@ export default function DashboardPage() {
             </div>
         </header>
         <main className="flex-1 space-y-6 p-4 sm:p-6">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-4 sm:hidden">
           <Tabs
             defaultValue="this-week"
-            className="w-full sm:w-auto"
+            className="w-full"
             onValueChange={handleTimeRangeChange}
           >
-            <TabsList className="grid w-full grid-cols-2 sm:w-auto sm:grid-cols-4">
+            <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
               <TabsTrigger value="this-week">Esta Semana</TabsTrigger>
               <TabsTrigger value="this-month">Este Mes</TabsTrigger>
               <TabsTrigger value="this-quarter">Este Trimestre</TabsTrigger>
