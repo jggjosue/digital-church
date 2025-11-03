@@ -257,6 +257,26 @@ export function AppSidebar() {
                     <Plus className="h-4 w-4" />
                     <span>Agregar Voluntario</span>
                 </Link>
+                 <Link
+                    href="/volunteers/tasks"
+                    className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
+                    pathname === '/volunteers/tasks' && 'bg-accent text-accent-foreground font-medium'
+                    )}
+                >
+                    <ClipboardList className="h-4 w-4" />
+                    <span>Tareas</span>
+                </Link>
+                 <Link
+                    href="/volunteers/planning"
+                    className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
+                    pathname === '/volunteers/planning' && 'bg-accent text-accent-foreground font-medium'
+                    )}
+                >
+                    <Calendar className="h-4 w-4" />
+                    <span>Planificación</span>
+                </Link>
             </CollapsibleContent>
         </Collapsible>
         {navItems.map((item) => (
