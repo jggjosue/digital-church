@@ -7,7 +7,7 @@ import {
   Search,
   Users,
   UserPlus,
-  ChevronDown
+  ChevronDown,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,7 @@ import {
     SelectValue,
   } from '@/components/ui/select';
 import { ministriesData } from '@/lib/data';
+import Link from 'next/link';
 
 type Ministry = (typeof ministriesData)[0];
 
@@ -37,8 +38,10 @@ export default function MinistriesPage() {
             Gestione los ministerios de la iglesia y sus miembros.
           </p>
         </div>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" /> Añadir Nuevo Ministerio
+        <Button asChild>
+          <Link href="/ministries/new">
+            <Plus className="mr-2 h-4 w-4" /> Añadir Nuevo Ministerio
+          </Link>
         </Button>
       </div>
 
