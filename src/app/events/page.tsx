@@ -21,6 +21,7 @@ import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { events as allEvents } from '@/lib/data';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useMediaQuery } from '@/hooks/use-media-query';
+import Link from 'next/link';
 
 type Event = (typeof allEvents)[0];
 
@@ -77,7 +78,7 @@ function EventDetails({ event, date }: { event: Event | null, date: Date | null 
                 </div>
             </div>
             <div className="mt-8 flex gap-2">
-                <Button variant="outline" className="w-full"><Edit className="mr-2 h-4 w-4"/>Editar</Button>
+                <Button variant="outline" className="w-full" asChild><Link href={`/events/${event.id}/edit`}><Edit className="mr-2 h-4 w-4"/>Editar</Link></Button>
                 <Button variant="destructive" className="w-full"><Trash2 className="mr-2 h-4 w-4"/>Eliminar</Button>
             </div>
         </div>
@@ -139,8 +140,10 @@ export default function EventsPage() {
               Vea, cree y gestione todos los eventos y actividades de la iglesia.
             </p>
           </div>
-          <Button>
-            <Plus className="mr-2 h-4 w-4" /> Crear Nuevo Evento
+          <Button asChild>
+            <Link href="/events/new">
+                <Plus className="mr-2 h-4 w-4" /> Crear Nuevo Evento
+            </Link>
           </Button>
         </div>
 
