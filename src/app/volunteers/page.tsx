@@ -8,6 +8,8 @@ import {
   XCircle,
   Plus,
   FileText,
+  Calendar as CalendarIcon,
+  Trash2,
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -28,6 +30,9 @@ import Link from 'next/link';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
+import { Calendar } from '@/components/ui/calendar';
+import { Checkbox } from '@/components/ui/checkbox';
+import { DayPicker } from 'react-day-picker';
 
 type Volunteer = (typeof volunteersData)[0];
 
@@ -36,6 +41,8 @@ export default function VolunteersPage() {
     volunteersData[0]
   );
   const [isAddSkillOpen, setIsAddSkillOpen] = React.useState(false);
+  const [isEditAvailabilityOpen, setIsEditAvailabilityOpen] = React.useState(false);
+  const [selectedDates, setSelectedDates] = React.useState<Date[] | undefined>([new Date(2023, 10, 22), new Date(2023, 10, 23), new Date(2023, 10, 24), new Date(2023, 10, 25)]);
 
   return (
     <main className="flex flex-col lg:flex-row h-screen bg-muted/20">
@@ -222,7 +229,88 @@ export default function VolunteersPage() {
                 <Card>
                     <CardHeader className='flex flex-row items-center justify-between'>
                         <h3 className="font-semibold text-lg">Disponibilidad General</h3>
-                        <Button variant="link" className="p-0 h-auto">Editar Disponibilidad</Button>
+                        <Dialog open={isEditAvailabilityOpen} onOpenChange={setIsEditAvailabilityOpen}>
+                            <DialogTrigger asChild>
+                                <Button variant="link" className="p-0 h-auto">Editar Disponibilidad</Button>
+                            </DialogTrigger>
+                            <DialogContent className="max-w-4xl">
+                                <DialogHeader>
+                                    <div className='flex items-center gap-4'>
+                                        <div className="hidden sm:flex items-center justify-center h-12 w-12 rounded-lg bg-muted">
+                                            <CalendarIcon className="h-6 w-6" />
+                                        </div>
+                                        <div>
+                                            <DialogTitle>Editar Disponibilidad de {selectedVolunteer.name}</DialogTitle>
+                                            <DialogDescription>
+                                                Establezca la disponibilidad recurrente y las fechas específicas de indisponibilidad.
+                                            </DialogDescription>
+                                        </div>
+                                    </div>
+                                </DialogHeader>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8 py-4">
+                                    <div className='space-y-4'>
+                                        <h4 className="font-semibold">Disponibilidad Recurrente</h4>
+                                        <div className="space-y-4">
+                                            <Card className="p-4">
+                                                <Label className="font-semibold">Dom</Label>
+                                                <div className="mt-2 space-y-2">
+                                                    <div className="flex items-center gap-2"><Checkbox id="sun-morn" defaultChecked /> <Label htmlFor='sun-morn' className='font-normal'>Mañana (8am - 12pm)</Label></div>
+                                                    <div className="flex items-center gap-2"><Checkbox id="sun-aft" /> <Label htmlFor='sun-aft' className='font-normal'>Tarde (12pm - 5pm)</Label></div>
+                                                    <div className="flex items-center gap-2"><Checkbox id="sun-eve" /> <Label htmlFor='sun-eve' className='font-normal'>Noche (5pm - 9pm)</Label></div>
+                                                </div>
+                                            </Card>
+                                             <Card className="p-4">
+                                                <Label className="font-semibold">Mié</Label>
+                                                <div className="mt-2 space-y-2">
+                                                    <div className="flex items-center gap-2"><Checkbox id="wed-morn" /> <Label htmlFor='wed-morn' className='font-normal'>Mañana (8am - 12pm)</Label></div>
+                                                    <div className="flex items-center gap-2"><Checkbox id="wed-aft" /> <Label htmlFor='wed-aft' className='font-normal'>Tarde (12pm - 5pm)</Label></div>
+                                                    <div className="flex items-center gap-2"><Checkbox id="wed-eve" defaultChecked /> <Label htmlFor='wed-eve' className='font-normal'>Noche (5pm - 9pm)</Label></div>
+                                                </div>
+                                            </Card>
+                                             <Card className="p-4">
+                                                <Label className="font-semibold">Sáb</Label>
+                                                <div className="mt-2 space-y-2">
+                                                    <div className="flex items-center gap-2"><Checkbox id="sat-morn" defaultChecked/> <Label htmlFor='sat-morn' className='font-normal'>Mañana (8am - 12pm)</Label></div>
+                                                    <div className="flex items-center gap-2"><Checkbox id="sat-aft" defaultChecked/> <Label htmlFor='sat-aft' className='font-normal'>Tarde (12pm - 5pm)</Label></div>
+                                                    <div className="flex items-center gap-2"><Checkbox id="sat-eve" defaultChecked/> <Label htmlFor='sat-eve' className='font-normal'>Noche (5pm - 9pm)</Label></div>
+                                                </div>
+                                            </Card>
+                                        </div>
+                                    </div>
+                                    <div className='space-y-4'>
+                                        <h4 className="font-semibold">Indisponibilidad Puntual</h4>
+                                        <Card className="p-4">
+                                            <DayPicker
+                                                mode="multiple"
+                                                selected={selectedDates}
+                                                onSelect={setSelectedDates}
+                                                defaultMonth={new Date(2023, 10)}
+                                                modifiers={{ unavailable: new Date(2023, 10, 18) }}
+                                                modifiersClassNames={{ unavailable: 'text-red-500' }}
+                                                footer={<Button size="sm" variant="link" className='w-full'>Añadir Fecha</Button>}
+                                            />
+                                        </Card>
+                                        <div className='space-y-2'>
+                                            <h5 className="font-medium text-sm">Próximas Fechas de Indisponibilidad:</h5>
+                                            <div className="space-y-2">
+                                                <div className="flex items-center justify-between bg-red-50 text-red-900 p-2 rounded-md">
+                                                    <span className="text-sm">18 de Noviembre, 2023</span>
+                                                    <Button variant="ghost" size="icon" className="h-6 w-6 text-red-700 hover:bg-red-100"><Trash2 className="h-4 w-4"/></Button>
+                                                </div>
+                                                <div className="flex items-center justify-between bg-red-50 text-red-900 p-2 rounded-md">
+                                                    <span className="text-sm">22 - 25 de Nov, 2023 (Vacaciones de Acción de Gracias)</span>
+                                                     <Button variant="ghost" size="icon" className="h-6 w-6 text-red-700 hover:bg-red-100"><Trash2 className="h-4 w-4"/></Button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <DialogFooter>
+                                    <Button variant="outline" onClick={() => setIsEditAvailabilityOpen(false)}>Cancelar</Button>
+                                    <Button onClick={() => setIsEditAvailabilityOpen(false)}>Guardar Cambios</Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
                     </CardHeader>
                     <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                         {Object.entries(selectedVolunteer.availability).map(([day, times]) => (
