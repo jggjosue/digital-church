@@ -29,11 +29,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { groupData, groupMembers } from '@/lib/data';
+import { groupData, groupMembers as initialGroupMembers } from '@/lib/data';
 import Link from 'next/link';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 type Group = (typeof groupData)[0];
-type GroupMember = (typeof groupMembers)[0];
+type GroupMember = (typeof initialGroupMembers)[0];
 
 const statusColors: { [key: string]: string } = {
   Activo: 'bg-green-100 text-green-800 border-green-200',
@@ -50,7 +51,9 @@ export default function GroupsPage() {
   const [selectedGroup, setSelectedGroup] = React.useState<Group>(
     groupData[0]
   );
+  const [groupMembers, setGroupMembers] = React.useState<GroupMember[]>(initialGroupMembers);
   const [selectedMembers, setSelectedMembers] = React.useState<number[]>([]);
+  const [memberToRemove, setMemberToRemove] = React.useState<GroupMember | null>(null);
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -68,7 +71,16 @@ export default function GroupsPage() {
     }
   };
 
+  const handleRemoveMember = () => {
+    if (memberToRemove) {
+      setGroupMembers(prev => prev.filter(m => m.id !== memberToRemove.id));
+      setMemberToRemove(null);
+    }
+  };
+
+
   return (
+    <AlertDialog>
     <main className="flex-1 bg-muted/20 p-4 sm:p-8">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
         <div>
@@ -219,9 +231,11 @@ export default function GroupsPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="link" className="text-destructive hover:text-destructive/80">
-                          Eliminar
-                        </Button>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="link" className="text-destructive hover:text-destructive/80" onClick={() => setMemberToRemove(member)}>
+                                Eliminar
+                            </Button>
+                        </AlertDialogTrigger>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -233,5 +247,23 @@ export default function GroupsPage() {
         </div>
       </div>
     </main>
+
+    <AlertDialogContent>
+        <AlertDialogHeader>
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+                <Trash2 className="h-6 w-6 text-red-600" />
+            </div>
+            <AlertDialogTitle className="text-center text-xl">Eliminar Miembro</AlertDialogTitle>
+            <AlertDialogDescription className="text-center">
+                ¿Estás seguro de que quieres eliminar a <span className="font-bold">{memberToRemove?.name}</span> del <span className="font-bold">{selectedGroup.name}</span>? Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter className="sm:justify-center">
+            <AlertDialogCancel onClick={() => setMemberToRemove(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleRemoveMember} className="bg-destructive hover:bg-destructive/90">Confirmar Eliminación</AlertDialogAction>
+        </AlertDialogFooter>
+    </AlertDialogContent>
+
+    </AlertDialog>
   );
 }
