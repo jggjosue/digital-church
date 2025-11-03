@@ -17,6 +17,7 @@ import Link from 'next/link';
 
 const eventsForDay = [
     {
+        id: 1,
         startTime: '09:00 AM',
         endTime: '10:30 AM',
         category: 'Community Service',
@@ -25,6 +26,7 @@ const eventsForDay = [
         description: "Join us in our monthly effort to support the local community. This month, we'll be organizing a food drive and helping at the local shelter.",
     },
     {
+        id: 2,
         startTime: '02:00 PM',
         endTime: '03:30 PM',
         category: 'Youth Ministry',
@@ -33,6 +35,7 @@ const eventsForDay = [
         description: "A fun and engaging session for teenagers. We'll have games, music, and a short devotional. A great place to build friendships and faith.",
     },
     {
+        id: 3,
         startTime: '07:00 PM',
         endTime: '08:00 PM',
         category: 'Worship',
@@ -105,7 +108,9 @@ export default function ActivitiesPage() {
                   <h3 className="text-xl font-semibold mt-2">{event.title}</h3>
                   <p className="text-muted-foreground mt-1 max-w-xl">{event.description}</p>
                 </div>
-                <Button variant="outline" className="w-full sm:w-auto">View Details</Button>
+                <Button variant="outline" className="w-full sm:w-auto" asChild>
+                    <Link href={`/events/${event.id}`}>Ver Detalles</Link>
+                </Button>
               </div>
             </CardContent>
           </Card>
