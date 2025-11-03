@@ -111,7 +111,7 @@ export default function VolunteerSchedulingPage() {
   const [date, setDate] = React.useState<Date | undefined>(new Date('2023-10-22T00:00:00'));
   const [view, setView] = React.useState('calendar');
   const [scheduleData, setScheduleData] = React.useState<ScheduleData>(initialScheduleData);
-  const [availableVolunteers, setAvailableVolunteers] = React.useState<Volunteer[]>(volunteersData.slice(0,3));
+  const [availableVolunteers, setAvailableVolunteers] = React.useState<Volunteer[]>(volunteersData.slice(3));
 
   const selectedDateString = date ? date.toISOString().split('T')[0] : '';
   const todaysSchedule = scheduleData[selectedDateString as keyof typeof scheduleData] || [];
@@ -277,7 +277,7 @@ export default function VolunteerSchedulingPage() {
                     </CardHeader>
                     <CardContent>
                       {view === 'calendar' ? (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                          <div className="grid grid-cols-1 gap-4">
                               {event.roles.map((role, roleIndex) => (
                                   <Card key={role.name} className="p-4 bg-muted/50">
                                       <h4 className="font-semibold text-sm">{role.name} ({role.assigned}/{role.needed})</h4>
@@ -356,33 +356,6 @@ export default function VolunteerSchedulingPage() {
                         </div>
                       )}
                     </CardContent>
-                     {availableVolunteers.length > 0 && (
-                      <CardContent>
-                        <Card>
-                          <CardHeader>
-                            <CardTitle className="text-base">Voluntarios Disponibles</CardTitle>
-                          </CardHeader>
-                          <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                            {availableVolunteers.map(v => (
-                                <div key={v.id} draggable onDragStart={(e) => handleDragStart(e, v)}>
-                                    <Card className="p-3 cursor-grab active:cursor-grabbing">
-                                        <div className="flex items-center gap-3">
-                                            <Avatar className="h-9 w-9">
-                                                <AvatarImage src={v.avatarUrl} alt={v.name} />
-                                                <AvatarFallback>{v.name.charAt(0)}</AvatarFallback>
-                                            </Avatar>
-                                            <div>
-                                                <p className="font-medium text-sm">{v.name}</p>
-                                                <p className="text-xs text-muted-foreground">{v.role}</p>
-                                            </div>
-                                        </div>
-                                    </Card>
-                                </div>
-                            ))}
-                          </CardContent>
-                        </Card>
-                      </CardContent>
-                    )}
                 </Card>
             ))}
          </div>
