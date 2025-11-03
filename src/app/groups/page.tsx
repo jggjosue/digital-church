@@ -153,8 +153,8 @@ export default function GroupsPage() {
                   className="pl-9"
                 />
               </div>
-              <Button>
-                <UserPlus className="mr-2 h-4 w-4" /> Añadir Miembro
+              <Button asChild>
+                <Link href="/groups/add-members"><UserPlus className="mr-2 h-4 w-4" /> Añadir Miembro</Link>
               </Button>
             </div>
           </div>
