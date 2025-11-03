@@ -422,7 +422,7 @@ export function AppSidebar() {
                 >
                     <div className="flex items-center gap-3">
                         <HandHeart className="h-4 w-4" />
-                        <span>Peticiones de Oración</span>
+                        <span>Peticiones</span>
                     </div>
                     <ChevronDown className={cn('h-4 w-4 transition-transform', isPrayerOpen && 'rotate-180')} />
                 </div>
