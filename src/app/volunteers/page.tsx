@@ -33,6 +33,10 @@ import { Slider } from '@/components/ui/slider';
 import { Calendar } from '@/components/ui/calendar';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DayPicker } from 'react-day-picker';
+import { Textarea } from '@/components/ui/textarea';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
 
 type Volunteer = (typeof volunteersData)[0];
 
@@ -42,7 +46,9 @@ export default function VolunteersPage() {
   );
   const [isAddSkillOpen, setIsAddSkillOpen] = React.useState(false);
   const [isEditAvailabilityOpen, setIsEditAvailabilityOpen] = React.useState(false);
+  const [isAddNoteOpen, setIsAddNoteOpen] = React.useState(false);
   const [selectedDates, setSelectedDates] = React.useState<Date[] | undefined>([new Date(2023, 10, 22), new Date(2023, 10, 23), new Date(2023, 10, 24), new Date(2023, 10, 25)]);
+  const [noteDate, setNoteDate] = React.useState<Date | undefined>(new Date());
 
   return (
     <main className="flex flex-col lg:flex-row h-screen bg-muted/20">
@@ -331,7 +337,84 @@ export default function VolunteersPage() {
                  <Card>
                     <CardHeader className='flex flex-row items-center justify-between'>
                         <h3 className="font-semibold text-lg">Notas Administrativas</h3>
-                        <Button variant="link" className="p-0 h-auto">Añadir Nota</Button>
+                        <Dialog open={isAddNoteOpen} onOpenChange={setIsAddNoteOpen}>
+                            <DialogTrigger asChild>
+                                <Button variant="link" className="p-0 h-auto">Añadir Nota</Button>
+                            </DialogTrigger>
+                             <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Añadir Nueva Nota para {selectedVolunteer.name}</DialogTitle>
+                                </DialogHeader>
+                                <div className="space-y-4 py-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="note-content">Contenido de la Nota</Label>
+                                        <Textarea id="note-content" placeholder="Ingrese los detalles de la nota..." />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="note-date">Fecha</Label>
+                                            <Popover>
+                                                <PopoverTrigger asChild>
+                                                <Button
+                                                    variant={"outline"}
+                                                    className={cn(
+                                                    "w-full justify-start text-left font-normal",
+                                                    !noteDate && "text-muted-foreground"
+                                                    )}
+                                                >
+                                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                                    {noteDate ? format(noteDate, "PPP") : <span>Seleccione una fecha</span>}
+                                                </Button>
+                                                </PopoverTrigger>
+                                                <PopoverContent className="w-auto p-0">
+                                                <Calendar
+                                                    mode="single"
+                                                    selected={noteDate}
+                                                    onSelect={setNoteDate}
+                                                    initialFocus
+                                                />
+                                                </PopoverContent>
+                                            </Popover>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="note-author">Autor</Label>
+                                            <Input id="note-author" defaultValue="Admin User" readOnly />
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="note-category">Categoría</Label>
+                                            <Select defaultValue="general">
+                                                <SelectTrigger id="note-category">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="general">General</SelectItem>
+                                                    <SelectItem value="feedback">Comentarios</SelectItem>
+                                                    <SelectItem value="follow-up">Seguimiento</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="note-visibility">Visibilidad</Label>
+                                            <Select defaultValue="admins">
+                                                <SelectTrigger id="note-visibility">
+                                                    <SelectValue />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="admins">Solo Administradores</SelectItem>
+                                                    <SelectItem value="leadership">Liderazgo</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <DialogFooter>
+                                    <Button variant="outline" onClick={() => setIsAddNoteOpen(false)}>Cancelar</Button>
+                                    <Button onClick={() => setIsAddNoteOpen(false)}>Guardar Nota</Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
                     </CardHeader>
                     <CardContent>
                         <p className="text-sm text-muted-foreground">
