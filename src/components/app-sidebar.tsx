@@ -594,6 +594,16 @@ export function AppSidebar() {
                 </Link>
             </CollapsibleContent>
         </Collapsible>
+        <Link
+          href="/facilities"
+          className={cn(
+            'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
+            pathname.startsWith('/facilities') && 'bg-accent text-accent-foreground font-medium'
+          )}
+        >
+          <Building className="h-4 w-4" />
+          <span>Instalaciones</span>
+        </Link>
       </nav>
       <div className="mt-auto space-y-1 p-4">
         <Collapsible open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
