@@ -614,6 +614,16 @@ export function AppSidebar() {
           <Landmark className="h-4 w-4" />
           <span>Templos</span>
         </Link>
+        <Link
+          href="/documentation"
+          className={cn(
+            'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
+            pathname.startsWith('/documentation') && 'bg-accent text-accent-foreground font-medium'
+          )}
+        >
+          <FileText className="h-4 w-4" />
+          <span>Documentación</span>
+        </Link>
       </nav>
       <div className="mt-auto space-y-1 p-4">
         <Collapsible open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
