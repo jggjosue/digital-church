@@ -16,14 +16,63 @@ import { Textarea } from '@/components/ui/textarea';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { membersData } from '@/lib/data';
+import { cn } from '@/lib/utils';
+
+type Member = (typeof membersData)[0];
 
 export default function NewMinistryPage() {
-  const [leaders, setLeaders] = React.useState([
-    { name: 'John Doe', email: 'john.doe@example.com', avatar: 'https://picsum.photos/seed/1/32/32' },
-  ]);
+  const [leaders, setLeaders] = React.useState<Member[]>([membersData[0]]);
+  const [searchTerm, setSearchTerm] = React.useState('');
+  const [filteredMembers, setFilteredMembers] = React.useState<Member[]>([]);
+  const [highlightedIndex, setHighlightedIndex] = React.useState(-1);
 
-  const removeLeader = (email: string) => {
-    setLeaders(leaders.filter(leader => leader.email !== email));
+  React.useEffect(() => {
+    if (searchTerm) {
+      const leaderIds = leaders.map(l => l.id);
+      setFilteredMembers(
+        membersData.filter(
+          m =>
+            !leaderIds.includes(m.id) &&
+            (m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            m.email.toLowerCase().includes(searchTerm.toLowerCase()))
+        ).slice(0, 5)
+      );
+      setHighlightedIndex(-1);
+    } else {
+      setFilteredMembers([]);
+    }
+  }, [searchTerm, leaders]);
+
+  const removeLeader = (id: number) => {
+    setLeaders(leaders.filter(leader => leader.id !== id));
+  };
+
+  const addLeader = (member: Member) => {
+    setLeaders(prev => [...prev, member]);
+    setSearchTerm('');
+    setFilteredMembers([]);
+    setHighlightedIndex(-1);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Backspace' && searchTerm === '' && leaders.length > 0) {
+      const lastLeader = leaders[leaders.length - 1];
+      removeLeader(lastLeader.id);
+    } else if (filteredMembers.length > 0) {
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            setHighlightedIndex(prev => (prev + 1) % filteredMembers.length);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            setHighlightedIndex(prev => (prev - 1 + filteredMembers.length) % filteredMembers.length);
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (highlightedIndex >= 0 && highlightedIndex < filteredMembers.length) {
+                addLeader(filteredMembers[highlightedIndex]);
+            }
+        }
+    }
   };
 
   return (
@@ -85,14 +134,33 @@ export default function NewMinistryPage() {
                 id="ministry-leaders"
                 placeholder="Buscar miembros para añadir como líderes..."
                 className="pl-9"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={handleKeyDown}
               />
+               {filteredMembers.length > 0 && (
+                    <div className="absolute top-full left-0 mt-2 w-full bg-background border rounded-md shadow-lg z-10">
+                        {filteredMembers.map((member, index) => (
+                             <div 
+                                key={member.id} 
+                                className={cn("p-2 hover:bg-accent cursor-pointer",
+                                    index === highlightedIndex && 'bg-accent'
+                                )}
+                                onMouseDown={(e) => { e.preventDefault(); addLeader(member); }}
+                            >
+                                <p className="font-medium">{member.name}</p>
+                                <p className="text-sm text-muted-foreground">{member.email}</p>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
             <div className="space-y-2 mt-2">
                 {leaders.map((leader) => (
-                    <div key={leader.email} className="flex items-center justify-between rounded-lg border bg-secondary p-2">
+                    <div key={leader.id} className="flex items-center justify-between rounded-lg border bg-secondary p-2">
                         <div className="flex items-center gap-3">
                             <Avatar className='h-8 w-8'>
-                                <AvatarImage src={leader.avatar} alt={leader.name} />
+                                <AvatarImage src={`https://picsum.photos/seed/${leader.id}/32/32`} alt={leader.name} />
                                 <AvatarFallback>{leader.name.charAt(0)}</AvatarFallback>
                             </Avatar>
                             <div>
@@ -100,7 +168,7 @@ export default function NewMinistryPage() {
                                 <p className="text-xs text-muted-foreground">{leader.email}</p>
                             </div>
                         </div>
-                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeLeader(leader.email)}>
+                        <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => removeLeader(leader.id)}>
                             <X className="h-4 w-4" />
                         </Button>
                     </div>
