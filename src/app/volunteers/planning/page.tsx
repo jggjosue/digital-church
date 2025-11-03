@@ -108,10 +108,14 @@ const initialScheduleData: ScheduleData = {
 
 
 export default function VolunteerSchedulingPage() {
-  const [date, setDate] = React.useState<Date | undefined>(new Date('2023-10-22T00:00:00'));
+  const [date, setDate] = React.useState<Date | undefined>();
   const [view, setView] = React.useState('calendar');
   const [scheduleData, setScheduleData] = React.useState<ScheduleData>(initialScheduleData);
   const [availableVolunteers, setAvailableVolunteers] = React.useState<Volunteer[]>(volunteersData.slice(3));
+
+  React.useEffect(() => {
+    setDate(new Date('2023-10-22T00:00:00'));
+  }, []);
 
   const selectedDateString = date ? date.toISOString().split('T')[0] : '';
   const todaysSchedule = scheduleData[selectedDateString as keyof typeof scheduleData] || [];
