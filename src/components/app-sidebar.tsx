@@ -39,7 +39,6 @@ import { Button } from './ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from './ui/collapsible';
 
 const navItems = [
-  { href: '/dashboard', icon: LayoutDashboard, label: 'Panel' },
   { href: '/sermons', icon: Video, label: 'Biblioteca' },
 ];
 
@@ -121,6 +120,16 @@ export function AppSidebar() {
                 >
                     <UserPlus className="h-4 w-4" />
                     <span>Nuevo</span>
+                </Link>
+                 <Link
+                    href="/members/pastoral"
+                    className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground pl-10',
+                    pathname === '/members/pastoral' && 'bg-accent text-accent-foreground font-medium'
+                    )}
+                >
+                    <Heart className="h-4 w-4" />
+                    <span>Pastoral</span>
                 </Link>
             </CollapsibleContent>
         </Collapsible>
