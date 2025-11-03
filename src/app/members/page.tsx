@@ -450,19 +450,7 @@ export default function MembersPage() {
                                 className="absolute top-4 left-4"
                                 />
                             <CardHeader className="flex flex-row items-start justify-end p-4">
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent>
-                                    <DropdownMenuItem asChild><Link href={`/members/${member.id}/edit`}>Editar</Link></DropdownMenuItem>
-                                    <AlertDialogTrigger asChild>
-                                        <DropdownMenuItem onSelect={(e) => {e.preventDefault(); setIsBulkDelete(false); setMemberToDelete(member);}}>Eliminar</DropdownMenuItem>
-                                    </AlertDialogTrigger>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
+                                
                             </CardHeader>
                             <Link href={`/members/${member.id}`} className="flex flex-col items-center justify-center flex-1 text-center p-4 pt-0">
                                 <Avatar className="h-20 w-20 mb-4">
@@ -515,7 +503,7 @@ export default function MembersPage() {
         </div>
         <AlertDialogContent>
             <AlertDialogHeader>
-                <AlertDialogTitle>¿Estás absolutamente seguro?</AlertDialogTitle>
+                <AlertDialogTitle>¿Estás absolutely seguro?</AlertDialogTitle>
                 <AlertDialogDescription>
                     {isBulkDelete 
                         ? `Esta acción no se puede deshacer. Esto eliminará permanentemente a los ${selected.length} miembros seleccionados.`
