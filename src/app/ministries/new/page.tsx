@@ -22,7 +22,7 @@ import { cn } from '@/lib/utils';
 type Member = (typeof membersData)[0];
 
 export default function NewMinistryPage() {
-  const [leaders, setLeaders] = React.useState<Member[]>([membersData[0]]);
+  const [leaders, setLeaders] = React.useState<Member[]>([]);
   const [searchTerm, setSearchTerm] = React.useState('');
   const [filteredMembers, setFilteredMembers] = React.useState<Member[]>([]);
   const [highlightedIndex, setHighlightedIndex] = React.useState(-1);
