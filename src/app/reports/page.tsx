@@ -6,6 +6,7 @@ import {
   Users,
   BarChart,
   DollarSign,
+  HandHeart,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,7 +18,7 @@ import {
 } from '@/components/ui/card';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
-import { attendanceRecords, membersData, incomeStatementData } from '@/lib/data';
+import { attendanceRecords, membersData, incomeStatementData, volunteersData } from '@/lib/data';
 
 type AutoTable = {
     autoTable: (options: any) => void;
@@ -45,6 +46,13 @@ const reportTypes = [
     description: 'Genere estados de cuenta de donaciones, presupuestos y reportes financieros.',
     buttonText: 'Generar Reporte Financiero',
   },
+  {
+    id: 'volunteers',
+    icon: HandHeart,
+    title: 'Reportes de Voluntarios',
+    description: 'Genere reportes sobre las horas de servicio de los voluntarios, las asignaciones y la información de contacto.',
+    buttonText: 'Generar Reporte de Voluntarios',
+  }
 ];
 
 export default function ReportsPage() {
@@ -142,6 +150,34 @@ export default function ReportsPage() {
         doc.save('reporte_financiero.pdf');
     };
 
+    const generateVolunteerReport = () => {
+        const doc = new jsPDF() as jsPDF & AutoTable;
+    
+        doc.text('Reporte de Voluntarios', 14, 20);
+    
+        const tableColumn = ["Nombre", "Email", "Teléfono", "Rol", "Horas Servidas"];
+        const tableRows: (string | number)[][] = [];
+    
+        volunteersData.forEach(volunteer => {
+          const volunteerData = [
+            volunteer.name,
+            volunteer.email,
+            volunteer.phone,
+            volunteer.role,
+            volunteer.hoursServed,
+          ];
+          tableRows.push(volunteerData);
+        });
+    
+        doc.autoTable({
+          head: [tableColumn],
+          body: tableRows,
+          startY: 30,
+        });
+    
+        doc.save('reporte_voluntarios.pdf');
+    }
+
     const handleReportGeneration = (reportId: string) => {
         if (reportId === 'attendance') {
             generateAttendanceReport();
@@ -149,6 +185,8 @@ export default function ReportsPage() {
             generateMembershipReport();
         } else if (reportId === 'financial') {
             generateFinancialReport();
+        } else if (reportId === 'volunteers') {
+            generateVolunteerReport();
         } else {
             alert(`La generación del reporte para "${reportId}" aún no está implementada.`);
         }
@@ -167,7 +205,7 @@ export default function ReportsPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {reportTypes.map((report, index) => (
           <Card key={index} className="flex flex-col">
             <CardHeader>
