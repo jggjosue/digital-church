@@ -15,6 +15,7 @@ import {
   ChevronDown,
   UserPlus,
   Plus,
+  List,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -39,7 +40,6 @@ const navItems = [
     subItems: [
       { href: '/members', icon: Users, label: 'Miembros' },
       { href: '/members/new', icon: UserPlus, label: 'Nuevo' },
-      { href: '/members/pastoral', icon: Heart, label: 'Pastoral' },
     ]
   },
   { 
@@ -51,7 +51,15 @@ const navItems = [
       { href: '/groups/add-members', icon: UserPlus, label: 'Agregar Miembros' },
     ]
   },
-  { href: '/ministries', icon: Users, label: 'Ministerios' },
+  { 
+    label: 'Ministerios', 
+    icon: Building, 
+    subItems: [
+      { href: '/ministries', icon: List, label: 'Gestionar' },
+      { href: '/ministries/new', icon: Plus, label: 'Nuevo Ministerio' },
+      { href: '/ministries/assign-members', icon: UserPlus, label: 'Asignar Miembros' },
+    ]
+  },
   { href: '/volunteers', icon: Heart, label: 'Voluntarios' },
   { href: '/events', icon: Calendar, label: 'Eventos' },
   { href: '/donations', icon: Heart, label: 'Ofrendas' },
@@ -60,9 +68,6 @@ const navItems = [
   { href: '/financial', icon: BarChart, label: 'Finanzas' },
   { href: '/attendance', icon: BarChart, label: 'Asistencia' },
   { href: '/reports', icon: FileText, label: 'Reportes' },
-  { href: '/facilities', icon: Building, label: 'Instalaciones' },
-  { href: '/temples', icon: Building, label: 'Templos' },
-  { href: '/documentation', icon: FileText, label: 'Documentación' },
   { href: '/settings', icon: Settings, label: 'Configuración' },
 ];
 
@@ -72,7 +77,7 @@ const bottomNavItems = [
 
 export function MobileSidebar() {
   const pathname = usePathname();
-  const [openCollapsibles, setOpenCollapsibles] = React.useState<string[]>(['Directorio', 'Grupos']);
+  const [openCollapsibles, setOpenCollapsibles] = React.useState<string[]>(['Directorio', 'Grupos', 'Ministerios']);
 
   const isSubItemActive = (subItems: any[]) => {
     return subItems.some(subItem => pathname.startsWith(subItem.href));
