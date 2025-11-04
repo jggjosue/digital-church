@@ -49,6 +49,14 @@ const navItems = [
     ]
   },
   { 
+    label: 'Pastoral', 
+    icon: Heart, 
+    subItems: [
+      { href: '/prayer', icon: List, label: 'Peticiones' },
+      { href: '/prayer/new', icon: Plus, label: 'Nueva Oración' },
+    ]
+  },
+  { 
     label: 'Grupos', 
     icon: Users, 
     subItems: [
@@ -98,14 +106,6 @@ const navItems = [
   },
   { href: '/sermons', icon: Video, label: 'Biblioteca' },
   { 
-    label: 'Pastoral', 
-    icon: Heart, 
-    subItems: [
-      { href: '/prayer', icon: List, label: 'Peticiones' },
-      { href: '/prayer/new', icon: Plus, label: 'Nueva Oración' },
-    ]
-  },
-  { 
     label: 'Finanzas', 
     icon: DollarSign, 
     subItems: [
@@ -149,7 +149,7 @@ const bottomNavItems = [
 
 export function MobileSidebar() {
   const pathname = usePathname();
-  const [openCollapsibles, setOpenCollapsibles] = React.useState<string[]>(['Directorio', 'Grupos', 'Ministerios', 'Voluntarios', 'Eventos', 'Ofrendas', 'Pastoral', 'Finanzas', 'Asistencia', 'Reportes', 'Configuración']);
+  const [openCollapsibles, setOpenCollapsibles] = React.useState<string[]>(['Directorio', 'Pastoral', 'Grupos', 'Ministerios', 'Voluntarios', 'Eventos', 'Ofrendas', 'Finanzas', 'Asistencia', 'Reportes', 'Configuración']);
 
   const isSubItemActive = (subItems: any[]) => {
     return subItems.some(subItem => pathname.startsWith(subItem.href));
