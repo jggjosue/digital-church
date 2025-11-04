@@ -7,8 +7,8 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { MobileSidebar } from '@/components/mobile-sidebar';
 
 interface AppHeaderProps {
-  title: string;
-  description: string;
+  title: React.ReactNode;
+  description: React.ReactNode;
   children?: React.ReactNode;
 }
 
@@ -28,8 +28,8 @@ export function AppHeader({ title, description, children }: AppHeaderProps) {
           </SheetContent>
         </Sheet>
         <div>
-          <h1 className="text-3xl font-bold">{title}</h1>
-          <p className="text-muted-foreground">{description}</p>
+          <div className="text-3xl font-bold">{title}</div>
+          <div className="text-muted-foreground">{description}</div>
         </div>
       </div>
       <div className="flex w-full sm:w-auto items-center justify-end gap-2">

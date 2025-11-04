@@ -33,6 +33,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Checkbox } from '@/components/ui/checkbox';
+import { AppHeader } from '@/components/app-header';
 
 const availableGroups = [
     'Youth Group',
@@ -56,25 +57,19 @@ export default function NewMemberPage() {
     }
 
   return (
-    <main className="flex-1 space-y-6 p-8 bg-muted/20">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Añadir Nuevo Miembro
-          </h1>
-          <p className="text-muted-foreground">
-            Ingrese los detalles a continuación para crear un nuevo perfil de miembro.
-          </p>
-        </div>
+    <>
+      <AppHeader
+        title="Añadir Nuevo Miembro"
+        description="Ingrese los detalles a continuación para crear un nuevo perfil de miembro."
+      >
         <div className="flex items-center gap-2">
           <Button variant="ghost" asChild>
             <Link href="/members">Cancelar</Link>
           </Button>
           <Button>Guardar Miembro</Button>
         </div>
-      </div>
-
-      <div className="space-y-8">
+      </AppHeader>
+      <main className="flex-1 p-8 space-y-8">
           <Card>
               <CardHeader>
                   <CardTitle>Información Personal</CardTitle>
@@ -227,7 +222,7 @@ export default function NewMemberPage() {
                   </div>
               </CardContent>
           </Card>
-      </div>
-    </main>
+      </main>
+    </>
   );
 }

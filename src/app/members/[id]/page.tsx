@@ -25,6 +25,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { AppHeader } from '@/components/app-header';
 
 const member = {
     id: 1,
@@ -79,34 +80,22 @@ export default function MemberProfilePage({ params }: { params: { id: string } }
   // In a real app, you would fetch the member data based on params.id
   
   return (
-    <main className="flex-1 bg-muted/20 p-8 space-y-6">
-      <header className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" asChild>
-            <Link href="/members">
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
-          </Button>
-          <div className="flex items-center gap-4">
-            <Avatar className="h-16 w-16">
-                <AvatarImage src={member.avatarUrl} alt={member.name} />
-                <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
-            </Avatar>
-            <div>
-                <h1 className="text-3xl font-bold">{member.name}</h1>
-                <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200 font-medium">
+    <>
+      <AppHeader
+        title={member.name}
+        description={
+            <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200 font-medium">
                 <span className="h-2 w-2 rounded-full mr-2 bg-green-500"></span>
                 {member.status}
-                </Badge>
-            </div>
-          </div>
-        </div>
+            </Badge>
+        }
+      >
         <div className="flex items-center gap-2">
-          <Button variant="outline" asChild><Link href={`/members/${params.id}/edit`}><Edit className="mr-2 h-4 w-4" /> Editar Perfil</Link></Button>
-          <Button><MoreHorizontal className="h-4 w-4" /></Button>
+            <Button variant="outline" asChild><Link href={`/members/${params.id}/edit`}><Edit className="mr-2 h-4 w-4" /> Editar Perfil</Link></Button>
+            <Button><MoreHorizontal className="h-4 w-4" /></Button>
         </div>
-      </header>
-
+      </AppHeader>
+      <main className="flex-1 p-8 space-y-6">
       <div className="grid grid-cols-3 gap-6">
         <div className="col-span-1 space-y-6">
           <Card>
@@ -281,5 +270,6 @@ export default function MemberProfilePage({ params }: { params: { id: string } }
         </div>
       </div>
     </main>
+    </>
   );
 }

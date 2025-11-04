@@ -38,7 +38,9 @@ export default function RootLayout({
         >
             <div className="flex">
                 <AppSidebar />
-                {children}
+                <div className="flex-1 flex flex-col">
+                  {children}
+                </div>
             </div>
             <Toaster />
         </ThemeProvider>

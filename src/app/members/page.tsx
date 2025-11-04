@@ -243,7 +243,6 @@ export default function MembersPage() {
 
   return (
     <AlertDialog>
-        <div className="flex min-h-screen w-full flex-col bg-background">
         <AppHeader
             title="Directorio de Miembros"
             description="Administre perfiles de miembros, información de contacto y membresías de grupos."
@@ -490,7 +489,6 @@ export default function MembersPage() {
                     </CardContent>
                 </Card>
             </main>
-        </div>
         </div>
         <AlertDialogContent>
             <AlertDialogHeader>
