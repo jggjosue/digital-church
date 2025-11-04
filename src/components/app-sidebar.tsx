@@ -154,7 +154,7 @@ const bottomNavItems = [
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const [openCollapsibles, setOpenCollapsibles] = React.useState<string[]>(['Directorio', 'Oración', 'Grupos', 'Ministerios', 'Voluntarios', 'Eventos', 'Ofrendas', 'Finanzas', 'Asistencia', 'Reportes', 'Configuración']);
+  const [openCollapsibles, setOpenCollapsibles] = React.useState<string[]>([]);
 
   const isSubItemActive = (subItems: any[]) => {
     return subItems.some(subItem => pathname.startsWith(subItem.href));
