@@ -115,7 +115,7 @@ const navItems = [
     icon: Library, 
     subItems: [
       { href: '/sermons', icon: Library, label: 'Librería' },
-      { href: '/sermons', icon: Video, label: 'Sermón' },
+      { href: '/sermons/list', icon: Video, label: 'Sermón' },
       { href: '/sermons', icon: Clapperboard, label: 'Vídeos' },
       { href: '/sermons', icon: Mic, label: 'Audio' },
       { href: '/sermons', icon: ImageIcon, label: 'Imagen' },
