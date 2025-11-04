@@ -46,6 +46,7 @@ const navItems = [
     subItems: [
       { href: '/members', icon: Users, label: 'Miembros' },
       { href: '/members/new', icon: UserPlus, label: 'Nuevo' },
+      { href: '/members/bulk-actions', icon: UserCog, label: 'Acciones Masivas' },
     ]
   },
   { 
