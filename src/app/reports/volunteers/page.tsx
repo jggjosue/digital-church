@@ -76,7 +76,9 @@ export default function VolunteerReportsPage() {
       <AppHeader
         title="Reportes de Voluntarios"
         description="Vea y exporte información sobre los voluntarios."
-      />
+      >
+        <div/>
+      </AppHeader>
     <main className="flex-1 space-y-6 p-8">
       <Card>
         <CardContent className="p-4">

@@ -83,7 +83,9 @@ export default function DonationReportsPage() {
       <AppHeader
         title="Reportes de Donaciones"
         description="Genere y vea la actividad de donaciones"
-      />
+      >
+        <div/>
+      </AppHeader>
     <main className="flex-1 space-y-6 p-8">
       <Card>
         <CardContent className="p-4">

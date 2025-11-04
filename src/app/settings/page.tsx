@@ -57,7 +57,9 @@ export default function SettingsPage() {
             <AppHeader
                 title="Roles y Permisos"
                 description="Defina y gestione roles de usuario, asigne permisos y controle los niveles de acceso."
-            />
+            >
+              <div/>
+            </AppHeader>
             <main className="flex-1 bg-muted/20 p-4 sm:p-8">
                 <div className="mt-6 grid grid-cols-1 gap-8 lg:grid-cols-3">
                     {/* Left Column: Role List */}
