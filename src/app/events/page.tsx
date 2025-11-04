@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -23,6 +24,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import Link from 'next/link';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { AppHeader } from '@/components/app-header';
 
 type Event = (typeof allEvents)[0];
 
@@ -147,23 +149,20 @@ export default function EventsPage() {
 
   return (
     <AlertDialog>
+    <div className="flex flex-col flex-1">
+      <AppHeader
+        title="Eventos de la Iglesia"
+        description="Vea, cree y gestione todos los eventos y actividades de la iglesia."
+      >
+        <Button asChild>
+          <Link href="/events/new">
+              <Plus className="mr-2 h-4 w-4" /> Crear Nuevo Evento
+          </Link>
+        </Button>
+      </AppHeader>
     <main className="flex flex-col lg:flex-row min-h-screen w-full bg-muted/20">
       <div className="flex-1 p-4 sm:p-8">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold">Eventos de la Iglesia</h1>
-            <p className="text-muted-foreground">
-              Vea, cree y gestione todos los eventos y actividades de la iglesia.
-            </p>
-          </div>
-          <Button asChild>
-            <Link href="/events/new">
-                <Plus className="mr-2 h-4 w-4" /> Crear Nuevo Evento
-            </Link>
-          </Button>
-        </div>
-
-        <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="relative w-full max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input placeholder="Buscar un evento por nombre..." className="pl-9" />
@@ -270,6 +269,7 @@ export default function EventsPage() {
         </AlertDialogContent>
 
     </main>
+    </div>
     </AlertDialog>
   );
 }

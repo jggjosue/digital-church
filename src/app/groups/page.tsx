@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -32,6 +33,7 @@ import {
 import { groupData as initialGroupData, groupMembers as initialGroupMembers } from '@/lib/data';
 import Link from 'next/link';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { AppHeader } from '@/components/app-header';
 
 type Group = (typeof initialGroupData)[0];
 type GroupMember = (typeof initialGroupMembers)[0];
@@ -92,20 +94,17 @@ export default function GroupsPage() {
 
   return (
     <AlertDialog>
+      <div className="flex flex-col flex-1">
+      <AppHeader
+        title="Gestión de Grupos"
+        description="Organice y gestione los grupos de su iglesia y sus miembros."
+      >
+        <Button asChild>
+          <Link href="/groups/new"><Plus className="mr-2 h-4 w-4" /> Crear Nuevo Grupo</Link>
+        </Button>
+      </AppHeader>
       <main className="flex-1 bg-muted/20 p-4 sm:p-8">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Gestión de Grupos</h1>
-            <p className="text-muted-foreground">
-              Organice y gestione los grupos de su iglesia y sus miembros.
-            </p>
-          </div>
-          <Button className="mt-4 sm:mt-0" asChild>
-            <Link href="/groups/new"><Plus className="mr-2 h-4 w-4" /> Crear Nuevo Grupo</Link>
-          </Button>
-        </div>
-
-        <div className="mt-6 grid grid-cols-1 gap-8 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           {/* Left Column: Group List */}
           <div className="lg:col-span-1">
             <h2 className="text-xl font-semibold">Todos los Grupos</h2>
@@ -283,6 +282,7 @@ export default function GroupsPage() {
           </div>
         </div>
       </main>
+      </div>
 
       <AlertDialogContent>
           <AlertDialogHeader>

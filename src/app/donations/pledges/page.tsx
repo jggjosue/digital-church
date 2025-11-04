@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -43,6 +44,7 @@ import {
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Link from 'next/link';
+import { AppHeader } from '@/components/app-header';
 
 const pledgesData = [
   {
@@ -111,19 +113,16 @@ export default function PledgeManagementPage() {
 
 
   return (
+    <div className="flex flex-col flex-1">
+    <AppHeader
+      title="Gestión de Promesas"
+      description="Rastree y gestione todas las promesas de los miembros y su estado de cumplimiento."
+    >
+      <Button>
+        <Plus className="mr-2 h-4 w-4" /> Registrar Nueva Promesa
+      </Button>
+    </AppHeader>
     <main className="flex-1 space-y-6 p-4 sm:p-8 bg-muted/20">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Gestión de Promesas</h1>
-          <p className="text-muted-foreground">
-            Rastree y gestione todas las promesas de los miembros y su estado de cumplimiento.
-          </p>
-        </div>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" /> Registrar Nueva Promesa
-        </Button>
-      </div>
-
       <div className="grid gap-6 md:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
@@ -256,5 +255,6 @@ export default function PledgeManagementPage() {
         </CardContent>
       </Card>
     </main>
+    </div>
   );
 }

@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -37,6 +38,7 @@ import { Badge } from '@/components/ui/badge';
 import { attendanceRecords } from '@/lib/data';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import Link from 'next/link';
+import { AppHeader } from '@/components/app-header';
 
 const statusColors: { [key: string]: string } = {
     Presente: 'bg-green-100 text-green-800 border-green-200',
@@ -69,17 +71,18 @@ export default function AttendancePage() {
     );
 
   return (
-    <main className="flex-1 bg-muted/20 p-4 sm:p-8">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold">Gestión de Asistencia</h1>
-        </div>
+    <div className="flex flex-col flex-1">
+      <AppHeader
+        title="Gestión de Asistencia"
+        description="Rastree y gestione la asistencia a los servicios y eventos."
+      >
         <div className="flex gap-2">
             <Button variant="outline" asChild><Link href="/reports"><BarChart className="mr-2 h-4 w-4" /> Generar Reporte</Link></Button>
             <Button><Plus className="mr-2 h-4 w-4" /> Registrar Nueva Asistencia</Button>
         </div>
-      </div>
-      <Card className="mt-6">
+      </AppHeader>
+    <main className="flex-1 bg-muted/20 p-4 sm:p-8">
+      <Card>
         <CardContent className="p-4">
             <div className="flex flex-col lg:flex-row items-center justify-between gap-4 mb-6">
                 <div className="relative w-full max-w-sm">
@@ -185,5 +188,6 @@ export default function AttendancePage() {
         </CardContent>
       </Card>
     </main>
+    </div>
   );
 }

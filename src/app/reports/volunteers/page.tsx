@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -35,6 +36,7 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink, Paginati
 import { Badge } from '@/components/ui/badge';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { AppHeader } from '@/components/app-header';
 
 type AutoTable = {
     autoTable: (options: any) => void;
@@ -70,16 +72,12 @@ export default function VolunteerReportsPage() {
     };
 
   return (
+    <div className="flex flex-col flex-1">
+      <AppHeader
+        title="Reportes de Voluntarios"
+        description="Vea y exporte información sobre los voluntarios."
+      />
     <main className="flex-1 space-y-6 p-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Reportes de Voluntarios</h1>
-          <p className="text-muted-foreground">
-            Vea y exporte información sobre los voluntarios.
-          </p>
-        </div>
-      </div>
-
       <Card>
         <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -169,5 +167,6 @@ export default function VolunteerReportsPage() {
           </CardContent>
         </Card>
     </main>
+    </div>
   );
 }

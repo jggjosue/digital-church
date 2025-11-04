@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -37,6 +38,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { AppHeader } from '@/components/app-header';
 
 type Volunteer = (typeof volunteersData)[0];
 
@@ -51,23 +53,23 @@ export default function VolunteersPage() {
   const [noteDate, setNoteDate] = React.useState<Date | undefined>(new Date());
 
   return (
-    <main className="flex flex-col lg:flex-row h-screen bg-muted/20">
+    <div className="flex flex-col flex-1">
+      <AppHeader
+        title="Gestión de Voluntarios"
+        description="Vea, gestione y programe a todos los voluntarios de la iglesia."
+      >
+        <div className="flex gap-2">
+          <Button variant="outline">
+              <FileText className="mr-2 h-4 w-4" /> Generar Reporte
+          </Button>
+          <Button asChild>
+              <Link href="/volunteers/new"><Plus className="mr-2 h-4 w-4" /> Añadir Nuevo Voluntario</Link>
+          </Button>
+        </div>
+      </AppHeader>
+    <main className="flex flex-col lg:flex-row h-[calc(100vh-theme(spacing.16))] bg-muted/20">
       <aside className="w-full lg:w-[380px] border-b lg:border-r lg:border-b-0 bg-background flex flex-col">
         <div className="p-6">
-          <h1 className="text-3xl font-bold">Gestión de Voluntarios</h1>
-          <p className="text-muted-foreground mt-1">
-            Vea, gestione y programe a todos los voluntarios de la iglesia.
-          </p>
-        </div>
-        <div className="px-6 pb-4 flex flex-col sm:flex-row gap-2">
-            <Button variant="outline" className="w-full">
-              <FileText className="mr-2 h-4 w-4" /> Generar Reporte
-            </Button>
-            <Button className="w-full">
-              <Plus className="mr-2 h-4 w-4" /> Añadir Nuevo Voluntario
-            </Button>
-        </div>
-        <div className="px-6 pb-4">
             <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input placeholder="Buscar por nombre de voluntario..." className="pl-9" />
@@ -437,5 +439,6 @@ export default function VolunteersPage() {
         </Tabs>
       </div>
     </main>
+    </div>
   );
 }

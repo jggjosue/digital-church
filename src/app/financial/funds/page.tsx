@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -16,6 +17,7 @@ import { Search, Plus, SlidersHorizontal, RefreshCw } from 'lucide-react';
 import { fundBalancesData } from '@/lib/data';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
+import { AppHeader } from '@/components/app-header';
 
 const formatCurrency = (amount: number, showSign = false) => {
     const formatted = new Intl.NumberFormat('es-ES', {
@@ -42,12 +44,11 @@ const statusColors: { [key: string]: string } = {
 export default function FundBalancesPage() {
     const { totalBalance, activeFunds, totalInflows, totalOutflows, funds } = fundBalancesData;
   return (
-    <main className="flex-1 space-y-6 p-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Saldos de Fondos</h1>
-          <p className="text-muted-foreground">Al 31 de Agosto de 2023</p>
-        </div>
+    <div className="flex flex-col flex-1">
+      <AppHeader
+        title="Saldos de Fondos"
+        description={`Al ${new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}`}
+      >
         <div className="flex items-center gap-2">
             <Button variant="outline">
                 <RefreshCw className="mr-2 h-4 w-4" /> Reconciliar
@@ -56,8 +57,8 @@ export default function FundBalancesPage() {
                 <Plus className="mr-2 h-4 w-4" /> Añadir Nuevo Fondo
             </Button>
         </div>
-      </div>
-
+      </AppHeader>
+    <main className="flex-1 space-y-6 p-8">
       <div className="flex items-center space-x-2">
         <div className="relative w-full max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -142,5 +143,6 @@ export default function FundBalancesPage() {
         </CardContent>
       </Card>
     </main>
+    </div>
   );
 }

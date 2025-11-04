@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -32,6 +33,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Checkbox } from '@/components/ui/checkbox';
+import { AppHeader } from '@/components/app-header';
 
 const availableGroups = [
     'Youth Group',
@@ -74,29 +76,19 @@ export default function EditMemberPage({ params }: { params: { id: string } }) {
     }
 
   return (
-    <main className="flex-1 space-y-6 p-4 sm:p-8 bg-muted/20">
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className='flex items-center gap-4'>
-            <Button variant="outline" size="icon" asChild>
-                <Link href={`/members/${params.id}`}><ArrowLeft className="h-4 w-4" /></Link>
-            </Button>
-            <div>
-            <h1 className="text-3xl font-bold tracking-tight">
-                Editar Miembro
-            </h1>
-            <p className="text-muted-foreground">
-                Actualice los detalles del perfil del miembro.
-            </p>
-            </div>
-        </div>
+    <div className="flex flex-col flex-1">
+      <AppHeader
+        title="Editar Miembro"
+        description="Actualice los detalles del perfil del miembro."
+      >
         <div className="flex items-center gap-2">
           <Button variant="ghost" asChild>
             <Link href={`/members/${params.id}`}>Cancelar</Link>
           </Button>
           <Button>Guardar Cambios</Button>
         </div>
-      </div>
-
+      </AppHeader>
+    <main className="flex-1 space-y-6 p-4 sm:p-8 bg-muted/20">
       <div className="space-y-8">
           <Card>
               <CardHeader>
@@ -253,5 +245,6 @@ export default function EditMemberPage({ params }: { params: { id: string } }) {
           </Card>
       </div>
     </main>
+    </div>
   );
 }

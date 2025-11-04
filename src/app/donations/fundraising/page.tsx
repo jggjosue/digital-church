@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -11,6 +12,7 @@ import { Plus, Search, Calendar, Edit, FileText } from 'lucide-react';
 import { fundraisingCampaigns } from '@/lib/data';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { AppHeader } from '@/components/app-header';
 
 const statusColors: { [key: string]: string } = {
     Active: 'bg-green-100 text-green-800 border-green-200',
@@ -37,19 +39,16 @@ export default function FundraisingPage() {
     }
 
   return (
-    <main className="flex-1 space-y-6 p-4 sm:p-8 bg-muted/20">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Campañas de Recaudación de Fondos</h1>
-          <p className="text-muted-foreground">
-            Cree y gestione sus campañas de recaudación de fondos.
-          </p>
-        </div>
+    <div className="flex flex-col flex-1">
+      <AppHeader
+        title="Campañas de Recaudación de Fondos"
+        description="Cree y gestione sus campañas de recaudación de fondos."
+      >
         <Button>
           <Plus className="mr-2 h-4 w-4" /> Crear Campaña
         </Button>
-      </div>
-
+      </AppHeader>
+    <main className="flex-1 space-y-6 p-4 sm:p-8 bg-muted/20">
       <div className="flex items-center gap-4">
         <div className="relative w-full max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -122,5 +121,6 @@ export default function FundraisingPage() {
       </div>
 
     </main>
+    </div>
   );
 }

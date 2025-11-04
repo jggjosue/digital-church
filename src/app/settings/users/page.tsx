@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -36,6 +37,7 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination';
 import { allUsers } from '@/lib/data';
+import { AppHeader } from '@/components/app-header';
 
 const roleColors: { [key: string]: string } = {
     'Super Administrador': 'bg-red-100 text-red-800 border-red-200',
@@ -64,19 +66,17 @@ export default function UsersPage() {
     );
 
   return (
-    <main className="flex-1 bg-muted/20 p-4 sm:p-8">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold">Gestión de Usuarios</h1>
-          <p className="text-muted-foreground">
-            Ver y gestionar todos los usuarios con acceso al portal de administración.
-          </p>
-        </div>
+    <div className="flex flex-col flex-1">
+      <AppHeader
+        title="Gestión de Usuarios"
+        description="Ver y gestionar todos los usuarios con acceso al portal de administración."
+      >
         <div className="flex gap-2">
             <Button><Plus className="mr-2 h-4 w-4" /> Añadir Nuevo Usuario</Button>
         </div>
-      </div>
-      <Card className="mt-6">
+      </AppHeader>
+    <main className="flex-1 bg-muted/20 p-4 sm:p-8">
+      <Card>
         <CardHeader>
             <div className="flex items-center justify-between gap-4">
                 <div className="relative w-full max-w-sm">
@@ -157,5 +157,6 @@ export default function UsersPage() {
         </CardContent>
       </Card>
     </main>
+    </div>
   );
 }

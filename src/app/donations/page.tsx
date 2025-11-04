@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -36,6 +37,7 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination';
 import Link from 'next/link';
+import { AppHeader } from '@/components/app-header';
 
 const donationsData = [
   {
@@ -106,22 +108,19 @@ export default function DonationsPage() {
       );
 
   return (
-    <main className="flex-1 bg-muted/20 p-4 sm:p-8">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold">Donaciones y Ofrendas</h1>
-          <p className="text-muted-foreground">
-            Gestione donaciones, promesas de donación y genere estados de cuenta.
-          </p>
-        </div>
+    <div className="flex flex-col flex-1">
+      <AppHeader
+        title="Donaciones y Ofrendas"
+        description="Gestione donaciones, promesas de donación y genere estados de cuenta."
+      >
         <Button variant="outline" asChild>
           <Link href="/donations/giving-statement">
             <FileText className="mr-2 h-4 w-4" /> Generar Estado de Cuenta
           </Link>
         </Button>
-      </div>
-
-      <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      </AppHeader>
+    <main className="flex-1 bg-muted/20 p-4 sm:p-8">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Ofrendas Totales Este Mes</CardTitle>
@@ -261,5 +260,6 @@ export default function DonationsPage() {
         </Tabs>
       </div>
     </main>
+    </div>
   );
 }

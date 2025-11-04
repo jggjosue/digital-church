@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -27,21 +28,18 @@ import {
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { AppHeader } from '@/components/app-header';
 
 export default function GivingStatementPage() {
   return (
+    <div className="flex flex-col flex-1">
+      <AppHeader
+        title="Generar Estados de Cuenta de Donaciones"
+        description="Cree y distribuya estados de cuenta de donaciones para sus miembros."
+      />
     <main className="flex-1 bg-muted/20 p-4 sm:p-8">
       <div className="max-w-6xl mx-auto">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Generar Estados de Cuenta de Donaciones
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            Cree y distribuya estados de cuenta de donaciones para sus miembros.
-          </p>
-        </div>
-
-        <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-1">
             <Card>
               <CardHeader>
@@ -165,5 +163,6 @@ export default function GivingStatementPage() {
         </div>
       </div>
     </main>
+    </div>
   );
 }

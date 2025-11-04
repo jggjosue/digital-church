@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -45,6 +46,7 @@ import {
 } from '@/components/ui/pagination';
 import { volunteerAssignments } from '@/lib/data';
 import { Label } from '@/components/ui/label';
+import { AppHeader } from '@/components/app-header';
 
 type Assignment = typeof volunteerAssignments[0];
 
@@ -71,18 +73,17 @@ export default function VolunteerAssignmentsPage() {
     );
 
   return (
-    <main className="flex-1 space-y-6 p-4 sm:p-8">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-            <h1 className="text-3xl font-bold tracking-tight">Asignaciones de Voluntarios</h1>
-            <p className="text-muted-foreground">Gestione y rastree todos los roles y horarios de los voluntarios.</p>
-        </div>
+    <div className="flex flex-col flex-1">
+      <AppHeader
+        title="Asignaciones de Voluntarios"
+        description="Gestione y rastree todos los roles y horarios de los voluntarios."
+      >
         <div className="flex items-center gap-2">
             <Button variant="outline"><FileText className="mr-2 h-4 w-4" /> Exportar Lista</Button>
             <Button><Plus className="mr-2 h-4 w-4"/> Asignar Voluntario</Button>
         </div>
-      </div>
-
+      </AppHeader>
+    <main className="flex-1 space-y-6 p-4 sm:p-8">
       <Card>
         <CardContent className="p-4">
             <div className="flex flex-col lg:flex-row items-center gap-4">
@@ -209,5 +210,6 @@ export default function VolunteerAssignmentsPage() {
         </CardContent>
       </Card>
     </main>
+    </div>
   );
 }

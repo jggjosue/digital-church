@@ -1,7 +1,8 @@
+
 'use client';
 
 import * as React from 'react';
-import { ArrowLeft, Search, X } from 'lucide-react';
+import { ArrowLeft, Search, X, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -18,6 +19,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { membersData } from '@/lib/data';
 import { cn } from '@/lib/utils';
+import { AppHeader } from '@/components/app-header';
 
 type Member = (typeof membersData)[0];
 
@@ -76,21 +78,17 @@ export default function NewMinistryPage() {
   };
 
   return (
-    <main className="flex-1 space-y-6 p-4 sm:p-8 bg-muted/20">
-      <div className="flex items-center gap-4">
-        <Button variant="outline" size="icon" asChild>
-          <Link href="/ministries">
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Crear Nuevo Ministerio</h1>
-          <p className="text-muted-foreground">
-            Complete los detalles a continuación para establecer un nuevo ministerio.
-          </p>
+    <div className="flex flex-col flex-1">
+      <AppHeader
+        title="Crear Nuevo Ministerio"
+        description="Complete los detalles a continuación para establecer un nuevo ministerio."
+      >
+        <div className="flex justify-end gap-2">
+            <Button variant="ghost" asChild><Link href="/ministries">Cancelar</Link></Button>
+            <Button>Crear Ministerio</Button>
         </div>
-      </div>
-
+      </AppHeader>
+    <main className="flex-1 space-y-6 p-4 sm:p-8 bg-muted/20">
       <Card className="max-w-3xl mx-auto">
         <CardHeader>
           <CardTitle>Detalles del Ministerio</CardTitle>
@@ -175,12 +173,9 @@ export default function NewMinistryPage() {
                 ))}
             </div>
           </div>
-          <div className="flex justify-end gap-2 pt-4">
-            <Button variant="ghost" asChild><Link href="/ministries">Cancelar</Link></Button>
-            <Button>Crear Ministerio</Button>
-          </div>
         </CardContent>
       </Card>
     </main>
+    </div>
   );
 }

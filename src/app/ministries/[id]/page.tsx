@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -30,6 +31,7 @@ import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { notFound } from 'next/navigation';
+import { AppHeader } from '@/components/app-header';
 
 const statusColors: { [key: string]: string } = {
     Activo: 'bg-green-100 text-green-800 border-green-200',
@@ -56,24 +58,18 @@ export default function MinistryDetailsPage({ params }: { params: { id: string }
   }));
 
   return (
-    <main className="flex-1 bg-muted/20 p-4 sm:p-8">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-            <Button variant="outline" size="icon" asChild>
-                <Link href="/ministries"><ArrowLeft className="h-4 w-4" /></Link>
-            </Button>
-            <div>
-                <h1 className="text-3xl font-bold tracking-tight">{ministry.name}</h1>
-                <p className="text-muted-foreground">{ministry.description}</p>
-            </div>
-        </div>
+    <div className="flex flex-col flex-1">
+      <AppHeader
+        title={ministry.name}
+        description={ministry.description}
+      >
         <div className="flex items-center gap-2">
             <Button variant="outline" asChild><Link href={`/ministries/${ministry.id}/edit`}><Edit className="mr-2 h-4 w-4" />Editar Ministerio</Link></Button>
             <Button asChild><Link href={`/ministries/assign-members?ministryId=${ministry.id}`}><Plus className="mr-2 h-4 w-4" /> Añadir Miembros</Link></Button>
         </div>
-      </div>
-      
-      <Card className="mt-8">
+      </AppHeader>
+    <main className="flex-1 bg-muted/20 p-4 sm:p-8">
+      <Card>
         <CardHeader>
             <CardTitle>Miembros del Ministerio ({ministryMembers.length})</CardTitle>
             <CardDescription>
@@ -134,5 +130,6 @@ export default function MinistryDetailsPage({ params }: { params: { id: string }
         </CardContent>
       </Card>
     </main>
+    </div>
   );
 }

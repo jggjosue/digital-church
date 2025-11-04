@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -35,6 +36,7 @@ import { memberDonationHistory } from '@/lib/data';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import Link from 'next/link';
 import { Checkbox } from '@/components/ui/checkbox';
+import { AppHeader } from '@/components/app-header';
 
 
 export default function MemberDonationHistoryPage({ params }: { params: { id: string } }) {
@@ -56,23 +58,18 @@ export default function MemberDonationHistoryPage({ params }: { params: { id: st
     );
 
   return (
-    <main className="flex-1 bg-muted/20 p-4 sm:p-8">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-            <Button variant="outline" size="icon" asChild>
-                <Link href={`/members/${params.id}`}><ArrowLeft className="h-4 w-4" /></Link>
-            </Button>
-            <div>
-                <h1 className="text-3xl font-bold">Historial de Donaciones de John Doe</h1>
-                <p className="text-muted-foreground">Vea el historial completo de donaciones para este miembro.</p>
-            </div>
-        </div>
+    <div className="flex flex-col flex-1">
+      <AppHeader
+        title="Historial de Donaciones de John Doe"
+        description="Vea el historial completo de donaciones para este miembro."
+      >
         <div className='flex gap-2'>
             <Button variant='outline'><FileText className='h-4 w-4 mr-2' />Generar Estado de Cuenta</Button>
             <Button><Download className='h-4 w-4 mr-2' />Exportar</Button>
         </div>
-      </div>
-      <Card className="mt-6">
+      </AppHeader>
+    <main className="flex-1 bg-muted/20 p-4 sm:p-8">
+      <Card>
         <CardHeader>
             <CardTitle>Todas las Donaciones</CardTitle>
         </CardHeader>
@@ -155,5 +152,6 @@ export default function MemberDonationHistoryPage({ params }: { params: { id: st
         </CardContent>
       </Card>
     </main>
+    </div>
   );
 }

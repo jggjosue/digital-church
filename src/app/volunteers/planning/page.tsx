@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -28,6 +29,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { AppHeader } from '@/components/app-header';
 
 type Volunteer = (typeof volunteersData)[0];
 
@@ -178,11 +180,18 @@ export default function VolunteerSchedulingPage() {
 
 
   return (
-    <main className="flex flex-col lg:flex-row h-[calc(100vh-theme(spacing.16))] bg-muted/20">
+    <div className="flex flex-col flex-1">
+        <AppHeader
+            title="Planeación de Voluntarios"
+            description="Asigne voluntarios a eventos y gestione los horarios."
+        >
+            <div className="flex items-center gap-2">
+                <Button variant="outline"><Send className="mr-2 h-4 w-4" />Comunicar</Button>
+                <Button><Save className="mr-2 h-4 w-4" />Guardar Horario</Button>
+            </div>
+        </AppHeader>
+        <main className="flex flex-col lg:flex-row h-[calc(100vh-theme(spacing.16))] bg-muted/20">
       <aside className="w-full lg:w-[320px] border-b lg:border-r lg:border-b-0 bg-background flex flex-col p-6">
-        <h2 className="text-xl font-bold">Planeación de Voluntarios</h2>
-        <p className="text-sm text-muted-foreground">Asigne voluntarios a eventos y gestione los horarios.</p>
-        
         <div className="mt-6">
           <Calendar
             mode="single"
@@ -255,10 +264,6 @@ export default function VolunteerSchedulingPage() {
             <h2 className="text-xl font-bold">
                 Horario para {date ? date.toLocaleDateString('es-ES', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'}) : 'Ninguna fecha seleccionada'}
             </h2>
-            <div className="flex items-center gap-2">
-                <Button variant="outline"><Send className="mr-2 h-4 w-4" />Comunicar</Button>
-                <Button><Save className="mr-2 h-4 w-4" />Guardar Horario</Button>
-            </div>
         </div>
 
          <div className="flex items-center justify-end gap-1 rounded-lg bg-muted p-1 mt-4">
@@ -388,5 +393,6 @@ export default function VolunteerSchedulingPage() {
         </Card>
       </div>
     </main>
+    </div>
   );
 }

@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -13,6 +14,7 @@ import {
 } from '@/components/ui/select';
 import { CalendarIcon, Download, SlidersHorizontal, Landmark } from 'lucide-react';
 import { incomeStatementData } from '@/lib/data';
+import { AppHeader } from '@/components/app-header';
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('es-ES', {
@@ -25,20 +27,17 @@ export default function IncomeExpensePage() {
   const { income, expenses, totalIncome, totalExpenses, netIncome } = incomeStatementData;
 
   return (
-    <main className="flex-1 space-y-6 p-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Estado de Ingresos y Gastos
-          </h1>
-          <p className="text-muted-foreground">1 de Enero, 2023 - 31 de Agosto, 2023</p>
-        </div>
+    <div className="flex flex-col flex-1">
+      <AppHeader
+        title="Estado de Ingresos y Gastos"
+        description="1 de Enero, 2023 - 31 de Agosto, 2023"
+      >
         <Button>
           <Download className="mr-2 h-4 w-4" />
           Exportar PDF
         </Button>
-      </div>
-
+      </AppHeader>
+    <main className="flex-1 space-y-6 p-8">
       <div className="flex items-center space-x-2">
         <Button variant="outline" className="flex items-center gap-2">
           <CalendarIcon className="h-4 w-4" />
@@ -111,5 +110,6 @@ export default function IncomeExpensePage() {
         </CardContent>
       </Card>
     </main>
+    </div>
   );
 }

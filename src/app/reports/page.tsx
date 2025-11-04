@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -19,6 +20,7 @@ import {
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { attendanceRecords, membersData, incomeStatementData, volunteersData } from '@/lib/data';
+import { AppHeader } from '@/components/app-header';
 
 type AutoTable = {
     autoTable: (options: any) => void;
@@ -193,18 +195,12 @@ export default function ReportsPage() {
     }
 
   return (
+    <div className="flex flex-col flex-1">
+      <AppHeader
+        title="Centro de Reportes"
+        description="Seleccione y genere reportes personalizados para su iglesia."
+      />
     <main className="flex-1 space-y-6 p-4 sm:p-8">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Centro de Reportes
-          </h1>
-          <p className="text-muted-foreground">
-            Seleccione y genere reportes personalizados para su iglesia.
-          </p>
-        </div>
-      </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {reportTypes.map((report, index) => (
           <Card key={index} className="flex flex-col">
@@ -224,5 +220,6 @@ export default function ReportsPage() {
         ))}
       </div>
     </main>
+    </div>
   );
 }

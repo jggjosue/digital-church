@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -27,6 +28,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { Checkbox } from '@/components/ui/checkbox';
+import { AppHeader } from '@/components/app-header';
 
 const donationData = {
     id: 2,
@@ -43,21 +45,17 @@ export default function EditDonationPage({ params }: { params: { id: string }}) 
     const [date, setDate] = React.useState<Date | undefined>(new Date(donationData.date));
 
     return (
+        <div className="flex flex-col flex-1">
+        <AppHeader
+            title={<>Editar Donación <span className="text-muted-foreground">#{params.id}</span></>}
+            description="Modifique los detalles del registro de donación."
+        >
+             <Button variant="ghost" asChild>
+                <Link href="/donations">Cancelar</Link>
+            </Button>
+            <Button>Guardar Cambios</Button>
+        </AppHeader>
         <main className="flex-1 space-y-6 p-4 sm:p-8 bg-muted/20">
-            <div className="flex items-center gap-4">
-                <Button variant="outline" size="icon" asChild>
-                <Link href="/donations">
-                    <ArrowLeft className="h-4 w-4" />
-                </Link>
-                </Button>
-                <div>
-                <h1 className="text-3xl font-bold tracking-tight">Editar Donación #{params.id}</h1>
-                <p className="text-muted-foreground">
-                    Modifique los detalles del registro de donación.
-                </p>
-                </div>
-            </div>
-            
             <Card className="max-w-3xl mx-auto">
                 <CardContent className="p-6 sm:p-8">
                     <div className="space-y-6">
@@ -153,16 +151,10 @@ export default function EditDonationPage({ params }: { params: { id: string }}) 
                                 </p>
                             </div>
                         </div>
-
-                        <div className="flex justify-end gap-2 pt-4">
-                            <Button variant="ghost" asChild>
-                                <Link href="/donations">Cancelar</Link>
-                            </Button>
-                            <Button>Guardar Cambios</Button>
-                        </div>
                     </div>
                 </CardContent>
             </Card>
         </main>
+        </div>
     );
 }

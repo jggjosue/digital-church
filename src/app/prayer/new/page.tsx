@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -28,27 +29,22 @@ import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { AppHeader } from '@/components/app-header';
 
 export default function NewPrayerRequestPage() {
 
   return (
-    <main className="flex-1 space-y-6 p-8 bg-muted/20">
-      <div className="flex items-center gap-4">
-        <Button variant="outline" size="icon" asChild>
-          <Link href="/prayer">
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Nueva Petición de Oración
-          </h1>
-          <p className="text-muted-foreground">
-            Comparta sus necesidades de oración con la comunidad.
-          </p>
+    <div className="flex flex-col flex-1">
+      <AppHeader
+        title="Nueva Petición de Oración"
+        description="Comparta sus necesidades de oración con la comunidad."
+      >
+        <div className="flex justify-end gap-2 pt-4">
+            <Button variant="outline">Cancelar</Button>
+            <Button>Enviar Petición</Button>
         </div>
-      </div>
-
+      </AppHeader>
+    <main className="flex-1 space-y-6 p-8 bg-muted/20">
       <Card className="max-w-3xl mx-auto">
         <CardHeader>
           <CardTitle>Detalles de la Petición de Oración</CardTitle>
@@ -117,14 +113,9 @@ export default function NewPrayerRequestPage() {
                 <p className="text-xs text-muted-foreground mt-1">Su nombre no se adjuntará a esta petición de oración.</p>
             </Label>
           </div>
-
-
-          <div className="flex justify-end gap-2 pt-4">
-            <Button variant="outline">Cancelar</Button>
-            <Button>Enviar Petición</Button>
-          </div>
         </CardContent>
       </Card>
     </main>
+    </div>
   );
 }

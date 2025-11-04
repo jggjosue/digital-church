@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -22,22 +23,24 @@ import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
+import { AppHeader } from '@/components/app-header';
 
 export default function NewTransactionPage() {
   const [transactionType, setTransactionType] = React.useState('income');
   const [date, setDate] = React.useState<Date | undefined>(new Date());
 
   return (
+    <div className="flex flex-col flex-1">
+      <AppHeader
+        title="Nueva Transacción Financiera"
+        description="Registre un nuevo ingreso o gasto para la iglesia."
+      >
+        <div className="flex justify-end gap-2">
+            <Button variant="outline">Cancelar</Button>
+            <Button>Guardar Transacción</Button>
+        </div>
+      </AppHeader>
     <main className="flex-1 space-y-6 p-8">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">
-          Nueva Transacción Financiera
-        </h1>
-        <p className="text-muted-foreground">
-          Registre un nuevo ingreso o gasto para la iglesia.
-        </p>
-      </div>
-
       <Card>
         <CardContent className="p-6">
           <div className="max-w-2xl mx-auto space-y-8">
@@ -135,14 +138,10 @@ export default function NewTransactionPage() {
               <Label htmlFor="notes">Notas (Opcional)</Label>
               <Textarea id="notes" placeholder="Añada una descripción o cualquier detalle relevante..." />
             </div>
-
-            <div className="flex justify-end gap-2">
-                <Button variant="outline">Cancelar</Button>
-                <Button>Guardar Transacción</Button>
-            </div>
           </div>
         </CardContent>
       </Card>
     </main>
+    </div>
   );
 }

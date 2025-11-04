@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -37,6 +38,7 @@ import { cn } from '@/lib/utils';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { Line, LineChart, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
+import { AppHeader } from '@/components/app-header';
 
 
 const chartConfig = {
@@ -77,16 +79,12 @@ export default function DonationReportsPage() {
   };
   
   return (
+    <div className="flex flex-col flex-1">
+      <AppHeader
+        title="Reportes de Donaciones"
+        description="Genere y vea la actividad de donaciones"
+      />
     <main className="flex-1 space-y-6 p-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Reportes de Donaciones</h1>
-          <p className="text-muted-foreground">
-            Genere y vea la actividad de donaciones
-          </p>
-        </div>
-      </div>
-
       <Card>
         <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -274,5 +272,6 @@ export default function DonationReportsPage() {
         </Card>
       </div>
     </main>
+    </div>
   );
 }

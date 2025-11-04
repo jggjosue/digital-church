@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -32,6 +33,7 @@ import { Badge } from '@/components/ui/badge';
 import { attendanceRecords } from '@/lib/data';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import Link from 'next/link';
+import { AppHeader } from '@/components/app-header';
 
 const statusColors: { [key: string]: string } = {
     Presente: 'bg-green-100 text-green-800 border-green-200',
@@ -65,19 +67,17 @@ export default function MemberAttendanceHistoryPage({ params }: { params: { id: 
     );
 
   return (
-    <main className="flex-1 bg-muted/20 p-4 sm:p-8">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-            <Button variant="outline" size="icon" asChild>
-                <Link href={`/members/${params.id}`}><ArrowLeft className="h-4 w-4" /></Link>
-            </Button>
-            <div>
-                <h1 className="text-3xl font-bold">Historial de Asistencia de John Doe</h1>
-                <p className="text-muted-foreground">Vea el historial completo de asistencia para este miembro.</p>
-            </div>
-        </div>
-      </div>
-      <Card className="mt-6">
+    <div className="flex flex-col flex-1">
+      <AppHeader
+        title="Historial de Asistencia de John Doe"
+        description="Vea el historial completo de asistencia para este miembro."
+      >
+        <Button variant="outline" asChild>
+          <Link href={`/members/${params.id}`}>Volver al Perfil</Link>
+        </Button>
+      </AppHeader>
+      <main className="flex-1 bg-muted/20 p-4 sm:p-8">
+      <Card>
         <CardHeader>
             <CardTitle>Todos los Registros</CardTitle>
         </CardHeader>
@@ -162,6 +162,7 @@ export default function MemberAttendanceHistoryPage({ params }: { params: { id: 
             </div>
         </CardContent>
       </Card>
-    </main>
+      </main>
+    </div>
   );
 }

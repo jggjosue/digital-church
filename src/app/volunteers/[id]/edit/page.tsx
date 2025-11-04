@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -37,6 +38,7 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
   } from '@/components/ui/breadcrumb';
+import { AppHeader } from '@/components/app-header';
 
 export default function EditVolunteerPage({ params }: { params: { id: string } }) {
     const volunteer = volunteersData.find(v => v.id.toString() === params.id);
@@ -56,35 +58,19 @@ export default function EditVolunteerPage({ params }: { params: { id: string } }
 
 
   return (
-    <main className="flex-1 space-y-6 p-4 sm:p-8 bg-muted/20">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-            <Breadcrumb className="mb-2">
-                <BreadcrumbList>
-                    <BreadcrumbItem>
-                        <BreadcrumbLink asChild><Link href="/volunteers">Voluntarios</Link></BreadcrumbLink>
-                    </BreadcrumbItem>
-                    <BreadcrumbSeparator />
-                    <BreadcrumbItem>
-                        <BreadcrumbPage>Editar Voluntario</BreadcrumbPage>
-                    </BreadcrumbItem>
-                </BreadcrumbList>
-            </Breadcrumb>
-            <h1 className="text-3xl font-bold tracking-tight">
-                Editar Voluntario
-            </h1>
-            <p className="text-muted-foreground">
-                Modificar detalles para {volunteer.name}.
-            </p>
-        </div>
+    <div className="flex flex-col flex-1">
+      <AppHeader
+        title="Editar Voluntario"
+        description={`Modificar detalles para ${volunteer.name}.`}
+      >
         <div className="flex items-center gap-2">
           <Button variant="outline" asChild>
             <Link href="/volunteers">Cancelar</Link>
           </Button>
           <Button>Guardar Cambios</Button>
         </div>
-      </div>
-
+      </AppHeader>
+    <main className="flex-1 space-y-6 p-4 sm:p-8 bg-muted/20">
       <div className="space-y-8 max-w-5xl mx-auto">
         <Card>
             <CardHeader>
@@ -188,5 +174,6 @@ export default function EditVolunteerPage({ params }: { params: { id: string } }
         </div>
       </div>
     </main>
+    </div>
   );
 }

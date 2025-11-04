@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -14,6 +15,7 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
+import { AppHeader } from '@/components/app-header';
 
 const eventsForDay = [
     {
@@ -63,20 +65,12 @@ export default function ActivitiesPage() {
     });
 
   return (
-    <main className="flex-1 bg-muted/20 p-4 sm:p-8">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-            <Button variant="outline" size="icon" asChild>
-                <Link href="/events"><ArrowLeft className="h-4 w-4" /></Link>
-            </Button>
-            <div>
-                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Events for {formattedDate}</h1>
-                <p className="text-muted-foreground">
-                    A total of {eventsForDay.length} events are scheduled for this day.
-                </p>
-            </div>
-        </div>
-        <div className="flex items-center gap-2 self-end sm:self-center">
+    <div className="flex flex-col flex-1">
+      <AppHeader
+        title={`Events for ${formattedDate}`}
+        description={`A total of ${eventsForDay.length} events are scheduled for this day.`}
+      >
+        <div className="flex items-center gap-2">
             <Button variant="ghost" onClick={() => handleDateChange(-1)}>
                 <ChevronLeft className="h-4 w-4 mr-2" />
                 Previous Day
@@ -91,9 +85,9 @@ export default function ActivitiesPage() {
                 </Link>
             </Button>
         </div>
-      </div>
-
-      <div className="mt-8 space-y-6">
+      </AppHeader>
+    <main className="flex-1 bg-muted/20 p-4 sm:p-8">
+      <div className="space-y-6">
         {eventsForDay.map((event, index) => (
           <Card key={index} className="overflow-hidden">
             <CardContent className="p-0 flex">
@@ -117,5 +111,6 @@ export default function ActivitiesPage() {
         ))}
       </div>
     </main>
+    </div>
   );
 }

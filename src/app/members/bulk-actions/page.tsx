@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -29,31 +30,22 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import { Textarea } from '@/components/ui/textarea';
+import { AppHeader } from '@/components/app-header';
 
 export default function BulkActionsPage() {
     const [selectedCount, setSelectedCount] = React.useState(12);
 
   return (
-    <main className="flex-1 bg-muted/20 p-4 sm:p-8">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <Button variant="outline" size="icon" asChild>
-            <Link href="/members">
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Acciones Masivas</h1>
-            <p className="text-muted-foreground">
-              Realice acciones en varios miembros a la vez.
-            </p>
-          </div>
-        </div>
+    <div className="flex flex-col flex-1">
+      <AppHeader
+        title="Acciones Masivas"
+        description="Realice acciones en varios miembros a la vez."
+      >
         <div className="text-lg font-semibold">
           {selectedCount} miembros seleccionados
         </div>
-      </div>
-
+      </AppHeader>
+    <main className="flex-1 bg-muted/20 p-4 sm:p-8">
       <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {/* Assign to Group */}
         <Card>
@@ -182,5 +174,6 @@ export default function BulkActionsPage() {
         </Card>
       </div>
     </main>
+    </div>
   );
 }

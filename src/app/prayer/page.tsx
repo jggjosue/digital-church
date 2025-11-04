@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -36,6 +37,7 @@ import { prayerRequestsData } from '@/lib/data';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
+import { AppHeader } from '@/components/app-header';
 
 type PrayerRequest = typeof prayerRequestsData[0];
 
@@ -142,7 +144,17 @@ export default function PrayerRequestsPage() {
 
 
   return (
-    <main className="flex-1 bg-muted/20 flex">
+    <div className="flex flex-col flex-1">
+        <AppHeader
+            title="Peticiones de Oración"
+            description="Gestione las peticiones de oración y los informes de alabanza."
+        >
+            <div className="flex gap-2">
+                <Button variant="outline"><Users className="mr-2 h-4 w-4" /> Gestionar Grupos</Button>
+                <Button asChild><Link href="/prayer/new"><Plus className="mr-2 h-4 w-4" /> Nueva Petición de Oración</Link></Button>
+            </div>
+        </AppHeader>
+        <main className="flex-1 bg-muted/20 flex">
       <aside className="w-80 border-r bg-background p-6 hidden md:block">
         <h2 className="text-xl font-bold">Filtros</h2>
         <div className="mt-6 space-y-6">
@@ -191,20 +203,7 @@ export default function PrayerRequestsPage() {
       </aside>
 
       <div className="flex-1 p-4 sm:p-8">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-                <h1 className="text-3xl font-bold">Peticiones de Oración</h1>
-                <p className="text-muted-foreground">
-                    Gestione las peticiones de oración y los informes de alabanza.
-                </p>
-            </div>
-            <div className="flex gap-2">
-                <Button variant="outline"><Users className="mr-2 h-4 w-4" /> Gestionar Grupos</Button>
-                <Button asChild><Link href="/prayer/new"><Plus className="mr-2 h-4 w-4" /> Nueva Petición de Oración</Link></Button>
-            </div>
-        </div>
-
-        <Card className="mt-6">
+        <Card>
           <CardContent className="p-4">
             <Tabs defaultValue="all-requests" onValueChange={setSelectedTab}>
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
@@ -277,5 +276,6 @@ export default function PrayerRequestsPage() {
         </Card>
       </div>
     </main>
+    </div>
   );
 }

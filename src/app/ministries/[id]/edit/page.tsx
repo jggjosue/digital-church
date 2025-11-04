@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -19,6 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { membersData, ministriesData } from '@/lib/data';
 import { cn } from '@/lib/utils';
 import { notFound } from 'next/navigation';
+import { AppHeader } from '@/components/app-header';
 
 type Member = (typeof membersData)[0];
 
@@ -85,21 +87,17 @@ export default function EditMinistryPage({ params }: { params: { id: string } })
   };
 
   return (
-    <main className="flex-1 space-y-6 p-4 sm:p-8 bg-muted/20">
-      <div className="flex items-center gap-4">
-        <Button variant="outline" size="icon" asChild>
-          <Link href={`/ministries/${params.id}`}>
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Editar Ministerio</h1>
-          <p className="text-muted-foreground">
-            Modifique los detalles del ministerio "{ministry.name}".
-          </p>
+    <div className="flex flex-col flex-1">
+      <AppHeader
+        title="Editar Ministerio"
+        description={`Modifique los detalles del ministerio "${ministry.name}".`}
+      >
+        <div className="flex justify-end gap-2">
+            <Button variant="outline" asChild><Link href={`/ministries/${params.id}`}>Cancelar</Link></Button>
+            <Button>Guardar Cambios</Button>
         </div>
-      </div>
-
+      </AppHeader>
+    <main className="flex-1 space-y-6 p-4 sm:p-8 bg-muted/20">
       <Card className="max-w-3xl mx-auto">
         <CardHeader>
           <CardTitle>Detalles del Ministerio</CardTitle>
@@ -181,12 +179,9 @@ export default function EditMinistryPage({ params }: { params: { id: string } })
                 ))}
             </div>
           </div>
-          <div className="flex justify-end gap-2 pt-4">
-            <Button variant="outline" asChild><Link href={`/ministries/${params.id}`}>Cancelar</Link></Button>
-            <Button>Guardar Cambios</Button>
-          </div>
         </CardContent>
       </Card>
     </main>
+    </div>
   );
 }

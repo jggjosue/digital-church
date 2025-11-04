@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -34,6 +35,7 @@ import {
 } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { incomeExpenseData, budgetSpendingData, recentTransactions } from '@/lib/data';
+import { AppHeader } from '@/components/app-header';
 
 
 const chartConfig = {
@@ -53,17 +55,17 @@ const chartConfig = {
 
 export default function FinancialPage() {
   return (
-    <main className="flex-1 space-y-6 p-4 sm:p-8">
-    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <h1 className="text-3xl font-bold tracking-tight">
-        Reportes Financieros
-        </h1>
+    <div className="flex flex-col flex-1">
+    <AppHeader
+        title="Reportes Financieros"
+        description="Resumen del rendimiento financiero y las transacciones."
+    >
         <Button variant="outline">
-        <Download className="mr-2 h-4 w-4" />
-        Exportar Reporte
+            <Download className="mr-2 h-4 w-4" />
+            Exportar Reporte
         </Button>
-    </div>
-
+    </AppHeader>
+    <main className="flex-1 space-y-6 p-4 sm:p-8">
     <Tabs defaultValue="year-to-date">
         <TabsList className="grid w-full grid-cols-2 sm:w-auto sm:grid-cols-4">
         <TabsTrigger value="last-month">Mes Pasado</TabsTrigger>
@@ -238,5 +240,6 @@ export default function FinancialPage() {
         </CardContent>
     </Card>
     </main>
+    </div>
   );
 }

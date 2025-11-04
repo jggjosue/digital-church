@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -39,6 +40,7 @@ import {
     BreadcrumbPage,
     BreadcrumbSeparator,
   } from '@/components/ui/breadcrumb';
+import { AppHeader } from '@/components/app-header';
 
 const statusColors: { [key: string]: string } = {
     Activo: 'bg-green-100 text-green-800 border-green-200',
@@ -85,10 +87,11 @@ export default function AddMembersToGroupPage() {
   
 
   return (
-    <main className="flex-1 bg-muted/20 p-4 sm:p-8">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-            <Breadcrumb className="mb-2">
+    <div className="flex flex-col flex-1">
+      <AppHeader
+        title="Agregar Miembros al Grupo de Jóvenes"
+        description={
+            <Breadcrumb>
                 <BreadcrumbList>
                     <BreadcrumbItem>
                         <BreadcrumbLink asChild><Link href="/groups">Grupos</Link></BreadcrumbLink>
@@ -103,17 +106,17 @@ export default function AddMembersToGroupPage() {
                     </BreadcrumbItem>
                 </BreadcrumbList>
             </Breadcrumb>
-            <h1 className="text-3xl font-bold tracking-tight">Agregar Miembros al Grupo de Jóvenes</h1>
-        </div>
+        }
+      >
         <div className="flex items-center gap-2">
             <Button variant="ghost" asChild><Link href="/groups">Cancelar</Link></Button>
             <Button onClick={handleAddMembers} disabled={selectedMembers.length === 0}>
                 <Plus className="mr-2 h-4 w-4" /> Agregar {selectedMembers.length > 0 ? selectedMembers.length : ''} {selectedMembers.length === 1 ? 'Miembro' : 'Miembros'}
             </Button>
         </div>
-      </div>
-      
-      <div className="mt-8 space-y-4 max-w-5xl mx-auto">
+      </AppHeader>
+    <main className="flex-1 bg-muted/20 p-4 sm:p-8">
+      <div className="space-y-4 max-w-5xl mx-auto">
         {showSuccess && (
             <Alert variant="default" className="bg-green-50 border-green-200 text-green-900">
                 <CheckCircle className="h-4 w-4 text-green-600" />
@@ -192,5 +195,6 @@ export default function AddMembersToGroupPage() {
       </div>
 
     </main>
+    </div>
   );
 }

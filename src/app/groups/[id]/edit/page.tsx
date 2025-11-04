@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -11,28 +12,26 @@ import Link from 'next/link';
 import { Search, X } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { groupData } from '@/lib/data';
+import { AppHeader } from '@/components/app-header';
 
 export default function EditGroupPage({ params }: { params: { id: string } }) {
   const group = groupData.find(g => g.id.toString() === params.id) || groupData[0];
   const [leader, setLeader] = React.useState<{ name: string; email: string } | null>({ name: 'Jane Smith', email: 'jane.smith@example.com' });
 
   return (
-    <main className="flex-1 space-y-6 p-4 sm:p-8 bg-muted/20">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Editar Grupo</h1>
-          <p className="text-muted-foreground">
-            Modifique los detalles del &quot;{group.name}&quot;.
-          </p>
-        </div>
+    <div className="flex flex-col flex-1">
+      <AppHeader
+        title="Editar Grupo"
+        description={`Modifique los detalles del "${group.name}".`}
+      >
         <div className="flex items-center gap-2">
             <Button variant="outline" asChild>
                 <Link href="/groups">Cancelar</Link>
             </Button>
             <Button>Guardar Cambios</Button>
         </div>
-      </div>
-
+      </AppHeader>
+    <main className="flex-1 space-y-6 p-4 sm:p-8 bg-muted/20">
       <Card className="max-w-3xl mx-auto">
         <CardHeader>
           <CardTitle>Detalles del Grupo</CardTitle>
@@ -101,11 +100,8 @@ export default function EditGroupPage({ params }: { params: { id: string } }) {
              <p className="text-sm text-destructive">Se requiere al menos un líder de grupo.</p>
           </div>
         </CardContent>
-        <CardFooter className="flex justify-end gap-2 pt-6">
-            <Button variant="outline" asChild><Link href="/groups">Cancelar</Link></Button>
-            <Button>Guardar Cambios</Button>
-        </CardFooter>
       </Card>
     </main>
+    </div>
   );
 }

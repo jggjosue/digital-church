@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -25,26 +26,24 @@ import {
   } from '@/components/ui/select';
 import { ministriesData } from '@/lib/data';
 import Link from 'next/link';
+import { AppHeader } from '@/components/app-header';
 
 type Ministry = (typeof ministriesData)[0];
 
 export default function MinistriesPage() {
   return (
-    <main className="flex-1 bg-muted/20 p-4 sm:p-8">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold">Ministerios</h1>
-          <p className="text-muted-foreground">
-            Gestione los ministerios de la iglesia y sus miembros.
-          </p>
-        </div>
+    <div className="flex flex-col flex-1">
+      <AppHeader
+        title="Ministerios"
+        description="Gestione los ministerios de la iglesia y sus miembros."
+      >
         <Button asChild>
           <Link href="/ministries/new">
             <Plus className="mr-2 h-4 w-4" /> Añadir Nuevo Ministerio
           </Link>
         </Button>
-      </div>
-
+      </AppHeader>
+    <main className="flex-1 bg-muted/20 p-4 sm:p-8">
       <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="relative w-full max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -112,5 +111,6 @@ export default function MinistriesPage() {
         ))}
       </div>
     </main>
+    </div>
   );
 }

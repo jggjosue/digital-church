@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -34,6 +35,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { sermonsData as initialSermonsData } from '@/lib/data';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { AppHeader } from '@/components/app-header';
 
 type Sermon = (typeof initialSermonsData)[0];
 
@@ -90,20 +92,17 @@ export default function SermonsPage() {
 
   return (
     <AlertDialog>
-    <main className="flex-1 bg-muted/20 p-4 sm:p-8">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold">Biblioteca de Sermones y Medios</h1>
-          <p className="text-muted-foreground">
-            Gestione todos los sermones, videos, audios e imágenes de su iglesia.
-          </p>
-        </div>
+    <div className="flex flex-col flex-1">
+      <AppHeader
+        title="Biblioteca de Sermones y Medios"
+        description="Gestione todos los sermones, videos, audios e imágenes de su iglesia."
+      >
         <Button>
           <Plus className="mr-2 h-4 w-4" /> Añadir Sermón
         </Button>
-      </div>
-
-      <Card className="mt-6">
+      </AppHeader>
+    <main className="flex-1 bg-muted/20 p-4 sm:p-8">
+      <Card>
         <CardContent className="p-4">
           <Tabs defaultValue="all-media">
             <div className="flex flex-col lg:flex-row items-center justify-between gap-4 mb-4">
@@ -236,7 +235,7 @@ export default function SermonsPage() {
             <AlertDialogAction onClick={handleDeleteSermon} className="bg-destructive hover:bg-destructive/90">Confirmar Eliminación</AlertDialogAction>
         </AlertDialogFooter>
     </AlertDialogContent>
-
+    </div>
     </AlertDialog>
   );
 }

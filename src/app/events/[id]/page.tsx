@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -21,6 +22,7 @@ import Link from 'next/link';
 import { events as allEvents } from '@/lib/data';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
 import { notFound } from 'next/navigation';
+import { AppHeader } from '@/components/app-header';
 
 const eventCategoryColors: { [key: string]: string } = {
   'Estudio Bíblico': 'bg-purple-100 text-purple-800 border-purple-200',
@@ -37,18 +39,17 @@ export default function EventDetailsPage({ params }: { params: { id: string } })
     }
 
   return (
+    <div className="flex flex-col flex-1">
+      <AppHeader
+        title="Detalles del Evento"
+        description={<Link href="/events/activities" className="text-sm text-muted-foreground hover:underline">Ver todas las actividades</Link>}
+      >
+          <div className="flex gap-2">
+            <Button className="w-full" asChild><Link href={`/events/${event.id}/edit`}><Edit className="mr-2 h-4 w-4"/>Editar</Link></Button>
+            <Button variant="destructive" className="w-full"><Trash2 className="mr-2 h-4 w-4"/>Eliminar</Button>
+          </div>
+      </AppHeader>
     <main className="flex-1 space-y-6 p-4 sm:p-8 bg-muted/20">
-      <div className="flex items-center gap-4">
-        <Button variant="outline" size="icon" asChild>
-          <Link href="/events/activities">
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-        </Button>
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Detalles del Evento</h1>
-        </div>
-      </div>
-
       <div className="max-w-4xl mx-auto">
         <Card>
             <CardContent className="p-6">
@@ -85,15 +86,11 @@ export default function EventDetailsPage({ params }: { params: { id: string } })
                         </div>
                     </div>
                 </div>
-
-                <div className="mt-10 flex flex-col sm:flex-row gap-4">
-                    <Button className="w-full" asChild><Link href={`/events/${event.id}/edit`}><Edit className="mr-2 h-4 w-4"/>Editar</Link></Button>
-                    <Button variant="destructive" className="w-full"><Trash2 className="mr-2 h-4 w-4"/>Eliminar</Button>
-                </div>
             </CardContent>
         </Card>
       </div>
 
     </main>
+    </div>
   );
 }
