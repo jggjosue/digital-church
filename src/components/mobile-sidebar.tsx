@@ -124,6 +124,7 @@ const navItems = [
       { href: '/attendance', icon: ClipboardList, label: 'Gestión' },
     ]
   },
+  { href: '/churches', icon: Building, label: 'Iglesias' },
   { 
     label: 'Reportes', 
     icon: FileText, 
