@@ -125,6 +125,7 @@ const navItems = [
     ]
   },
   { href: '/churches', icon: Building, label: 'Iglesias' },
+  { href: '/facilities', icon: Building, label: 'Instalaciones' },
   { 
     label: 'Reportes', 
     icon: FileText, 
@@ -258,3 +259,5 @@ export function AppSidebar() {
     </aside>
   );
 }
+
+    
