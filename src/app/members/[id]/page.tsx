@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -80,7 +81,7 @@ export default function MemberProfilePage({ params }: { params: { id: string } }
   // In a real app, you would fetch the member data based on params.id
   
   return (
-    <>
+    <div className="flex flex-col flex-1">
       <AppHeader
         title={member.name}
         description={
@@ -270,6 +271,6 @@ export default function MemberProfilePage({ params }: { params: { id: string } }
         </div>
       </div>
     </main>
-    </>
+    </div>
   );
 }

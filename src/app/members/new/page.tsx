@@ -57,7 +57,7 @@ export default function NewMemberPage() {
     }
 
   return (
-    <>
+    <div className="flex flex-col flex-1">
       <AppHeader
         title="Añadir Nuevo Miembro"
         description="Ingrese los detalles a continuación para crear un nuevo perfil de miembro."
@@ -223,6 +223,6 @@ export default function NewMemberPage() {
               </CardContent>
           </Card>
       </main>
-    </>
+    </div>
   );
 }
