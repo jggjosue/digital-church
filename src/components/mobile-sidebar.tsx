@@ -98,7 +98,7 @@ const navItems = [
   },
   { href: '/sermons', icon: Video, label: 'Biblioteca' },
   { 
-    label: 'Peticiones', 
+    label: 'Pastoral', 
     icon: Heart, 
     subItems: [
       { href: '/prayer', icon: List, label: 'Peticiones' },
@@ -149,7 +149,7 @@ const bottomNavItems = [
 
 export function MobileSidebar() {
   const pathname = usePathname();
-  const [openCollapsibles, setOpenCollapsibles] = React.useState<string[]>(['Directorio', 'Grupos', 'Ministerios', 'Voluntarios', 'Eventos', 'Ofrendas', 'Peticiones', 'Finanzas', 'Asistencia', 'Reportes', 'Configuración']);
+  const [openCollapsibles, setOpenCollapsibles] = React.useState<string[]>(['Directorio', 'Grupos', 'Ministerios', 'Voluntarios', 'Eventos', 'Ofrendas', 'Pastoral', 'Finanzas', 'Asistencia', 'Reportes', 'Configuración']);
 
   const isSubItemActive = (subItems: any[]) => {
     return subItems.some(subItem => pathname.startsWith(subItem.href));
