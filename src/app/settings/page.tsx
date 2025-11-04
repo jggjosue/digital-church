@@ -23,6 +23,7 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { rolesData } from '@/lib/data';
 import { AppHeader } from '@/components/app-header';
+import Link from 'next/link';
 
 type Role = (typeof rolesData)[0];
 
@@ -62,8 +63,8 @@ export default function SettingsPage() {
                     {/* Left Column: Role List */}
                     <div className="lg:col-span-1">
                         <div className='flex flex-col gap-4'>
-                            <Button>
-                                <Plus className="mr-2 h-4 w-4" /> Añadir Nuevo Rol
+                            <Button asChild>
+                                <Link href="/settings/new"><Plus className="mr-2 h-4 w-4" /> Añadir Nuevo Rol</Link>
                             </Button>
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
