@@ -50,7 +50,7 @@ export default function SermonsPage() {
   const [sermonsData, setSermonsData] = React.useState<Sermon[]>(initialSermonsData);
   const [selected, setSelected] = React.useState<number[]>([]);
   const [currentPage, setCurrentPage] = React.useState(1);
-  const itemsPerPage = 20;
+  const itemsPerPage = 10;
   const [sermonToDelete, setSermonToDelete] = React.useState<Sermon | null>(null);
 
   const totalPages = Math.ceil(sermonsData.length / itemsPerPage);
@@ -239,3 +239,5 @@ export default function SermonsPage() {
     </AlertDialog>
   );
 }
+
+    
