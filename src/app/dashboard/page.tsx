@@ -1,3 +1,4 @@
+
 'use client';
 import * as React from 'react';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -14,10 +15,7 @@ import { TotalVolunteers } from '@/components/dashboard/total-volunteers';
 import { UpcomingEventsCard } from '@/components/dashboard/upcoming-events-card';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { MemberGrowthChart } from '@/components/dashboard/member-growth-chart';
-import { Button } from '@/components/ui/button';
-import { Menu } from 'lucide-react';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { MobileSidebar } from '@/components/mobile-sidebar';
+import { AppHeader } from '@/components/app-header';
 
 export type TimeRange = 'this-week' | 'this-month' | 'this-quarter' | 'this-year';
 
@@ -30,45 +28,25 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-1 flex-col">
-        <header className="sticky top-0 z-10 flex h-16 flex-row items-center justify-between gap-4 border-b bg-background px-4 py-4 sm:px-6">
-            <div className="flex items-center gap-2">
-                <Sheet>
-                  <SheetTrigger asChild>
-                    <Button size="icon" variant="outline" className="md:hidden">
-                      <Menu className="h-5 w-5" />
-                      <span className="sr-only">Toggle Menu</span>
-                    </Button>
-                  </SheetTrigger>
-                  <SheetContent side="left" className="sm:max-w-xs p-0">
-                      <MobileSidebar />
-                  </SheetContent>
-                </Sheet>
-                <div>
-                    <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Panel</h1>
-                    <p className="text-sm text-muted-foreground">
-                    Un resumen de las actividades y estadísticas clave de la iglesia.
-                    </p>
-                </div>
-            </div>
-            <div className="flex items-center justify-end gap-2">
-                <Tabs
-                    defaultValue="this-week"
-                    className="hidden sm:block"
-                    onValueChange={handleTimeRangeChange}
-                >
-                    <TabsList>
-                    <TabsTrigger value="this-week">Esta Semana</TabsTrigger>
-                    <TabsTrigger value="this-month">Este Mes</TabsTrigger>
-                    <TabsTrigger value="this-quarter">Este Trimestre</TabsTrigger>
-                    <TabsTrigger value="this-year">Este Año</TabsTrigger>
-                    </TabsList>
-                </Tabs>
-                <div className="flex items-center gap-2">
-                    <ThemeToggle />
-                </div>
-            </div>
-        </header>
-        <main className="flex-1 space-y-6 p-4 sm:p-6">
+      <AppHeader
+        title="Panel"
+        description="Un resumen de las actividades y estadísticas clave de la iglesia."
+      >
+        <Tabs
+          defaultValue="this-week"
+          className="hidden sm:block"
+          onValueChange={handleTimeRangeChange}
+        >
+          <TabsList>
+            <TabsTrigger value="this-week">Esta Semana</TabsTrigger>
+            <TabsTrigger value="this-month">Este Mes</TabsTrigger>
+            <TabsTrigger value="this-quarter">Este Trimestre</TabsTrigger>
+            <TabsTrigger value="this-year">Este Año</TabsTrigger>
+          </TabsList>
+        </Tabs>
+        <ThemeToggle />
+      </AppHeader>
+      <main className="flex-1 space-y-6 p-4 sm:p-6">
         <div className="sm:hidden">
           <Tabs
             defaultValue="this-week"
@@ -95,8 +73,8 @@ export default function DashboardPage() {
           <TotalVolunteers />
         </div>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <GivingTrends timeRange={timeRange} />
-            <MemberGrowthChart timeRange={timeRange} />
+          <GivingTrends timeRange={timeRange} />
+          <MemberGrowthChart timeRange={timeRange} />
         </div>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
           <div className="lg:col-span-2">

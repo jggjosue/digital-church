@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -55,7 +56,7 @@ import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
-
+import { AppHeader } from '@/components/app-header';
 
 type Member = (typeof membersData)[0];
 
@@ -243,20 +244,15 @@ export default function MembersPage() {
   return (
     <AlertDialog>
         <div className="flex min-h-screen w-full flex-col bg-background">
-        <header className="sticky top-0 z-10 flex h-auto flex-col items-start gap-4 border-b bg-background p-6 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-                <h1 className="text-3xl font-bold">Directorio de Miembros</h1>
-                <p className="text-muted-foreground">
-                Administre perfiles de miembros, información de contacto y membresías de grupos.
-                </p>
-            </div>
-            <div className="flex items-center gap-4">
-                <Button asChild>
-                    <Link href="/members/new"><Plus className="mr-2" /> Añadir Nuevo Miembro</Link>
-                </Button>
-                <ThemeToggle />
-            </div>
-        </header>
+        <AppHeader
+            title="Directorio de Miembros"
+            description="Administre perfiles de miembros, información de contacto y membresías de grupos."
+        >
+            <Button asChild>
+                <Link href="/members/new"><Plus className="mr-2" /> Añadir Nuevo Miembro</Link>
+            </Button>
+            <ThemeToggle />
+        </AppHeader>
         <div className="flex flex-1 md:grid md:grid-cols-[280px_1fr]">
             <aside className="hidden w-80 border-r bg-background p-6 md:block">
                 <Filters filters={filters} onFilterChange={handleFilterChange} onApply={applyFilters} onClear={clearFilters}/>
