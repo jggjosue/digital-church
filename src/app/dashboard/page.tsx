@@ -15,7 +15,7 @@ import { UpcomingEventsCard } from '@/components/dashboard/upcoming-events-card'
 import { ThemeToggle } from '@/components/theme-toggle';
 import { MemberGrowthChart } from '@/components/dashboard/member-growth-chart';
 import { Button } from '@/components/ui/button';
-import { PanelLeft } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { MobileSidebar } from '@/components/mobile-sidebar';
 
@@ -35,7 +35,7 @@ export default function DashboardPage() {
                 <Sheet>
                   <SheetTrigger asChild>
                     <Button size="icon" variant="outline" className="md:hidden">
-                      <PanelLeft className="h-5 w-5" />
+                      <Menu className="h-5 w-5" />
                       <span className="sr-only">Toggle Menu</span>
                     </Button>
                   </SheetTrigger>
