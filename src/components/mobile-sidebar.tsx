@@ -23,6 +23,10 @@ import {
   ClipboardList,
   UserCog,
   BookHeart,
+  Library,
+  Clapperboard,
+  Mic,
+  ImageIcon,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -106,7 +110,18 @@ const navItems = [
       { href: '/donations/new', icon: Plus, label: 'Nueva Donación' },
     ]
   },
-  { href: '/sermons', icon: Video, label: 'Biblioteca' },
+  { 
+    label: 'Biblioteca', 
+    icon: Library, 
+    subItems: [
+      { href: '/sermons', icon: Library, label: 'Librería' },
+      { href: '/sermons', icon: Video, label: 'Sermón' },
+      { href: '/sermons', icon: Clapperboard, label: 'Vídeos' },
+      { href: '/sermons', icon: Mic, label: 'Audio' },
+      { href: '/sermons', icon: ImageIcon, label: 'Imagen' },
+      { href: '/sermons', icon: Plus, label: 'Nuevo sermón' },
+    ]
+  },
   { 
     label: 'Finanzas', 
     icon: DollarSign, 
