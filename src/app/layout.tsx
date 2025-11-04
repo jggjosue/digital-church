@@ -1,10 +1,10 @@
-import type { Metadata } from 'next';
-import './globals.css';
-import { Toaster } from "@/components/ui/toaster";
-import { PT_Sans } from 'next/font/google';
-import { cn } from '@/lib/utils';
 import { AppSidebar } from '@/components/app-sidebar';
 import { ThemeProvider } from '@/components/theme-provider';
+import { Toaster } from "@/components/ui/toaster";
+import { cn } from '@/lib/utils';
+import type { Metadata } from 'next';
+import { PT_Sans } from 'next/font/google';
+import './globals.css';
 
 const ptSans = PT_Sans({ 
   subsets: ['latin'], 
@@ -13,7 +13,7 @@ const ptSans = PT_Sans({
 });
 
 export const metadata: Metadata = {
-  title: 'Churchlytics',
+  title: 'ICIAR',
   description: 'Un resumen de las actividades y estadísticas clave de la iglesia.',
 };
 
