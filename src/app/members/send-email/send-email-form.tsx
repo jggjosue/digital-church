@@ -19,6 +19,7 @@ import Link from 'next/link';
 import { membersData } from '@/lib/data';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { AppHeader } from '@/components/app-header';
 
 type Member = (typeof membersData)[0];
 
@@ -87,90 +88,86 @@ export function SendEmailForm() {
   const recipientEmails = recipients.map(r => r.email).join(', ');
 
   return (
-    <main className="flex-1 bg-muted/20 p-4 sm:p-8">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-        <Button variant="outline" size="icon" asChild className="shrink-0">
-          <Link href="/members">
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
+    <div className="flex flex-col flex-1">
+      <AppHeader
+        title="Enviar Correo a Miembros"
+        description="Redacte y envíe un correo electrónico a los miembros seleccionados."
+      >
+        <Button variant="outline" asChild>
+          <Link href="/members"><ArrowLeft className="mr-2 h-4 w-4" />Volver a Miembros</Link>
         </Button>
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Enviar Correo a Miembros</h1>
-          <p className="text-muted-foreground text-sm sm:text-base">
-            Redacte y envíe un correo electrónico a los miembros seleccionados.
-          </p>
-        </div>
-      </div>
-
-      <Card className="mt-8 max-w-4xl mx-auto">
-        <CardHeader>
-          <CardTitle>Redactar Correo</CardTitle>
-          <CardDescription>
-            {recipients.length} {recipients.length === 1 ? 'destinatario' : 'destinatarios'} seleccionados.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="recipients">Para</Label>
-            <div className="min-h-10 rounded-md border border-input p-2 flex flex-wrap gap-2 items-center">
-              {recipients.map(recipient => (
-                <Badge key={recipient.id} variant="secondary" className="flex items-center gap-1.5 py-1 text-sm">
-                  <span>{recipient.name}</span>
-                  <button onClick={() => handleRemoveRecipient(recipient.id)} className="rounded-full hover:bg-black/10 dark:hover:bg-white/10 p-0.5">
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
-              ))}
-              <div className="relative flex-grow">
-                 <Input 
-                    id="recipients-input"
-                    placeholder="Añadir más destinatarios..."
-                    className="border-none focus-visible:ring-0 shadow-none h-auto py-0 px-1"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    onKeyDown={handleKeyDown}
-                />
-                {filteredMembers.length > 0 && (
-                    <div className="absolute top-full left-0 mt-2 w-full bg-background border rounded-md shadow-lg z-10">
-                        {filteredMembers.map((member, index) => (
-                             <div 
-                                key={member.id} 
-                                className={cn("p-2 hover:bg-accent cursor-pointer",
-                                    index === highlightedIndex && 'bg-accent'
-                                )}
-                                onMouseDown={(e) => { e.preventDefault(); handleAddRecipient(member); }}
-                            >
-                                <p className="font-medium">{member.name}</p>
-                                <p className="text-sm text-muted-foreground">{member.email}</p>
-                            </div>
-                        ))}
-                    </div>
-                )}
+      </AppHeader>
+      <main className="flex-1 bg-muted/20 p-4 sm:p-8">
+        <Card className="max-w-4xl mx-auto">
+          <CardHeader>
+            <CardTitle>Redactar Correo</CardTitle>
+            <CardDescription>
+              {recipients.length} {recipients.length === 1 ? 'destinatario' : 'destinatarios'} seleccionados.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="recipients">Para</Label>
+              <div className="min-h-10 rounded-md border border-input p-2 flex flex-wrap gap-2 items-center">
+                {recipients.map(recipient => (
+                  <Badge key={recipient.id} variant="secondary" className="flex items-center gap-1.5 py-1 text-sm">
+                    <span>{recipient.name}</span>
+                    <button onClick={() => handleRemoveRecipient(recipient.id)} className="rounded-full hover:bg-black/10 dark:hover:bg-white/10 p-0.5">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+                <div className="relative flex-grow">
+                   <Input 
+                      id="recipients-input"
+                      placeholder="Añadir más destinatarios..."
+                      className="border-none focus-visible:ring-0 shadow-none h-auto py-0 px-1"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onKeyDown={handleKeyDown}
+                  />
+                  {filteredMembers.length > 0 && (
+                      <div className="absolute top-full left-0 mt-2 w-full bg-background border rounded-md shadow-lg z-10">
+                          {filteredMembers.map((member, index) => (
+                               <div 
+                                  key={member.id} 
+                                  className={cn("p-2 hover:bg-accent cursor-pointer",
+                                      index === highlightedIndex && 'bg-accent'
+                                  )}
+                                  onMouseDown={(e) => { e.preventDefault(); handleAddRecipient(member); }}
+                              >
+                                  <p className="font-medium">{member.name}</p>
+                                  <p className="text-sm text-muted-foreground">{member.email}</p>
+                              </div>
+                          ))}
+                      </div>
+                  )}
+                </div>
               </div>
+              <Input id="recipients" value={recipientEmails} className="hidden" readOnly/>
             </div>
-            <Input id="recipients" value={recipientEmails} className="hidden" readOnly/>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="subject">Asunto</Label>
-            <Input id="subject" placeholder="Asunto de su correo electrónico" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="message">Mensaje</Label>
-            <Textarea
-              id="message"
-              placeholder="Escriba su mensaje aquí..."
-              rows={10}
-              className="text-base"
-            />
-          </div>
-          <div className="flex justify-end gap-2">
-            <Button variant="outline">Cancelar</Button>
-            <Button>
-              <Send className="mr-2 h-4 w-4" /> Enviar Correo
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </main>
+            <div className="space-y-2">
+              <Label htmlFor="subject">Asunto</Label>
+              <Input id="subject" placeholder="Asunto de su correo electrónico" />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="message">Mensaje</Label>
+              <Textarea
+                id="message"
+                placeholder="Escriba su mensaje aquí..."
+                rows={10}
+                className="text-base"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline">Cancelar</Button>
+              <Button>
+                <Send className="mr-2 h-4 w-4" /> Enviar Correo
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </main>
+    </div>
   );
 }

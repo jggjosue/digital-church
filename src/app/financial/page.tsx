@@ -112,7 +112,7 @@ export default function FinancialPage() {
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
         <CardHeader>
-            <CardTitle>Ingresos vs. Gastos a lo Largo del Tiempo</CardTitle>
+            <CardTitle>Ingresos vs. Gastos a lo largo del Tiempo</CardTitle>
             <p className="text-2xl font-bold text-muted-foreground">$23,535.50 <span className='text-lg'>Neto</span></p>
         </CardHeader>
         <CardContent>

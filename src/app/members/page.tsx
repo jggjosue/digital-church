@@ -243,252 +243,254 @@ export default function MembersPage() {
 
   return (
     <AlertDialog>
-        <AppHeader
-            title="Directorio de Miembros"
-            description="Administre perfiles de miembros, información de contacto y membresías de grupos."
-        >
-            <Button asChild>
-                <Link href="/members/new"><Plus className="mr-2" /> Añadir Nuevo Miembro</Link>
-            </Button>
-            <ThemeToggle />
-        </AppHeader>
-        <div className="flex flex-1 md:grid md:grid-cols-[280px_1fr]">
-            <aside className="hidden w-80 border-r bg-background p-6 md:block">
-                <Filters filters={filters} onFilterChange={handleFilterChange} onApply={applyFilters} onClear={clearFilters}/>
-            </aside>
-            <main className="flex-1 p-8">
-                <Card>
-                    <CardHeader>
-                    <div className="flex items-center justify-between">
-                        <div className="relative max-w-sm flex-1">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input placeholder="Buscar por nombre, email, teléfono, estado..." className="pl-9" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <Sheet>
-                                <SheetTrigger asChild>
-                                    <Button variant="outline" className="md:hidden flex items-center gap-2">
-                                        <SlidersHorizontal className="h-4 w-4" />
-                                        <span>Filtros</span>
-                                    </Button>
-                                </SheetTrigger>
-                                <SheetContent side="left" className="w-[300px]">
-                                <div className="p-6">
-                                    <Filters filters={filters} onFilterChange={handleFilterChange} onApply={applyFilters} onClear={clearFilters}/>
-                                </div>
-                                </SheetContent>
-                            </Sheet>
-                            <Button
-                                variant={view === 'table' ? 'secondary' : 'ghost'}
-                                size="icon"
-                                onClick={() => setView('table')}
-                            >
-                                <List className="h-5 w-5" />
-                            </Button>
-                            <Button
-                                variant={view === 'card' ? 'secondary' : 'ghost'}
-                                size="icon"
-                                onClick={() => setView('card')}
-                            >
-                                <LayoutGrid className="h-5 w-5" />
-                            </Button>
-                        </div>
-                    </div>
-                    </CardHeader>
-                    <CardContent>
-                    {selected.length > 0 && (
-                        <div className="mb-4 flex items-center justify-between rounded-lg bg-blue-50 p-3">
-                        <div className="text-sm font-medium">
-                            {selected.length} {selected.length > 1 ? 'elementos seleccionados' : 'elemento seleccionado'}
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <AlertDialogTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setIsBulkDelete(true)}>
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
-                            </AlertDialogTrigger>
-                            <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
-                                <Link href={`/members/send-email?ids=${selected.join(',')}`}><Mail className="h-4 w-4" /></Link>
-                            </Button>
-                            <Button size="sm" asChild>
-                            <Link href="/members/bulk-actions">Acciones Masivas</Link>
-                            </Button>
-                        </div>
-                        </div>
-                    )}
-                    
-                    {filteredMembers.length === 0 && (
-                        <div className="text-center py-12 text-muted-foreground">
-                            No se encontraron miembros que coincidan con sus filtros.
-                        </div>
-                    )}
-
-                    {view === 'table' && filteredMembers.length > 0 ? (
-                        <div className="overflow-x-auto">
-                        <Table>
-                        <TableHeader>
-                        <TableRow>
-                            <TableHead className="w-12">
-                            <Checkbox
-                                checked={
-                                selected.length > 0 &&
-                                selected.length === paginatedMembers.length
-                                }
-                                onCheckedChange={(checked) =>
-                                handleSelectAll(!!checked)
-                                }
-                            />
-                            </TableHead>
-                            <TableHead>Nombre</TableHead>
-                            <TableHead>Contacto</TableHead>
-                            <TableHead>Estado</TableHead>
-                            <TableHead>Grupos</TableHead>
-                            <TableHead>Acciones</TableHead>
-                        </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                        {paginatedMembers.map((member) => (
-                            <TableRow key={member.id}>
-                            <TableCell>
-                                <Checkbox
-                                checked={selected.includes(member.id)}
-                                onCheckedChange={(checked) =>
-                                    handleSelectOne(member.id, !!checked)
-                                }
-                                />
-                            </TableCell>
-                            <TableCell>
-                                <div className="flex items-center gap-3">
-                                <Avatar>
-                                    <AvatarImage
-                                    src={`https://picsum.photos/seed/${member.id}/40/40`}
-                                    alt={member.name}
-                                    />
-                                    <AvatarFallback>
-                                    {member.name.charAt(0)}
-                                    </AvatarFallback>
-                                </Avatar>
-                                <div>
-                                    <div className="font-medium">{member.name}</div>
-                                    <div className="text-sm text-muted-foreground">
-                                    {member.email}
+        <div className="flex flex-col flex-1">
+            <AppHeader
+                title="Directorio de Miembros"
+                description="Administre perfiles de miembros, información de contacto y membresías de grupos."
+            >
+                <Button asChild>
+                    <Link href="/members/new"><Plus className="mr-2" /> Añadir Nuevo Miembro</Link>
+                </Button>
+                <ThemeToggle />
+            </AppHeader>
+            <div className="flex flex-1 md:grid md:grid-cols-[280px_1fr]">
+                <aside className="hidden w-80 border-r bg-background p-6 md:block">
+                    <Filters filters={filters} onFilterChange={handleFilterChange} onApply={applyFilters} onClear={clearFilters}/>
+                </aside>
+                <main className="flex-1 p-8">
+                    <Card>
+                        <CardHeader>
+                        <div className="flex items-center justify-between">
+                            <div className="relative max-w-sm flex-1">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input placeholder="Buscar por nombre, email, teléfono, estado..." className="pl-9" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Sheet>
+                                    <SheetTrigger asChild>
+                                        <Button variant="outline" className="md:hidden flex items-center gap-2">
+                                            <SlidersHorizontal className="h-4 w-4" />
+                                            <span>Filtros</span>
+                                        </Button>
+                                    </SheetTrigger>
+                                    <SheetContent side="left" className="w-[300px]">
+                                    <div className="p-6">
+                                        <Filters filters={filters} onFilterChange={handleFilterChange} onApply={applyFilters} onClear={clearFilters}/>
                                     </div>
-                                </div>
-                                </div>
-                            </TableCell>
-                            <TableCell>
-                                <div className="text-sm">{member.phone1}</div>
-                                <div className="text-sm text-muted-foreground">
-                                {member.phone2}
-                                </div>
-                            </TableCell>
-                            <TableCell>
-                                <div className="flex items-center gap-2">
-                                <span
-                                    className={`h-2 w-2 rounded-full ${
-                                    statusColors[member.status as keyof typeof statusColors]
-                                    }`}
-                                />
-                                <span className="text-sm">{member.status}</span>
-                                </div>
-                            </TableCell>
-                            <TableCell>
-                                <div className="flex flex-wrap gap-1">
-                                {member.groups.map((group) => (
-                                    <Badge
-                                    key={group}
-                                    variant="outline"
-                                    className={`font-normal ${groupColors[group as keyof typeof groupColors] || 'bg-gray-100 text-gray-800'}`}
-                                    >
-                                    {group}
-                                    </Badge>
-                                ))}
-                                </div>
-                            </TableCell>
-                            <TableCell>
-                                <div className="flex items-center">
-                                <Button variant="link" asChild>
-                                    <Link href={`/members/${member.id}`}>Ver</Link>
+                                    </SheetContent>
+                                </Sheet>
+                                <Button
+                                    variant={view === 'table' ? 'secondary' : 'ghost'}
+                                    size="icon"
+                                    onClick={() => setView('table')}
+                                >
+                                    <List className="h-5 w-5" />
                                 </Button>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon">
-                                        <MoreHorizontal className="h-4 w-4" />
-                                    </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent>
-                                    <DropdownMenuItem asChild><Link href={`/members/${member.id}/edit`}>Editar</Link></DropdownMenuItem>
-                                    <AlertDialogTrigger asChild>
-                                        <DropdownMenuItem onSelect={(e) => {e.preventDefault(); setIsBulkDelete(false); setMemberToDelete(member);}}>Eliminar</DropdownMenuItem>
-                                    </AlertDialogTrigger>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                                </div>
-                            </TableCell>
-                            </TableRow>
-                        ))}
-                        </TableBody>
-                    </Table>
-                    </div>
-                    ) : view === 'card' && filteredMembers.length > 0 ? (
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                        {paginatedMembers.map((member) => (
-                        <Card key={member.id} className="relative">
-                            <Checkbox
-                                checked={selected.includes(member.id)}
-                                onCheckedChange={(checked) =>
-                                    handleSelectOne(member.id, !!checked)
-                                }
-                                className="absolute top-4 left-4"
-                                />
-                            <Link href={`/members/${member.id}`}>
-                                <CardContent className="flex flex-col items-center justify-center text-center p-6">
-                                <Avatar className="h-20 w-20 mb-4">
-                                    <AvatarImage src={`https://picsum.photos/seed/${member.id}/80/80`} alt={member.name} />
-                                    <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
-                                </Avatar>
-                                <p className="text-lg font-bold">{member.name}</p>
-                                <p className="text-sm text-muted-foreground truncate">{member.email}</p>
-                                <div className="mt-4 flex items-center gap-2">
-                                    <span className={`h-2.5 w-2.5 rounded-full ${statusColors[member.status as keyof typeof statusColors]}`} />
-                                    <span className="text-sm font-medium">{member.status}</span>
-                                </div>
-                                <div className="mt-4 flex flex-wrap gap-1 justify-center">
-                                    {member.groups.map((group) => (
-                                    <Badge key={group} variant="outline" className={`font-normal ${groupColors[group as keyof typeof groupColors] || 'bg-gray-100 text-gray-800'}`}>{group}</Badge>
-                                    ))}
-                                </div>
-                                </CardContent>
-                            </Link>
-                        </Card>
-                        ))}
-                    </div>
-                    ) : null}
-                     <div className="flex items-center justify-between pt-4">
-                        <div className="text-sm text-muted-foreground">
-                            Mostrando {paginatedMembers.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} a {Math.min(currentPage * itemsPerPage, filteredMembers.length)} de {filteredMembers.length} resultados
+                                <Button
+                                    variant={view === 'card' ? 'secondary' : 'ghost'}
+                                    size="icon"
+                                    onClick={() => setView('card')}
+                                >
+                                    <LayoutGrid className="h-5 w-5" />
+                                </Button>
+                            </div>
                         </div>
-                        <Pagination>
-                            <PaginationContent>
-                            <PaginationItem>
-                                <PaginationPrevious href="#" onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }} />
-                            </PaginationItem>
-                            {[...Array(totalPages)].map((_, i) => (
-                                <PaginationItem key={i}>
-                                <PaginationLink href="#" isActive={i + 1 === currentPage} onClick={(e) => { e.preventDefault(); handlePageChange(i + 1); }}>
-                                    {i + 1}
-                                </PaginationLink>
-                                </PaginationItem>
+                        </CardHeader>
+                        <CardContent>
+                        {selected.length > 0 && (
+                            <div className="mb-4 flex items-center justify-between rounded-lg bg-blue-50 p-3">
+                            <div className="text-sm font-medium">
+                                {selected.length} {selected.length > 1 ? 'elementos seleccionados' : 'elemento seleccionado'}
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <AlertDialogTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={() => setIsBulkDelete(true)}>
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </AlertDialogTrigger>
+                                <Button variant="ghost" size="icon" className="h-8 w-8" asChild>
+                                    <Link href={`/members/send-email?ids=${selected.join(',')}`}><Mail className="h-4 w-4" /></Link>
+                                </Button>
+                                <Button size="sm" asChild>
+                                <Link href="/members/bulk-actions">Acciones Masivas</Link>
+                                </Button>
+                            </div>
+                            </div>
+                        )}
+                        
+                        {filteredMembers.length === 0 && (
+                            <div className="text-center py-12 text-muted-foreground">
+                                No se encontraron miembros que coincidan con sus filtros.
+                            </div>
+                        )}
+
+                        {view === 'table' && filteredMembers.length > 0 ? (
+                            <div className="overflow-x-auto">
+                            <Table>
+                            <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-12">
+                                <Checkbox
+                                    checked={
+                                    selected.length > 0 &&
+                                    selected.length === paginatedMembers.length
+                                    }
+                                    onCheckedChange={(checked) =>
+                                    handleSelectAll(!!checked)
+                                    }
+                                />
+                                </TableHead>
+                                <TableHead>Nombre</TableHead>
+                                <TableHead>Contacto</TableHead>
+                                <TableHead>Estado</TableHead>
+                                <TableHead>Grupos</TableHead>
+                                <TableHead>Acciones</TableHead>
+                            </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                            {paginatedMembers.map((member) => (
+                                <TableRow key={member.id}>
+                                <TableCell>
+                                    <Checkbox
+                                    checked={selected.includes(member.id)}
+                                    onCheckedChange={(checked) =>
+                                        handleSelectOne(member.id, !!checked)
+                                    }
+                                    />
+                                </TableCell>
+                                <TableCell>
+                                    <div className="flex items-center gap-3">
+                                    <Avatar>
+                                        <AvatarImage
+                                        src={`https://picsum.photos/seed/${member.id}/40/40`}
+                                        alt={member.name}
+                                        />
+                                        <AvatarFallback>
+                                        {member.name.charAt(0)}
+                                        </AvatarFallback>
+                                    </Avatar>
+                                    <div>
+                                        <div className="font-medium">{member.name}</div>
+                                        <div className="text-sm text-muted-foreground">
+                                        {member.email}
+                                        </div>
+                                    </div>
+                                    </div>
+                                </TableCell>
+                                <TableCell>
+                                    <div className="text-sm">{member.phone1}</div>
+                                    <div className="text-sm text-muted-foreground">
+                                    {member.phone2}
+                                    </div>
+                                </TableCell>
+                                <TableCell>
+                                    <div className="flex items-center gap-2">
+                                    <span
+                                        className={`h-2 w-2 rounded-full ${
+                                        statusColors[member.status as keyof typeof statusColors]
+                                        }`}
+                                    />
+                                    <span className="text-sm">{member.status}</span>
+                                    </div>
+                                </TableCell>
+                                <TableCell>
+                                    <div className="flex flex-wrap gap-1">
+                                    {member.groups.map((group) => (
+                                        <Badge
+                                        key={group}
+                                        variant="outline"
+                                        className={`font-normal ${groupColors[group as keyof typeof groupColors] || 'bg-gray-100 text-gray-800'}`}
+                                        >
+                                        {group}
+                                        </Badge>
+                                    ))}
+                                    </div>
+                                </TableCell>
+                                <TableCell>
+                                    <div className="flex items-center">
+                                    <Button variant="link" asChild>
+                                        <Link href={`/members/${member.id}`}>Ver</Link>
+                                    </Button>
+                                    <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="icon">
+                                            <MoreHorizontal className="h-4 w-4" />
+                                        </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent>
+                                        <DropdownMenuItem asChild><Link href={`/members/${member.id}/edit`}>Editar</Link></DropdownMenuItem>
+                                        <AlertDialogTrigger asChild>
+                                            <DropdownMenuItem onSelect={(e) => {e.preventDefault(); setIsBulkDelete(false); setMemberToDelete(member);}}>Eliminar</DropdownMenuItem>
+                                        </AlertDialogTrigger>
+                                        </DropdownMenuContent>
+                                    </DropdownMenu>
+                                    </div>
+                                </TableCell>
+                                </TableRow>
                             ))}
-                            <PaginationItem>
-                                <PaginationNext href="#" onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }}/>
-                            </PaginationItem>
-                            </PaginationContent>
-                        </Pagination>
-                    </div>
-                    </CardContent>
-                </Card>
-            </main>
+                            </TableBody>
+                        </Table>
+                        </div>
+                        ) : view === 'card' && filteredMembers.length > 0 ? (
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                            {paginatedMembers.map((member) => (
+                            <Card key={member.id} className="relative">
+                                <Checkbox
+                                    checked={selected.includes(member.id)}
+                                    onCheckedChange={(checked) =>
+                                        handleSelectOne(member.id, !!checked)
+                                    }
+                                    className="absolute top-4 left-4"
+                                    />
+                                <Link href={`/members/${member.id}`}>
+                                    <CardContent className="flex flex-col items-center justify-center text-center p-6">
+                                    <Avatar className="h-20 w-20 mb-4">
+                                        <AvatarImage src={`https://picsum.photos/seed/${member.id}/80/80`} alt={member.name} />
+                                        <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
+                                    </Avatar>
+                                    <p className="text-lg font-bold">{member.name}</p>
+                                    <p className="text-sm text-muted-foreground truncate">{member.email}</p>
+                                    <div className="mt-4 flex items-center gap-2">
+                                        <span className={`h-2.5 w-2.5 rounded-full ${statusColors[member.status as keyof typeof statusColors]}`} />
+                                        <span className="text-sm font-medium">{member.status}</span>
+                                    </div>
+                                    <div className="mt-4 flex flex-wrap gap-1 justify-center">
+                                        {member.groups.map((group) => (
+                                        <Badge key={group} variant="outline" className={`font-normal ${groupColors[group as keyof typeof groupColors] || 'bg-gray-100 text-gray-800'}`}>{group}</Badge>
+                                        ))}
+                                    </div>
+                                    </CardContent>
+                                </Link>
+                            </Card>
+                            ))}
+                        </div>
+                        ) : null}
+                         <div className="flex items-center justify-between pt-4">
+                            <div className="text-sm text-muted-foreground">
+                                Mostrando {paginatedMembers.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} a {Math.min(currentPage * itemsPerPage, filteredMembers.length)} de {filteredMembers.length} resultados
+                            </div>
+                            <Pagination>
+                                <PaginationContent>
+                                <PaginationItem>
+                                    <PaginationPrevious href="#" onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }} />
+                                </PaginationItem>
+                                {[...Array(totalPages)].map((_, i) => (
+                                    <PaginationItem key={i}>
+                                    <PaginationLink href="#" isActive={i + 1 === currentPage} onClick={(e) => { e.preventDefault(); handlePageChange(i + 1); }}>
+                                        {i + 1}
+                                    </PaginationLink>
+                                    </PaginationItem>
+                                ))}
+                                <PaginationItem>
+                                    <PaginationNext href="#" onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }}/>
+                                </PaginationItem>
+                                </PaginationContent>
+                            </Pagination>
+                        </div>
+                        </CardContent>
+                    </Card>
+                </main>
+            </div>
         </div>
         <AlertDialogContent>
             <AlertDialogHeader>
