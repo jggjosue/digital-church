@@ -5,6 +5,7 @@ import { PT_Sans } from 'next/font/google';
 import { cn } from '@/lib/utils';
 import { AppSidebar } from '@/components/app-sidebar';
 import { ThemeProvider } from '@/components/theme-provider';
+import { Analytics } from "@vercel/analytics/next"
 
 const ptSans = PT_Sans({ 
   subsets: ['latin'], 
@@ -43,6 +44,7 @@ export default function RootLayout({
                 </div>
             </div>
             <Toaster />
+            <Analytics />
         </ThemeProvider>
       </body>
     </html>
