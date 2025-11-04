@@ -118,7 +118,7 @@ const navItems = [
       { href: '/sermons/list', icon: Video, label: 'Sermón' },
       { href: '/sermons/videos', icon: Clapperboard, label: 'Vídeos' },
       { href: '/sermons/audio', icon: Mic, label: 'Audio' },
-      { href: '/sermons', icon: ImageIcon, label: 'Imagen' },
+      { href: '/sermons/images', icon: ImageIcon, label: 'Imagen' },
       { href: '/sermons/new', icon: Plus, label: 'Nuevo sermón' },
     ]
   },
@@ -184,7 +184,12 @@ export function AppSidebar() {
   React.useEffect(() => {
     const activeItem = navItems.find(item => item.subItems && isSubItemActive(item.subItems));
     if (activeItem) {
-      setOpenCollapsibles(prev => [...prev, activeItem.label]);
+      setOpenCollapsibles(prev => {
+        if (prev.includes(activeItem.label)) {
+          return prev;
+        }
+        return [...prev, activeItem.label]
+      });
     }
   }, [pathname]);
 
