@@ -116,7 +116,7 @@ const navItems = [
     subItems: [
       { href: '/sermons', icon: Library, label: 'Librería' },
       { href: '/sermons/list', icon: Video, label: 'Sermón' },
-      { href: '/sermons', icon: Clapperboard, label: 'Vídeos' },
+      { href: '/sermons/videos', icon: Clapperboard, label: 'Vídeos' },
       { href: '/sermons', icon: Mic, label: 'Audio' },
       { href: '/sermons', icon: ImageIcon, label: 'Imagen' },
       { href: '/sermons/new', icon: Plus, label: 'Nuevo sermón' },
@@ -177,7 +177,7 @@ export function MobileSidebar() {
 
   const toggleCollapsible = (label: string) => {
     setOpenCollapsibles(prev => 
-      prev.includes(label) ? prev.filter(l => l !== label) : [...prev, label]
+      prev.includes(label) ? prev.filter(l => l !== label) : [label]
     );
   };
 
