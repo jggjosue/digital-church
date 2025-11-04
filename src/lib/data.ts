@@ -1,5 +1,55 @@
 
 
+export const staffData = [
+    {
+      id: 1,
+      name: 'James Peterson',
+      role: 'Senior Pastor',
+      email: 'james.peterson@gracechurch.org',
+      phone: '+1 (234) 567-8901',
+      avatarUrl: 'https://picsum.photos/seed/jp/100/100',
+    },
+    {
+      id: 2,
+      name: 'Sarah Johnson',
+      role: 'Youth Pastor',
+      email: 'sarah.j@gracechurch.org',
+      phone: '+1 (234) 567-8902',
+      avatarUrl: 'https://picsum.photos/seed/sj/100/100',
+    },
+    {
+      id: 3,
+      name: 'Michael Lee',
+      role: 'Worship Leader',
+      email: 'michael.lee@gracechurch.org',
+      phone: '+1 (234) 567-8903',
+      avatarUrl: 'https://picsum.photos/seed/ml/100/100',
+    },
+    {
+      id: 4,
+      name: 'Emily Martinez',
+      role: 'Administrator',
+      email: 'emily.m@gracechurch.org',
+      phone: '+1 (234) 567-8904',
+      avatarUrl: '',
+    },
+    {
+      id: 5,
+      name: 'David Chen',
+      role: 'Volunteer Coordinator',
+      email: 'david.chen@gracechurch.org',
+      phone: '+1 (234) 567-8905',
+      avatarUrl: 'https://picsum.photos/seed/dc/100/100',
+    },
+    {
+        id: 6,
+        name: 'Jessica Rodriguez',
+        role: "Children's Ministry Director",
+        email: 'jessica.r@gracechurch.org',
+        phone: '+1 (234) 567-8906',
+        avatarUrl: 'https://picsum.photos/seed/jr/100/100',
+    }
+  ];
 
 export const memberDemographics = [
   { name: '18-25', value: 301, fill: 'hsl(252 82% 64%)' },
