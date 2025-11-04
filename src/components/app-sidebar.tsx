@@ -49,7 +49,7 @@ const navItems = [
     ]
   },
   { 
-    label: 'Pastoral', 
+    label: 'Oración', 
     icon: Heart, 
     subItems: [
       { href: '/prayer', icon: List, label: 'Peticiones' },
@@ -151,7 +151,7 @@ const bottomNavItems = [
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const [openCollapsibles, setOpenCollapsibles] = React.useState<string[]>(['Directorio', 'Pastoral', 'Grupos', 'Ministerios', 'Voluntarios', 'Eventos', 'Ofrendas', 'Finanzas', 'Asistencia', 'Reportes', 'Configuración']);
+  const [openCollapsibles, setOpenCollapsibles] = React.useState<string[]>(['Directorio', 'Oración', 'Grupos', 'Ministerios', 'Voluntarios', 'Eventos', 'Ofrendas', 'Finanzas', 'Asistencia', 'Reportes', 'Configuración']);
 
   const isSubItemActive = (subItems: any[]) => {
     return subItems.some(subItem => pathname.startsWith(subItem.href));
@@ -259,5 +259,7 @@ export function AppSidebar() {
     </aside>
   );
 }
+
+    
 
     
