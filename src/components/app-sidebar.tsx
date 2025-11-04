@@ -119,7 +119,7 @@ const navItems = [
       { href: '/sermons', icon: Clapperboard, label: 'Vídeos' },
       { href: '/sermons', icon: Mic, label: 'Audio' },
       { href: '/sermons', icon: ImageIcon, label: 'Imagen' },
-      { href: '/sermons', icon: Plus, label: 'Nuevo sermón' },
+      { href: '/sermons/new', icon: Plus, label: 'Nuevo sermón' },
     ]
   },
   { 
