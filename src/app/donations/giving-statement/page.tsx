@@ -36,7 +36,9 @@ export default function GivingStatementPage() {
       <AppHeader
         title="Generar Estados de Cuenta de Donaciones"
         description="Cree y distribuya estados de cuenta de donaciones para sus miembros."
-      />
+      >
+        <div/>
+      </AppHeader>
     <main className="flex-1 bg-muted/20 p-4 sm:p-8">
       <div className="max-w-6xl mx-auto">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
