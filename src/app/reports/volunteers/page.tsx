@@ -79,7 +79,7 @@ export default function VolunteerReportsPage() {
       >
         <div/>
       </AppHeader>
-    <main className="flex-1 space-y-6 p-8">
+    <main className="flex-1 space-y-6 p-4 sm:p-8">
       <Card>
         <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -87,7 +87,7 @@ export default function VolunteerReportsPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input placeholder="Buscar por voluntario o rol..." className="pl-9" />
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex w-full sm:w-auto items-center gap-2">
                 <Select>
                     <SelectTrigger className="w-full sm:w-[180px]">
                         <SelectValue placeholder="Filtrar por Rol" />
@@ -99,8 +99,8 @@ export default function VolunteerReportsPage() {
                     </SelectContent>
                 </Select>
             </div>
-            <div className="flex items-center gap-2">
-              <Button onClick={generatePDF}>
+            <div className="flex w-full sm:w-auto items-center gap-2">
+              <Button onClick={generatePDF} className="w-full sm:w-auto">
                 <Download className="mr-2 h-4 w-4" /> Exportar a PDF
               </Button>
             </div>
