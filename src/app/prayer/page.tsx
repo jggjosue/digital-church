@@ -8,6 +8,7 @@ import {
   Globe,
   Plus,
   Users,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -38,6 +39,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Label } from '@/components/ui/label';
 import Link from 'next/link';
 import { AppHeader } from '@/components/app-header';
+import { Sheet, SheetTrigger, SheetContent } from '@/components/ui/sheet';
+import { useMediaQuery } from '@/hooks/use-media-query';
 
 type PrayerRequest = typeof prayerRequestsData[0];
 
@@ -59,6 +62,7 @@ export default function PrayerRequestsPage() {
   });
   const [filteredData, setFilteredData] = React.useState<PrayerRequest[]>(prayerRequestsData);
   const [selectedTab, setSelectedTab] = React.useState('all-requests');
+  const isDesktop = useMediaQuery("(min-width: 768px)");
 
   const handleFilterChange = <K extends keyof typeof activeFilters>(key: K, value: string) => {
     setActiveFilters(prev => {
@@ -142,32 +146,20 @@ export default function PrayerRequestsPage() {
     </TableBody>
   );
 
-
-  return (
-    <div className="flex flex-col flex-1">
-        <AppHeader
-            title="Peticiones de Oración"
-            description="Gestione las peticiones de oración y los informes de alabanza."
-        >
-            <div className="flex gap-2">
-                <Button variant="outline"><Users className="mr-2 h-4 w-4" /> Gestionar Grupos</Button>
-                <Button asChild><Link href="/prayer/new"><Plus className="mr-2 h-4 w-4" /> Nueva Petición de Oración</Link></Button>
-            </div>
-        </AppHeader>
-        <main className="flex-1 bg-muted/20 flex">
-      <aside className="w-80 border-r bg-background p-6 hidden md:block">
+  const FiltersComponent = () => (
+    <>
         <h2 className="text-xl font-bold">Filtros</h2>
         <div className="mt-6 space-y-6">
             <div>
                 <h3 className="text-sm font-medium text-muted-foreground">Estado</h3>
                 <div className="mt-2 space-y-2">
                     <div className="flex items-center gap-2">
-                        <Checkbox id="active" onCheckedChange={() => handleFilterChange('status', 'Activo')} checked={activeFilters.status.includes('Activo')} />
-                        <Label htmlFor="active" className="text-sm">Activo</Label>
+                        <Checkbox id="active-filter" onCheckedChange={() => handleFilterChange('status', 'Activo')} checked={activeFilters.status.includes('Activo')} />
+                        <Label htmlFor="active-filter" className="text-sm font-normal">Activo</Label>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Checkbox id="answered" onCheckedChange={() => handleFilterChange('status', 'Respondido')} checked={activeFilters.status.includes('Respondido')} />
-                        <Label htmlFor="answered" className="text-sm">Respondido</Label>
+                        <Checkbox id="answered-filter" onCheckedChange={() => handleFilterChange('status', 'Respondido')} checked={activeFilters.status.includes('Respondido')} />
+                        <Label htmlFor="answered-filter" className="text-sm font-normal">Respondido</Label>
                     </div>
                 </div>
             </div>
@@ -175,12 +167,12 @@ export default function PrayerRequestsPage() {
                 <h3 className="text-sm font-medium text-muted-foreground">Privacidad</h3>
                 <div className="mt-2 space-y-2">
                     <div className="flex items-center gap-2">
-                        <Checkbox id="public" onCheckedChange={() => handleFilterChange('privacy', 'Público')} checked={activeFilters.privacy.includes('Público')} />
-                        <Label htmlFor="public" className="text-sm">Público</Label>
+                        <Checkbox id="public-filter" onCheckedChange={() => handleFilterChange('privacy', 'Público')} checked={activeFilters.privacy.includes('Público')} />
+                        <Label htmlFor="public-filter" className="text-sm font-normal">Público</Label>
                     </div>
                     <div className="flex items-center gap-2">
-                        <Checkbox id="staff-only" onCheckedChange={() => handleFilterChange('privacy', 'Solo Personal')} checked={activeFilters.privacy.includes('Solo Personal')} />
-                        <Label htmlFor="staff-only" className="text-sm">Solo Personal</Label>
+                        <Checkbox id="staff-only-filter" onCheckedChange={() => handleFilterChange('privacy', 'Solo Personal')} checked={activeFilters.privacy.includes('Solo Personal')} />
+                        <Label htmlFor="staff-only-filter" className="text-sm font-normal">Solo Personal</Label>
                     </div>
                 </div>
             </div>
@@ -200,6 +192,24 @@ export default function PrayerRequestsPage() {
                 <Button variant="ghost" className="w-full" onClick={clearFilters}>Limpiar Todo</Button>
             </div>
         </div>
+    </>
+  );
+
+
+  return (
+    <div className="flex flex-col flex-1">
+        <AppHeader
+            title="Peticiones de Oración"
+            description="Gestione las peticiones de oración y los informes de alabanza."
+        >
+            <div className="flex gap-2">
+                <Button variant="outline"><Users className="mr-2 h-4 w-4" /> Gestionar Grupos</Button>
+                <Button asChild><Link href="/prayer/new"><Plus className="mr-2 h-4 w-4" /> Nueva Petición de Oración</Link></Button>
+            </div>
+        </AppHeader>
+        <main className="flex flex-1 bg-muted/20">
+      <aside className="w-80 border-r bg-background p-6 hidden md:block">
+        <FiltersComponent />
       </aside>
 
       <div className="flex-1 p-4 sm:p-8">
@@ -211,11 +221,24 @@ export default function PrayerRequestsPage() {
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         <Input placeholder="Buscar peticiones o nombres..." className="pl-9" />
                     </div>
-                    <TabsList className="grid grid-cols-3 w-full sm:w-auto">
-                        <TabsTrigger value="all-requests">Todas las Peticiones</TabsTrigger>
-                        <TabsTrigger value="my-requests">Mis Peticiones</TabsTrigger>
-                        <TabsTrigger value="answered">Respondidas</TabsTrigger>
-                    </TabsList>
+                    <div className="flex w-full sm:w-auto items-center justify-between gap-2">
+                        <Sheet>
+                            <SheetTrigger asChild>
+                                <Button variant="outline" className="md:hidden flex-1">
+                                    <SlidersHorizontal className="mr-2 h-4 w-4" />
+                                    Filtros
+                                </Button>
+                            </SheetTrigger>
+                            <SheetContent side="left" className="p-6">
+                                <FiltersComponent />
+                            </SheetContent>
+                        </Sheet>
+                        <TabsList className="grid grid-cols-3 flex-1 sm:inline-flex">
+                            <TabsTrigger value="all-requests">Todas</TabsTrigger>
+                            <TabsTrigger value="my-requests">Mis Peticiones</TabsTrigger>
+                            <TabsTrigger value="answered">Respondidas</TabsTrigger>
+                        </TabsList>
+                    </div>
                 </div>
               <TabsContent value="all-requests">
                 <div className="overflow-x-auto">
