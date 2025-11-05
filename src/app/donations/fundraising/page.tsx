@@ -49,13 +49,13 @@ export default function FundraisingPage() {
         </Button>
       </AppHeader>
     <main className="flex-1 space-y-6 p-4 sm:p-8 bg-muted/20">
-      <div className="flex items-center gap-4">
+      <div className="flex flex-col sm:flex-row items-center gap-4">
         <div className="relative w-full max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input placeholder="Buscar campañas..." className="pl-9" />
         </div>
         <Select>
-            <SelectTrigger className='w-[180px]'>
+            <SelectTrigger className='w-full sm:w-[180px]'>
                 <SelectValue placeholder="Todos los Estados" />
             </SelectTrigger>
             <SelectContent>
@@ -95,7 +95,7 @@ export default function FundraisingPage() {
                         </div>
                     )}
                 </CardContent>
-                <CardFooter className="flex justify-between items-center text-sm text-muted-foreground pt-4">
+                <CardFooter className="flex flex-col sm:flex-row justify-between items-start sm:items-center text-sm text-muted-foreground pt-4 gap-4 sm:gap-2">
                     {campaign.status !== 'Draft' && (
                         <div className="flex items-center gap-2">
                             <Calendar className="h-4 w-4" />
@@ -111,10 +111,10 @@ export default function FundraisingPage() {
                         </Button>
                     )}
                     
-                    {campaign.status === 'Completed' && <Button variant="link" asChild><Link href="#">Ver Reporte</Link></Button>}
-                    {campaign.status === 'Active' && <Button variant="link" asChild><Link href="#">Ver Detalles</Link></Button>}
-                    {campaign.status === 'Upcoming' && <Button variant="link" asChild><Link href="#">Ver Detalles</Link></Button>}
-                    {campaign.status === 'Draft' && <Button variant="link" asChild><Link href="#">Editar Borrador</Link></Button>}
+                    {campaign.status === 'Completed' && <Button variant="link" asChild className="p-0 h-auto"><Link href="#">Ver Reporte</Link></Button>}
+                    {campaign.status === 'Active' && <Button variant="link" asChild className="p-0 h-auto"><Link href="#">Ver Detalles</Link></Button>}
+                    {campaign.status === 'Upcoming' && <Button variant="link" asChild className="p-0 h-auto"><Link href="#">Ver Detalles</Link></Button>}
+                    {campaign.status === 'Draft' && <Button variant="link" asChild className="p-0 h-auto"><Link href="#">Editar Borrador</Link></Button>}
                 </CardFooter>
             </Card>
         ))}
