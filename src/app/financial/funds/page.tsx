@@ -58,14 +58,14 @@ export default function FundBalancesPage() {
             </Button>
         </div>
       </AppHeader>
-    <main className="flex-1 space-y-6 p-8">
-      <div className="flex items-center space-x-2">
+    <main className="flex-1 space-y-6 p-4 sm:p-8">
+      <div className="flex flex-col sm:flex-row items-center gap-2">
         <div className="relative w-full max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input placeholder="Buscar fondos..." className="pl-9" />
         </div>
         <Select>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-full sm:w-[180px]">
             <SelectValue placeholder="Todos los Tipos de Fondos" />
           </SelectTrigger>
           <SelectContent>
