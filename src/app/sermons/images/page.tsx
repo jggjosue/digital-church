@@ -77,12 +77,12 @@ export default function ImageLibraryPage() {
       <Card>
         <CardContent className="p-4">
           <Tabs defaultValue="images">
-            <div className="flex flex-col lg:flex-row items-center justify-between gap-4 mb-4">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
                 <div className="relative w-full max-w-sm">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input placeholder="Search by title, tag, or sermon..." className="pl-9" />
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 lg:flex lg:items-center gap-2 w-full lg:w-auto">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 w-full sm:w-auto">
                     <Button variant="outline" className="w-full">Category <ChevronDown className="ml-2 h-4 w-4" /></Button>
                     <Button variant="outline" className="w-full">Album <ChevronDown className="ml-2 h-4 w-4" /></Button>
                     <Button variant="outline" className="w-full">Date Uploaded <ChevronDown className="ml-2 h-4 w-4" /></Button>
@@ -96,7 +96,7 @@ export default function ImageLibraryPage() {
               <TabsTrigger value="images">Images</TabsTrigger>
             </TabsList>
             <TabsContent value="images">
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 mt-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 mt-6">
                     {imagesData.map((image, index) => (
                         <Card key={index} className='overflow-hidden'>
                             <CardContent className='p-0'>
