@@ -44,7 +44,7 @@ export default function MinistriesPage() {
         </Button>
       </AppHeader>
     <main className="flex-1 bg-muted/20 p-4 sm:p-8">
-      <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="relative w-full max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input placeholder="Buscar ministerios..." className="pl-9" />
@@ -66,12 +66,12 @@ export default function MinistriesPage() {
         {ministriesData.map((ministry) => (
             <Card key={ministry.id}>
                 <CardContent className="p-6">
-                    <div className="flex justify-between items-start">
+                    <div className="flex flex-col sm:flex-row justify-between items-start gap-2">
                         <div>
                             <h3 className="text-xl font-bold">{ministry.name}</h3>
                             <p className="text-muted-foreground mt-1">{ministry.description}</p>
                         </div>
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost" size="icon" className='-mr-2 -mt-2 sm:mt-0'>
                             <MoreHorizontal className="h-5 w-5" />
                         </Button>
                     </div>
@@ -86,24 +86,24 @@ export default function MinistriesPage() {
                                 Líder: {ministry.leader}
                             </div>
                             <div className="flex items-center">
-                                {ministry.memberAvatars.slice(0, 3).map((avatar, index) => (
+                                {ministry.memberAvatars.slice(0, 5).map((avatar, index) => (
                                     <Avatar key={index} className={`h-8 w-8 -ml-2 border-2 border-card`}>
                                         <AvatarImage src={avatar} />
                                         <AvatarFallback>{ministry.leader.charAt(0)}</AvatarFallback>
                                     </Avatar>
                                 ))}
-                                {ministry.members > 3 && (
+                                {ministry.members > 5 && (
                                 <Avatar className="h-8 w-8 -ml-2 border-2 border-card bg-muted text-muted-foreground">
-                                    <AvatarFallback>+{ministry.members - 3}</AvatarFallback>
+                                    <AvatarFallback>+{ministry.members - 5}</AvatarFallback>
                                 </Avatar>
                                 )}
                             </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                            <Button asChild>
+                        <div className="flex items-center gap-2 w-full sm:w-auto">
+                            <Button className="w-full sm:w-auto" asChild>
                                 <Link href={`/ministries/${ministry.id}`}>Ver Detalles</Link>
                             </Button>
-                            <Button variant="outline" asChild><Link href="/ministries/assign-members">Asignar Miembros</Link></Button>
+                            <Button variant="outline" className="w-full sm:w-auto" asChild><Link href="/ministries/assign-members">Asignar Miembros</Link></Button>
                         </div>
                     </div>
                 </CardContent>
