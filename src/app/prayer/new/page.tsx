@@ -44,7 +44,7 @@ export default function NewPrayerRequestPage() {
             <Button>Enviar Petición</Button>
         </div>
       </AppHeader>
-    <main className="flex-1 space-y-6 p-8 bg-muted/20">
+    <main className="flex-1 space-y-6 p-4 sm:p-8 bg-muted/20">
       <Card className="max-w-3xl mx-auto">
         <CardHeader>
           <CardTitle>Detalles de la Petición de Oración</CardTitle>
