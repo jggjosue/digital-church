@@ -54,12 +54,12 @@ export default function NewRolePage() {
                 title="Crear Nuevo Rol"
                 description="Defina un nuevo rol de usuario y configure sus permisos."
             >
-                <div className="flex justify-end gap-2">
+                <div className="flex flex-col sm:flex-row w-full sm:w-auto justify-end gap-2">
                     <Button variant="outline" asChild><Link href="/settings">Cancelar</Link></Button>
                     <Button>Crear Rol</Button>
                 </div>
             </AppHeader>
-            <main className="flex-1 bg-muted/20 p-8">
+            <main className="flex-1 bg-muted/20 p-4 sm:p-8">
                 <div className="max-w-4xl mx-auto">
                     <Card>
                         <CardHeader>
@@ -93,8 +93,8 @@ export default function NewRolePage() {
                                         <AccordionItem key={category} value={`item-${index + 1}`}>
                                             <AccordionTrigger className='font-semibold'>{category}</AccordionTrigger>
                                             <AccordionContent>
-                                                <div className="grid grid-cols-2 gap-4 p-4">
-                                                    <div className="flex items-center space-x-2 col-span-2">
+                                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4">
+                                                    <div className="flex items-center space-x-2 col-span-1 sm:col-span-2">
                                                         <Checkbox id={`select-all-${category.toLowerCase().replace(/\s/g, '-')}`} />
                                                         <label
                                                             htmlFor={`select-all-${category.toLowerCase().replace(/\s/g, '-')}`}
