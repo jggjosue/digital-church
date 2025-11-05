@@ -113,7 +113,9 @@ export default function EventsPage() {
     calendarDays.push({ day, isCurrentMonth: true });
   }
 
-  const remainingDays = (isDesktop ? 42 : 35) - calendarDays.length;
+  const totalCells = Math.ceil(calendarDays.length / 7) * 7;
+  const remainingDays = totalCells - calendarDays.length;
+
   for (let i = 1; i <= remainingDays; i++) {
     calendarDays.push({ day: i, isCurrentMonth: false });
   }
@@ -160,7 +162,7 @@ export default function EventsPage() {
           </Link>
         </Button>
       </AppHeader>
-    <main className="flex flex-col lg:flex-row min-h-screen w-full bg-muted/20">
+    <main className="flex flex-col lg:flex-row min-h-0 flex-1 w-full bg-muted/20">
       <div className="flex-1 p-4 sm:p-8">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="relative w-full max-w-sm">
@@ -211,7 +213,7 @@ export default function EventsPage() {
                 return (
                   <Sheet key={index}>
                     <SheetTrigger asChild disabled={!eventToDisplay || isDesktop}>
-                       <div className={`relative h-20 sm:h-28 p-1 sm:p-2 bg-card border-r border-b ${date.isCurrentMonth ? '' : 'bg-muted/50 text-muted-foreground'} ${eventToDisplay ? 'cursor-pointer' : ''}`}
+                       <div className={`relative h-20 sm:h-24 p-1 sm:p-2 bg-card border-r border-b ${date.isCurrentMonth ? '' : 'bg-muted/50 text-muted-foreground'} ${eventToDisplay ? 'cursor-pointer' : ''}`}
                          onClick={() => eventToDisplay && handleSelectEvent(eventToDisplay, date.day)}>
                         <div className={`text-sm text-right sm:text-left ${selectedDay === date.day && date.isCurrentMonth ? 'font-bold text-primary' : ''}`}>
                           {date.day}
@@ -243,7 +245,7 @@ export default function EventsPage() {
         </Card>
       </div>
 
-      <aside className="w-96 border-l bg-background p-6 hidden lg:block">
+      <aside className="w-full lg:w-96 border-l bg-background p-6 hidden lg:block">
         <h2 className="text-lg font-semibold">Detalles del Evento</h2>
         <p className="text-sm text-muted-foreground">
           Seleccionado: {selectedDate.toLocaleDateString('es-ES', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric'})}
@@ -273,3 +275,5 @@ export default function EventsPage() {
     </AlertDialog>
   );
 }
+
+    
