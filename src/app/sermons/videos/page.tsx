@@ -55,10 +55,10 @@ export default function VideoLibraryPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input placeholder="Search by title, event, or sermon..." className="pl-9" />
             </div>
-            <div className="grid grid-cols-3 lg:flex lg:items-center gap-2 w-full lg:w-auto">
-                <Button variant="outline">Category <ChevronDown className="ml-2 h-4 w-4" /></Button>
-                <Button variant="outline">Date Range <ChevronDown className="ml-2 h-4 w-4" /></Button>
-                <Button variant="outline">Privacy <ChevronDown className="ml-2 h-4 w-4" /></Button>
+            <div className="flex flex-col sm:grid sm:grid-cols-3 lg:flex items-center gap-2 w-full lg:w-auto">
+                <Button variant="outline" className="w-full">Category <ChevronDown className="ml-2 h-4 w-4" /></Button>
+                <Button variant="outline" className="w-full">Date Range <ChevronDown className="ml-2 h-4 w-4" /></Button>
+                <Button variant="outline" className="w-full">Privacy <ChevronDown className="ml-2 h-4 w-4" /></Button>
             </div>
         </div>
 
@@ -90,9 +90,9 @@ export default function VideoLibraryPage() {
                     </div>
                 </div>
             </CardContent>
-            <CardFooter className='p-4 bg-muted/50 border-t flex justify-between'>
-                <Button variant="ghost"><Edit className='mr-2 h-4 w-4'/>Edit</Button>
-                <Button variant="ghost" size="icon"><MoreHorizontal className='h-4 w-4'/></Button>
+            <CardFooter className='p-4 bg-muted/50 border-t flex flex-col sm:flex-row justify-between gap-2'>
+                <Button variant="ghost" className="w-full sm:w-auto"><Edit className='mr-2 h-4 w-4'/>Edit</Button>
+                <Button variant="ghost" size="icon" className="self-end sm:self-center"><MoreHorizontal className='h-4 w-4'/></Button>
             </CardFooter>
         </Card>
       </main>
