@@ -37,14 +37,14 @@ export default function IncomeExpensePage() {
           Exportar PDF
         </Button>
       </AppHeader>
-    <main className="flex-1 space-y-6 p-8">
-      <div className="flex items-center space-x-2">
-        <Button variant="outline" className="flex items-center gap-2">
+    <main className="flex-1 space-y-6 p-4 sm:p-8">
+      <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2">
+        <Button variant="outline" className="flex items-center gap-2 w-full sm:w-auto">
           <CalendarIcon className="h-4 w-4" />
           <span>1 de Ene, 2023 - 31 de Ago, 2023</span>
         </Button>
         <Select>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-full sm:w-[180px]">
             <SelectValue placeholder="Todas las Categorías" />
           </SelectTrigger>
           <SelectContent>
@@ -52,7 +52,7 @@ export default function IncomeExpensePage() {
           </SelectContent>
         </Select>
         <Select>
-          <SelectTrigger className="w-[180px]">
+          <SelectTrigger className="w-full sm:w-[180px]">
             <SelectValue placeholder="Todos los Fondos" />
           </SelectTrigger>
           <SelectContent>
