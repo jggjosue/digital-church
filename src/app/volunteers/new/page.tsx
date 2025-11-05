@@ -45,11 +45,11 @@ export default function NewVolunteerPage() {
             title="Agregar Nuevo Voluntario"
             description="Ingrese los detalles a continuación para crear un nuevo perfil de voluntario."
         >
-            <div className="flex items-center gap-2">
-                <Button variant="ghost" asChild>
+            <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+                <Button variant="ghost" asChild className="w-full sm:w-auto">
                     <Link href="/volunteers">Cancelar</Link>
                 </Button>
-                <Button>Guardar Voluntario</Button>
+                <Button className="w-full sm:w-auto">Guardar Voluntario</Button>
             </div>
         </AppHeader>
         <main className="flex-1 space-y-6 p-4 sm:p-8 bg-muted/20">
@@ -106,7 +106,7 @@ export default function NewVolunteerPage() {
                             </div>
                             <div className="space-y-2">
                             <Label>Habilidades e Intereses</Label>
-                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 rounded-md border p-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 rounded-md border p-4">
                                 {availableSkills.map(skill => (
                                     <div key={skill} className="flex items-center gap-2">
                                         <Checkbox id={`skill-${skill}`} />
