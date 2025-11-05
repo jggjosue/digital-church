@@ -152,7 +152,7 @@ export default function DonationsPage() {
 
       <div className="mt-6">
         <Tabs defaultValue="donations">
-          <TabsList className="w-full overflow-x-auto">
+          <TabsList className="w-full grid grid-cols-3">
             <TabsTrigger value="donations">Donaciones</TabsTrigger>
             <TabsTrigger value="pledges">Promesas</TabsTrigger>
             <TabsTrigger value="campaigns">Campañas</TabsTrigger>
@@ -165,14 +165,14 @@ export default function DonationsPage() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input placeholder="Buscar donaciones..." className="pl-9" />
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="icon">
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <Button variant="ghost" size="icon" className="w-auto px-2 sm:w-10">
                       <ListFilter className="h-4 w-4" />
                     </Button>
-                    <Button variant="ghost" size="icon">
+                    <Button variant="ghost" size="icon" className="w-auto px-2 sm:w-10">
                       <Download className="h-4 w-4" />
                     </Button>
-                    <Button asChild>
+                    <Button asChild className="flex-1 sm:flex-none">
                       <Link href="/donations/new">
                         <Plus className="mr-2 h-4 w-4" /> Añadir Donación
                       </Link>
