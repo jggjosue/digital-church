@@ -49,7 +49,7 @@ export default function NewEventPage() {
         title="Crear Nuevo Evento"
         description="Complete el siguiente formulario para agregar un nuevo evento al calendario de la iglesia."
       >
-        <div className="flex justify-end gap-2">
+        <div className="flex flex-col sm:flex-row justify-end gap-2 w-full sm:w-auto">
             <Button variant="outline" asChild><Link href="/events">Cancelar</Link></Button>
             <Button>Crear Evento</Button>
         </div>
@@ -69,7 +69,7 @@ export default function NewEventPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                           <div className="space-y-2">
                               <Label>Fecha y Hora de Inicio</Label>
-                              <div className="flex gap-2">
+                              <div className="flex flex-col sm:flex-row gap-2">
                                   <Popover>
                                       <PopoverTrigger asChild>
                                       <Button
@@ -92,12 +92,12 @@ export default function NewEventPage() {
                                       />
                                       </PopoverContent>
                                   </Popover>
-                                  <Input type="time" className="w-[140px]" />
+                                  <Input type="time" className="w-full sm:w-[140px]" />
                               </div>
                           </div>
                           <div className="space-y-2">
                               <Label>Fecha y Hora de Finalización</Label>
-                              <div className="flex gap-2">
+                              <div className="flex flex-col sm:flex-row gap-2">
                                   <Popover>
                                       <PopoverTrigger asChild>
                                       <Button
@@ -120,7 +120,7 @@ export default function NewEventPage() {
                                       />
                                       </PopoverContent>
                                   </Popover>
-                                  <Input type="time" className="w-[140px]" />
+                                  <Input type="time" className="w-full sm:w-[140px]" />
                               </div>
                           </div>
                       </div>
