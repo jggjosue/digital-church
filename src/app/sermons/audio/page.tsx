@@ -36,6 +36,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { sermonsData as initialSermonsData } from '@/lib/data';
 import { AppHeader } from '@/components/app-header';
 import Link from 'next/link';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 
 type Sermon = (typeof initialSermonsData)[0];
 
@@ -65,10 +66,26 @@ export default function AudioLibraryPage() {
   const [sermonsData, setSermonsData] = React.useState<Sermon[]>(audioLibraryData);
   const [selected, setSelected] = React.useState<number[]>([]);
   const [sermonToDelete, setSermonToDelete] = React.useState<Sermon | null>(null);
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const itemsPerPage = 5;
+
+  const totalPages = Math.ceil(sermonsData.length / itemsPerPage);
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const paginatedData = sermonsData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelected(sermonsData.map((s) => s.id));
+      setSelected(paginatedData.map((s) => s.id));
     } else {
       setSelected([]);
     }
@@ -108,10 +125,10 @@ export default function AudioLibraryPage() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input placeholder="Search by title, speaker, or event..." className="pl-9" />
                 </div>
-                <div className="grid grid-cols-3 lg:flex lg:items-center gap-2 w-full lg:w-auto">
-                    <Button variant="outline">Filter by Status <ChevronDown className="ml-2 h-4 w-4" /></Button>
-                    <Button variant="outline">Filter by Category <ChevronDown className="ml-2 h-4 w-4" /></Button>
-                    <Button variant="outline">Date Range <ChevronDown className="ml-2 h-4 w-4" /></Button>
+                <div className="grid grid-cols-1 sm:grid-cols-3 lg:flex lg:items-center gap-2 w-full lg:w-auto">
+                    <Button variant="outline" className="w-full">Filter by Status <ChevronDown className="ml-2 h-4 w-4" /></Button>
+                    <Button variant="outline" className="w-full">Filter by Category <ChevronDown className="ml-2 h-4 w-4" /></Button>
+                    <Button variant="outline" className="w-full">Date Range <ChevronDown className="ml-2 h-4 w-4" /></Button>
                 </div>
             </div>
             <TabsList className="grid grid-cols-3 sm:inline-flex">
@@ -119,7 +136,7 @@ export default function AudioLibraryPage() {
               <TabsTrigger value="sermons" asChild><Link href="/sermons/list">Sermons</Link></TabsTrigger>
               <TabsTrigger value="videos" asChild><Link href="/sermons/videos">Videos</Link></TabsTrigger>
               <TabsTrigger value="audio">Audio</TabsTrigger>
-              <TabsTrigger value="images" disabled>Images</TabsTrigger>
+              <TabsTrigger value="images" asChild><Link href="/sermons/images">Images</Link></TabsTrigger>
             </TabsList>
             <TabsContent value="audio">
                 <div className="overflow-x-auto">
@@ -130,7 +147,7 @@ export default function AudioLibraryPage() {
                       <Checkbox
                         checked={
                           selected.length > 0 &&
-                          selected.length === sermonsData.length
+                          selected.length === paginatedData.length
                         }
                         onCheckedChange={(checked) => handleSelectAll(!!checked)}
                       />
@@ -145,7 +162,7 @@ export default function AudioLibraryPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {sermonsData.map((sermon) => (
+                  {paginatedData.map((sermon) => (
                     <TableRow key={sermon.id}>
                       <TableCell>
                         <Checkbox
@@ -189,6 +206,28 @@ export default function AudioLibraryPage() {
                 </TableBody>
               </Table>
               </div>
+               <div className="flex flex-col sm:flex-row items-center justify-between pt-4 gap-4">
+                <div className="text-sm text-muted-foreground">
+                    Mostrando {paginatedData.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} a {Math.min(currentPage * itemsPerPage, sermonsData.length)} de {sermonsData.length} resultados
+                </div>
+                <Pagination>
+                    <PaginationContent>
+                    <PaginationItem>
+                        <PaginationPrevious href="#" onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }} />
+                    </PaginationItem>
+                    {[...Array(totalPages)].map((_, i) => (
+                        <PaginationItem key={i}>
+                        <PaginationLink href="#" isActive={i + 1 === currentPage} onClick={(e) => { e.preventDefault(); handlePageChange(i + 1); }}>
+                            {i + 1}
+                        </PaginationLink>
+                        </PaginationItem>
+                    ))}
+                    <PaginationItem>
+                        <PaginationNext href="#" onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }}/>
+                    </PaginationItem>
+                    </PaginationContent>
+                </Pagination>
+            </div>
             </TabsContent>
           </Tabs>
         </CardContent>

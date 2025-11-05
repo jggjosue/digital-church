@@ -82,10 +82,10 @@ export default function ImageLibraryPage() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input placeholder="Search by title, tag, or sermon..." className="pl-9" />
                 </div>
-                <div className="grid grid-cols-3 lg:flex lg:items-center gap-2 w-full lg:w-auto">
-                    <Button variant="outline">Category <ChevronDown className="ml-2 h-4 w-4" /></Button>
-                    <Button variant="outline">Album <ChevronDown className="ml-2 h-4 w-4" /></Button>
-                    <Button variant="outline">Date Uploaded <ChevronDown className="ml-2 h-4 w-4" /></Button>
+                <div className="grid grid-cols-1 sm:grid-cols-3 lg:flex lg:items-center gap-2 w-full lg:w-auto">
+                    <Button variant="outline" className="w-full">Category <ChevronDown className="ml-2 h-4 w-4" /></Button>
+                    <Button variant="outline" className="w-full">Album <ChevronDown className="ml-2 h-4 w-4" /></Button>
+                    <Button variant="outline" className="w-full">Date Uploaded <ChevronDown className="ml-2 h-4 w-4" /></Button>
                 </div>
             </div>
             <TabsList className="grid grid-cols-3 sm:inline-flex">
