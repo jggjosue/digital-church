@@ -105,16 +105,16 @@ export default function SermonsPage() {
       <Card>
         <CardContent className="p-4">
           <Tabs defaultValue="all-media">
-            <div className="flex flex-col lg:flex-row items-center justify-between gap-4 mb-4">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4">
                 <div className="relative w-full max-w-sm">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input placeholder="Buscar por título o predicador..." className="pl-9" />
                 </div>
-                <div className="grid grid-cols-2 lg:flex lg:items-center gap-2 w-full lg:w-auto">
-                    <Button variant="outline">Estado <ChevronDown className="ml-2 h-4 w-4" /></Button>
-                    <Button variant="outline">Serie <ChevronDown className="ml-2 h-4 w-4" /></Button>
-                    <Button variant="outline">Predicador <ChevronDown className="ml-2 h-4 w-4" /></Button>
-                    <Button variant="outline">Fechas <ChevronDown className="ml-2 h-4 w-4" /></Button>
+                <div className="grid grid-cols-2 sm:grid-cols-4 lg:flex lg:items-center gap-2 w-full lg:w-auto">
+                    <Button variant="outline" className="w-full">Estado <ChevronDown className="ml-2 h-4 w-4" /></Button>
+                    <Button variant="outline" className="w-full">Serie <ChevronDown className="ml-2 h-4 w-4" /></Button>
+                    <Button variant="outline" className="w-full">Predicador <ChevronDown className="ml-2 h-4 w-4" /></Button>
+                    <Button variant="outline" className="w-full">Fechas <ChevronDown className="ml-2 h-4 w-4" /></Button>
                 </div>
             </div>
             <TabsList className="grid grid-cols-3 sm:inline-flex">
@@ -239,5 +239,7 @@ export default function SermonsPage() {
     </AlertDialog>
   );
 }
+
+    
 
     
