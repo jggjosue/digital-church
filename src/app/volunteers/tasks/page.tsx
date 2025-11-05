@@ -87,10 +87,12 @@ export default function VolunteerAssignmentsPage() {
       <Card>
         <CardContent className="p-4">
             <div className="flex flex-col lg:flex-row items-center gap-4">
-                <div className="flex-1 relative w-full">
+                <div className="flex-1 w-full">
                     <Label htmlFor="search-volunteer">Buscar por Nombre</Label>
-                    <Search className="absolute left-3 top-[2.4rem] h-4 w-4 text-muted-foreground" />
-                    <Input id="search-volunteer" placeholder="Buscar voluntario..." className="pl-9 mt-1" />
+                    <div className="relative mt-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <Input id="search-volunteer" placeholder="Buscar voluntario..." className="pl-9" />
+                    </div>
                 </div>
                  <div className="flex-1 w-full">
                     <Label htmlFor="ministry-filter">Ministerio</Label>
