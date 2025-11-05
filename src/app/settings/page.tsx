@@ -61,7 +61,7 @@ export default function SettingsPage() {
               <div/>
             </AppHeader>
             <main className="flex-1 bg-muted/20 p-4 sm:p-8">
-                <div className="mt-6 grid grid-cols-1 gap-8 lg:grid-cols-3">
+                <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
                     {/* Left Column: Role List */}
                     <div className="lg:col-span-1">
                         <div className='flex flex-col gap-4'>
@@ -129,13 +129,13 @@ export default function SettingsPage() {
                                     ))}
                                 </Accordion>
                                 <div className="mt-8 flex flex-col sm:flex-row justify-between items-center gap-4">
-                                    <Button variant="link" className="text-destructive p-0 hover:text-destructive/80">
+                                    <Button variant="link" className="text-destructive p-0 hover:text-destructive/80 order-2 sm:order-1">
                                         <Trash2 className="mr-2 h-4 w-4" />
                                         Eliminar Rol
                                     </Button>
-                                    <div className="flex gap-2">
-                                        <Button variant="outline">Cancelar</Button>
-                                        <Button>Guardar Cambios</Button>
+                                    <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto order-1 sm:order-2">
+                                        <Button variant="outline" className="w-full sm:w-auto">Cancelar</Button>
+                                        <Button className="w-full sm:w-auto">Guardar Cambios</Button>
                                     </div>
                                 </div>
                             </CardContent>
