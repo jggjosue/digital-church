@@ -108,7 +108,7 @@ export default function AddMembersToGroupPage() {
             </Breadcrumb>
         }
       >
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row items-center gap-2">
             <Button variant="ghost" asChild><Link href="/groups">Cancelar</Link></Button>
             <Button onClick={handleAddMembers} disabled={selectedMembers.length === 0}>
                 <Plus className="mr-2 h-4 w-4" /> Agregar {selectedMembers.length > 0 ? selectedMembers.length : ''} {selectedMembers.length === 1 ? 'Miembro' : 'Miembros'}
