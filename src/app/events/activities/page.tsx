@@ -70,16 +70,16 @@ export default function ActivitiesPage() {
         title={`Events for ${formattedDate}`}
         description={`A total of ${eventsForDay.length} events are scheduled for this day.`}
       >
-        <div className="flex items-center gap-2">
-            <Button variant="ghost" onClick={() => handleDateChange(-1)}>
+        <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+            <Button variant="ghost" onClick={() => handleDateChange(-1)} className="w-full sm:w-auto">
                 <ChevronLeft className="h-4 w-4 mr-2" />
                 Previous Day
             </Button>
-            <Button variant="ghost" onClick={() => handleDateChange(1)}>
+            <Button variant="ghost" onClick={() => handleDateChange(1)} className="w-full sm:w-auto">
                 Next Day
                 <ChevronRight className="h-4 w-4 ml-2" />
             </Button>
-            <Button asChild>
+            <Button asChild className="w-full sm:w-auto">
                 <Link href="/events/new">
                     <Plus className="mr-2 h-4 w-4" /> Add Event
                 </Link>
@@ -90,10 +90,10 @@ export default function ActivitiesPage() {
       <div className="space-y-6">
         {eventsForDay.map((event, index) => (
           <Card key={index} className="overflow-hidden">
-            <CardContent className="p-0 flex">
-              <div className="w-28 flex flex-col items-center justify-center p-4 bg-muted/50">
+            <CardContent className="p-0 flex flex-col sm:flex-row">
+              <div className="w-full sm:w-28 flex flex-row sm:flex-col items-center justify-between sm:justify-center p-4 bg-muted/50">
                   <p className="text-lg font-bold text-primary">{event.startTime}</p>
-                  <div className="h-full w-px bg-border my-2 flex-grow min-h-[1.5rem]"></div>
+                  <div className="h-px w-4 sm:h-full sm:w-px bg-border my-2 mx-2 sm:mx-0"></div>
                   <p className="text-sm text-muted-foreground">{event.endTime}</p>
               </div>
               <div className="p-6 flex-1 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -102,7 +102,7 @@ export default function ActivitiesPage() {
                   <h3 className="text-xl font-semibold mt-2">{event.title}</h3>
                   <p className="text-muted-foreground mt-1 max-w-xl">{event.description}</p>
                 </div>
-                <Button variant="outline" className="w-full sm:w-auto" asChild>
+                <Button variant="outline" className="w-full sm:w-auto mt-4 sm:mt-0" asChild>
                     <Link href={`/events/${event.id}`}>Ver Detalles</Link>
                 </Button>
               </div>
