@@ -133,7 +133,7 @@ export default function VolunteersPage() {
         </div>
       </aside>
 
-      <div className="flex-1 p-4 sm:p-8 overflow-y-auto">
+      <div className="flex-1 p-4 sm:p-8">
         <Card className="bg-card">
           <CardContent className="p-6">
             <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
