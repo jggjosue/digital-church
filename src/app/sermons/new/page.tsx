@@ -38,7 +38,10 @@ export default function NewSermonPage() {
         title="Añadir Nuevo Sermón"
         description="Rellene los detalles a continuación para añadir un nuevo sermón a la biblioteca."
       >
-        <div/>
+        <div className="hidden sm:flex gap-2">
+            <Button variant="outline" asChild><Link href="/sermons">Cancelar</Link></Button>
+            <Button>Guardar Sermón</Button>
+        </div>
       </AppHeader>
     <main className="flex-1 bg-muted/20 p-4 sm:p-8">
       <Card className="max-w-4xl mx-auto">
@@ -124,9 +127,9 @@ export default function NewSermonPage() {
                 </div> 
             </div>
 
-            <div className="flex justify-end gap-2">
-                <Button variant="outline" asChild><Link href="/sermons">Cancelar</Link></Button>
-                <Button>Guardar Sermón</Button>
+            <div className="flex flex-col sm:flex-row justify-end gap-2">
+                <Button variant="outline" asChild className="w-full sm:w-auto"><Link href="/sermons">Cancelar</Link></Button>
+                <Button className="w-full sm:w-auto">Guardar Sermón</Button>
             </div>
         </CardContent>
       </Card>
