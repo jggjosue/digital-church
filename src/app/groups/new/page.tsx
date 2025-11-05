@@ -34,7 +34,7 @@ export default function NewGroupPage() {
             title="Crear Nuevo Grupo"
             description="Complete los detalles a continuación para crear un nuevo grupo."
         >
-            <div className="flex justify-end gap-2 pt-4">
+            <div className="flex flex-col sm:flex-row justify-end gap-2 w-full sm:w-auto">
                 <Button variant="ghost" asChild><Link href="/groups">Cancelar</Link></Button>
                 <Button>
                 <Plus className="mr-2 h-4 w-4" /> Crear Grupo
