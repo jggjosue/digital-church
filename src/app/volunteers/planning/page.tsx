@@ -190,9 +190,9 @@ export default function VolunteerSchedulingPage() {
                 <Button><Save className="mr-2 h-4 w-4" />Guardar Horario</Button>
             </div>
         </AppHeader>
-        <main className="flex flex-col lg:flex-row h-[calc(100vh-theme(spacing.16))] bg-muted/20">
+        <main className="flex flex-col lg:flex-row flex-1 bg-muted/20">
       <aside className="w-full lg:w-[320px] border-b lg:border-r lg:border-b-0 bg-background flex flex-col p-6">
-        <div className="mt-6">
+        <div className="lg:mt-6">
           <Calendar
             mode="single"
             selected={date}
@@ -286,7 +286,7 @@ export default function VolunteerSchedulingPage() {
                     </CardHeader>
                     <CardContent>
                       {view === 'calendar' ? (
-                          <div className="grid grid-cols-1 gap-4">
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                               {event.roles.map((role, roleIndex) => (
                                   <Card key={role.name} className="p-4 bg-muted/50">
                                       <h4 className="font-semibold text-sm">{role.name} ({role.assigned}/{role.needed})</h4>
@@ -396,3 +396,5 @@ export default function VolunteerSchedulingPage() {
     </div>
   );
 }
+
+    
