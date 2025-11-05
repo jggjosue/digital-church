@@ -40,7 +40,7 @@ export default function StaffDirectoryPage() {
           <Plus className="mr-2 h-4 w-4" /> Añadir Nuevo Miembro del Personal
         </Button>
       </AppHeader>
-      <main className="flex-1 flex bg-muted/20">
+      <main className="flex flex-1 bg-muted/20">
         <aside className="hidden w-80 border-r bg-background p-6 lg:block">
             <h2 className="text-xl font-semibold">Filtros</h2>
             <div className="mt-6 space-y-6">
@@ -85,10 +85,6 @@ export default function StaffDirectoryPage() {
                         </div>
                     </div>
                 </div>
-                <div className="pt-4 space-y-2">
-                    <Button className="w-full">Aplicar Filtros</Button>
-                    <Button variant="ghost" className="w-full">Limpiar Todo</Button>
-                </div>
             </div>
         </aside>
         <div className="flex-1 p-4 sm:p-8">
@@ -112,15 +108,15 @@ export default function StaffDirectoryPage() {
                 {staffData.map((staff) => (
                     <Card key={staff.id}>
                         <CardContent className="p-6">
-                            <div className="flex flex-col sm:flex-row items-center gap-6">
-                                <Avatar className='h-20 w-20'>
+                            <div className="flex flex-col items-center gap-6 text-center">
+                                <Avatar className='h-24 w-24'>
                                     <AvatarImage src={staff.avatarUrl} alt={staff.name} />
                                     <AvatarFallback>{staff.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
                                 </Avatar>
-                                <div className="flex-1 text-center sm:text-left">
+                                <div className="flex-1 text-center">
                                     <h3 className="text-xl font-bold">{staff.name}</h3>
                                     <p className="text-primary">{staff.role}</p>
-                                    <div className='mt-2 flex flex-col sm:flex-row sm:items-center gap-x-6 gap-y-1 text-sm text-muted-foreground justify-center sm:justify-start'>
+                                    <div className='mt-4 flex flex-col sm:flex-row sm:items-center gap-x-6 gap-y-2 text-sm text-muted-foreground justify-center'>
                                         <div className='flex items-center justify-center gap-2'>
                                             <Mail className='h-4 w-4'/>
                                             <span>{staff.email}</span>
@@ -131,7 +127,7 @@ export default function StaffDirectoryPage() {
                                         </div>
                                     </div>
                                 </div>
-                                <Button variant="outline" asChild>
+                                <Button variant="outline" className="w-full sm:w-auto" asChild>
                                     <Link href="#">Ver Perfil</Link>
                                 </Button>
                             </div>
