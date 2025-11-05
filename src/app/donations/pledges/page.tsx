@@ -160,7 +160,7 @@ export default function PledgeManagementPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input placeholder="Buscar por donante..." className="pl-9" />
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
                 <Select>
                     <SelectTrigger className="w-full sm:w-[150px]">
                         <SelectValue placeholder="Estado: Todos" />
@@ -172,20 +172,20 @@ export default function PledgeManagementPage() {
                         <SelectItem value="completed">Completado</SelectItem>
                     </SelectContent>
                 </Select>
-                <Button variant="ghost" size="icon">
+                 <Select>
+                    <SelectTrigger className="w-full sm:w-[180px]">
+                        <SelectValue placeholder="Ordenar por: Fecha de finalización" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="end-date">Fecha de finalización</SelectItem>
+                        <SelectItem value="donor-name">Nombre del donante</SelectItem>
+                        <SelectItem value="progress">Progreso</SelectItem>
+                    </SelectContent>
+                </Select>
+                <Button variant="ghost" size="icon" className="w-auto px-2 sm:px-0 sm:w-auto">
                     <Download className="h-4 w-4" />
                 </Button>
             </div>
-             <Select>
-                <SelectTrigger className="w-full sm:w-[180px]">
-                    <SelectValue placeholder="Ordenar por: Fecha de finalización" />
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectItem value="end-date">Fecha de finalización</SelectItem>
-                    <SelectItem value="donor-name">Nombre del donante</SelectItem>
-                    <SelectItem value="progress">Progreso</SelectItem>
-                </SelectContent>
-            </Select>
           </div>
 
           <div className="overflow-x-auto">
