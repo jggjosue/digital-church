@@ -40,13 +40,13 @@ export default function NewTransactionPage() {
             <Button>Guardar Transacción</Button>
         </div>
       </AppHeader>
-    <main className="flex-1 space-y-6 p-8">
+    <main className="flex-1 space-y-6 p-4 sm:p-8">
       <Card>
         <CardContent className="p-6">
           <div className="max-w-2xl mx-auto space-y-8">
             <div className="space-y-2">
                 <Label>Tipo de Transacción</Label>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <Button
                         variant={transactionType === 'income' ? 'default' : 'outline'}
                         onClick={() => setTransactionType('income')}
