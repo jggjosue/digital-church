@@ -46,7 +46,7 @@ export default function DashboardPage() {
         </Tabs>
         <ThemeToggle />
       </AppHeader>
-      <main className="flex-1 space-y-6 p-4 sm:p-6">
+      <main className="flex-1 space-y-6 p-4 sm:p-8">
         <div className="sm:hidden">
           <Tabs
             defaultValue="this-week"
@@ -54,20 +54,20 @@ export default function DashboardPage() {
             onValueChange={handleTimeRangeChange}
           >
             <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="this-week">Esta Semana</TabsTrigger>
-              <TabsTrigger value="this-month">Este Mes</TabsTrigger>
-              <TabsTrigger value="this-quarter">Este Trimestre</TabsTrigger>
-              <TabsTrigger value="this-year">Este Año</TabsTrigger>
+              <TabsTrigger value="this-week">Semana</TabsTrigger>
+              <TabsTrigger value="this-month">Mes</TabsTrigger>
+              <TabsTrigger value="this-quarter">Trim.</TabsTrigger>
+              <TabsTrigger value="this-year">Año</TabsTrigger>
             </TabsList>
           </Tabs>
         </div>
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           <TotalMembers timeRange={timeRange} />
           <WeeklyAttendance timeRange={timeRange} />
           <GivingThisMonth timeRange={timeRange} />
           <UpcomingEventsCard />
         </div>
-        <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
           <TotalGroups />
           <TotalMinistries />
           <TotalVolunteers />
@@ -81,7 +81,7 @@ export default function DashboardPage() {
             <MemberDemographics />
           </div>
           <div className="lg:col-span-3">
-            <div className="grid gap-6">
+            <div className="grid grid-cols-1 gap-6">
               <UpcomingEvents />
               <PrayerRequests />
             </div>
