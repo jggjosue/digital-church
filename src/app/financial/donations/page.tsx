@@ -50,7 +50,7 @@ const chartConfig = {
 
 
 export default function DonationReportsPage() {
-  const { totalDonations, averageDonation, newDonors, givingTrends, recentDonations } = donationReportsData;
+  const { totalDonations, averageDonation, newDonors, recentDonations } = donationReportsData;
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = React.useState<string>((currentYear + 1).toString());
   const [currentPage, setCurrentPage] = React.useState(1);
@@ -86,17 +86,17 @@ export default function DonationReportsPage() {
       >
         <div/>
       </AppHeader>
-    <main className="flex-1 space-y-6 p-8">
+    <main className="flex-1 space-y-6 p-4 sm:p-8">
       <Card>
         <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex flex-col items-start gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="relative w-full max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input placeholder="Buscar por donante..." className="pl-9" />
             </div>
-            <div className="flex items-center gap-2">
+            <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-3 sm:w-auto">
                 <Select value={selectedYear} onValueChange={setSelectedYear}>
-                    <SelectTrigger className="w-full sm:w-[140px]">
+                    <SelectTrigger>
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -106,7 +106,7 @@ export default function DonationReportsPage() {
                     </SelectContent>
                 </Select>
                  <Select>
-                    <SelectTrigger className="w-full sm:w-[140px]">
+                    <SelectTrigger>
                         <SelectValue placeholder="Todos los Fondos" />
                     </SelectTrigger>
                     <SelectContent>
@@ -116,7 +116,7 @@ export default function DonationReportsPage() {
                     </SelectContent>
                 </Select>
                  <Select>
-                    <SelectTrigger className="w-full sm:w-[140px]">
+                    <SelectTrigger>
                         <SelectValue placeholder="Todas las Campañas" />
                     </SelectTrigger>
                     <SelectContent>
@@ -124,11 +124,11 @@ export default function DonationReportsPage() {
                     </SelectContent>
                 </Select>
             </div>
-            <div className="flex items-center gap-2">
-              <Button variant="outline">
+            <div className="flex w-full flex-col gap-2 sm:flex-row sm:w-auto">
+              <Button variant="outline" className='w-full'>
                 <FileText className="mr-2 h-4 w-4" /> Estados de Cuenta
               </Button>
-              <Button>
+              <Button className='w-full'>
                 <Download className="mr-2 h-4 w-4" /> Exportar
               </Button>
             </div>
