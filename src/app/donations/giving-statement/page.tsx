@@ -116,9 +116,9 @@ export default function GivingStatementPage() {
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent className="flex flex-col items-center justify-center p-8 bg-muted/30">
+              <CardContent className="flex flex-col items-center justify-center p-4 sm:p-8 bg-muted/30">
                 <Card className="w-full max-w-2xl shadow-lg">
-                    <CardContent className="p-8">
+                    <CardContent className="p-6 sm:p-8">
                         <div className="flex justify-between items-start mb-8">
                             <div>
                                 <h2 className="text-2xl font-bold">Grace Chapel</h2>
@@ -134,7 +134,7 @@ export default function GivingStatementPage() {
                             <p className="text-sm text-muted-foreground">123 Main St</p>
                             <p className="text-sm text-muted-foreground">Anytown, USA 12345</p>
                         </div>
-                        <div className="grid grid-cols-2 gap-4 text-sm mb-8">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm mb-8">
                             <div>
                                 <p className="text-muted-foreground">Fecha del Estado de Cuenta:</p>
                                 <p className="font-medium">15 de Enero, 2024</p>
@@ -157,9 +157,9 @@ export default function GivingStatementPage() {
             </Card>
 
             <div className="mt-6 flex flex-col sm:flex-row justify-end gap-2">
-                <Button variant="outline"><Download className="mr-2 h-4 w-4" />Descargar Todo</Button>
-                <Button variant="outline"><Mail className="mr-2 h-4 w-4" />Enviar Todo por Correo</Button>
-                <Button><FileText className="mr-2 h-4 w-4" />Generar Estados de Cuenta</Button>
+                <Button variant="outline" className="w-full sm:w-auto"><Download className="mr-2 h-4 w-4" />Descargar Todo</Button>
+                <Button variant="outline" className="w-full sm:w-auto"><Mail className="mr-2 h-4 w-4" />Enviar Todo por Correo</Button>
+                <Button className="w-full sm:w-auto"><FileText className="mr-2 h-4 w-4" />Generar Estados de Cuenta</Button>
             </div>
           </div>
         </div>
