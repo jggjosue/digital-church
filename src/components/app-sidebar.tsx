@@ -184,6 +184,7 @@ export function AppSidebar() {
   React.useEffect(() => {
     const activeItem = navItems.find(item => item.subItems && isSubItemActive(item.subItems));
     if (activeItem) {
+      // Keep existing open menus, and add the new active one if not already open
       setOpenCollapsibles(prev => {
         if (prev.includes(activeItem.label)) {
           return prev;
