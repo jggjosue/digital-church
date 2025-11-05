@@ -42,14 +42,30 @@ import Link from 'next/link';
 
 type Sermon = (typeof sermonsData)[0];
 
-const sermons = sermonsData.slice(0, 4);
+const sermons = sermonsData;
 
 export default function SermonsListPage() {
   const [selected, setSelected] = React.useState<number[]>([]);
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const itemsPerPage = 5;
+
+  const totalPages = Math.ceil(sermons.length / itemsPerPage);
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const paginatedData = sermons.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelected(sermons.map((s) => s.id));
+      setSelected(paginatedData.map((s) => s.id));
     } else {
       setSelected([]);
     }
@@ -66,12 +82,12 @@ export default function SermonsListPage() {
   return (
     <div className="flex flex-col flex-1">
       <AppHeader
-        title="Sermons"
-        description="View and manage all sermons for your church."
+        title="Sermones"
+        description="Vea y gestione todos los sermones de su iglesia."
       >
         <Button asChild>
           <Link href="/sermons/new">
-            <Plus className="mr-2 h-4 w-4" /> Add New Sermon
+            <Plus className="mr-2 h-4 w-4" /> Añadir Nuevo Sermón
           </Link>
         </Button>
       </AppHeader>
@@ -81,13 +97,13 @@ export default function SermonsListPage() {
               <div className="flex flex-col lg:flex-row items-center justify-between gap-4 mb-4">
                   <div className="relative w-full max-w-sm">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input placeholder="Search by title, speaker, or topic..." className="pl-9" />
+                      <Input placeholder="Buscar por título, predicador o tema..." className="pl-9" />
                   </div>
                   <div className="grid grid-cols-2 lg:flex lg:items-center gap-2 w-full lg:w-auto">
-                      <Button variant="outline">Speaker <ChevronDown className="ml-2 h-4 w-4" /></Button>
-                      <Button variant="outline">Series <ChevronDown className="ml-2 h-4 w-4" /></Button>
-                      <Button variant="outline">Topic <ChevronDown className="ml-2 h-4 w-4" /></Button>
-                      <Button variant="outline">Date Range <ChevronDown className="ml-2 h-4 w-4" /></Button>
+                      <Button variant="outline">Predicador <ChevronDown className="ml-2 h-4 w-4" /></Button>
+                      <Button variant="outline">Serie <ChevronDown className="ml-2 h-4 w-4" /></Button>
+                      <Button variant="outline">Tema <ChevronDown className="ml-2 h-4 w-4" /></Button>
+                      <Button variant="outline">Rango de Fechas <ChevronDown className="ml-2 h-4 w-4" /></Button>
                   </div>
               </div>
               <div className="overflow-x-auto">
@@ -98,20 +114,20 @@ export default function SermonsListPage() {
                         <Checkbox
                           checked={
                             selected.length > 0 &&
-                            selected.length === sermons.length
+                            selected.length === paginatedData.length
                           }
                           onCheckedChange={(checked) => handleSelectAll(!!checked)}
                         />
                       </TableHead>
-                      <TableHead>TITLE</TableHead>
-                      <TableHead>SPEAKER</TableHead>
-                      <TableHead>DATE</TableHead>
+                      <TableHead>TÍTULO</TableHead>
+                      <TableHead>PREDICADOR</TableHead>
+                      <TableHead>FECHA</TableHead>
                       <TableHead>MEDIA</TableHead>
-                      <TableHead className="text-right">ACTIONS</TableHead>
+                      <TableHead className="text-right">ACCIONES</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {sermons.map((sermon) => (
+                    {paginatedData.map((sermon) => (
                       <TableRow key={sermon.id}>
                         <TableCell>
                           <Checkbox
@@ -129,8 +145,8 @@ export default function SermonsListPage() {
                         <TableCell>{sermon.date}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-2">
-                            {sermon.id !== 3 && <Video className="h-4 w-4 text-muted-foreground" />}
-                            {(sermon.id === 1 || sermon.id === 3 || sermon.id === 4) && <Mic className="h-4 w-4 text-muted-foreground" />}
+                            {sermon.id % 2 === 0 && <Video className="h-4 w-4 text-muted-foreground" />}
+                            {sermon.id % 2 !== 0 && <Mic className="h-4 w-4 text-muted-foreground" />}
                           </div>
                         </TableCell>
                         <TableCell className="text-right">
@@ -143,6 +159,28 @@ export default function SermonsListPage() {
                   </TableBody>
                 </Table>
               </div>
+              <div className="flex flex-col sm:flex-row items-center justify-between pt-4 gap-4">
+                <div className="text-sm text-muted-foreground">
+                    Mostrando {paginatedData.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} a {Math.min(currentPage * itemsPerPage, sermons.length)} de {sermons.length} resultados
+                </div>
+                <Pagination>
+                    <PaginationContent>
+                    <PaginationItem>
+                        <PaginationPrevious href="#" onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }} />
+                    </PaginationItem>
+                    {[...Array(totalPages)].map((_, i) => (
+                        <PaginationItem key={i}>
+                        <PaginationLink href="#" isActive={i + 1 === currentPage} onClick={(e) => { e.preventDefault(); handlePageChange(i + 1); }}>
+                            {i + 1}
+                        </PaginationLink>
+                        </PaginationItem>
+                    ))}
+                    <PaginationItem>
+                        <PaginationNext href="#" onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }}/>
+                    </PaginationItem>
+                    </PaginationContent>
+                </Pagination>
+            </div>
           </CardContent>
         </Card>
       </main>
