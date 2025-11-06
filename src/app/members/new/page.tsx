@@ -51,7 +51,7 @@ const formSchema = z.object({
   lastName: z.string().min(1, { message: 'El apellido es requerido.' }),
   email: z.string().email({ message: 'Por favor ingrese un correo electrónico válido.' }).min(1, { message: 'El correo electrónico es requerido.' }),
   phone: z.string().optional(),
-  address: z.string().optional(),
+  address: z.string().min(1, { message: 'La dirección es requerida.' }),
   dob: z.date().optional(),
   spiritualBirthday: z.date().optional(),
   family: z.array(z.object({ id: z.number(), name: z.string(), relation: z.string() })).optional(),
