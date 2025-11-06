@@ -57,7 +57,7 @@ const formSchema = z.object({
   }),
   spiritualBirthday: z.date().optional(),
   family: z.array(z.object({ id: z.number(), name: z.string(), relation: z.string() })).optional(),
-  groups: z.array(z.string()).optional(),
+  groups: z.array(z.string()).nonempty({ message: 'Debe seleccionar al menos un grupo.' }),
   membershipStatus: z.string().optional(),
 });
 
