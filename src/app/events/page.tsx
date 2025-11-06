@@ -162,7 +162,7 @@ export default function EventsPage() {
           </Link>
         </Button>
       </AppHeader>
-    <main className="flex flex-col flex-1 w-full bg-muted/20">
+    <main className="flex flex-col lg:flex-row flex-1 w-full bg-muted/20">
       <div className="flex-1 p-4 sm:p-8">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="relative w-full max-w-sm">
@@ -218,7 +218,7 @@ export default function EventsPage() {
                         </div>
                         <div className="mt-1 space-y-1">
                             {eventToDisplay && (
-                              <AlertDialogTrigger asChild>
+                              <SheetTrigger asChild>
                                 <div 
                                   className={`p-1 rounded-md text-xs truncate cursor-pointer ${eventCategoryColors[eventToDisplay.category]} ${selectedEvent?.id === eventToDisplay.id ? 'ring-2 ring-primary' : ''}`}
                                   onClick={() => handleSelectEvent(eventToDisplay, date.day)}
@@ -226,10 +226,15 @@ export default function EventsPage() {
                                     <span className='hidden sm:inline'>{eventToDisplay.title.split(' ').slice(0,2).join(' ')}</span>
                                     <span className='sm:hidden'>●</span>
                                 </div>
-                              </AlertDialogTrigger>
+                              </SheetTrigger>
                             )}
                         </div>
                       </div>
+                      {!isDesktop && eventToDisplay && (
+                        <SheetContent side="bottom" className="h-[80%]">
+                            <EventDetails event={selectedEvent} date={selectedDate} onEventDelete={setEventToDelete} />
+                        </SheetContent>
+                      )}
                   </Sheet>
                 );
               })}
@@ -237,6 +242,14 @@ export default function EventsPage() {
           </CardContent>
         </Card>
       </div>
+
+      <aside className="w-full lg:w-96 border-l p-8 bg-background hidden lg:block">
+        <h2 className="text-xl font-bold">Detalles del Evento</h2>
+        <p className="text-muted-foreground text-sm">
+            {selectedDate.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+        </p>
+        <EventDetails event={selectedEvent} date={selectedDate} onEventDelete={setEventToDelete} />
+      </aside>
 
         <AlertDialogContent>
             <AlertDialogHeader>
@@ -252,10 +265,6 @@ export default function EventsPage() {
                 <AlertDialogCancel onClick={() => setEventToDelete(null)}>Cancelar</AlertDialogCancel>
                 <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Confirmar Eliminación</AlertDialogAction>
             </AlertDialogFooter>
-        </AlertDialogContent>
-
-        <AlertDialogContent className="max-w-2xl">
-          <EventDetails event={selectedEvent} date={selectedDate} onEventDelete={setEventToDelete} />
         </AlertDialogContent>
 
     </main>
