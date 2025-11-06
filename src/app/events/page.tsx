@@ -162,7 +162,7 @@ export default function EventsPage() {
           </Link>
         </Button>
       </AppHeader>
-    <main className="flex flex-col lg:flex-row min-h-0 flex-1 w-full bg-muted/20">
+    <main className="flex flex-col flex-1 w-full bg-muted/20">
       <div className="flex-1 p-4 sm:p-8">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="relative w-full max-w-sm">
@@ -212,31 +212,24 @@ export default function EventsPage() {
 
                 return (
                   <Sheet key={index}>
-                    <SheetTrigger asChild disabled={!eventToDisplay || isDesktop}>
-                       <div className={`relative h-20 sm:h-24 p-1 sm:p-2 bg-card border-r border-b ${date.isCurrentMonth ? '' : 'bg-muted/50 text-muted-foreground'} ${eventToDisplay ? 'cursor-pointer' : ''}`}
-                         onClick={() => eventToDisplay && handleSelectEvent(eventToDisplay, date.day)}>
+                    <div className={`relative h-20 sm:h-24 p-1 sm:p-2 bg-card border-r border-b ${date.isCurrentMonth ? '' : 'bg-muted/50 text-muted-foreground'}`}>
                         <div className={`text-sm text-right sm:text-left ${selectedDay === date.day && date.isCurrentMonth ? 'font-bold text-primary' : ''}`}>
                           {date.day}
                         </div>
                         <div className="mt-1 space-y-1">
                             {eventToDisplay && (
-                                <div className={`p-1 rounded-md text-xs truncate ${eventCategoryColors[eventToDisplay.category]} ${selectedEvent?.id === eventToDisplay.id ? 'ring-2 ring-primary' : ''}`}>
+                              <AlertDialogTrigger asChild>
+                                <div 
+                                  className={`p-1 rounded-md text-xs truncate cursor-pointer ${eventCategoryColors[eventToDisplay.category]} ${selectedEvent?.id === eventToDisplay.id ? 'ring-2 ring-primary' : ''}`}
+                                  onClick={() => handleSelectEvent(eventToDisplay, date.day)}
+                                >
                                     <span className='hidden sm:inline'>{eventToDisplay.title.split(' ').slice(0,2).join(' ')}</span>
                                     <span className='sm:hidden'>●</span>
                                 </div>
+                              </AlertDialogTrigger>
                             )}
                         </div>
                       </div>
-                    </SheetTrigger>
-                    {!isDesktop && (
-                        <SheetContent side="right">
-                           <h2 className="text-lg font-semibold">Detalles del Evento</h2>
-                            <p className="text-sm text-muted-foreground">
-                            Seleccionado: {new Date(year, month, selectedDay).toLocaleDateString('es-ES', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric'})}
-                            </p>
-                            <EventDetails event={eventToDisplay} date={selectedDate} onEventDelete={setEventToDelete} />
-                        </SheetContent>
-                    )}
                   </Sheet>
                 );
               })}
@@ -244,15 +237,6 @@ export default function EventsPage() {
           </CardContent>
         </Card>
       </div>
-
-      <aside className="w-full lg:w-96 border-l bg-background p-6 hidden lg:block">
-        <h2 className="text-lg font-semibold">Detalles del Evento</h2>
-        <p className="text-sm text-muted-foreground">
-          Seleccionado: {selectedDate.toLocaleDateString('es-ES', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric'})}
-        </p>
-
-        <EventDetails event={selectedEvent} date={selectedDate} onEventDelete={setEventToDelete} />
-      </aside>
 
         <AlertDialogContent>
             <AlertDialogHeader>
@@ -270,10 +254,12 @@ export default function EventsPage() {
             </AlertDialogFooter>
         </AlertDialogContent>
 
+        <AlertDialogContent className="max-w-2xl">
+          <EventDetails event={selectedEvent} date={selectedDate} onEventDelete={setEventToDelete} />
+        </AlertDialogContent>
+
     </main>
     </div>
     </AlertDialog>
   );
 }
-
-    
