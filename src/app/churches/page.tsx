@@ -141,9 +141,7 @@ export default function ChurchesPage() {
                         <h3 className="font-bold text-lg">{selectedLocation.name}</h3>
                         <p className="text-sm mt-1">{selectedLocation.address}</p>
                         <p className="text-sm text-muted-foreground mt-1">{selectedLocation.phone}</p>
-                        <Button variant="link" className="p-0 h-auto mt-4" asChild>
-                            <Link href={`/churches/${selectedLocation.id}`}>Ver Detalles</Link>
-                        </Button>
+                        <Link href={`/churches/${selectedLocation.id}`} className="text-sm font-medium text-black dark:text-white mt-4 inline-block hover:underline">Ver Detalles</Link>
                     </CardContent>
                 </Card>
             </div>
