@@ -16,6 +16,8 @@ import {
 import { AppHeader } from '@/components/app-header';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import Image from 'next/image';
+import { PlaceHolderImages } from '@/lib/placeholder-images';
 
 const locations = [
   {
@@ -23,30 +25,40 @@ const locations = [
     name: 'Main Campus - Downtown',
     address: '123 Main St, Los Angeles, CA 90012',
     phone: '(213) 555-0182',
+    imageUrl: PlaceHolderImages.find(p => p.id === 'event-bible-study')?.imageUrl || 'https://picsum.photos/seed/loc1/800/600',
+    imageHint: 'modern church building'
   },
   {
     id: 2,
     name: 'North Valley Campus',
     address: '456 Oak Ave, San Fernando, CA 91340',
     phone: '(818) 555-0145',
+    imageUrl: 'https://picsum.photos/seed/loc2/800/600',
+    imageHint: 'suburban church exterior'
   },
   {
     id: 3,
     name: 'South Bay Campus',
     address: '789 Pine Ln, Torrance, CA 90501',
     phone: '(310) 555-0199',
+    imageUrl: 'https://picsum.photos/seed/loc3/800/600',
+    imageHint: 'church with palm trees'
   },
   {
     id: 4,
     name: 'Eastside Community Church',
     address: '101 Maple Dr, Riverside, CA 92507',
     phone: '(951) 555-0133',
+    imageUrl: 'https://picsum.photos/seed/loc4/800/600',
+    imageHint: 'community church entrance'
   },
   {
     id: 5,
     name: 'Austin Central Campus',
     address: '202 Congress Ave, Austin, TX 78701',
     phone: '(512) 555-0176',
+    imageUrl: 'https://picsum.photos/seed/loc5/800/600',
+    imageHint: 'city church building'
   },
 ];
 
@@ -115,14 +127,22 @@ export default function ChurchesPage() {
             </div>
         </div>
         <div className="flex-1 bg-muted/20 relative">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                <Card className="w-80">
+          <Image
+            src={selectedLocation.imageUrl}
+            alt={selectedLocation.name}
+            fill
+            className="object-cover"
+            data-ai-hint={selectedLocation.imageHint}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+            <div className="absolute bottom-8 left-8">
+                <Card className="w-80 bg-background/80 backdrop-blur-sm">
                     <CardContent className="p-6">
                         <h3 className="font-bold text-lg">{selectedLocation.name}</h3>
                         <p className="text-sm mt-1">{selectedLocation.address}</p>
                         <p className="text-sm text-muted-foreground mt-1">{selectedLocation.phone}</p>
                         <Button variant="link" className="p-0 h-auto mt-4" asChild>
-                            <Link href="#">Ver Detalles</Link>
+                            <Link href={`/churches/${selectedLocation.id}`}>Ver Detalles</Link>
                         </Button>
                     </CardContent>
                 </Card>
