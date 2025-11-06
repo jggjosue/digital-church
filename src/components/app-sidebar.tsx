@@ -159,7 +159,14 @@ const navItems = [
         { href: '/churches/new', icon: Plus, label: 'Añadir Ubicación' },
     ]
   },
-  { href: '/facilities', icon: Building, label: 'Instalaciones' },
+  { 
+    label: 'Instalaciones', 
+    icon: Building, 
+    subItems: [
+      { href: '/facilities', icon: List, label: 'Gestión' },
+      { href: '/facilities/new', icon: Plus, label: 'Registrar Salón' },
+    ]
+  },
   { 
     label: 'Reportes', 
     icon: FileText, 
