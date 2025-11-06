@@ -27,31 +27,31 @@ import { AppHeader } from '@/components/app-header';
 
 const ceremonyData = [
   {
-    type: 'Baptism',
+    type: 'Bautismo',
     icon: Droplet,
     iconBgColor: 'bg-blue-100',
     iconColor: 'text-blue-500',
-    date: 'October 22, 2023',
-    title: 'Baptism of Emily White',
-    details: 'Officiated by: Pastor David Chen',
+    date: '22 de Octubre, 2023',
+    title: 'Bautismo de Emily White',
+    details: 'Oficiado por: Pastor David Chen',
   },
   {
-    type: 'Marriage',
+    type: 'Matrimonio',
     icon: Heart,
     iconBgColor: 'bg-pink-100',
     iconColor: 'text-pink-500',
-    date: 'September 15, 2023',
-    title: 'Marriage of Michael Johnson & Jessica Lee',
-    details: 'Witnesses: Sarah Brown, Chris Wilson',
+    date: '15 de Septiembre, 2023',
+    title: 'Matrimonio de Michael Johnson & Jessica Lee',
+    details: 'Testigos: Sarah Brown, Chris Wilson',
   },
   {
-    type: 'Child Dedication',
+    type: 'Dedicación de Niño',
     icon: Smile,
     iconBgColor: 'bg-green-100',
     iconColor: 'text-green-500',
-    date: 'August 05, 2023',
-    title: 'Child Dedication for Olivia Rodriguez',
-    details: 'Parents: Liam & Maria Rodriguez',
+    date: '05 de Agosto, 2023',
+    title: 'Dedicación de Niño para Olivia Rodriguez',
+    details: 'Padres: Liam & Maria Rodriguez',
   },
 ];
 
@@ -59,12 +59,12 @@ export default function CeremoniesPage() {
   return (
     <div className="flex flex-col flex-1">
       <AppHeader
-        title="Historical Records"
-        description="Search and view the church's event archive."
+        title="Registros Históricos"
+        description="Busque y vea el archivo de eventos de la iglesia."
       >
         <div className="flex gap-2">
-            <Button variant="outline"><FileText className="mr-2 h-4 w-4" /> Export Data</Button>
-            <Button><Plus className="mr-2 h-4 w-4" /> Add Record</Button>
+            <Button variant="outline"><FileText className="mr-2 h-4 w-4" /> Exportar Datos</Button>
+            <Button><Plus className="mr-2 h-4 w-4" /> Añadir Registro</Button>
         </div>
       </AppHeader>
     <main className="flex-1 bg-muted/20 p-4 sm:p-8">
@@ -73,25 +73,25 @@ export default function CeremoniesPage() {
             <div className="flex flex-col lg:flex-row items-center justify-between gap-4 mb-6">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
                     <div>
-                        <label htmlFor="event-type" className="text-sm font-medium text-muted-foreground">Event Type</label>
+                        <label htmlFor="event-type" className="text-sm font-medium text-muted-foreground">Tipo de Evento</label>
                          <Select>
                             <SelectTrigger id="event-type" className="w-full mt-1">
-                            <SelectValue placeholder="All Events" />
+                            <SelectValue placeholder="Todos los Eventos" />
                             </SelectTrigger>
                             <SelectContent>
-                            <SelectItem value="all">All Events</SelectItem>
-                            <SelectItem value="baptism">Baptism</SelectItem>
-                            <SelectItem value="marriage">Marriage</SelectItem>
-                            <SelectItem value="dedication">Child Dedication</SelectItem>
+                            <SelectItem value="all">Todos los Eventos</SelectItem>
+                            <SelectItem value="baptism">Bautismo</SelectItem>
+                            <SelectItem value="marriage">Matrimonio</SelectItem>
+                            <SelectItem value="dedication">Dedicación de Niño</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
                      <div>
-                        <label htmlFor="date-range" className="text-sm font-medium text-muted-foreground">Date Range</label>
-                        <Input id="date-range" placeholder="Jan 1, 2023 - Dec 31, 2023" className="mt-1" />
+                        <label htmlFor="date-range" className="text-sm font-medium text-muted-foreground">Rango de Fechas</label>
+                        <Input id="date-range" placeholder="1 de Ene, 2023 - 31 de Dic, 2023" className="mt-1" />
                     </div>
                      <div>
-                        <label htmlFor="search-person" className="text-sm font-medium text-muted-foreground">Search by Person</label>
+                        <label htmlFor="search-person" className="text-sm font-medium text-muted-foreground">Buscar por Persona</label>
                         <div className="relative mt-1">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input id="search-person" placeholder="e.g., John Smith" className="pl-9" />
@@ -119,7 +119,7 @@ export default function CeremoniesPage() {
                                         <h3 className="text-lg font-bold mt-1">{ceremony.title}</h3>
                                         <p className="text-sm text-muted-foreground mt-1">{ceremony.details}</p>
                                     </div>
-                                    <Button variant="link" className="p-0 h-auto self-start sm:self-center">View Details</Button>
+                                    <Button variant="link" className="p-0 h-auto self-start sm:self-center">Ver Detalles</Button>
                                 </CardContent>
                             </Card>
                         </div>
