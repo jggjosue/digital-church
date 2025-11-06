@@ -50,7 +50,7 @@ const formSchema = z.object({
   firstName: z.string().min(1, { message: 'El nombre es requerido.' }),
   lastName: z.string().min(1, { message: 'El apellido es requerido.' }),
   email: z.string().email({ message: 'Por favor ingrese un correo electrónico válido.' }).min(1, { message: 'El correo electrónico es requerido.' }),
-  phone: z.string().optional(),
+  phone: z.string().min(1, { message: 'El número de teléfono es requerido.' }),
   address: z.string().min(1, { message: 'La dirección es requerida.' }),
   dob: z.date().optional(),
   spiritualBirthday: z.date().optional(),
@@ -331,5 +331,3 @@ export default function NewMemberPage() {
     </div>
   );
 }
-
-    
