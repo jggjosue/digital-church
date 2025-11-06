@@ -142,17 +142,17 @@ export default function FacilitiesPage() {
     return calendarDays;
   }
   
-  const getWeekViewDays = () => {
-    const startOfWeek = new Date(currentDate);
-    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
-    const weekDays = [];
-    for (let i=0; i<7; i++) {
-        const day = new Date(startOfWeek);
-        day.setDate(day.getDate() + i);
-        weekDays.push({date: day, day: day.getDate()});
+    const getWeekViewDays = () => {
+        const startOfWeek = new Date(currentDate);
+        startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+        const weekDays = [];
+        for (let i=0; i<7; i++) {
+            const day = new Date(startOfWeek);
+            day.setDate(day.getDate() + i);
+            weekDays.push({date: day, day: day.getDate()});
+        }
+        return weekDays;
     }
-    return weekDays;
-  }
 
   const renderMonthView = () => {
     const calendarDays = getMonthViewDays();
@@ -283,21 +283,21 @@ export default function FacilitiesPage() {
       </AppHeader>
       <main className="flex-1 flex flex-col md:flex-row min-h-0 bg-muted/20">
         <aside className="w-full md:w-80 border-b md:border-r md:border-b-0 bg-background flex flex-col p-4">
-            <h3 className="text-sm font-medium text-muted-foreground mb-2">Filtrar por Salón</h3>
-            <Select value={selectedHallName} onValueChange={setSelectedHallName}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos los Salones</SelectItem>
-                {halls.map(hall => <SelectItem key={hall.name} value={hall.name}>{hall.name}</SelectItem>)}
-              </SelectContent>
-            </Select>
         </aside>
         <div className="flex-1 p-4 sm:p-6 overflow-auto">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="w-full sm:w-64">
+                    <h3 className="text-sm font-medium text-muted-foreground mb-2">Filtrar por Salón</h3>
+                    <Select value={selectedHallName} onValueChange={setSelectedHallName}>
+                    <SelectTrigger>
+                        <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">Todos los Salones</SelectItem>
+                        {halls.map(hall => <SelectItem key={hall.name} value={hall.name}>{hall.name}</SelectItem>)}
+                    </SelectContent>
+                    </Select>
+                </div>
                 <div className="flex items-center gap-2">
                   <Button variant="ghost" size="icon" onClick={handlePrev}><ChevronLeft className="h-5 w-5" /></Button>
                   <h2 className="text-lg font-semibold text-center w-64">{getHeaderDateString()}</h2>
@@ -309,7 +309,9 @@ export default function FacilitiesPage() {
                     <Button variant={view === 'week' ? "secondary" : "ghost"} size="sm" onClick={() => setView('week')}>Semana</Button>
                     <Button variant={view === 'day' ? "secondary" : "ghost"} size="sm" onClick={() => setView('day')}>Día</Button>
                 </div>
-              </div>
+            </div>
+          <Card className='mt-4'>
+            <CardContent className="p-4">
               {view === 'month' ? renderMonthView() : view === 'week' ? renderWeekView() : renderDayView()}
             </CardContent>
           </Card>
