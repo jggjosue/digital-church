@@ -141,7 +141,15 @@ const navItems = [
       { href: '/attendance', icon: ClipboardList, label: 'Gestión' },
     ]
   },
-  { href: '/ceremonies', icon: BookHeart, label: 'Ceremonias' },
+  { 
+    label: 'Ceremonias', 
+    icon: BookHeart, 
+    subItems: [
+        { href: '/ceremonies', icon: List, label: 'Gestión' },
+        { href: '/ceremonies/new', icon: Plus, label: 'Agregar Ceremonia' },
+        { href: '/ceremonies/export', icon: FileText, label: 'Exportar Datos' },
+    ]
+  },
   { href: '/churches', icon: Building, label: 'Iglesias' },
   { href: '/facilities', icon: Building, label: 'Instalaciones' },
   { 
