@@ -52,7 +52,9 @@ const formSchema = z.object({
   email: z.string().email({ message: 'Por favor ingrese un correo electrónico válido.' }).min(1, { message: 'El correo electrónico es requerido.' }),
   phone: z.string().min(1, { message: 'El número de teléfono es requerido.' }),
   address: z.string().min(1, { message: 'La dirección es requerida.' }),
-  dob: z.date().optional(),
+  dob: z.date({
+    required_error: "La fecha de nacimiento es requerida.",
+  }),
   spiritualBirthday: z.date().optional(),
   family: z.array(z.object({ id: z.number(), name: z.string(), relation: z.string() })).optional(),
   groups: z.array(z.string()).optional(),
