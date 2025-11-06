@@ -58,7 +58,9 @@ const formSchema = z.object({
   spiritualBirthday: z.date().optional(),
   family: z.array(z.object({ id: z.number(), name: z.string(), relation: z.string() })).optional(),
   groups: z.array(z.string()).nonempty({ message: 'Debe seleccionar al menos un grupo.' }),
-  membershipStatus: z.string().optional(),
+  membershipStatus: z.string({
+    required_error: "El estado de membresía es requerido.",
+  }).min(1, { message: 'El estado de membresía es requerido.' }),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -312,7 +314,7 @@ export default function NewMemberPage() {
                                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                                     <FormControl>
                                         <SelectTrigger>
-                                            <SelectValue />
+                                            <SelectValue placeholder="Seleccione un estado" />
                                         </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
