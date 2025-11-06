@@ -34,6 +34,7 @@ import { groupData as initialGroupData, groupMembers as initialGroupMembers } fr
 import Link from 'next/link';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { AppHeader } from '@/components/app-header';
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 
 type Group = (typeof initialGroupData)[0];
 type GroupMember = (typeof initialGroupMembers)[0];
@@ -58,10 +59,26 @@ export default function GroupsPage() {
   const [selectedMembers, setSelectedMembers] = React.useState<number[]>([]);
   const [memberToRemove, setMemberToRemove] = React.useState<GroupMember | null>(null);
   const [groupToDelete, setGroupToDelete] = React.useState<Group | null>(null);
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const itemsPerPage = 5;
+
+  const totalPages = Math.ceil(groupMembers.length / itemsPerPage);
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const paginatedMembers = groupMembers.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedMembers(groupMembers.map((m) => m.id));
+      setSelectedMembers(paginatedMembers.map((m) => m.id));
     } else {
       setSelectedMembers([]);
     }
@@ -214,7 +231,7 @@ export default function GroupsPage() {
                             <Checkbox
                               checked={
                                 selectedMembers.length > 0 &&
-                                selectedMembers.length === groupMembers.length
+                                selectedMembers.length === paginatedMembers.length
                               }
                               onCheckedChange={(checked) => handleSelectAll(!!checked)}
                             />
@@ -226,7 +243,7 @@ export default function GroupsPage() {
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {groupMembers.map((member) => (
+                        {paginatedMembers.map((member) => (
                           <TableRow key={member.id}>
                             <TableCell>
                               <Checkbox
@@ -274,6 +291,28 @@ export default function GroupsPage() {
                         ))}
                       </TableBody>
                     </Table>
+                    </div>
+                     <div className="flex flex-col sm:flex-row items-center justify-between p-4 gap-4">
+                        <div className="text-sm text-muted-foreground">
+                            Mostrando {paginatedMembers.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} a {Math.min(currentPage * itemsPerPage, groupMembers.length)} de {groupMembers.length} miembros
+                        </div>
+                        <Pagination>
+                            <PaginationContent>
+                            <PaginationItem>
+                                <PaginationPrevious href="#" onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }} />
+                            </PaginationItem>
+                            {[...Array(totalPages)].map((_, i) => (
+                                <PaginationItem key={i}>
+                                <PaginationLink href="#" isActive={i + 1 === currentPage} onClick={(e) => { e.preventDefault(); handlePageChange(i + 1); }}>
+                                    {i + 1}
+                                </PaginationLink>
+                                </PaginationItem>
+                            ))}
+                            <PaginationItem>
+                                <PaginationNext href="#" onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }}/>
+                            </PaginationItem>
+                            </PaginationContent>
+                        </Pagination>
                     </div>
                   </CardContent>
                 </Card>
