@@ -27,6 +27,7 @@ import {
   Clapperboard,
   Mic,
   ImageIcon,
+  Search,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -150,7 +151,14 @@ const navItems = [
         { href: '/ceremonies/export', icon: FileText, label: 'Exportar Datos' },
     ]
   },
-  { href: '/churches', icon: Building, label: 'Iglesias' },
+  { 
+    label: 'Iglesias', 
+    icon: Building, 
+    subItems: [
+        { href: '/churches', icon: Search, label: 'Buscar' },
+        { href: '/churches/new', icon: Plus, label: 'Añadir Ubicación' },
+    ]
+  },
   { href: '/facilities', icon: Building, label: 'Instalaciones' },
   { 
     label: 'Reportes', 
