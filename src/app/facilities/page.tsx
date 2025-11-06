@@ -63,22 +63,23 @@ const halls = [
   ];
   
   const events = {
-    '2023-11-05': [{ title: 'Servicio Dominical', color: 'bg-red-100 text-red-800' }],
-    '2023-11-09': [{ title: 'Grupo de Jóvenes', color: 'bg-green-100 text-green-800' }],
-    '2023-11-11': [{ title: 'Ensayo de Boda', color: 'bg-yellow-100 text-yellow-800' }],
+    '2023-11-05': [{ title: 'Servicio Dominical', color: 'bg-red-100 text-red-800', hall: 'Salón Santuario' }],
+    '2023-11-09': [{ title: 'Grupo de Jóvenes', color: 'bg-green-100 text-green-800', hall: 'Centro Juvenil' }],
+    '2023-11-11': [{ title: 'Ensayo de Boda', color: 'bg-yellow-100 text-yellow-800', hall: 'Salón Santuario' }],
     '2023-11-12': [
-      { title: 'Servicio Dominical', color: 'bg-red-100 text-red-800' },
-      { title: 'Ceremonia de Boda', color: 'bg-yellow-100 text-yellow-800' },
+      { title: 'Servicio Dominical', color: 'bg-red-100 text-red-800', hall: 'Salón Santuario' },
+      { title: 'Ceremonia de Boda', color: 'bg-yellow-100 text-yellow-800', hall: 'Salón Santuario' },
+      { title: 'Estudio Bíblico', color: 'bg-blue-100 text-blue-800', hall: 'Biblioteca y Sala de Estudio' },
     ],
-    '2023-11-14': [{ title: 'Reunión Comunitaria', color: 'bg-blue-100 text-blue-800' }],
-    '2023-11-19': [{ title: 'Servicio Dominical', color: 'bg-red-100 text-red-800' }],
-    '2023-11-23': [{ title: 'Servicio de Acción de Gracias', color: 'bg-blue-100 text-blue-800' }],
-    '2023-11-26': [{ title: 'Servicio Dominical', color: 'bg-red-100 text-red-800' }],
+    '2023-11-14': [{ title: 'Reunión Comunitaria', color: 'bg-blue-100 text-blue-800', hall: 'Salón Comunitario' }],
+    '2023-11-19': [{ title: 'Servicio Dominical', color: 'bg-red-100 text-red-800', hall: 'Salón Santuario' }],
+    '2023-11-23': [{ title: 'Servicio de Acción de Gracias', color: 'bg-blue-100 text-blue-800', hall: 'Salón Comunitario' }],
+    '2023-11-26': [{ title: 'Servicio Dominical', color: 'bg-red-100 text-red-800', hall: 'Salón Santuario' }],
   };
 
 export default function FacilitiesPage() {
   const [currentDate, setCurrentDate] = React.useState(new Date(2023, 10, 1)); // November 2023
-  const [selectedHall, setSelectedHall] = React.useState(halls[0]);
+  const [selectedHallName, setSelectedHallName] = React.useState('all');
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -122,37 +123,35 @@ export default function FacilitiesPage() {
         </Button>
       </AppHeader>
       <main className="flex-1 flex flex-col md:flex-row min-h-0 bg-muted/20">
-        <aside className="w-full md:w-80 border-b md:border-r md:border-b-0 bg-background flex flex-col">
-          <div className="p-4">
+        <aside className="w-full md:w-80 border-b md:border-r md:border-b-0 bg-background flex flex-col p-4">
             <h3 className="text-sm font-medium text-muted-foreground mb-2">Filtrar por Salón</h3>
-            <Select defaultValue="all">
+            <Select value={selectedHallName} onValueChange={setSelectedHallName}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos los Salones</SelectItem>
-                {halls.map(hall => <SelectItem key={hall.name} value={hall.name.toLowerCase().replace(/ /g, '-')}>{hall.name}</SelectItem>)}
+                {halls.map(hall => <SelectItem key={hall.name} value={hall.name}>{hall.name}</SelectItem>)}
               </SelectContent>
             </Select>
-          </div>
-          <div className="flex-1 overflow-y-auto">
+            <div className='mt-4 flex-1 overflow-y-auto space-y-2'>
             {halls.map((hall, index) => (
               <div
                 key={index}
                 className={cn(
-                  'p-4 cursor-pointer border-t',
-                  selectedHall.name === hall.name ? 'bg-accent' : 'hover:bg-accent/50'
+                  'p-4 cursor-pointer border rounded-lg',
+                  selectedHallName === hall.name ? 'bg-accent border-primary' : 'hover:bg-accent/50'
                 )}
-                onClick={() => setSelectedHall(hall)}
+                onClick={() => setSelectedHallName(hall.name)}
               >
-                <h4 className={cn('font-semibold', selectedHall.name === hall.name && 'text-primary')}>{hall.name}</h4>
+                <h4 className={cn('font-semibold', selectedHallName === hall.name && 'text-primary')}>{hall.name}</h4>
                 <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
                   <span className="flex items-center gap-1.5"><Users className="h-4 w-4" /> Capacidad: {hall.capacity}</span>
                   <span className="flex items-center gap-1.5">{hall.icon} {hall.feature}</span>
                 </div>
               </div>
             ))}
-          </div>
+            </div>
         </aside>
         <div className="flex-1 p-4 sm:p-6 overflow-auto">
           <Card>
@@ -176,12 +175,15 @@ export default function FacilitiesPage() {
                 ))}
                 {calendarDays.map((date, index) => {
                     const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(date.day).padStart(2, '0')}`;
-                    const dayEvents = date.isCurrentMonth ? events[dateStr as keyof typeof events] : [];
+                    const dayEvents = (date.isCurrentMonth ? events[dateStr as keyof typeof events] : []) || [];
+                    const filteredEvents = selectedHallName === 'all'
+                        ? dayEvents
+                        : dayEvents.filter(event => event.hall === selectedHallName);
                     return(
                   <div key={index} className={cn("relative h-20 sm:h-28 p-1 sm:p-2 bg-card border-r border-b", date.isCurrentMonth ? '' : 'bg-muted/50 text-muted-foreground/50')}>
                     <div className="text-xs sm:text-sm text-right">{date.day}</div>
                     <div className="mt-1 space-y-1">
-                      {dayEvents?.map((event, eventIndex) => (
+                      {filteredEvents.map((event, eventIndex) => (
                         <div key={eventIndex} className={cn("p-1 rounded-md text-[10px] sm:text-xs truncate", event.color)}>
                             {event.title}
                         </div>
