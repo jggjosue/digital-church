@@ -89,6 +89,7 @@ export default function FacilitiesPage() {
   const [currentDate, setCurrentDate] = React.useState(new Date(2023, 10, 1)); // November 2023
   const [selectedHallName, setSelectedHallName] = React.useState('all');
   const [selectedEvent, setSelectedEvent] = React.useState<CalendarEvent | null>(null);
+  const [view, setView] = React.useState('month');
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -96,30 +97,143 @@ export default function FacilitiesPage() {
   const getDaysInMonth = (year: number, month: number) => new Date(year, month + 1, 0).getDate();
   const getFirstDayOfMonth = (year: number, month: number) => new Date(year, month, 1).getDay();
 
-  const daysInMonth = getDaysInMonth(year, month);
-  const firstDay = getFirstDayOfMonth(year, month);
+  const handlePrev = () => {
+    if (view === 'month') {
+        setCurrentDate(new Date(year, month - 1, 1));
+    } else {
+        const newDate = new Date(currentDate);
+        newDate.setDate(newDate.getDate() - (view === 'week' ? 7 : 1));
+        setCurrentDate(newDate);
+    }
+  };
 
-  const calendarDays = Array.from({ length: firstDay }, (_, i) => ({
-    day: getDaysInMonth(year, month - 1) - firstDay + i + 1,
-    isCurrentMonth: false,
-  }));
-
-  for (let day = 1; day <= daysInMonth; day++) {
-    calendarDays.push({ day, isCurrentMonth: true });
-  }
-
-  const totalCells = Math.ceil(calendarDays.length / 7) * 7;
-  const remainingDays = totalCells - calendarDays.length;
-
-  for (let i = 1; i <= remainingDays; i++) {
-    calendarDays.push({ day: i, isCurrentMonth: false });
-  }
-
-  const handlePrevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
-  const handleNextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
+  const handleNext = () => {
+    if (view === 'month') {
+        setCurrentDate(new Date(year, month + 1, 1));
+    } else {
+        const newDate = new Date(currentDate);
+        newDate.setDate(newDate.getDate() + (view === 'week' ? 7 : 1));
+        setCurrentDate(newDate);
+    }
+  };
   const goToToday = () => setCurrentDate(new Date());
-
+  
   const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+
+  const getMonthViewDays = () => {
+    const daysInMonth = getDaysInMonth(year, month);
+    const firstDay = getFirstDayOfMonth(year, month);
+    
+    const calendarDays = Array.from({ length: firstDay }, (_, i) => ({
+      day: getDaysInMonth(year, month - 1) - firstDay + i + 1,
+      isCurrentMonth: false,
+    }));
+  
+    for (let day = 1; day <= daysInMonth; day++) {
+      calendarDays.push({ day, isCurrentMonth: true });
+    }
+  
+    const totalCells = Math.ceil(calendarDays.length / 7) * 7;
+    const remainingDays = totalCells - calendarDays.length;
+  
+    for (let i = 1; i <= remainingDays; i++) {
+      calendarDays.push({ day: i, isCurrentMonth: false });
+    }
+    return calendarDays;
+  }
+  
+  const getWeekViewDays = () => {
+    const startOfWeek = new Date(currentDate);
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+    const weekDays = [];
+    for (let i=0; i<7; i++) {
+        const day = new Date(startOfWeek);
+        day.setDate(day.getDate() + i);
+        weekDays.push({date: day, day: day.getDate()});
+    }
+    return weekDays;
+  }
+
+  const renderMonthView = () => {
+    const calendarDays = getMonthViewDays();
+    return (
+        <div className="mt-4 grid grid-cols-7 gap-px border-t border-l bg-border">
+        {dayNames.map(day => (
+          <div key={day} className="py-2 text-center text-xs font-medium text-muted-foreground bg-card">{day}</div>
+        ))}
+        {calendarDays.map((date, index) => {
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(date.day).padStart(2, '0')}`;
+            const dayEvents = (date.isCurrentMonth ? events[dateStr as keyof typeof events] : []) || [];
+            const filteredEvents = selectedHallName === 'all'
+                ? dayEvents
+                : dayEvents.filter(event => event.hall === selectedHallName);
+            return(
+          <div key={index} className={cn("relative h-20 sm:h-28 p-1 sm:p-2 bg-card border-r border-b", date.isCurrentMonth ? '' : 'bg-muted/50 text-muted-foreground/50')}>
+            <div className="text-xs sm:text-sm text-right">{date.day}</div>
+            <div className="mt-1 space-y-1">
+              {filteredEvents.map((event, eventIndex) => (
+                 <AlertDialogTrigger asChild key={eventIndex}>
+                    <div
+                        onClick={() => setSelectedEvent({ ...event, date: new Date(dateStr) })}
+                        className={cn("p-1 rounded-md text-[10px] sm:text-xs truncate cursor-pointer", event.color)}
+                    >
+                        {event.title}
+                    </div>
+                </AlertDialogTrigger>
+              ))}
+            </div>
+          </div>
+        )})}
+      </div>
+    );
+  }
+  
+  const renderWeekView = () => {
+    const weekDays = getWeekViewDays();
+    return (
+      <div className="mt-4 grid grid-cols-7 gap-px border-t border-l bg-border">
+        {weekDays.map(({date, day}) => (
+          <div key={day} className="py-2 text-center text-xs font-medium text-muted-foreground bg-card">
+              {dayNames[date.getDay()]} {day}
+          </div>
+        ))}
+        {Array.from({ length: 24 * 2 }).map((_, i) => (
+            weekDays.map(({date, day}) => {
+                const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const dayEvents = events[dateStr as keyof typeof events] || [];
+                const filteredEvents = selectedHallName === 'all' ? dayEvents : dayEvents.filter(event => event.hall === selectedHallName);
+
+                return (
+                    <div key={`${day}-${i}`} className="relative h-10 bg-card border-r border-b">
+                        {i === 18 && day === 5 && filteredEvents.find(e => e.title === 'Servicio Dominical') && (
+                            <AlertDialogTrigger asChild>
+                                <div onClick={() => setSelectedEvent({ ...filteredEvents.find(e => e.title === 'Servicio Dominical')!, date: new Date(dateStr) })} className={cn("absolute inset-0 p-1 rounded-md text-[10px] sm:text-xs truncate cursor-pointer z-10", filteredEvents.find(e => e.title === 'Servicio Dominical')?.color)}>
+                                    Servicio Dominical
+                                </div>
+                             </AlertDialogTrigger>
+                        )}
+                    </div>
+                );
+            })
+        ))}
+      </div>
+    );
+  };
+
+  const getHeaderDateString = () => {
+    if (view === 'month') {
+        return currentDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
+    }
+    const startOfWeek = new Date(currentDate);
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(endOfWeek.getDate() + 6);
+    if (startOfWeek.getMonth() === endOfWeek.getMonth()) {
+        return `${startOfWeek.getDate()} - ${endOfWeek.getDate()} de ${startOfWeek.toLocaleString('es-ES', { month: 'long', year: 'numeric' })}`;
+    }
+    return `${startOfWeek.getDate()} de ${startOfWeek.toLocaleString('es-ES', {month: 'short'})} - ${endOfWeek.getDate()} de ${endOfWeek.toLocaleString('es-ES', {month: 'short'})}, ${currentDate.getFullYear()}`;
+  }
+
 
   return (
     <AlertDialog>
@@ -152,45 +266,18 @@ export default function FacilitiesPage() {
             <CardContent className="p-4">
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon" onClick={handlePrevMonth}><ChevronLeft className="h-5 w-5" /></Button>
-                  <h2 className="text-lg font-semibold">{currentDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' })}</h2>
-                  <Button variant="ghost" size="icon" onClick={handleNextMonth}><ChevronRight className="h-5 w-5" /></Button>
+                  <Button variant="ghost" size="icon" onClick={handlePrev}><ChevronLeft className="h-5 w-5" /></Button>
+                  <h2 className="text-lg font-semibold text-center w-64">{getHeaderDateString()}</h2>
+                  <Button variant="ghost" size="icon" onClick={handleNext}><ChevronRight className="h-5 w-5" /></Button>
                   <Button variant="outline" onClick={goToToday}>Hoy</Button>
                 </div>
                 <div className="flex items-center gap-1 rounded-lg bg-muted p-1">
-                    <Button variant="secondary" size="sm">Mes</Button>
-                    <Button variant="ghost" size="sm">Semana</Button>
-                    <Button variant="ghost" size="sm">Día</Button>
+                    <Button variant={view === 'month' ? "secondary" : "ghost"} size="sm" onClick={() => setView('month')}>Mes</Button>
+                    <Button variant={view === 'week' ? "secondary" : "ghost"} size="sm" onClick={() => setView('week')}>Semana</Button>
+                    <Button variant={view === 'day' ? "secondary" : "ghost"} size="sm" onClick={() => setView('day')}>Día</Button>
                 </div>
               </div>
-              <div className="mt-4 grid grid-cols-7 gap-px border-t border-l bg-border">
-                {dayNames.map(day => (
-                  <div key={day} className="py-2 text-center text-xs font-medium text-muted-foreground bg-card">{day}</div>
-                ))}
-                {calendarDays.map((date, index) => {
-                    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(date.day).padStart(2, '0')}`;
-                    const dayEvents = (date.isCurrentMonth ? events[dateStr as keyof typeof events] : []) || [];
-                    const filteredEvents = selectedHallName === 'all'
-                        ? dayEvents
-                        : dayEvents.filter(event => event.hall === selectedHallName);
-                    return(
-                  <div key={index} className={cn("relative h-20 sm:h-28 p-1 sm:p-2 bg-card border-r border-b", date.isCurrentMonth ? '' : 'bg-muted/50 text-muted-foreground/50')}>
-                    <div className="text-xs sm:text-sm text-right">{date.day}</div>
-                    <div className="mt-1 space-y-1">
-                      {filteredEvents.map((event, eventIndex) => (
-                         <AlertDialogTrigger asChild key={eventIndex}>
-                            <div
-                                onClick={() => setSelectedEvent({ ...event, date: new Date(dateStr) })}
-                                className={cn("p-1 rounded-md text-[10px] sm:text-xs truncate cursor-pointer", event.color)}
-                            >
-                                {event.title}
-                            </div>
-                        </AlertDialogTrigger>
-                      ))}
-                    </div>
-                  </div>
-                )})}
-              </div>
+              {view === 'month' ? renderMonthView() : renderWeekView()}
             </CardContent>
           </Card>
         </div>
