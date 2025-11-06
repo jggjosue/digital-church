@@ -11,6 +11,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Clapperboard,
+  Plus,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,6 +27,7 @@ import {
 } from '@/components/ui/select';
 import { AppHeader } from '@/components/app-header';
 import { cn } from '@/lib/utils';
+import Link from 'next/link';
 
 const halls = [
     {
@@ -115,7 +117,9 @@ export default function FacilitiesPage() {
         title="Gestión de Salones y Salas"
         description="Programe y gestione los espacios disponibles de su templo."
       >
-        <Button>Registrar Salón</Button>
+        <Button asChild>
+          <Link href="/facilities/new"><Plus className='h-4 w-4 mr-2' />Registrar Salón</Link>
+        </Button>
       </AppHeader>
       <main className="flex-1 flex flex-col md:flex-row min-h-0 bg-muted/20">
         <aside className="w-full md:w-80 border-b md:border-r md:border-b-0 bg-background flex flex-col">
