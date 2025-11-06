@@ -144,7 +144,7 @@ export default function FacilitiesPage() {
                 )}
                 onClick={() => setSelectedHallName(hall.name)}
               >
-                <h4 className={cn('font-semibold', selectedHallName === hall.name && 'text-primary')}>{hall.name}</h4>
+                <h4 className={cn('font-semibold', selectedHallName === hall.name && 'text-foreground')}>{hall.name}</h4>
                 <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
                   <span className="flex items-center gap-1.5"><Users className="h-4 w-4" /> Capacidad: {hall.capacity}</span>
                   <span className="flex items-center gap-1.5">{hall.icon} {hall.feature}</span>
