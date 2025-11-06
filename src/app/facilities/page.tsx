@@ -281,41 +281,37 @@ export default function FacilitiesPage() {
           <Link href="/facilities/new"><Plus className='h-4 w-4 mr-2' />Registrar Salón</Link>
         </Button>
       </AppHeader>
-      <main className="flex-1 flex flex-col md:flex-row min-h-0 bg-muted/20">
-        <aside className="w-full md:w-80 border-b md:border-r md:border-b-0 bg-background flex flex-col p-4">
-        </aside>
-        <div className="flex-1 p-4 sm:p-6 overflow-auto">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="w-full sm:w-64">
-                    <h3 className="text-sm font-medium text-muted-foreground mb-2">Filtrar por Salón</h3>
-                    <Select value={selectedHallName} onValueChange={setSelectedHallName}>
-                    <SelectTrigger>
-                        <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">Todos los Salones</SelectItem>
-                        {halls.map(hall => <SelectItem key={hall.name} value={hall.name}>{hall.name}</SelectItem>)}
-                    </SelectContent>
-                    </Select>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon" onClick={handlePrev}><ChevronLeft className="h-5 w-5" /></Button>
-                  <h2 className="text-lg font-semibold text-center w-64">{getHeaderDateString()}</h2>
-                  <Button variant="ghost" size="icon" onClick={handleNext}><ChevronRight className="h-5 w-5" /></Button>
-                  <Button variant="outline" onClick={goToToday}>Hoy</Button>
-                </div>
-                <div className="flex items-center gap-1 rounded-lg bg-muted p-1">
-                    <Button variant={view === 'month' ? "secondary" : "ghost"} size="sm" onClick={() => setView('month')}>Mes</Button>
-                    <Button variant={view === 'week' ? "secondary" : "ghost"} size="sm" onClick={() => setView('week')}>Semana</Button>
-                    <Button variant={view === 'day' ? "secondary" : "ghost"} size="sm" onClick={() => setView('day')}>Día</Button>
-                </div>
+      <main className="flex-1 p-4 sm:p-6 overflow-auto bg-muted/20">
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div className="w-full sm:w-64">
+                <h3 className="text-sm font-medium text-muted-foreground mb-2">Filtrar por Salón</h3>
+                <Select value={selectedHallName} onValueChange={setSelectedHallName}>
+                <SelectTrigger>
+                    <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectItem value="all">Todos los Salones</SelectItem>
+                    {halls.map(hall => <SelectItem key={hall.name} value={hall.name}>{hall.name}</SelectItem>)}
+                </SelectContent>
+                </Select>
             </div>
-          <Card className='mt-4'>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" onClick={handlePrev}><ChevronLeft className="h-5 w-5" /></Button>
+              <h2 className="text-lg font-semibold text-center w-64">{getHeaderDateString()}</h2>
+              <Button variant="ghost" size="icon" onClick={handleNext}><ChevronRight className="h-5 w-5" /></Button>
+              <Button variant="outline" onClick={goToToday}>Hoy</Button>
+            </div>
+            <div className="flex items-center gap-1 rounded-lg bg-muted p-1">
+                <Button variant={view === 'month' ? "secondary" : "ghost"} size="sm" onClick={() => setView('month')}>Mes</Button>
+                <Button variant={view === 'week' ? "secondary" : "ghost"} size="sm" onClick={() => setView('week')}>Semana</Button>
+                <Button variant={view === 'day' ? "secondary" : "ghost"} size="sm" onClick={() => setView('day')}>Día</Button>
+            </div>
+        </div>
+        <Card className='mt-4'>
             <CardContent className="p-4">
               {view === 'month' ? renderMonthView() : view === 'week' ? renderWeekView() : renderDayView()}
             </CardContent>
-          </Card>
-        </div>
+        </Card>
       </main>
       {selectedEvent && (
         <AlertDialogContent>
