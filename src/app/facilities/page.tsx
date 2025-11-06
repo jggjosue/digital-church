@@ -29,31 +29,31 @@ import { cn } from '@/lib/utils';
 
 const halls = [
     {
-      name: 'Sanctuary Hall',
+      name: 'Salón Santuario',
       capacity: 300,
-      feature: 'Stage',
+      feature: 'Escenario',
       icon: <Presentation className="h-4 w-4 text-muted-foreground" />,
     },
     {
-      name: 'Community Hall',
+      name: 'Salón Comunitario',
       capacity: 150,
-      feature: 'AV System',
+      feature: 'Sistema AV',
       icon: <Clapperboard className="h-4 w-4 text-muted-foreground" />,
     },
     {
-      name: 'Prayer Room A',
+      name: 'Sala de Oración A',
       capacity: 25,
-      feature: 'AC',
+      feature: 'Aire Acondicionado',
       icon: <Wind className="h-4 w-4 text-muted-foreground" />,
     },
     {
-      name: 'Youth Center',
+      name: 'Centro Juvenil',
       capacity: 50,
-      feature: 'Projector',
+      feature: 'Proyector',
       icon: <Projector className="h-4 w-4 text-muted-foreground" />,
     },
     {
-      name: 'Library & Study Room',
+      name: 'Biblioteca y Sala de Estudio',
       capacity: 20,
       feature: 'Wi-Fi',
       icon: <Wifi className="h-4 w-4 text-muted-foreground" />,
@@ -61,17 +61,17 @@ const halls = [
   ];
   
   const events = {
-    '2023-11-05': [{ title: 'Sunday Service', color: 'bg-red-100 text-red-800' }],
-    '2023-11-09': [{ title: 'Youth Group', color: 'bg-green-100 text-green-800' }],
-    '2023-11-11': [{ title: 'Wedding Rehearsal', color: 'bg-yellow-100 text-yellow-800' }],
+    '2023-11-05': [{ title: 'Servicio Dominical', color: 'bg-red-100 text-red-800' }],
+    '2023-11-09': [{ title: 'Grupo de Jóvenes', color: 'bg-green-100 text-green-800' }],
+    '2023-11-11': [{ title: 'Ensayo de Boda', color: 'bg-yellow-100 text-yellow-800' }],
     '2023-11-12': [
-      { title: 'Sunday Service', color: 'bg-red-100 text-red-800' },
-      { title: 'Wedding Ceremony', color: 'bg-yellow-100 text-yellow-800' },
+      { title: 'Servicio Dominical', color: 'bg-red-100 text-red-800' },
+      { title: 'Ceremonia de Boda', color: 'bg-yellow-100 text-yellow-800' },
     ],
-    '2023-11-14': [{ title: 'Community Meeting', color: 'bg-blue-100 text-blue-800' }],
-    '2023-11-19': [{ title: 'Sunday Service', color: 'bg-red-100 text-red-800' }],
-    '2023-11-23': [{ title: 'Thanksgiving Service', color: 'bg-blue-100 text-blue-800' }],
-    '2023-11-26': [{ title: 'Sunday Service', color: 'bg-red-100 text-red-800' }],
+    '2023-11-14': [{ title: 'Reunión Comunitaria', color: 'bg-blue-100 text-blue-800' }],
+    '2023-11-19': [{ title: 'Servicio Dominical', color: 'bg-red-100 text-red-800' }],
+    '2023-11-23': [{ title: 'Servicio de Acción de Gracias', color: 'bg-blue-100 text-blue-800' }],
+    '2023-11-26': [{ title: 'Servicio Dominical', color: 'bg-red-100 text-red-800' }],
   };
 
 export default function FacilitiesPage() {
@@ -107,27 +107,27 @@ export default function FacilitiesPage() {
   const handleNextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
   const goToToday = () => setCurrentDate(new Date());
 
-  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
   return (
     <div className="flex flex-col flex-1">
       <AppHeader
-        title="Halls & Rooms Management"
-        description="Schedule and manage your temple's available spaces."
+        title="Gestión de Salones y Salas"
+        description="Programe y gestione los espacios disponibles de su templo."
       >
-        <Button>Register Hall</Button>
+        <Button>Registrar Salón</Button>
       </AppHeader>
       <main className="flex-1 flex flex-col md:flex-row min-h-0 bg-muted/20">
         <aside className="w-full md:w-80 border-b md:border-r md:border-b-0 bg-background flex flex-col">
           <div className="p-4">
-            <h3 className="text-sm font-medium text-muted-foreground mb-2">Filter by Hall</h3>
+            <h3 className="text-sm font-medium text-muted-foreground mb-2">Filtrar por Salón</h3>
             <Select defaultValue="all">
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Halls</SelectItem>
-                {halls.map(hall => <SelectItem key={hall.name} value={hall.name.toLowerCase().replace(' ', '-')}>{hall.name}</SelectItem>)}
+                <SelectItem value="all">Todos los Salones</SelectItem>
+                {halls.map(hall => <SelectItem key={hall.name} value={hall.name.toLowerCase().replace(/ /g, '-')}>{hall.name}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
@@ -143,7 +143,7 @@ export default function FacilitiesPage() {
               >
                 <h4 className={cn('font-semibold', selectedHall.name === hall.name && 'text-primary')}>{hall.name}</h4>
                 <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
-                  <span className="flex items-center gap-1.5"><Users className="h-4 w-4" /> Capacity: {hall.capacity}</span>
+                  <span className="flex items-center gap-1.5"><Users className="h-4 w-4" /> Capacidad: {hall.capacity}</span>
                   <span className="flex items-center gap-1.5">{hall.icon} {hall.feature}</span>
                 </div>
               </div>
@@ -156,14 +156,14 @@ export default function FacilitiesPage() {
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <div className="flex items-center gap-2">
                   <Button variant="ghost" size="icon" onClick={handlePrevMonth}><ChevronLeft className="h-5 w-5" /></Button>
-                  <h2 className="text-lg font-semibold">{currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}</h2>
+                  <h2 className="text-lg font-semibold">{currentDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' })}</h2>
                   <Button variant="ghost" size="icon" onClick={handleNextMonth}><ChevronRight className="h-5 w-5" /></Button>
-                  <Button variant="outline" onClick={goToToday}>Today</Button>
+                  <Button variant="outline" onClick={goToToday}>Hoy</Button>
                 </div>
                 <div className="flex items-center gap-1 rounded-lg bg-muted p-1">
-                    <Button variant="secondary" size="sm">Month</Button>
-                    <Button variant="ghost" size="sm">Week</Button>
-                    <Button variant="ghost" size="sm">Day</Button>
+                    <Button variant="secondary" size="sm">Mes</Button>
+                    <Button variant="ghost" size="sm">Semana</Button>
+                    <Button variant="ghost" size="sm">Día</Button>
                 </div>
               </div>
               <div className="mt-4 grid grid-cols-7 gap-px border-t border-l bg-border">
