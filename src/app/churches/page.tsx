@@ -127,14 +127,15 @@ export default function ChurchesPage() {
             </div>
         </div>
         <div className="flex-1 bg-muted/20 relative">
-          <Image
-            src={selectedLocation.imageUrl}
-            alt={selectedLocation.name}
-            fill
-            className="object-cover"
-            data-ai-hint={selectedLocation.imageHint}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+          <iframe
+            width="100%"
+            height="100%"
+            frameBorder="0"
+            style={{ border: 0 }}
+            src={`https://maps.google.com/maps?q=${encodeURIComponent(selectedLocation.address)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+            allowFullScreen
+          ></iframe>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent pointer-events-none" />
             <div className="absolute bottom-8 left-8">
                 <Card className="w-80 bg-background/80 backdrop-blur-sm">
                     <CardContent className="p-6">
