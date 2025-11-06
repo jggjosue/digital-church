@@ -29,9 +29,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { AppHeader } from '@/components/app-header';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 const personCeremonies = [
-    { id: 1, type: 'Matrimonio', date: '15 de Sep, 2023', officiant: 'Pastor David Chen' },
+    { id: 1, type: 'Matrimonio', date: '15 de Sep, 2023', officiant: 'Pastor David Chen', details: 'Michael Johnson & Jessica Lee' },
     { id: 2, type: 'Dedicación de Niño', date: '05 de Ago, 2023', officiant: 'Pastor David Chen', details: 'Hijo: Michael Johnson Jr.' },
 ];
 
@@ -50,6 +52,59 @@ export default function ExportCeremoniesPage() {
             setSelectedCeremonies(selectedCeremonies.filter(i => i !== id));
         }
     };
+    
+    const generatePDF = () => {
+        const doc = new jsPDF();
+        const selectedData = personCeremonies.filter(c => selectedCeremonies.includes(c.id));
+        const personName = selectedPerson.name;
+
+        // Header
+        doc.setFontSize(22);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Certificado de Ceremonia', 105, 20, { align: 'center' });
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'normal');
+        doc.text('Otorgado por Grace Chapel', 105, 30, { align: 'center' });
+
+        // Church Logo (Placeholder)
+        // You can add a real logo here if you have one as a base64 string
+        doc.rect(15, 15, 20, 20);
+        doc.text('Logo', 25, 27, { align: 'center'});
+
+        doc.setLineWidth(0.5);
+        doc.line(15, 40, 195, 40);
+
+        // Body
+        doc.setFontSize(12);
+        doc.text(`Este certificado confirma la participación de:`, 15, 50);
+        doc.setFontSize(18);
+        doc.setFont('helvetica', 'bold');
+        doc.text(personName, 15, 60);
+
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'normal');
+        doc.text('En la(s) siguiente(s) ceremonia(s) sagrada(s):', 15, 70);
+
+        autoTable(doc, {
+            startY: 75,
+            head: [['Tipo de Ceremonia', 'Fecha', 'Oficiante', 'Detalles']],
+            body: selectedData.map(c => [c.type, c.date, c.officiant, c.details]),
+            theme: 'striped',
+            headStyles: { fillColor: [33, 150, 243] },
+        });
+
+        const finalY = (doc as any).lastAutoTable.finalY || 120;
+
+        // Footer
+        doc.line(15, finalY + 20, 75, finalY + 20);
+        doc.text('Firma del Pastor', 45, finalY + 25, { align: 'center' });
+        
+        doc.line(135, finalY + 20, 195, finalY + 20);
+        doc.text('Fecha de Emisión', 165, finalY + 25, { align: 'center'});
+        doc.text(new Date().toLocaleDateString('es-ES'), 165, finalY + 30, { align: 'center'});
+
+        doc.save(`certificado_${personName.replace(/\s/g, '_')}.pdf`);
+    };
 
 
   return (
@@ -60,7 +115,7 @@ export default function ExportCeremoniesPage() {
       >
         <div className="flex justify-end gap-2">
             <Button variant="outline" asChild><Link href="/ceremonies">Cancelar</Link></Button>
-            <Button disabled={selectedCeremonies.length === 0}>
+            <Button onClick={generatePDF} disabled={selectedCeremonies.length === 0}>
                 <Download className="mr-2 h-4 w-4" />
                 Exportar PDF ({selectedCeremonies.length})
             </Button>
