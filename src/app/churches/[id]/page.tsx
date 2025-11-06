@@ -48,13 +48,14 @@ export default function ChurchDetailsPage({ params }: { params: { id: string } }
       <div className="max-w-6xl mx-auto">
         <Card className="overflow-hidden">
             <div className="relative h-64 w-full">
-                <Image 
-                    src={location.imageUrl}
-                    alt={location.name}
-                    fill
-                    className="object-cover"
-                    data-ai-hint={location.imageHint}
-                />
+                <iframe
+                    width="100%"
+                    height="100%"
+                    frameBorder="0"
+                    style={{ border: 0 }}
+                    src={`https://maps.google.com/maps?q=${encodeURIComponent(location.address)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
+                    allowFullScreen
+                ></iframe>
             </div>
             <CardContent className="p-6">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
