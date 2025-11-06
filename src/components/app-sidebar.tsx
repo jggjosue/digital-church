@@ -145,7 +145,7 @@ const navItems = [
     label: 'Ceremonias', 
     icon: BookHeart, 
     subItems: [
-        { href: '/ceremonies', icon: List, label: 'Gestión' },
+        { href: '/ceremonies', icon: List, label: 'Registros' },
         { href: '/ceremonies/new', icon: Plus, label: 'Agregar Ceremonia' },
         { href: '/ceremonies/export', icon: FileText, label: 'Exportar Datos' },
     ]
