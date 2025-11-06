@@ -67,7 +67,7 @@ export default function CeremoniesPage() {
             <Button variant="outline"><FileText className="mr-2 h-4 w-4" /> Exportar Datos</Button>
             <Button asChild>
               <Link href="/ceremonies/new">
-                <Plus className="mr-2 h-4 w-4" /> Añadir Registro
+                <Plus className="mr-2 h-4 w-4" /> Agregar Ceremonia
               </Link>
             </Button>
         </div>
