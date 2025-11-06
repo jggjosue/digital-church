@@ -28,6 +28,7 @@ import Link from 'next/link';
 
 const ceremonyData = [
   {
+    id: 4,
     type: 'Bautismo',
     icon: Droplet,
     iconBgColor: 'bg-blue-100',
@@ -37,6 +38,7 @@ const ceremonyData = [
     details: 'Oficiado por: Pastor David Chen',
   },
   {
+    id: 2,
     type: 'Matrimonio',
     icon: Heart,
     iconBgColor: 'bg-pink-100',
@@ -46,6 +48,7 @@ const ceremonyData = [
     details: 'Testigos: Sarah Brown, Chris Wilson',
   },
   {
+    id: 3,
     type: 'Dedicación de Niño',
     icon: Smile,
     iconBgColor: 'bg-green-100',
@@ -128,7 +131,9 @@ export default function CeremoniesPage() {
                                         <h3 className="text-lg font-bold mt-1">{ceremony.title}</h3>
                                         <p className="text-sm text-muted-foreground mt-1">{ceremony.details}</p>
                                     </div>
-                                    <Button variant="link" className="p-0 h-auto self-start sm:self-center">Ver Detalles</Button>
+                                    <Button variant="link" className="p-0 h-auto self-start sm:self-center" asChild>
+                                        <Link href={`/events/${ceremony.id}`}>Ver Detalles</Link>
+                                    </Button>
                                 </CardContent>
                             </Card>
                         </div>
