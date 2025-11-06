@@ -219,19 +219,52 @@ export default function FacilitiesPage() {
       </div>
     );
   };
+  
+  const renderDayView = () => {
+    const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`;
+    const dayEvents = events[dateStr as keyof typeof events] || [];
+    const filteredEvents = selectedHallName === 'all' ? dayEvents : dayEvents.filter(event => event.hall === selectedHallName);
+
+    return (
+        <div className="mt-4 border-t border-l border-r bg-border">
+            <div className="py-2 text-center text-xs font-medium text-muted-foreground bg-card">
+                Eventos
+            </div>
+            <div className="bg-card p-4 space-y-4">
+                {filteredEvents.length > 0 ? filteredEvents.map((event, eventIndex) => (
+                    <AlertDialogTrigger asChild key={eventIndex}>
+                        <div
+                            onClick={() => setSelectedEvent({ ...event, date: new Date(dateStr) })}
+                            className={cn("p-4 rounded-md cursor-pointer flex justify-between items-center", event.color)}
+                        >
+                            <span className="font-semibold">{event.title}</span>
+                            <span className="text-sm">{event.hall}</span>
+                        </div>
+                    </AlertDialogTrigger>
+                )) : <p className="text-muted-foreground text-center py-8">No hay eventos programados para este día.</p>}
+            </div>
+        </div>
+    );
+  };
 
   const getHeaderDateString = () => {
     if (view === 'month') {
         return currentDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' });
     }
-    const startOfWeek = new Date(currentDate);
-    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(endOfWeek.getDate() + 6);
-    if (startOfWeek.getMonth() === endOfWeek.getMonth()) {
-        return `${startOfWeek.getDate()} - ${endOfWeek.getDate()} de ${startOfWeek.toLocaleString('es-ES', { month: 'long', year: 'numeric' })}`;
+    if (view === 'week') {
+        const startOfWeek = new Date(currentDate);
+        startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(endOfWeek.getDate() + 6);
+        if (startOfWeek.getMonth() === endOfWeek.getMonth()) {
+            return `${startOfWeek.getDate()} - ${endOfWeek.getDate()} de ${startOfWeek.toLocaleString('es-ES', { month: 'long', year: 'numeric' })}`;
+        }
+        return `${startOfWeek.getDate()} de ${startOfWeek.toLocaleString('es-ES', {month: 'short'})} - ${endOfWeek.getDate()} de ${endOfWeek.toLocaleString('es-ES', {month: 'short'})}, ${currentDate.getFullYear()}`;
     }
-    return `${startOfWeek.getDate()} de ${startOfWeek.toLocaleString('es-ES', {month: 'short'})} - ${endOfWeek.getDate()} de ${endOfWeek.toLocaleString('es-ES', {month: 'short'})}, ${currentDate.getFullYear()}`;
+    if (view === 'day') {
+        return currentDate.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    }
+    return '';
   }
 
 
@@ -277,7 +310,7 @@ export default function FacilitiesPage() {
                     <Button variant={view === 'day' ? "secondary" : "ghost"} size="sm" onClick={() => setView('day')}>Día</Button>
                 </div>
               </div>
-              {view === 'month' ? renderMonthView() : renderWeekView()}
+              {view === 'month' ? renderMonthView() : view === 'week' ? renderWeekView() : renderDayView()}
             </CardContent>
           </Card>
         </div>
