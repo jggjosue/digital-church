@@ -45,7 +45,7 @@ export default function ChurchDetailsPage({ params }: { params: { id: string } }
                 <AlertDialogTrigger asChild>
                     <Button variant="destructive"><Trash2 className="mr-2 h-4 w-4"/>Eliminar</Button>
                 </AlertDialogTrigger>
-                <Button><Edit className="mr-2 h-4 w-4"/>Editar Ubicación</Button>
+                <Button asChild><Link href={`/churches/${params.id}/edit`}><Edit className="mr-2 h-4 w-4"/>Editar Ubicación</Link></Button>
             </div>
         </AppHeader>
         <main className="flex-1 bg-muted/20 p-4 sm:p-8">
