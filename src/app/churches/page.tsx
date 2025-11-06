@@ -59,8 +59,10 @@ export default function ChurchesPage() {
         title="Ubicaciones de la Iglesia"
         description="Gestione y vea las ubicaciones geográficas de su iglesia."
       >
-        <Button>
-          <Plus className="mr-2 h-4 w-4" /> Añadir Ubicación
+        <Button asChild>
+          <Link href="/churches/new">
+            <Plus className="mr-2 h-4 w-4" /> Añadir Ubicación
+          </Link>
         </Button>
       </AppHeader>
       <main className="flex-1 flex flex-col md:flex-row overflow-hidden">
