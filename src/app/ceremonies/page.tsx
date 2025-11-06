@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { AppHeader } from '@/components/app-header';
+import Link from 'next/link';
 
 const ceremonyData = [
   {
@@ -64,7 +65,11 @@ export default function CeremoniesPage() {
       >
         <div className="flex gap-2">
             <Button variant="outline"><FileText className="mr-2 h-4 w-4" /> Exportar Datos</Button>
-            <Button><Plus className="mr-2 h-4 w-4" /> Añadir Registro</Button>
+            <Button asChild>
+              <Link href="/ceremonies/new">
+                <Plus className="mr-2 h-4 w-4" /> Añadir Registro
+              </Link>
+            </Button>
         </div>
       </AppHeader>
     <main className="flex-1 bg-muted/20 p-4 sm:p-8">
