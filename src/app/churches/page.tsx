@@ -119,7 +119,7 @@ export default function ChurchesPage() {
                         )}
                         onClick={() => setSelectedLocation(location)}
                     >
-                        <h3 className={cn('font-semibold', selectedLocation.id === location.id && 'text-primary')}>{location.name}</h3>
+                        <h3 className={cn('font-semibold', selectedLocation.id === location.id && 'text-foreground')}>{location.name}</h3>
                         <p className="text-sm">{location.address}</p>
                         <p className="text-sm text-muted-foreground">{location.phone}</p>
                     </div>
