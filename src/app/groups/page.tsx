@@ -60,7 +60,7 @@ export default function GroupsPage() {
   const [memberToRemove, setMemberToRemove] = React.useState<GroupMember | null>(null);
   const [groupToDelete, setGroupToDelete] = React.useState<Group | null>(null);
   const [currentPage, setCurrentPage] = React.useState(1);
-  const itemsPerPage = 5;
+  const itemsPerPage = 20;
 
   const totalPages = Math.ceil(groupMembers.length / itemsPerPage);
 
