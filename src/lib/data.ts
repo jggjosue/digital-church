@@ -1,5 +1,7 @@
 
 
+import { Droplet, Heart, Smile } from "lucide-react";
+
 export const staffData = [
     {
       id: 1,
@@ -446,6 +448,39 @@ export const membersData = [
       address: '123 Church Street, Anytown, USA',
       description: 'Únase a nosotros para nuestro servicio de adoración semanal.'
     }
+  ];
+
+  export const ceremonyData = [
+    {
+      id: 4,
+      type: 'Bautismo',
+      icon: Droplet,
+      iconBgColor: 'bg-blue-100',
+      iconColor: 'text-blue-500',
+      date: '22 de Octubre, 2023',
+      title: 'Bautismo de Emily White',
+      details: 'Oficiado por: Pastor David Chen',
+    },
+    {
+      id: 2,
+      type: 'Matrimonio',
+      icon: Heart,
+      iconBgColor: 'bg-pink-100',
+      iconColor: 'text-pink-500',
+      date: '15 de Septiembre, 2023',
+      title: 'Matrimonio de Michael Johnson & Jessica Lee',
+      details: 'Testigos: Sarah Brown, Chris Wilson',
+    },
+    {
+      id: 3,
+      type: 'Dedicación de Niño',
+      icon: Smile,
+      iconBgColor: 'bg-green-100',
+      iconColor: 'text-green-500',
+      date: '05 de Agosto, 2023',
+      title: 'Dedicación de Niño para Olivia Rodriguez',
+      details: 'Padres: Liam & Maria Rodriguez',
+    },
   ];
 
   export const volunteersData = [

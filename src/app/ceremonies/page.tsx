@@ -25,39 +25,7 @@ import {
 } from '@/components/ui/select';
 import { AppHeader } from '@/components/app-header';
 import Link from 'next/link';
-
-const ceremonyData = [
-  {
-    id: 4,
-    type: 'Bautismo',
-    icon: Droplet,
-    iconBgColor: 'bg-blue-100',
-    iconColor: 'text-blue-500',
-    date: '22 de Octubre, 2023',
-    title: 'Bautismo de Emily White',
-    details: 'Oficiado por: Pastor David Chen',
-  },
-  {
-    id: 2,
-    type: 'Matrimonio',
-    icon: Heart,
-    iconBgColor: 'bg-pink-100',
-    iconColor: 'text-pink-500',
-    date: '15 de Septiembre, 2023',
-    title: 'Matrimonio de Michael Johnson & Jessica Lee',
-    details: 'Testigos: Sarah Brown, Chris Wilson',
-  },
-  {
-    id: 3,
-    type: 'Dedicación de Niño',
-    icon: Smile,
-    iconBgColor: 'bg-green-100',
-    iconColor: 'text-green-500',
-    date: '05 de Agosto, 2023',
-    title: 'Dedicación de Niño para Olivia Rodriguez',
-    details: 'Padres: Liam & Maria Rodriguez',
-  },
-];
+import { ceremonyData } from '@/lib/data';
 
 export default function CeremoniesPage() {
   return (
@@ -132,7 +100,7 @@ export default function CeremoniesPage() {
                                         <p className="text-sm text-muted-foreground mt-1">{ceremony.details}</p>
                                     </div>
                                     <Button variant="link" className="p-0 h-auto self-start sm:self-center" asChild>
-                                        <Link href={`/events/${ceremony.id}`}>Ver Detalles</Link>
+                                        <Link href={`/ceremonies/${ceremony.id}`}>Ver Detalles</Link>
                                     </Button>
                                 </CardContent>
                             </Card>
