@@ -64,7 +64,11 @@ export default function CeremoniesPage() {
         description="Busque y vea el archivo de eventos de la iglesia."
       >
         <div className="flex gap-2">
-            <Button variant="outline"><FileText className="mr-2 h-4 w-4" /> Exportar Datos</Button>
+            <Button variant="outline" asChild>
+              <Link href="/ceremonies/export">
+                <FileText className="mr-2 h-4 w-4" /> Exportar Datos
+              </Link>
+            </Button>
             <Button asChild>
               <Link href="/ceremonies/new">
                 <Plus className="mr-2 h-4 w-4" /> Agregar Ceremonia
