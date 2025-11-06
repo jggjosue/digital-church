@@ -28,6 +28,7 @@ import {
 import { AppHeader } from '@/components/app-header';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 const halls = [
     {
@@ -77,9 +78,17 @@ const halls = [
     '2023-11-26': [{ title: 'Servicio Dominical', color: 'bg-red-100 text-red-800', hall: 'Salón Santuario' }],
   };
 
+type CalendarEvent = {
+    title: string;
+    color: string;
+    hall: string;
+    date: Date;
+};
+
 export default function FacilitiesPage() {
   const [currentDate, setCurrentDate] = React.useState(new Date(2023, 10, 1)); // November 2023
   const [selectedHallName, setSelectedHallName] = React.useState('all');
+  const [selectedEvent, setSelectedEvent] = React.useState<CalendarEvent | null>(null);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -113,6 +122,7 @@ export default function FacilitiesPage() {
   const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 
   return (
+    <AlertDialog>
     <div className="flex flex-col flex-1">
       <AppHeader
         title="Gestión de Salones y Salas"
@@ -135,22 +145,6 @@ export default function FacilitiesPage() {
               </SelectContent>
             </Select>
             <div className='mt-4 flex-1 overflow-y-auto space-y-2'>
-            {halls.map((hall, index) => (
-              <div
-                key={index}
-                className={cn(
-                  'p-4 cursor-pointer border rounded-lg',
-                  selectedHallName === hall.name ? 'bg-accent border-primary' : 'hover:bg-accent/50'
-                )}
-                onClick={() => setSelectedHallName(hall.name)}
-              >
-                <h4 className={cn('font-semibold', selectedHallName === hall.name && 'text-foreground')}>{hall.name}</h4>
-                <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
-                  <span className="flex items-center gap-1.5"><Users className="h-4 w-4" /> Capacidad: {hall.capacity}</span>
-                  <span className="flex items-center gap-1.5">{hall.icon} {hall.feature}</span>
-                </div>
-              </div>
-            ))}
             </div>
         </aside>
         <div className="flex-1 p-4 sm:p-6 overflow-auto">
@@ -184,9 +178,14 @@ export default function FacilitiesPage() {
                     <div className="text-xs sm:text-sm text-right">{date.day}</div>
                     <div className="mt-1 space-y-1">
                       {filteredEvents.map((event, eventIndex) => (
-                        <div key={eventIndex} className={cn("p-1 rounded-md text-[10px] sm:text-xs truncate", event.color)}>
-                            {event.title}
-                        </div>
+                         <AlertDialogTrigger asChild key={eventIndex}>
+                            <div
+                                onClick={() => setSelectedEvent({ ...event, date: new Date(dateStr) })}
+                                className={cn("p-1 rounded-md text-[10px] sm:text-xs truncate cursor-pointer", event.color)}
+                            >
+                                {event.title}
+                            </div>
+                        </AlertDialogTrigger>
                       ))}
                     </div>
                   </div>
@@ -196,6 +195,21 @@ export default function FacilitiesPage() {
           </Card>
         </div>
       </main>
+      {selectedEvent && (
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>{selectedEvent.title}</AlertDialogTitle>
+                <AlertDialogDescription>
+                    <strong>Salón:</strong> {selectedEvent.hall}<br/>
+                    <strong>Fecha:</strong> {selectedEvent.date.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => setSelectedEvent(null)}>Cerrar</AlertDialogCancel>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+      )}
     </div>
+    </AlertDialog>
   );
 }
