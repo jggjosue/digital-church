@@ -188,37 +188,39 @@ export default function FacilitiesPage() {
     );
   }
   
-  const renderWeekView = () => {
-    const weekDays = getWeekViewDays();
-    return (
-      <div className="mt-4 grid grid-cols-7 gap-px border-t border-l bg-border">
-        {weekDays.map(({date, day}) => (
-          <div key={day} className="py-2 text-center text-xs font-medium text-muted-foreground bg-card">
-              {dayNames[date.getDay()]} {day}
+    const renderWeekView = () => {
+        const weekDays = getWeekViewDays();
+        return (
+          <div className="mt-4 grid grid-cols-7 gap-px border-t border-l bg-border">
+            {weekDays.map(({ date, day }) => (
+              <div key={day} className="bg-card border-r">
+                <div className="py-2 text-center text-xs font-medium text-muted-foreground">
+                  {dayNames[date.getDay()]} {day}
+                </div>
+                <div className="h-full min-h-48 p-1 space-y-1">
+                  {(() => {
+                    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                    const dayEvents = events[dateStr as keyof typeof events] || [];
+                    const filteredEvents = selectedHallName === 'all' ? dayEvents : dayEvents.filter(event => event.hall === selectedHallName);
+                    
+                    return filteredEvents.map((event, eventIndex) => (
+                      <AlertDialogTrigger asChild key={eventIndex}>
+                        <div
+                            onClick={() => setSelectedEvent({ ...event, date: new Date(dateStr) })}
+                            className={cn("p-2 rounded-md text-[10px] sm:text-xs cursor-pointer", event.color)}
+                        >
+                            <p className="font-semibold truncate">{event.title}</p>
+                            <p className="text-xs truncate">{event.hall}</p>
+                        </div>
+                      </AlertDialogTrigger>
+                    ));
+                  })()}
+                </div>
+              </div>
+            ))}
           </div>
-        ))}
-        {Array.from({ length: 24 * 2 }).map((_, i) => (
-            weekDays.map(({date, day}) => {
-                const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                const dayEvents = events[dateStr as keyof typeof events] || [];
-                const filteredEvents = selectedHallName === 'all' ? dayEvents : dayEvents.filter(event => event.hall === selectedHallName);
-
-                return (
-                    <div key={`${day}-${i}`} className="relative h-10 bg-card border-r border-b">
-                        {i === 18 && day === 5 && filteredEvents.find(e => e.title === 'Servicio Dominical') && (
-                            <AlertDialogTrigger asChild>
-                                <div onClick={() => setSelectedEvent({ ...filteredEvents.find(e => e.title === 'Servicio Dominical')!, date: new Date(dateStr) })} className={cn("absolute inset-0 p-1 rounded-md text-[10px] sm:text-xs truncate cursor-pointer z-10", filteredEvents.find(e => e.title === 'Servicio Dominical')?.color)}>
-                                    Servicio Dominical
-                                </div>
-                             </AlertDialogTrigger>
-                        )}
-                    </div>
-                );
-            })
-        ))}
-      </div>
-    );
-  };
+        );
+      };
   
   const renderDayView = () => {
     const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(currentDate.getDate()).padStart(2, '0')}`;
@@ -291,8 +293,6 @@ export default function FacilitiesPage() {
                 {halls.map(hall => <SelectItem key={hall.name} value={hall.name}>{hall.name}</SelectItem>)}
               </SelectContent>
             </Select>
-            <div className='mt-4 flex-1 overflow-y-auto space-y-2'>
-            </div>
         </aside>
         <div className="flex-1 p-4 sm:p-6 overflow-auto">
           <Card>
