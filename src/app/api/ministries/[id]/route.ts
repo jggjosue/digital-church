@@ -15,8 +15,8 @@ const leaderSchema = z.object({
 
 const updateMinistrySchema = z.object({
   name: z.string().min(1).max(200),
-  description: z.string().min(1).max(8000),
-  category: z.enum(MINISTRY_CATEGORY_VALUES),
+  description: z.string().max(8000),
+  category: z.enum(MINISTRY_CATEGORY_VALUES).optional(),
   leaders: z.array(leaderSchema).min(1),
 });
 
@@ -70,16 +70,19 @@ export async function PATCH(
     }));
     const memberCount = leaders.length;
     const db = await getDb();
+    const setPayload: Partial<MinistryDocument> = {
+      name: body.name.trim(),
+      description: body.description.trim(),
+      leaders,
+      memberCount,
+    };
+    if (body.category) {
+      setPayload.category = body.category;
+    }
     const result = await db.collection<MinistryDocument>(MINISTRIES_COLLECTION).updateOne(
       { id: id.trim() },
       {
-        $set: {
-          name: body.name.trim(),
-          description: body.description.trim(),
-          category: body.category,
-          leaders,
-          memberCount,
-        },
+        $set: setPayload,
       }
     );
     if (result.matchedCount === 0) {
@@ -90,6 +93,31 @@ export async function PATCH(
     console.error('[api/ministries/[id] PATCH]', e);
     const message =
       e instanceof Error ? e.message : 'Error al actualizar en la base de datos.';
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
+export async function DELETE(
+  _request: Request,
+  context: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await context.params;
+    if (!id?.trim()) {
+      return NextResponse.json({ error: 'Id inválido.' }, { status: 400 });
+    }
+    const db = await getDb();
+    const result = await db
+      .collection<MinistryDocument>(MINISTRIES_COLLECTION)
+      .deleteOne({ id: id.trim() });
+    if (result.deletedCount === 0) {
+      return NextResponse.json({ error: 'Ministerio no encontrado.' }, { status: 404 });
+    }
+    return NextResponse.json({ ok: true, message: 'Ministerio eliminado correctamente.' });
+  } catch (e) {
+    console.error('[api/ministries/[id] DELETE]', e);
+    const message =
+      e instanceof Error ? e.message : 'Error al eliminar en la base de datos.';
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }

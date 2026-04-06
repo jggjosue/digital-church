@@ -13,14 +13,16 @@ export function UpcomingEventsCard() {
   const totalEvents = upcomingEvents.length;
 
   return (
-    <Card>
+    <Card className="border-border/70 shadow-sm transition-shadow hover:shadow-md">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-sm font-medium">Próximos Eventos</CardTitle>
-        <Calendar className="h-4 w-4 text-muted-foreground" />
+        <div className="rounded-md bg-primary/10 p-2 text-primary">
+          <Calendar className="h-4 w-4" />
+        </div>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{totalEvents}</div>
-        <p className="text-xs text-muted-foreground">Eventos este mes</p>
+        <div className="text-3xl font-semibold tracking-tight">{totalEvents}</div>
+        <p className="mt-1 text-xs text-muted-foreground">Eventos programados este mes</p>
       </CardContent>
     </Card>
   )

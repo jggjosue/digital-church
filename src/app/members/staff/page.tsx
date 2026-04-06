@@ -35,18 +35,15 @@ import {
 } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 
-const PASTORAL_DEPARTMENT = 'Pastoral';
-
-type PastoralMemberApi = {
+type PastorApi = {
   id: string;
-  firstName: string;
-  lastName: string;
+  name: string;
+  role: string;
+  department: string;
+  status: 'Activo' | 'Visitante' | 'Inactivo';
   email: string;
   phone: string;
-  membershipStatus: string;
-  photoDataUrl: string | null;
-  department: string | null;
-  staffRole: string | null;
+  avatarUrl: string | null;
 };
 
 type StaffMember = {
@@ -60,25 +57,16 @@ type StaffMember = {
   avatarUrl: string | null;
 };
 
-function membershipStatusLabel(code: string): StaffMember['status'] {
-  const map: Record<string, StaffMember['status']> = {
-    active: 'Activo',
-    visitor: 'Visitante',
-    inactive: 'Inactivo',
-  };
-  return map[code] ?? 'Activo';
-}
-
-function mapPastoralMemberToStaff(doc: PastoralMemberApi): StaffMember {
+function mapPastorApiToStaff(doc: PastorApi): StaffMember {
   return {
     id: doc.id,
-    name: `${doc.firstName} ${doc.lastName}`.trim(),
-    role: doc.staffRole?.trim() ? doc.staffRole.trim() : 'Sin cargo',
-    department: doc.department?.trim() || PASTORAL_DEPARTMENT,
-    status: membershipStatusLabel(doc.membershipStatus),
+    name: doc.name,
+    role: doc.role,
+    department: doc.department,
+    status: doc.status,
     email: doc.email,
     phone: doc.phone,
-    avatarUrl: doc.photoDataUrl,
+    avatarUrl: doc.avatarUrl,
   };
 }
 
@@ -179,8 +167,7 @@ function FilterPanelFields({
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
-        Listado del departamento <span className="font-medium text-foreground">{PASTORAL_DEPARTMENT}</span>
-        . Los datos provienen del directorio de miembros.
+        Listado de pastores desde la colección members (staffRole = Pastor).
       </p>
       <div>
         <h3 className="text-sm font-medium text-muted-foreground">Rol / Posición</h3>
@@ -285,18 +272,16 @@ export default function StaffDirectoryPage() {
         setLoading(true);
         setLoadError(null);
         try {
-          const res = await fetch(
-            `/api/members?department=${encodeURIComponent(PASTORAL_DEPARTMENT)}`
-          );
+          const res = await fetch('/api/staff/pastors');
           const data = (await res.json().catch(() => ({}))) as {
-            members?: PastoralMemberApi[];
+            pastors?: PastorApi[];
             error?: string;
           };
           if (!res.ok) {
             throw new Error(data.error || 'No se pudo cargar el directorio.');
           }
-          const rows = Array.isArray(data.members)
-            ? data.members.map(mapPastoralMemberToStaff)
+          const rows = Array.isArray(data.pastors)
+            ? data.pastors.map(mapPastorApiToStaff)
             : [];
           if (!cancelled) {
             setPastoralStaff(rows);
@@ -356,7 +341,7 @@ export default function StaffDirectoryPage() {
     <div className="flex flex-col flex-1">
       <AppHeader
         title="Directorio pastoral"
-        description="Personal con departamento Pastoral en el directorio de miembros. Asigne departamento y cargo al registrar cada miembro."
+        description="Pastores de la colección members, validados por staffRole igual a Pastor."
       >
         <Button asChild>
           <Link href="/members">
@@ -456,9 +441,8 @@ export default function StaffDirectoryPage() {
 
             {!loadError && !loading && filteredStaff.length === 0 ? (
               <p className="py-12 text-center text-sm text-muted-foreground">
-                No hay personal pastoral registrado con departamento «{PASTORAL_DEPARTMENT}», o ningún
-                resultado coincide con los filtros y la búsqueda. Puede añadir miembros desde el
-                directorio y asignarles departamento Pastoral.
+                No hay pastores en members con staffRole igual a Pastor, o ningún resultado coincide con los
+                filtros y la búsqueda.
               </p>
             ) : null}
 

@@ -47,12 +47,8 @@ const formSchema = z.object({
     required_error: "La fecha de nacimiento es requerida.",
   }),
   spiritualBirthday: z.date().optional(),
-  groups: z
-    .array(z.string())
-    .nonempty({ message: 'Debe seleccionar al menos un ministerio.' }),
-  churchIds: z
-    .array(z.string())
-    .min(1, { message: 'Debe seleccionar al menos un templo.' }),
+  groups: z.array(z.string()).default([]),
+  churchIds: z.array(z.string()).default([]),
   staffRoleKind: z
     .string()
     .refine((v) => v !== STAFF_ROLE_NONE, {
@@ -73,20 +69,30 @@ function staffRoleToApi(kind: string): string | undefined {
   return kind;
 }
 
+function toTitleCase(value: string): string {
+  return value
+    .trim()
+    .toLocaleLowerCase('es')
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toLocaleUpperCase('es') + word.slice(1))
+    .join(' ');
+}
+
 /** Estado de membresía por defecto al crear desde este formulario (la API lo requiere). */
 const DEFAULT_MEMBERSHIP_STATUS = 'active' as const;
 
 export default function NewMemberPage() {
     const { toast } = useToast();
     const [ministriesFromDb, setMinistriesFromDb] = React.useState<MinistryDocument[]>([]);
-    const [ministriesLoad, setMinistriesLoad] = React.useState<
+    const [groupsLoad, setGroupsLoad] = React.useState<
       'loading' | 'ready' | 'error'
     >('loading');
 
     React.useEffect(() => {
       let cancelled = false;
       (async () => {
-        setMinistriesLoad('loading');
+        setGroupsLoad('loading');
         try {
           const res = await fetch('/api/ministries', {
             cache: 'no-store',
@@ -97,16 +103,16 @@ export default function NewMemberPage() {
             error?: string;
           };
           if (!res.ok) {
-            throw new Error(data.error || 'No se pudieron cargar los ministerios.');
+            throw new Error(data.error || 'No se pudieron cargar los grupos y ministerios.');
           }
           if (!cancelled) {
             setMinistriesFromDb(data.ministries ?? []);
-            setMinistriesLoad('ready');
+            setGroupsLoad('ready');
           }
         } catch {
           if (!cancelled) {
             setMinistriesFromDb([]);
-            setMinistriesLoad('error');
+            setGroupsLoad('error');
           }
         }
       })();
@@ -393,7 +399,7 @@ export default function NewMemberPage() {
               <CardHeader>
                   <CardTitle>Grupos y Ministerios</CardTitle>
                   <CardDescription>
-                    Asigne el miembro a uno o más ministerios registrados en la base de datos.
+                    Asigne el miembro a grupos y ministerios existentes en la colección `members`.
                   </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -404,23 +410,22 @@ export default function NewMemberPage() {
                         <FormItem>
                             <FormLabel>Asignar a ministerios</FormLabel>
                             <div className="mt-2 max-h-60 space-y-3 overflow-y-auto rounded-md border p-4">
-                                {ministriesLoad === 'loading' ? (
+                                {groupsLoad === 'loading' ? (
                                   <p className="text-sm text-muted-foreground">
-                                    Cargando ministerios desde la base de datos…
+                                    Cargando grupos y ministerios desde la base de datos...
                                   </p>
                                 ) : null}
-                                {ministriesLoad === 'error' ? (
+                                {groupsLoad === 'error' ? (
                                   <p className="text-sm text-destructive">
-                                    No se pudieron cargar los ministerios. Intente de nuevo más tarde.
+                                    No se pudieron cargar grupos y ministerios. Intente de nuevo más tarde.
                                   </p>
                                 ) : null}
-                                {ministriesLoad === 'ready' && ministriesFromDb.length === 0 ? (
+                                {groupsLoad === 'ready' && ministriesFromDb.length === 0 ? (
                                   <p className="text-sm text-muted-foreground">
-                                    No hay ministerios registrados. Cree ministerios en la sección de
-                                    ministerios para poder asignarlos aquí.
+                                    No hay ministerios registrados en `ministries`.
                                   </p>
                                 ) : null}
-                                {ministriesLoad === 'ready'
+                                {groupsLoad === 'ready'
                                   ? ministriesFromDb.map((m) => {
                                       const label = m.name.trim();
                                       if (!label) return null;
@@ -435,7 +440,7 @@ export default function NewMemberPage() {
                                             htmlFor={`member-ministry-${m.id}`}
                                             className="cursor-pointer font-normal"
                                           >
-                                            {label}
+                                            {toTitleCase(label)}
                                           </Label>
                                         </div>
                                       );
@@ -443,7 +448,7 @@ export default function NewMemberPage() {
                                   : null}
                             </div>
                             <p className="mt-2 text-xs text-muted-foreground">
-                              Puede seleccionar varios ministerios.
+                              Puede seleccionar varios grupos y ministerios (opcional).
                             </p>
                             <FormMessage />
                         </FormItem>

@@ -73,25 +73,27 @@ const navItems = [
       { href: '/ministries/assign-members', icon: UserPlus, label: 'Asignar Miembros' },
     ]
   },
-  { 
-    label: 'Asistencia', 
-    icon: BarChart, 
+  {
+    label: 'Asistencia',
+    icon: BarChart,
     subItems: [
-      { href: '/attendance', icon: ClipboardList, label: 'Gestión' },
-    ]
+      { href: '/attendance', icon: Search, label: 'Templos' },
+      { href: '/attendance/report', icon: FileText, label: 'Reporte' },
+      { href: '/attendance/registro', icon: ClipboardList, label: 'Registro' },
+    ],
   },
   { 
     label: 'Ofrendas', 
     icon: Heart, 
     subItems: [
-      { href: '/donations', icon: Heart, label: 'Donaciones y ofrendas' },
+      { href: '/donations/new', icon: Plus, label: 'Nueva Donación' },
       { href: '/donations/pledges', icon: List, label: 'Gestión de Promesas' },
+      { href: '/donations', icon: Heart, label: 'Donaciones y ofrendas' },
       { href: '/donations/giving-statement', icon: FileText, label: 'Declaración de Donación' },
       { href: '/donations/fundraising', icon: PiggyBank, label: 'Recaudación de Fondos' },
-      { href: '/donations/new', icon: Plus, label: 'Nueva Donación' },
     ]
   },
-  { 
+  /*{ 
     label: 'Finanzas', 
     icon: DollarSign, 
     subItems: [
@@ -184,7 +186,7 @@ const navItems = [
       { href: '/settings/new', icon: Plus, label: 'Nuevo rol' },
       { href: '/settings/users', icon: Users, label: 'Usuarios' },
     ],
-  },
+  },*/
 ];
 
 //const bottomNavItems = [

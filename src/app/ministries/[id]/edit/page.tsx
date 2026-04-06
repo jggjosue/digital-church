@@ -10,17 +10,9 @@ import { Textarea } from '@/components/ui/textarea';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import { AppHeader } from '@/components/app-header';
 import type { MinistryDocument, MinistryLeader } from '@/lib/ministries';
-import { leadersRegisteredForMinistry } from '@/lib/ministries';
 import { useToast } from '@/hooks/use-toast';
 
 export default function EditMinistryPage() {
@@ -30,34 +22,17 @@ export default function EditMinistryPage() {
   const id =
     typeof params?.id === 'string' ? params.id : Array.isArray(params?.id) ? params.id[0] : '';
 
+  const searchDebounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const [ministry, setMinistry] = React.useState<MinistryDocument | null>(null);
-  const [allMinistries, setAllMinistries] = React.useState<MinistryDocument[]>([]);
   const [loadState, setLoadState] = React.useState<'loading' | 'error' | 'ready'>('loading');
   const [errMsg, setErrMsg] = React.useState<string | null>(null);
   const [name, setName] = React.useState('');
   const [description, setDescription] = React.useState('');
-  const [category, setCategory] = React.useState<string>('');
-  const [referenceMinistryId, setReferenceMinistryId] = React.useState('');
   const [leaders, setLeaders] = React.useState<MinistryLeader[]>([]);
   const [searchTerm, setSearchTerm] = React.useState('');
   const [filteredLeaders, setFilteredLeaders] = React.useState<MinistryLeader[]>([]);
   const [highlightedIndex, setHighlightedIndex] = React.useState(-1);
   const [saving, setSaving] = React.useState(false);
-
-  React.useEffect(() => {
-    let cancelled = false;
-    void fetch('/api/ministries', { cache: 'no-store', headers: { Accept: 'application/json' } })
-      .then((r) => r.json())
-      .then((d: { ministries?: MinistryDocument[] }) => {
-        if (!cancelled) setAllMinistries(d.ministries ?? []);
-      })
-      .catch(() => {
-        if (!cancelled) setAllMinistries([]);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   React.useEffect(() => {
     if (!id?.trim()) {
@@ -91,9 +66,7 @@ export default function EditMinistryPage() {
         setMinistry(m);
         setName(m.name);
         setDescription(m.description);
-        setCategory(m.category);
         setLeaders(m.leaders.map((l) => ({ ...l })));
-        setReferenceMinistryId(m.id);
         setLoadState('ready');
       } catch (e) {
         if (!cancelled) {
@@ -108,25 +81,62 @@ export default function EditMinistryPage() {
   }, [id]);
 
   React.useEffect(() => {
-    if (!searchTerm.trim() || !referenceMinistryId) {
+    const q = searchTerm.trim();
+    if (!q) {
       setFilteredLeaders([]);
       setHighlightedIndex(-1);
       return;
     }
-    const pool = leadersRegisteredForMinistry(allMinistries, referenceMinistryId);
     const added = new Set(leaders.map((l) => String(l.id)));
-    const q = searchTerm.toLowerCase();
-    setFilteredLeaders(
-      pool
-        .filter(
-          (l) =>
-            !added.has(String(l.id)) &&
-            (l.name.toLowerCase().includes(q) || l.email.toLowerCase().includes(q))
-        )
-        .slice(0, 5)
-    );
-    setHighlightedIndex(-1);
-  }, [searchTerm, leaders, referenceMinistryId, allMinistries]);
+    let cancelled = false;
+    if (searchDebounceRef.current) {
+      clearTimeout(searchDebounceRef.current);
+    }
+    searchDebounceRef.current = setTimeout(() => {
+      void (async () => {
+        try {
+          const res = await fetch(
+            `/api/members?q=${encodeURIComponent(q)}&limit=8`,
+            { cache: 'no-store', headers: { Accept: 'application/json' } }
+          );
+          const data = (await res.json().catch(() => ({}))) as {
+            members?: Array<{
+              id: string;
+              firstName: string;
+              lastName: string;
+              email: string;
+            }>;
+            error?: string;
+          };
+          if (!res.ok) {
+            throw new Error(data.error || 'No se pudo buscar miembros.');
+          }
+          if (cancelled) return;
+          const suggestions = (data.members ?? [])
+            .map((m) => ({
+              id: m.id,
+              name: `${m.firstName ?? ''} ${m.lastName ?? ''}`.trim() || 'Sin nombre',
+              email: m.email ?? '',
+            }))
+            .filter((m) => !added.has(String(m.id)));
+          setFilteredLeaders(suggestions);
+          setHighlightedIndex(-1);
+        } catch {
+          if (!cancelled) {
+            setFilteredLeaders([]);
+            setHighlightedIndex(-1);
+          }
+        }
+      })();
+    }, 250);
+    return () => {
+      cancelled = true;
+      if (searchDebounceRef.current) {
+        clearTimeout(searchDebounceRef.current);
+        searchDebounceRef.current = null;
+      }
+    };
+  }, [searchTerm, leaders]);
 
   const removeLeader = (leaderId: string) => {
     setLeaders((prev) => prev.filter((leader) => String(leader.id) !== leaderId));
@@ -163,11 +173,11 @@ export default function EditMinistryPage() {
 
   const handleSave = async () => {
     if (!id?.trim() || !ministry) return;
-    if (!name.trim() || !description.trim() || !category) {
+    if (!name.trim()) {
       toast({
         variant: 'destructive',
         title: 'Faltan datos',
-        description: 'Complete nombre, descripción y categoría.',
+        description: 'Complete el nombre del ministerio.',
       });
       return;
     }
@@ -187,7 +197,6 @@ export default function EditMinistryPage() {
         body: JSON.stringify({
           name: name.trim(),
           description: description.trim(),
-          category,
           leaders: leaders.map((l) => ({
             id: l.id,
             name: l.name,
@@ -215,9 +224,6 @@ export default function EditMinistryPage() {
       setSaving(false);
     }
   };
-
-  const searchDisabled =
-    !referenceMinistryId || allMinistries.length === 0;
 
   if (loadState === 'loading') {
     return (
@@ -285,60 +291,16 @@ export default function EditMinistryPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="category">Categoría del Ministerio</Label>
-              <Select value={category || undefined} onValueChange={setCategory}>
-                <SelectTrigger id="category">
-                  <SelectValue placeholder="Seleccione una categoría" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="outreach">Alcance Comunitario</SelectItem>
-                  <SelectItem value="worship">Adoración</SelectItem>
-                  <SelectItem value="youth">Jóvenes</SelectItem>
-                  <SelectItem value="children">Niños</SelectItem>
-                  <SelectItem value="care">Cuidado</SelectItem>
-                  <SelectItem value="general">Sin categoría</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="reference-ministry">Ministerio (líderes desde base de datos)</Label>
-              <Select
-                value={referenceMinistryId || undefined}
-                onValueChange={setReferenceMinistryId}
-                disabled={allMinistries.length === 0}
-              >
-                <SelectTrigger id="reference-ministry">
-                  <SelectValue placeholder="Seleccione un ministerio" />
-                </SelectTrigger>
-                <SelectContent>
-                  {allMinistries.map((m) => (
-                    <SelectItem key={m.id} value={m.id}>
-                      {m.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                Al escribir en el buscador solo aparecen líderes ya registrados en MongoDB para el
-                ministerio seleccionado (puede ser este u otro).
-              </p>
-            </div>
-            <div className="space-y-2">
               <Label htmlFor="ministry-leaders">Líder(es) del Ministerio</Label>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   id="ministry-leaders"
-                  placeholder={
-                    searchDisabled
-                      ? 'Cargando ministerios o seleccione uno arriba…'
-                      : 'Buscar entre líderes del ministerio seleccionado…'
-                  }
+                  placeholder="Buscar en la base de datos de miembros..."
                   className="pl-9"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  disabled={searchDisabled}
                 />
                 {filteredLeaders.length > 0 ? (
                   <div className="absolute left-0 top-full z-10 mt-2 w-full rounded-md border bg-background shadow-lg">

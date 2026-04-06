@@ -1,0 +1,121 @@
+import { NextResponse } from 'next/server';
+import { z } from 'zod';
+import { getDb } from '@/lib/mongodb';
+
+const ATTENDANCE_REGISTRY_COLLECTION = 'attendance_registry';
+
+const monthKeySchema = z.enum([
+  'enero',
+  'febrero',
+  'marzo',
+  'abril',
+  'mayo',
+  'junio',
+  'julio',
+  'agosto',
+  'septiembre',
+  'octubre',
+  'noviembre',
+  'diciembre',
+]);
+
+const categoryRecordSchema = z.object({
+  id: z.string().min(1),
+  label: z.string().min(1),
+  weeks: z.array(z.array(z.number().min(0))).length(5),
+  isCustom: z.boolean().optional(),
+});
+
+const monthRecordSchema = z.object({
+  month: z.string().min(1),
+  period: z.string().min(1),
+  categories: z.array(categoryRecordSchema),
+});
+
+const recordsSchema = z.record(monthKeySchema, monthRecordSchema);
+
+const saveSchema = z.object({
+  churchId: z.string().min(1),
+  year: z.string().regex(/^\d{4}$/),
+  records: recordsSchema,
+  initializedMonths: z.array(monthKeySchema),
+});
+
+type AttendanceRegistryDoc = z.infer<typeof saveSchema> & {
+  createdAt: string;
+  updatedAt: string;
+};
+
+export async function GET(request: Request) {
+  try {
+    const url = new URL(request.url);
+    const churchId = url.searchParams.get('churchId')?.trim() ?? '';
+    const year = url.searchParams.get('year')?.trim() ?? '';
+    if (!churchId || !year) {
+      return NextResponse.json(
+        { error: 'churchId y year son requeridos.' },
+        { status: 400 }
+      );
+    }
+    const db = await getDb();
+    const doc = await db
+      .collection<AttendanceRegistryDoc>(ATTENDANCE_REGISTRY_COLLECTION)
+      .findOne(
+        { churchId, year },
+        {
+          projection: {
+            _id: 0,
+            churchId: 1,
+            year: 1,
+            records: 1,
+            initializedMonths: 1,
+            createdAt: 1,
+            updatedAt: 1,
+          },
+        }
+      );
+
+    return NextResponse.json({ record: doc ?? null });
+  } catch (e) {
+    console.error('[api/attendance/registro GET]', e);
+    const message = e instanceof Error ? e.message : 'Error al leer la base de datos.';
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    const json = await request.json();
+    const parsed = saveSchema.safeParse(json);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Datos inválidos', details: parsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+    const payload = parsed.data;
+    const now = new Date().toISOString();
+    const db = await getDb();
+    await db.collection<AttendanceRegistryDoc>(ATTENDANCE_REGISTRY_COLLECTION).updateOne(
+      { churchId: payload.churchId, year: payload.year },
+      {
+        $set: {
+          records: payload.records,
+          initializedMonths: payload.initializedMonths,
+          updatedAt: now,
+        },
+        $setOnInsert: {
+          churchId: payload.churchId,
+          year: payload.year,
+          createdAt: now,
+        },
+      },
+      { upsert: true }
+    );
+    return NextResponse.json({ ok: true, message: 'Asistencia guardada correctamente.' });
+  } catch (e) {
+    console.error('[api/attendance/registro PUT]', e);
+    const message = e instanceof Error ? e.message : 'Error al guardar en la base de datos.';
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}

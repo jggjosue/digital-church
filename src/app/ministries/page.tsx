@@ -17,6 +17,17 @@ import Link from 'next/link';
 import { AppHeader } from '@/components/app-header';
 import type { MinistryDocument } from '@/lib/ministries';
 import { ministryCategoryLabel } from '@/lib/ministries';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { useToast } from '@/hooks/use-toast';
 
 function leaderSummary(ministry: MinistryDocument): string {
   if (ministry.leaders.length === 0) return 'Sin líder';
@@ -24,12 +35,24 @@ function leaderSummary(ministry: MinistryDocument): string {
   return `${ministry.leaders[0].name} +${ministry.leaders.length - 1}`;
 }
 
+function normalizeSearchText(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
 export default function MinistriesPage() {
+  const { toast } = useToast();
   const [ministries, setMinistries] = React.useState<MinistryDocument[]>([]);
   const [loadState, setLoadState] = React.useState<'loading' | 'error' | 'ready'>('loading');
   const [loadError, setLoadError] = React.useState<string | null>(null);
   const [searchQuery, setSearchQuery] = React.useState('');
   const [sortBy, setSortBy] = React.useState<'name' | 'members'>('name');
+  const [ministryToDelete, setMinistryToDelete] = React.useState<MinistryDocument | null>(null);
+  const [deleting, setDeleting] = React.useState(false);
+  const [canDeleteMinistries, setCanDeleteMinistries] = React.useState(false);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -64,14 +87,39 @@ export default function MinistriesPage() {
     };
   }, []);
 
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/members/me-role', {
+          cache: 'no-store',
+          headers: { Accept: 'application/json' },
+        });
+        const data = (await res.json().catch(() => ({}))) as { isAdmin?: boolean };
+        if (!cancelled) {
+          setCanDeleteMinistries(Boolean(data.isAdmin));
+        }
+      } catch {
+        if (!cancelled) {
+          setCanDeleteMinistries(false);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const filteredSorted = React.useMemo(() => {
-    const q = searchQuery.trim().toLowerCase();
+    const q = normalizeSearchText(searchQuery);
     let list = ministries;
     if (q) {
       list = list.filter((m) => {
-        const cat = ministryCategoryLabel(m.category).toLowerCase();
-        const leaders = m.leaders.map((l) => `${l.name} ${l.email}`).join(' ').toLowerCase();
-        const hay = `${m.name} ${m.description} ${cat} ${leaders}`;
+        const cat = normalizeSearchText(ministryCategoryLabel(m.category));
+        const leaders = normalizeSearchText(
+          m.leaders.map((l) => `${l.name} ${l.email}`).join(' ')
+        );
+        const hay = normalizeSearchText(`${m.name} ${m.description} ${cat} ${leaders}`);
         return hay.includes(q);
       });
     }
@@ -83,6 +131,34 @@ export default function MinistriesPage() {
     }
     return out;
   }, [ministries, searchQuery, sortBy]);
+
+  const handleDeleteMinistry = async () => {
+    if (!ministryToDelete) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/ministries/${encodeURIComponent(ministryToDelete.id)}`, {
+        method: 'DELETE',
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string; message?: string };
+      if (!res.ok) {
+        throw new Error(data.error || 'No se pudo eliminar el ministerio.');
+      }
+      setMinistries((prev) => prev.filter((m) => m.id !== ministryToDelete.id));
+      toast({
+        title: 'Ministerio eliminado',
+        description: data.message || 'El ministerio se eliminó correctamente.',
+      });
+      setMinistryToDelete(null);
+    } catch (e) {
+      toast({
+        variant: 'destructive',
+        title: 'No se pudo eliminar',
+        description: e instanceof Error ? e.message : 'Inténtelo de nuevo.',
+      });
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   return (
     <div className="flex flex-1 flex-col">
@@ -108,16 +184,18 @@ export default function MinistriesPage() {
               aria-label="Buscar ministerios"
             />
           </div>
-          <div className="w-full sm:w-[220px]">
-            <Select value={sortBy} onValueChange={(v) => setSortBy(v as 'name' | 'members')}>
-              <SelectTrigger aria-label="Ordenar lista">
-                <SelectValue placeholder="Ordenar por: Nombre" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="name">Ordenar por: Nombre</SelectItem>
-                <SelectItem value="members">Ordenar por: Miembros</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+            <div className="w-full sm:w-[220px]">
+              <Select value={sortBy} onValueChange={(v) => setSortBy(v as 'name' | 'members')}>
+                <SelectTrigger aria-label="Ordenar lista">
+                  <SelectValue placeholder="Ordenar por: Nombre" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="name">Ordenar por: Nombre</SelectItem>
+                  <SelectItem value="members">Ordenar por: Miembros</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
 
@@ -148,9 +226,18 @@ export default function MinistriesPage() {
                     </p>
                     <p className="mt-1 text-muted-foreground">{ministry.description}</p>
                   </div>
-                  <Button variant="ghost" size="icon" className="-mr-2 -mt-2 sm:mt-0" type="button">
-                    <MoreHorizontal className="h-5 w-5" />
-                  </Button>
+                  {canDeleteMinistries ? (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="-mr-2 -mt-2 sm:mt-0"
+                      type="button"
+                      onClick={() => setMinistryToDelete(ministry)}
+                      aria-label={`Eliminar ${ministry.name}`}
+                    >
+                      <MoreHorizontal className="h-5 w-5" />
+                    </Button>
+                  ) : null}
                 </div>
                 <div className="mt-6 flex flex-col items-start justify-between gap-4 lg:flex-row lg:items-center">
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
@@ -197,6 +284,35 @@ export default function MinistriesPage() {
             </Card>
           ))}
         </div>
+        <AlertDialog
+          open={ministryToDelete !== null}
+          onOpenChange={(open) => {
+            if (!open && !deleting) setMinistryToDelete(null);
+          }}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>¿Desea borrar este ministerio?</AlertDialogTitle>
+              <AlertDialogDescription>
+                {ministryToDelete
+                  ? `Esta acción eliminará «${ministryToDelete.name}» y no se puede deshacer.`
+                  : 'Esta acción no se puede deshacer.'}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={(e) => {
+                  e.preventDefault();
+                  void handleDeleteMinistry();
+                }}
+                disabled={deleting}
+              >
+                {deleting ? 'Borrando…' : 'Borrar'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </main>
     </div>
   );

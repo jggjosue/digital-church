@@ -57,13 +57,16 @@ export function MemberGrowthChart({ timeRange }: MemberGrowthChartProps) {
   const latestMembers = filteredData[filteredData.length - 1]?.members || 0;
 
   return (
-    <Card className="h-full">
-      <CardHeader>
+    <Card className="h-full border-border/70 shadow-sm">
+      <CardHeader className="space-y-1 border-b pb-4">
         <CardTitle>Tendencias de Miembros</CardTitle>
         <CardDescription>{getTitle(timeRange)}</CardDescription>
-        <div className="text-3xl font-bold">{latestMembers.toLocaleString()} <span className="text-sm font-normal text-green-600">+2.1%</span></div>
+        <div className="pt-2 text-3xl font-semibold tracking-tight">
+          {latestMembers.toLocaleString()}
+          <span className="ml-2 text-sm font-normal text-green-600">+2.1%</span>
+        </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-5">
           <ChartContainer config={chartConfig} className="h-[250px] w-full">
             <LineChart accessibilityLayer data={filteredData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
                 <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />

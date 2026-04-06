@@ -19,13 +19,6 @@ import {
 
 export type TempleOption = ChurchSelectOption;
 
-const OTRO: TempleOption = { id: 'otro', name: 'Otro', municipality: '' };
-
-function withOtro(options: TempleOption[]): TempleOption[] {
-  if (options.some((o) => o.id === 'otro')) return options;
-  return [...options, OTRO];
-}
-
 function mapChurchToOption(c: ChurchLocation): TempleOption {
   return {
     id: c.id,
@@ -72,7 +65,7 @@ export function TempleAssignmentCard({
         }
         const list = dedupeChurchesById(data.churches ?? []);
         setChurchCount(list.length);
-        setOptions(withOtro(list.map(mapChurchToOption)));
+        setOptions(list.map(mapChurchToOption));
         setLoadState('ready');
       } catch {
         if (!cancelled) {
@@ -110,8 +103,8 @@ export function TempleAssignmentCard({
             ) : null}
             {loadState === 'ready' && churchCount === 0 ? (
               <p className="text-sm text-muted-foreground">
-                No hay templos registrados en la base de datos. Añada ubicaciones en la sección de
-                iglesias; mientras tanto puede usar «Otro».
+                No hay templos registrados en la colección `churches`. Añada ubicaciones en la
+                sección de iglesias.
               </p>
             ) : null}
             {loadState === 'ready'

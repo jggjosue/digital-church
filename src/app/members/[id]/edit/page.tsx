@@ -35,8 +35,8 @@ import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { assignableMemberGroups } from '@/lib/data';
 import { TempleAssignmentCard } from '@/components/temple-assignment-card';
+import type { MinistryDocument } from '@/lib/ministries';
 
 const STAFF_ROLE_NONE = '__none__';
 
@@ -77,6 +77,16 @@ const STAFF_ROLE_OPTIONS = [
 function staffRoleToApi(kind: string): string | undefined {
   if (!kind || kind === STAFF_ROLE_NONE) return undefined;
   return kind;
+}
+
+function toTitleCase(value: string): string {
+  return value
+    .trim()
+    .toLocaleLowerCase('es')
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toLocaleUpperCase('es') + word.slice(1))
+    .join(' ');
 }
 
 /** Valores guardados distintos de Pastor/Congregante (p. ej. texto libre antiguo) se muestran como «Sin especificar». */
@@ -154,6 +164,10 @@ export default function EditMemberPage() {
   const [photoDataUrl, setPhotoDataUrl] = React.useState<string | null>(null);
   const [loadState, setLoadState] = React.useState<'loading' | 'error' | 'ready'>('loading');
   const [loadMessage, setLoadMessage] = React.useState<string | null>(null);
+  const [groupOptions, setGroupOptions] = React.useState<string[]>([]);
+  const [groupsLoadState, setGroupsLoadState] = React.useState<'loading' | 'ready' | 'error'>(
+    'loading'
+  );
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -232,6 +246,42 @@ export default function EditMemberPage() {
       cancelled = true;
     };
   }, [id, form.reset]);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setGroupsLoadState('loading');
+      try {
+        const res = await fetch('/api/ministries', {
+          cache: 'no-store',
+          headers: { Accept: 'application/json' },
+        });
+        const data = (await res.json().catch(() => ({}))) as {
+          ministries?: MinistryDocument[];
+          error?: string;
+        };
+        if (!res.ok) {
+          throw new Error(data.error || 'No se pudieron cargar los ministerios.');
+        }
+        if (cancelled) return;
+        const groups = [...new Set(
+          (data.ministries ?? [])
+            .map((m) => String(m.name ?? '').trim())
+            .filter(Boolean)
+        )].sort((a, b) => a.localeCompare(b, 'es'));
+        setGroupOptions(groups);
+        setGroupsLoadState('ready');
+      } catch {
+        if (!cancelled) {
+          setGroupOptions([]);
+          setGroupsLoadState('error');
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
     const handleGroupToggle = (group: string) => {
     const currentGroups = form.getValues('groups') || [];
@@ -600,7 +650,9 @@ export default function EditMemberPage() {
           <Card>
               <CardHeader>
                   <CardTitle>Grupos y Ministerios</CardTitle>
-                  <CardDescription>Asigne el miembro a grupos relevantes.</CardDescription>
+                  <CardDescription>
+                    Asigne el miembro a grupos y ministerios existentes en la colección `members`.
+                  </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                   <FormField
@@ -610,7 +662,23 @@ export default function EditMemberPage() {
                       <FormItem>
                         <FormLabel>Asignar a Grupos</FormLabel>
                         <div className="mt-2 max-h-60 space-y-3 overflow-y-auto rounded-md border p-4">
-                          {assignableMemberGroups.map((group) => (
+                          {groupsLoadState === 'loading' ? (
+                            <p className="text-sm text-muted-foreground">
+                              Cargando grupos y ministerios desde la base de datos...
+                            </p>
+                          ) : null}
+                          {groupsLoadState === 'error' ? (
+                            <p className="text-sm text-destructive">
+                              No se pudieron cargar ministerios.
+                            </p>
+                          ) : null}
+                          {groupsLoadState === 'ready' && groupOptions.length === 0 ? (
+                            <p className="text-sm text-muted-foreground">
+                              No hay ministerios registrados en `ministries`.
+                            </p>
+                          ) : null}
+                          {groupsLoadState === 'ready'
+                            ? groupOptions.map((group) => (
                               <div key={group} className="flex items-center gap-3">
                                   <Checkbox 
                                 id={`edit-member-group-${group}`}
@@ -618,10 +686,11 @@ export default function EditMemberPage() {
                                       onCheckedChange={() => handleGroupToggle(group)}
                                   />
                               <Label htmlFor={`edit-member-group-${group}`} className="cursor-pointer font-normal">
-                                {group}
+                                {toTitleCase(group)}
                               </Label>
                               </div>
-                          ))}
+                            ))
+                            : null}
                       </div>
                         <p className="mt-2 text-xs text-muted-foreground">Puede seleccionar múltiples grupos.</p>
                         <FormMessage />

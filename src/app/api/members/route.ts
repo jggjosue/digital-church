@@ -13,9 +13,9 @@ export const createMemberSchema = z.object({
   address: z.string().min(1),
   dob: z.string().min(1),
   spiritualBirthday: z.string().nullable().optional(),
-  groups: z.array(z.string()).min(1),
+  groups: z.array(z.string()).default([]),
   /** Ids de documentos en la colección `churches` (y opcionalmente `otro`). */
-  churchIds: z.array(z.string()).min(1),
+  churchIds: z.array(z.string()).default([]),
   membershipStatus: z.string().min(1),
   photoDataUrl: z.string().nullable().optional(),
   /** Imagen ya guardada vía POST /api/member-photo-uploads al seleccionar archivo. */
@@ -56,14 +56,51 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     // Ej. `?department=Pastoral` → solo miembros con ese `department` en el documento.
     const department = searchParams.get('department')?.trim();
-    const filter = department ? { department } : {};
+    const group = searchParams.get('group')?.trim();
+    const q = searchParams.get('q')?.trim();
+    const limitParam = Number(searchParams.get('limit') ?? '0');
+    const limit = Number.isFinite(limitParam) && limitParam > 0 ? Math.min(limitParam, 50) : 0;
+    const filter: Record<string, unknown> = department ? { department } : {};
+    if (group) {
+      filter.groups = group;
+    }
+    if (q) {
+      const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const byName = new RegExp(escaped, 'i');
+      const compact = q.replace(/\s+/g, '');
+      const byFullName = compact ? new RegExp(compact, 'i') : byName;
+      filter.$or = [
+        { firstName: byName },
+        { lastName: byName },
+        { email: byName },
+        { phone: byName },
+        {
+          $expr: {
+            $regexMatch: {
+              input: {
+                $replaceAll: {
+                  input: { $concat: ['$firstName', '$lastName'] },
+                  find: ' ',
+                  replacement: '',
+                },
+              },
+              regex: byFullName.source,
+              options: 'i',
+            },
+          },
+        },
+      ];
+    }
 
     const db = await getDb();
-    const docs = await db
+    let query = db
       .collection<MemberDocument>('members')
       .find(filter, { projection: { _id: 0 } })
-      .sort({ createdAt: -1 })
-      .toArray();
+      .sort({ createdAt: -1 });
+    if (limit > 0) {
+      query = query.limit(limit);
+    }
+    const docs = await query.toArray();
     const members = docs.map((raw) => {
       const { templeIds: _legacyTemple, ...rest } = raw as Record<string, unknown>;
       return {

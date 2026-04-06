@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/card"
 import { givingData } from "@/lib/data"
 import type { TimeRange } from '@/app/dashboard/page';
+import { HandCoins, TrendingUp } from 'lucide-react';
 
 interface GivingThisMonthProps {
   timeRange: TimeRange;
@@ -35,16 +36,22 @@ export function GivingThisMonth({ timeRange }: GivingThisMonthProps) {
   const { value, change } = getDataForRange(timeRange);
 
   return (
-    <Card>
-      <CardHeader className="pb-2">
+    <Card className="border-border/70 shadow-sm transition-shadow hover:shadow-md">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-sm font-medium">Ofrendas</CardTitle>
+        <div className="rounded-md bg-primary/10 p-2 text-primary">
+          <HandCoins className="h-4 w-4" />
+        </div>
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">${value.toLocaleString(undefined, {
+        <div className="text-3xl font-semibold tracking-tight">${value.toLocaleString(undefined, {
             minimumFractionDigits: 0,
             maximumFractionDigits: 0
         })}</div>
-        <p className={`text-xs ${change.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>{change}</p>
+        <p className={`mt-1 inline-flex items-center gap-1 text-xs ${change.startsWith('+') ? 'text-green-600' : 'text-red-600'}`}>
+          <TrendingUp className="h-3.5 w-3.5" />
+          {change} vs periodo anterior
+        </p>
       </CardContent>
     </Card>
   )

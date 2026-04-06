@@ -10,22 +10,13 @@ import { MemberDemographics } from '@/components/dashboard/member-demographics';
 import { UpcomingEvents } from '@/components/dashboard/upcoming-events';
 import { PrayerRequests } from '@/components/dashboard/prayer-requests';
 import { TotalGroups } from '@/components/dashboard/total-groups';
-import { MinistriesManageCard } from '@/components/dashboard/ministries-manage-card';
-import { PrayerRequestsManageCard } from '@/components/dashboard/prayer-requests-manage-card';
-import { GroupsManageCard } from '@/components/dashboard/groups-manage-card';
-import { VolunteersTasksManageCard } from '@/components/dashboard/volunteers-tasks-manage-card';
-import { EventsManageCard } from '@/components/dashboard/events-manage-card';
-import { SermonsLibraryManageCard } from '@/components/dashboard/sermons-library-manage-card';
-import { CeremoniesManageCard } from '@/components/dashboard/ceremonies-manage-card';
-import { FacilitiesManageCard } from '@/components/dashboard/facilities-manage-card';
-import { ReportsManageCard } from '@/components/dashboard/reports-manage-card';
-import { SettingsManageCard } from '@/components/dashboard/settings-manage-card';
 import { TotalMinistries } from '@/components/dashboard/total-ministries';
 import { TotalVolunteers } from '@/components/dashboard/total-volunteers';
 import { UpcomingEventsCard } from '@/components/dashboard/upcoming-events-card';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { MemberGrowthChart } from '@/components/dashboard/member-growth-chart';
 import { AppHeader } from '@/components/app-header';
+import { Badge } from '@/components/ui/badge';
 
 export type TimeRange = 'this-week' | 'this-month' | 'this-quarter' | 'this-year';
 
@@ -56,7 +47,8 @@ export default function DashboardPage() {
         </Tabs>
         <ThemeToggle />
       </AppHeader>
-      <main className="flex-1 space-y-6 p-4 sm:p-8">
+      <main className="flex-1 bg-gradient-to-b from-muted/20 to-background p-4 sm:p-8">
+        <div className="mx-auto w-full max-w-7xl space-y-8">
         <div className="sm:hidden">
           <Tabs
             defaultValue="this-week"
@@ -71,43 +63,50 @@ export default function DashboardPage() {
             </TabsList>
           </Tabs>
         </div>
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          <TotalMembers timeRange={timeRange} />
-          <WeeklyAttendance timeRange={timeRange} />
-          <GivingThisMonth timeRange={timeRange} />
-          <UpcomingEventsCard />
-        </div>
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-          <TotalGroups />
-          <TotalMinistries />
-          <TotalVolunteers />
-        </div>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-          <GroupsManageCard />
-          <MinistriesManageCard />
-          <PrayerRequestsManageCard />
-          <VolunteersTasksManageCard />
-          <EventsManageCard />
-          <SermonsLibraryManageCard />
-          <CeremoniesManageCard />
-          <FacilitiesManageCard />
-          <ReportsManageCard />
-          <SettingsManageCard />
-        </div>
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-          <GivingTrends timeRange={timeRange} />
-          <MemberGrowthChart timeRange={timeRange} />
-        </div>
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-          <div className="lg:col-span-2">
-            <MemberDemographics />
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+              Resumen general
+            </h2>
+            <Badge variant="secondary">Actualizado en tiempo real</Badge>
           </div>
-          <div className="lg:col-span-3">
-            <div className="grid grid-cols-1 gap-6">
-              <UpcomingEvents />
-              <PrayerRequests />
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <TotalMembers timeRange={timeRange} />
+            <WeeklyAttendance timeRange={timeRange} />
+            <GivingThisMonth timeRange={timeRange} />
+            <UpcomingEventsCard />
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <TotalGroups />
+            <TotalMinistries />
+            <TotalVolunteers />
+          </div>
+        </section>
+        <section className="space-y-4">
+          <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+            Tendencias
+          </h2>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <GivingTrends timeRange={timeRange} />
+            <MemberGrowthChart timeRange={timeRange} />
+          </div>
+        </section>
+        <section className="space-y-4">
+          <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
+            Actividad reciente
+          </h2>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+            <div className="lg:col-span-2">
+              <MemberDemographics />
+            </div>
+            <div className="lg:col-span-3">
+              <div className="grid grid-cols-1 gap-6">
+                <UpcomingEvents />
+                <PrayerRequests />
+              </div>
             </div>
           </div>
+        </section>
         </div>
       </main>
     </div>

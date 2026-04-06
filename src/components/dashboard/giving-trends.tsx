@@ -57,13 +57,16 @@ export function GivingTrends({ timeRange }: GivingTrendsProps) {
   const totalGiving = filteredData.reduce((acc, curr) => acc + curr.total, 0)
 
   return (
-    <Card className="h-full">
-      <CardHeader>
+    <Card className="h-full border-border/70 shadow-sm">
+      <CardHeader className="space-y-1 border-b pb-4">
         <CardTitle>Tendencias de Ofrendas</CardTitle>
         <CardDescription>{getTitle(timeRange)}</CardDescription>
-        <div className="text-3xl font-bold">${totalGiving.toLocaleString()} <span className="text-sm font-normal text-green-600">+4.2%</span></div>
+        <div className="pt-2 text-3xl font-semibold tracking-tight">
+          ${totalGiving.toLocaleString()}
+          <span className="ml-2 text-sm font-normal text-green-600">+4.2%</span>
+        </div>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-5">
           <ChartContainer config={chartConfig} className="h-[250px] w-full">
             <BarChart accessibilityLayer data={filteredData} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
               <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} fontSize={12} />

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { ObjectId } from 'mongodb';
 import { getDb } from '@/lib/mongodb';
 import { consumePhotoUpload } from '@/lib/member-photo-upload';
 import { createMemberSchema, type MemberDocument } from '../route';
@@ -136,13 +137,45 @@ export async function PATCH(
           ? String(body.department).trim()
           : null;
     }
-    const result = await db.collection('members').updateOne(
-      { id: id.trim() },
-      { $set: setPayload }
-    );
+    const normalizedId = id.trim();
+    const members = db.collection('members');
 
+    // Primero intenta por `id` (uuid propio de la app).
+    let result = await members.updateOne({ id: normalizedId }, { $set: setPayload });
+
+    // Compatibilidad: si la URL trae un ObjectId de Mongo, actualiza por `_id`.
+    if (result.matchedCount === 0 && ObjectId.isValid(normalizedId)) {
+      result = await members.updateOne(
+        { _id: new ObjectId(normalizedId) },
+        { $set: { ...setPayload, id: normalizedId } }
+      );
+    }
+
+    // Si no existe por ninguno de los dos identificadores, crea el documento.
     if (result.matchedCount === 0) {
-      return NextResponse.json({ error: 'Miembro no encontrado.' }, { status: 404 });
+      const doc: MemberDocument = {
+        id: normalizedId,
+        createdAt: new Date().toISOString(),
+        firstName: body.firstName.trim(),
+        lastName: body.lastName.trim(),
+        email: body.email.trim().toLowerCase(),
+        phone: body.phone.trim(),
+        address: body.address.trim(),
+        dob: body.dob,
+        spiritualBirthday: body.spiritualBirthday ?? null,
+        groups: [...body.groups],
+        churchIds: [...body.churchIds],
+        membershipStatus: body.membershipStatus,
+        photoDataUrl,
+        department:
+          Object.prototype.hasOwnProperty.call(body, 'department') &&
+          body.department !== undefined &&
+          String(body.department).trim() !== ''
+            ? String(body.department).trim()
+            : null,
+        staffRole,
+      };
+      await members.insertOne(doc);
     }
 
     return NextResponse.json({ ok: true, message: 'Cambios guardados correctamente.' });

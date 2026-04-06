@@ -1,49 +1,17 @@
 import { NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
-import type { Collection } from 'mongodb';
 import { z } from 'zod';
 import { getDb } from '@/lib/mongodb';
 import {
-  buildDefaultChurchDocuments,
   buildMapsUrlsFromAddress,
   CHURCHES_COLLECTION,
   dedupeChurchesById,
   type ChurchLocation,
 } from '@/lib/church-locations';
 
-/** Inserta templos ICIAR por defecto cuyo `id` aún no exista (p. ej. BD antigua con solo 5 sedes). */
-async function backfillMissingDefaultChurches(col: Collection<ChurchLocation>) {
-  const defaults = buildDefaultChurchDocuments();
-  const existing = await col.find({}, { projection: { id: 1 } }).toArray();
-  const existingIds = new Set(
-    existing.map((d) => String(d.id ?? '').trim()).filter(Boolean)
-  );
-  const toInsert = defaults.filter((d) => d.id && !existingIds.has(d.id));
-  if (toInsert.length > 0) {
-    await col.insertMany(toInsert);
-  }
-}
-
-async function ensureDefaultChurchesSeeded(db: Awaited<ReturnType<typeof getDb>>) {
-  const col = db.collection<ChurchLocation>(CHURCHES_COLLECTION);
-  const n = await col.countDocuments();
-  if (n === 0) {
-    const legacy = db.collection('church_locations');
-    const legacyCount = await legacy.countDocuments();
-    if (legacyCount > 0) {
-      const docs = await legacy.find({}, { projection: { _id: 0 } }).toArray();
-      await col.insertMany(docs as ChurchLocation[]);
-    } else {
-      await col.insertMany(buildDefaultChurchDocuments());
-    }
-  }
-  await backfillMissingDefaultChurches(col);
-}
-
 export async function GET() {
   try {
     const db = await getDb();
-    await ensureDefaultChurchesSeeded(db);
     const docs = await db
       .collection<ChurchLocation>(CHURCHES_COLLECTION)
       .find({}, { projection: { _id: 0 } })
