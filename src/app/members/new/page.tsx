@@ -2,11 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import {
-  Calendar as CalendarIcon,
-  Search,
-  Trash2,
-} from 'lucide-react';
+import { Calendar as CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -29,22 +25,17 @@ import Link from 'next/link';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AppHeader } from '@/components/app-header';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { TempleAssignmentCard } from '@/components/temple-assignment-card';
+import type { MinistryDocument } from '@/lib/ministries';
 
-const availableGroups = [
-    'Youth Group',
-    'Choir',
-    'Volunteers',
-    'New Members Class',
-];
+const STAFF_ROLE_NONE = '__none__';
 
 const formSchema = z.object({
   firstName: z.string().min(1, { message: 'El nombre es requerido.' }),
@@ -56,18 +47,74 @@ const formSchema = z.object({
     required_error: "La fecha de nacimiento es requerida.",
   }),
   spiritualBirthday: z.date().optional(),
-  family: z.array(z.object({ id: z.number(), name: z.string(), relation: z.string() })).optional(),
-  groups: z.array(z.string()).nonempty({ message: 'Debe seleccionar al menos un grupo.' }),
-  membershipStatus: z.string({
-    required_error: "El estado de membresía es requerido.",
-  }).min(1, { message: 'El estado de membresía es requerido.' }),
+  groups: z
+    .array(z.string())
+    .nonempty({ message: 'Debe seleccionar al menos un ministerio.' }),
+  churchIds: z
+    .array(z.string())
+    .min(1, { message: 'Debe seleccionar al menos un templo.' }),
+  staffRoleKind: z
+    .string()
+    .refine((v) => v !== STAFF_ROLE_NONE, {
+      message: 'Seleccione Pastor o Congregante.',
+    }),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
+const STAFF_ROLE_OPTIONS = [
+  { value: STAFF_ROLE_NONE, label: 'Sin especificar' },
+  { value: 'Pastor', label: 'Pastor' },
+  { value: 'Congregante', label: 'Congregante' },
+] as const;
+
+function staffRoleToApi(kind: string): string | undefined {
+  if (!kind || kind === STAFF_ROLE_NONE) return undefined;
+  return kind;
+}
+
+/** Estado de membresía por defecto al crear desde este formulario (la API lo requiere). */
+const DEFAULT_MEMBERSHIP_STATUS = 'active' as const;
 
 export default function NewMemberPage() {
     const { toast } = useToast();
+    const [ministriesFromDb, setMinistriesFromDb] = React.useState<MinistryDocument[]>([]);
+    const [ministriesLoad, setMinistriesLoad] = React.useState<
+      'loading' | 'ready' | 'error'
+    >('loading');
+
+    React.useEffect(() => {
+      let cancelled = false;
+      (async () => {
+        setMinistriesLoad('loading');
+        try {
+          const res = await fetch('/api/ministries', {
+            cache: 'no-store',
+            headers: { Accept: 'application/json' },
+          });
+          const data = (await res.json().catch(() => ({}))) as {
+            ministries?: MinistryDocument[];
+            error?: string;
+          };
+          if (!res.ok) {
+            throw new Error(data.error || 'No se pudieron cargar los ministerios.');
+          }
+          if (!cancelled) {
+            setMinistriesFromDb(data.ministries ?? []);
+            setMinistriesLoad('ready');
+          }
+        } catch {
+          if (!cancelled) {
+            setMinistriesFromDb([]);
+            setMinistriesLoad('error');
+          }
+        }
+      })();
+      return () => {
+        cancelled = true;
+      };
+    }, []);
+
     const form = useForm<FormValues>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -77,7 +124,8 @@ export default function NewMemberPage() {
             phone: '',
             address: '',
             groups: [],
-            membershipStatus: 'active'
+            churchIds: [],
+            staffRoleKind: STAFF_ROLE_NONE,
         }
     });
 
@@ -86,16 +134,64 @@ export default function NewMemberPage() {
         const newGroups = currentGroups.includes(group)
             ? currentGroups.filter(g => g !== group)
             : [...currentGroups, group];
-        form.setValue('groups', newGroups);
-    }
-    
-    const onSubmit = (values: FormValues) => {
-        console.log(values);
-        toast({
-            title: "Miembro Guardado",
-            description: `${values.firstName} ${values.lastName} ha sido agregado exitosamente.`,
+        form.setValue('groups', newGroups as FormValues['groups'], {
+            shouldValidate: true,
+            shouldDirty: true,
         });
-    }
+    };
+
+    const onSubmit = async (values: FormValues) => {
+        try {
+            const res = await fetch('/api/members', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    firstName: values.firstName,
+                    lastName: values.lastName,
+                    email: values.email,
+                    phone: values.phone,
+                    address: values.address,
+                    dob: values.dob.toISOString(),
+                    spiritualBirthday: values.spiritualBirthday?.toISOString() ?? null,
+                    groups: values.groups,
+                    churchIds: values.churchIds,
+                    membershipStatus: DEFAULT_MEMBERSHIP_STATUS,
+                    staffRole: staffRoleToApi(values.staffRoleKind),
+                }),
+            });
+            const data = (await res.json().catch(() => ({}))) as {
+                error?: string;
+                message?: string;
+            };
+            if (!res.ok) {
+                throw new Error(data.error || 'No se pudo guardar el miembro.');
+            }
+            toast({
+                title: 'Miembro guardado',
+                description: `${values.firstName} ${values.lastName} se guardó correctamente.`,
+            });
+            form.reset({
+                firstName: '',
+                lastName: '',
+                email: '',
+                phone: '',
+                address: '',
+                groups: [],
+                churchIds: [],
+                staffRoleKind: STAFF_ROLE_NONE,
+            });
+            form.resetField('dob');
+            form.resetField('spiritualBirthday');
+        } catch (err) {
+            console.error(err);
+            toast({
+                variant: 'destructive',
+                title: 'No se pudo guardar',
+                description:
+                    err instanceof Error ? err.message : 'Error al guardar en la base de datos.',
+            });
+        }
+    };
 
   return (
     <div className="flex flex-col flex-1">
@@ -107,7 +203,13 @@ export default function NewMemberPage() {
           <Button variant="ghost" asChild>
             <Link href="/members">Cancelar</Link>
           </Button>
-          <Button onClick={form.handleSubmit(onSubmit)}>Guardar Miembro</Button>
+          <Button
+            type="button"
+            disabled={form.formState.isSubmitting}
+            onClick={form.handleSubmit(onSubmit)}
+          >
+            {form.formState.isSubmitting ? 'Guardando…' : 'Guardar Miembro'}
+          </Button>
         </div>
       </AppHeader>
       <main className="flex-1 p-8 space-y-8">
@@ -119,15 +221,6 @@ export default function NewMemberPage() {
                     <CardDescription>Detalles básicos sobre el nuevo miembro.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                    <div className="flex items-center gap-6">
-                        <div className="w-24 h-24 rounded-full bg-muted flex items-center justify-center">
-                            <Upload className="h-8 w-8 text-muted-foreground" />
-                        </div>
-                        <div>
-                            <Button variant="outline" type="button">Subir Foto</Button>
-                            <p className="text-xs text-muted-foreground mt-2">PNG, JPG, GIF hasta 10MB.</p>
-                        </div>
-                    </div>
                     <div className="grid grid-cols-2 gap-6">
                         <FormField
                             control={form.control}
@@ -232,7 +325,7 @@ export default function NewMemberPage() {
                             name="spiritualBirthday"
                             render={({ field }) => (
                                 <FormItem className="flex flex-col">
-                                    <FormLabel>Cumpleaños Espiritual</FormLabel>
+                                    <FormLabel>Fecha de Bautismo</FormLabel>
                                     <Popover>
                                         <PopoverTrigger asChild>
                                         <FormControl>
@@ -262,24 +355,46 @@ export default function NewMemberPage() {
 
             <Card>
               <CardHeader>
-                  <CardTitle>Familia y Relaciones</CardTitle>
-                  <CardDescription>Conecte este miembro con su familia.</CardDescription>
+                <CardTitle>Directorio de personal</CardTitle>
+                <CardDescription>
+                  Indique si el miembro es Pastor o Congregante; con ello podrá listarse en el directorio de
+                  personal.
+                </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                  <div>
-                      <Label htmlFor="add-family">Añadir Miembro de la Familia</Label>
-                      <div className="relative mt-2">
-                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          <Input id="add-family" placeholder="Buscar miembros existentes..." className="pl-9" />
-                      </div>
-                  </div>
+              <CardContent className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="staffRoleKind"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Cargo o rol (obligatorio)</FormLabel>
+                      <Select value={field.value ?? STAFF_ROLE_NONE} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Seleccione un cargo" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {STAFF_ROLE_OPTIONS.map((opt) => (
+                            <SelectItem key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </CardContent>
             </Card>
-            
+
             <Card>
               <CardHeader>
                   <CardTitle>Grupos y Ministerios</CardTitle>
-                  <CardDescription>Asigne el miembro a grupos relevantes.</CardDescription>
+                  <CardDescription>
+                    Asigne el miembro a uno o más ministerios registrados en la base de datos.
+                  </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                   <FormField
@@ -287,48 +402,75 @@ export default function NewMemberPage() {
                     name="groups"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Asignar a Grupos</FormLabel>
-                            <div className="mt-2 space-y-3 rounded-md border p-4 max-h-60 overflow-y-auto">
-                                {availableGroups.map(group => (
-                                    <div key={group} className="flex items-center gap-3">
-                                        <Checkbox 
-                                            id={group} 
-                                            checked={field.value?.includes(group)}
-                                            onCheckedChange={() => handleGroupToggle(group)}
-                                        />
-                                        <Label htmlFor={group} className="font-normal">{group}</Label>
-                                    </div>
-                                ))}
+                            <FormLabel>Asignar a ministerios</FormLabel>
+                            <div className="mt-2 max-h-60 space-y-3 overflow-y-auto rounded-md border p-4">
+                                {ministriesLoad === 'loading' ? (
+                                  <p className="text-sm text-muted-foreground">
+                                    Cargando ministerios desde la base de datos…
+                                  </p>
+                                ) : null}
+                                {ministriesLoad === 'error' ? (
+                                  <p className="text-sm text-destructive">
+                                    No se pudieron cargar los ministerios. Intente de nuevo más tarde.
+                                  </p>
+                                ) : null}
+                                {ministriesLoad === 'ready' && ministriesFromDb.length === 0 ? (
+                                  <p className="text-sm text-muted-foreground">
+                                    No hay ministerios registrados. Cree ministerios en la sección de
+                                    ministerios para poder asignarlos aquí.
+                                  </p>
+                                ) : null}
+                                {ministriesLoad === 'ready'
+                                  ? ministriesFromDb.map((m) => {
+                                      const label = m.name.trim();
+                                      if (!label) return null;
+                                      return (
+                                        <div key={m.id} className="flex items-center gap-3">
+                                          <Checkbox
+                                            id={`member-ministry-${m.id}`}
+                                            checked={field.value?.includes(label)}
+                                            onCheckedChange={() => handleGroupToggle(label)}
+                                          />
+                                          <Label
+                                            htmlFor={`member-ministry-${m.id}`}
+                                            className="cursor-pointer font-normal"
+                                          >
+                                            {label}
+                                          </Label>
+                                        </div>
+                                      );
+                                    })
+                                  : null}
                             </div>
-                            <p className="text-xs text-muted-foreground mt-2">Puede seleccionar múltiples grupos.</p>
+                            <p className="mt-2 text-xs text-muted-foreground">
+                              Puede seleccionar varios ministerios.
+                            </p>
                             <FormMessage />
                         </FormItem>
                     )}
                   />
-                   <FormField
-                        control={form.control}
-                        name="membershipStatus"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Estado de Membresía</FormLabel>
-                                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                    <FormControl>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="Seleccione un estado" />
-                                        </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        <SelectItem value="active">Activo</SelectItem>
-                                        <SelectItem value="visitor">Visitante</SelectItem>
-                                        <SelectItem value="inactive">Inactivo</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
               </CardContent>
             </Card>
+
+            <FormField
+              control={form.control}
+              name="churchIds"
+              render={({ field }) => (
+                <FormItem>
+                  <TempleAssignmentCard
+                    selectedIds={field.value ?? []}
+                    onToggle={(churchId) => {
+                      const current = field.value ?? [];
+                      const next = current.includes(churchId)
+                        ? current.filter((id) => id !== churchId)
+                        : [...current, churchId];
+                      field.onChange(next);
+                    }}
+                  />
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </form>
         </Form>
       </main>

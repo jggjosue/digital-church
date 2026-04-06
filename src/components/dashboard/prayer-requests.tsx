@@ -1,5 +1,6 @@
 "use client"
 import * as React from 'react'
+import Link from 'next/link'
 import {
   Card,
   CardContent,
@@ -7,18 +8,18 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { useToast } from "@/hooks/use-toast"
 import { prayerRequests as initialPrayerRequests } from "@/lib/data"
 
 export function PrayerRequests() {
-  const { toast } = useToast()
   const [requests, setRequests] = React.useState(initialPrayerRequests)
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-base font-medium">Peticiones de Oración Recientes</CardTitle>
-        <Button variant="link" className="p-0 h-auto">Ver Todas</Button>
+        <Button variant="link" className="p-0 h-auto" asChild>
+          <Link href="/prayer">Ver Todas</Link>
+        </Button>
       </CardHeader>
       <CardContent>
         <div className="space-y-2">

@@ -2,57 +2,6 @@
 
 import { Droplet, Heart, Smile } from "lucide-react";
 
-export const staffData = [
-    {
-      id: 1,
-      name: 'James Peterson',
-      role: 'Senior Pastor',
-      email: 'james.peterson@gracechurch.org',
-      phone: '+1 (234) 567-8901',
-      avatarUrl: 'https://picsum.photos/seed/jp/100/100',
-    },
-    {
-      id: 2,
-      name: 'Sarah Johnson',
-      role: 'Youth Pastor',
-      email: 'sarah.j@gracechurch.org',
-      phone: '+1 (234) 567-8902',
-      avatarUrl: 'https://picsum.photos/seed/sj/100/100',
-    },
-    {
-      id: 3,
-      name: 'Michael Lee',
-      role: 'Worship Leader',
-      email: 'michael.lee@gracechurch.org',
-      phone: '+1 (234) 567-8903',
-      avatarUrl: 'https://picsum.photos/seed/ml/100/100',
-    },
-    {
-      id: 4,
-      name: 'Emily Martinez',
-      role: 'Administrator',
-      email: 'emily.m@gracechurch.org',
-      phone: '+1 (234) 567-8904',
-      avatarUrl: '',
-    },
-    {
-      id: 5,
-      name: 'David Chen',
-      role: 'Volunteer Coordinator',
-      email: 'david.chen@gracechurch.org',
-      phone: '+1 (234) 567-8905',
-      avatarUrl: 'https://picsum.photos/seed/dc/100/100',
-    },
-    {
-        id: 6,
-        name: 'Jessica Rodriguez',
-        role: "Children's Ministry Director",
-        email: 'jessica.r@gracechurch.org',
-        phone: '+1 (234) 567-8906',
-        avatarUrl: 'https://picsum.photos/seed/jr/100/100',
-    }
-  ];
-
 export const memberDemographics = [
   { name: '18-25', value: 301, fill: 'hsl(252 82% 64%)' },
   { name: '26-40', value: 421, fill: 'hsl(217 91% 60%)' },
@@ -168,91 +117,7 @@ export const prayerRequests = [
     { id: 3, request: 'Oportunidad de trabajo para David P.', submitted: 'Enviado hace 5 días' },
 ];
 
-export const membersData = [
-    {
-      id: 1,
-      name: 'John Doe',
-      email: 'john.doe@example.com',
-      phone1: '+1 234 567 890',
-      phone2: '',
-      status: 'Activo',
-      groups: ['Voluntarios', 'Coro'],
-    },
-    {
-      id: 2,
-      name: 'Jane Smith',
-      email: 'jane.smith@example.com',
-      phone1: '+1 987 654 321',
-      phone2: '',
-      status: 'Activo',
-      groups: ['Grupo de Jóvenes'],
-    },
-    {
-      id: 3,
-      name: 'Robert Brown',
-      email: 'robert.brown@example.com',
-      phone1: '+1 555 123 456',
-      phone2: '',
-      status: 'Visitante',
-      groups: ['Nuevo Miembro'],
-    },
-    {
-      id: 4,
-      name: 'Emily Davis',
-      email: 'emily.davis@example.com',
-      phone1: '+1 444 555 666',
-      phone2: '',
-      status: 'Activo',
-      groups: ['Voluntarios'],
-    },
-    {
-      id: 5,
-      name: 'Michael Wilson',
-      email: 'michael.wilson@example.com',
-      phone1: '+1 777 888 999',
-      phone2: '',
-      status: 'Inactivo',
-      groups: [],
-    },
-    { id: 6, name: 'Sophia Martinez', email: 'sophia.martinez@example.com', phone1: '+1 555-100-1000', phone2: '', status: 'Activo', groups: ['Coro', 'Voluntarios'] },
-    { id: 7, name: 'James Johnson', email: 'james.johnson@example.com', phone1: '+1 555-101-1010', phone2: '', status: 'Inactivo', groups: [] },
-    { id: 8, name: 'Olivia Garcia', email: 'olivia.garcia@example.com', phone1: '+1 555-102-1020', phone2: '', status: 'Visitante', groups: ['Nuevo Miembro'] },
-    { id: 9, name: 'Liam Rodriguez', email: 'liam.rodriguez@example.com', phone1: '+1 555-103-1030', phone2: '', status: 'Activo', groups: ['Grupo de Jóvenes'] },
-    { id: 10, name: 'Emma Lopez', email: 'emma.lopez@example.com', phone1: '+1 555-104-1040', phone2: '', status: 'Activo', groups: ['Voluntarios'] },
-    { id: 11, name: 'Noah Hernandez', email: 'noah.hernandez@example.com', phone1: '+1 555-105-1050', phone2: '', status: 'Inactivo', groups: [] },
-    { id: 12, name: 'Ava Gonzalez', email: 'ava.gonzalez@example.com', phone1: '+1 555-106-1060', phone2: '', status: 'Activo', groups: ['Coro'] },
-    { id: 13, name: 'William Perez', email: 'william.perez@example.com', phone1: '+1 555-107-1070', phone2: '', status: 'Visitante', groups: ['Nuevo Miembro'] },
-    { id: 14, name: 'Isabella Sanchez', email: 'isabella.sanchez@example.com', phone1: '+1 555-108-1080', phone2: '', status: 'Activo', groups: ['Grupo de Jóvenes', 'Voluntarios'] },
-    { id: 15, name: 'James Ramirez', email: 'james.ramirez@example.com', phone1: '+1 555-109-1090', phone2: '', status: 'Activo', groups: ['Voluntarios'] },
-    { id: 16, name: 'Charlotte Torres', email: 'charlotte.torres@example.com', phone1: '+1 555-110-1100', phone2: '', status: 'Activo', groups: ['Coro'] },
-    { id: 17, name: 'Benjamin Flores', email: 'benjamin.flores@example.com', phone1: '+1 555-111-1110', phone2: '', status: 'Inactivo', groups: [] },
-    { id: 18, name: 'Amelia Rivera', email: 'amelia.rivera@example.com', phone1: '+1 555-112-1120', phone2: '', status: 'Visitante', groups: ['Nuevo Miembro'] },
-    { id: 19, name: 'Lucas Gomez', email: 'lucas.gomez@example.com', phone1: '+1 555-113-1130', phone2: '', status: 'Activo', groups: ['Grupo de Jóvenes'] },
-    { id: 20, name: 'Mia Diaz', email: 'mia.diaz@example.com', phone1: '+1 555-114-1140', phone2: '', status: 'Activo', groups: ['Voluntarios'] },
-    { id: 21, name: 'Henry Cruz', email: 'henry.cruz@example.com', phone1: '+1 555-115-1150', phone2: '', status: 'Activo', groups: ['Coro', 'Voluntarios'] },
-    { id: 22, name: 'Evelyn Reyes', email: 'evelyn.reyes@example.com', phone1: '+1 555-116-1160', phone2: '', status: 'Inactivo', groups: [] },
-    { id: 23, name: 'Alexander Morales', email: 'alexander.morales@example.com', phone1: '+1 555-117-1170', phone2: '', status: 'Visitante', groups: ['Nuevo Miembro'] },
-    { id: 24, name: 'Harper Gutierrez', email: 'harper.gutierrez@example.com', phone1: '+1 555-118-1180', phone2: '', status: 'Activo', groups: ['Grupo de Jóvenes'] },
-    { id: 25, name: 'Sebastian Ortiz', email: 'sebastian.ortiz@example.com', phone1: '+1 555-119-1190', phone2: '', status: 'Activo', groups: ['Voluntarios'] },
-    { id: 26, name: 'Camila Jimenez', email: 'camila.jimenez@example.com', phone1: '+1 555-120-1200', phone2: '', status: 'Inactivo', groups: [] },
-    { id: 27, name: 'Daniel Moreno', email: 'daniel.moreno@example.com', phone1: '+1 555-121-1210', phone2: '', status: 'Activo', groups: ['Coro'] },
-    { id: 28, name: 'Sofia Castillo', email: 'sofia.castillo@example.com', phone1: '+1 555-122-1220', phone2: '', status: 'Visitante', groups: ['Nuevo Miembro'] },
-    { id: 29, name: 'Matthew Vasquez', email: 'matthew.vasquez@example.com', phone1: '+1 555-123-1230', phone2: '', status: 'Activo', groups: ['Grupo de Jóvenes', 'Voluntarios'] },
-    { id: 30, name: 'Avery Chavez', email: 'avery.chavez@example.com', phone1: '+1 555-124-1240', phone2: '', status: 'Activo', groups: ['Voluntarios'] },
-    { id: 31, name: 'David Mendoza', email: 'david.mendoza@example.com', phone1: '+1 555-125-1250', phone2: '', status: 'Activo', groups: ['Coro'] },
-    { id: 32, name: 'Ella Medina', email: 'ella.medina@example.com', phone1: '+1 555-126-1260', phone2: '', status: 'Inactivo', groups: [] },
-    { id: 33, name: 'Joseph Rojas', email: 'joseph.rojas@example.com', phone1: '+1 555-127-1270', phone2: '', status: 'Visitante', groups: ['Nuevo Miembro'] },
-    { id: 34, name: 'Scarlett Guerrero', email: 'scarlett.guerrero@example.com', phone1: '+1 555-128-1280', phone2: '', status: 'Activo', groups: ['Grupo de Jóvenes'] },
-    { id: 35, name: 'Samuel Pena', email: 'samuel.pena@example.com', phone1: '+1 555-129-1290', phone2: '', status: 'Activo', groups: ['Voluntarios'] },
-    { id: 36, name: 'Grace Soto', email: 'grace.soto@example.com', phone1: '+1 555-130-1300', phone2: '', status: 'Activo', groups: ['Coro', 'Voluntarios'] },
-    { id: 37, name: 'Jackson Alvarado', email: 'jackson.alvarado@example.com', phone1: '+1 555-131-1310', phone2: '', status: 'Inactivo', groups: [] },
-    { id: 38, name: 'Chloe Santos', email: 'chloe.santos@example.com', phone1: '+1 555-132-1320', phone2: '', status: 'Visitante', groups: ['Nuevo Miembro'] },
-    { id: 39, name: 'Jayden Garza', email: 'jayden.garza@example.com', phone1: '+1 555-133-1330', phone2: '', status: 'Activo', groups: ['Grupo de Jóvenes'] },
-    { id: 40, name: 'Lily Vega', email: 'lily.vega@example.com', phone1: '+1 555-134-1340', phone2: '', status: 'Activo', groups: ['Voluntarios'] },
-    { id: 41, name: 'Carter Navarro', email: 'carter.navarro@example.com', phone1: '+1 555-135-1350', phone2: '', status: 'Activo', groups: ['Coro'] }
-  ];
-
-  export const groupData = [
+export const groupData = [
     {
       id: 1,
       name: 'Grupo de Jóvenes',
@@ -289,8 +154,26 @@ export const membersData = [
       status: 'Inactivo',
     },
   ];
-  
-  export const groupMembers = [
+
+/** Grupos del catálogo (el directorio en `/members` añade más según MongoDB). */
+export const assignableMemberGroups = [...new Set(groupData.map((g) => g.name))].sort(
+  (a, b) => a.localeCompare(b, 'es')
+);
+
+/** Fila heredada para pantallas que aún no usan la API. El directorio usa MongoDB. */
+export type LegacyMemberDirectoryRow = {
+  id: number;
+  name: string;
+  email: string;
+  phone1: string;
+  phone2: string;
+  status: string;
+  groups: string[];
+};
+
+export const membersData: LegacyMemberDirectoryRow[] = [];
+
+export const groupMembers = [
     {
       id: 1,
       name: 'Jane Smith',

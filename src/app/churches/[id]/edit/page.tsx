@@ -6,130 +6,336 @@ import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import Link from 'next/link';
 import { AppHeader } from '@/components/app-header';
-import { notFound } from 'next/navigation';
+import type { IciarTempleSchedule } from '@/lib/iciar-temples';
+import type { ChurchLocation } from '@/lib/church-locations';
+import { useParams } from 'next/navigation';
+import { Plus, Trash2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
-const locationDetails = {
-    id: 1,
-    name: 'Main Campus - Downtown',
-    address: '123 Main St',
-    city: 'Los Angeles',
-    state: 'CA',
-    zip: '90012',
-    country: 'usa',
-    phone: '(213) 555-0182',
-    email: 'downtown@gracechurch.org',
-    campusPastor: 'Pastor John Smith',
-    description: 'Our main campus located in the heart of the city, serving as a hub for our community outreach and primary worship services. We have programs for all ages and a vibrant congregation.',
-};
+function EditTempleForm({
+  templeId,
+  initial,
+}: {
+  templeId: string;
+  initial: {
+    name: string;
+    address: string;
+    municipality: string;
+    lat: number;
+    lng: number;
+    embedUrl: string;
+    shareMapUrl: string;
+    schedule: IciarTempleSchedule[];
+  };
+}) {
+  const { toast } = useToast();
+  const [name, setName] = React.useState(initial.name);
+  const [address, setAddress] = React.useState(initial.address);
+  const [municipality, setMunicipality] = React.useState(initial.municipality);
+  const [lat, setLat] = React.useState(String(initial.lat));
+  const [lng, setLng] = React.useState(String(initial.lng));
+  const [embedUrl, setEmbedUrl] = React.useState(initial.embedUrl);
+  const [shareMapUrl, setShareMapUrl] = React.useState(initial.shareMapUrl);
+  const [schedule, setSchedule] = React.useState<IciarTempleSchedule[]>(() =>
+    initial.schedule.map((s) => ({ ...s }))
+  );
 
-export default function EditChurchPage({ params }: { params: { id: string } }) {
-  // In a real app, you would fetch data based on params.id
-  const location = locationDetails;
-    
-  if (!location) {
-    notFound();
-  }
+  const updateScheduleRow = (
+    index: number,
+    field: keyof IciarTempleSchedule,
+    value: string
+  ) => {
+    setSchedule((rows) =>
+      rows.map((row, i) => (i === index ? { ...row, [field]: value } : row))
+    );
+  };
+
+  const addScheduleRow = () => {
+    setSchedule((rows) => [
+      ...rows,
+      { day: '', time: '', label: '' },
+    ]);
+  };
+
+  const removeScheduleRow = (index: number) => {
+    setSchedule((rows) => rows.filter((_, i) => i !== index));
+  };
+
+  const handleSave = () => {
+    toast({
+      title: 'Cambios registrados (solo en esta sesión)',
+      description:
+        'Los datos del templo no se guardan en servidor; use esta vista para revisar o copiar la información.',
+    });
+  };
 
   return (
     <div className="flex flex-col flex-1">
       <AppHeader
         title="Editar Ubicación"
-        description={`Modificando los detalles de "${location.name}"`}
+        description={`Modificando los detalles de «${initial.name}»`}
       >
         <div className="flex items-center gap-2">
-            <Button variant="ghost" asChild>
-                <Link href={`/churches/${params.id}`}>Cancelar</Link>
-            </Button>
-            <Button>Guardar Cambios</Button>
+          <Button variant="ghost" asChild>
+            <Link href={`/churches/${templeId}`}>Cancelar</Link>
+          </Button>
+          <Button type="button" onClick={handleSave}>
+            Guardar Cambios
+          </Button>
         </div>
       </AppHeader>
       <main className="flex-1 space-y-6 p-4 sm:p-8 bg-muted/20">
         <Card className="max-w-3xl mx-auto">
           <CardHeader>
-            <CardTitle>Información de la Ubicación</CardTitle>
+            <CardTitle>Información del templo</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
-              <Label htmlFor="location-name">Nombre de la Ubicación</Label>
-              <Input id="location-name" defaultValue={location.name} />
+              <Label htmlFor="temple-name">Nombre del templo</Label>
+              <Input
+                id="temple-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+              />
             </div>
-
             <div className="space-y-2">
-              <Label htmlFor="address">Dirección</Label>
-              <Input id="address" defaultValue={location.address} />
+              <Label htmlFor="temple-address">Dirección</Label>
+              <Input
+                id="temple-address"
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+              />
             </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="city">Ciudad</Label>
-                <Input id="city" defaultValue={location.city} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="state">Estado</Label>
-                <Input id="state" defaultValue={location.state} />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="zip">Código Postal</Label>
-                <Input id="zip" defaultValue={location.zip} />
-              </div>
-            </div>
-
             <div className="space-y-2">
-                <Label htmlFor="country">País</Label>
-                <Select defaultValue={location.country}>
-                    <SelectTrigger id="country">
-                        <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="usa">Estados Unidos</SelectItem>
-                        <SelectItem value="canada">Canadá</SelectItem>
-                        <SelectItem value="mexico">México</SelectItem>
-                    </SelectContent>
-                </Select>
+              <Label htmlFor="municipality">Municipio</Label>
+              <Input
+                id="municipality"
+                value={municipality}
+                onChange={(e) => setMunicipality(e.target.value)}
+              />
             </div>
-             <div className="space-y-2">
-                <Label htmlFor="phone">Número de Teléfono</Label>
-                <Input id="phone" defaultValue={location.phone} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="lat">Latitud</Label>
+                <Input
+                  id="lat"
+                  type="text"
+                  inputMode="decimal"
+                  value={lat}
+                  onChange={(e) => setLat(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="lng">Longitud</Label>
+                <Input
+                  id="lng"
+                  type="text"
+                  inputMode="decimal"
+                  value={lng}
+                  onChange={(e) => setLng(e.target.value)}
+                />
+              </div>
             </div>
           </CardContent>
         </Card>
-        
+
         <Card className="max-w-3xl mx-auto">
           <CardHeader>
-            <CardTitle>Detalles del Campus</CardTitle>
+            <CardTitle>Mapa y enlaces</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
-                <Label htmlFor="campus-pastor">Pastor del Campus</Label>
-                <Input id="campus-pastor" defaultValue={location.campusPastor} />
+              <Label htmlFor="embed-url">URL embebida (Google Maps)</Label>
+              <Textarea
+                id="embed-url"
+                className="min-h-[100px] font-mono text-xs"
+                value={embedUrl}
+                onChange={(e) => setEmbedUrl(e.target.value)}
+              />
             </div>
-             <div className="space-y-2">
-                <Label htmlFor="contact-email">Email de Contacto</Label>
-                <Input id="contact-email" type="email" defaultValue={location.email} />
+            <div className="space-y-2">
+              <Label htmlFor="share-url">Enlace para compartir (Google Maps)</Label>
+              <Input
+                id="share-url"
+                className="font-mono text-xs"
+                value={shareMapUrl}
+                onChange={(e) => setShareMapUrl(e.target.value)}
+              />
             </div>
-             <div className="space-y-2">
-                <Label htmlFor="description">Descripción del Campus</Label>
-                <Textarea id="description" defaultValue={location.description} />
-            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="max-w-3xl mx-auto">
+          <CardHeader className="flex flex-row items-center justify-between space-y-0">
+            <CardTitle>Horarios publicados</CardTitle>
+            <Button type="button" variant="outline" size="sm" onClick={addScheduleRow}>
+              <Plus className="mr-1 h-4 w-4" />
+              Añadir
+            </Button>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {schedule.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No hay horarios. Pulse «Añadir» para crear uno.
+              </p>
+            ) : (
+              schedule.map((row, index) => (
+                <div
+                  key={index}
+                  className="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-end"
+                >
+                  <div className="grid flex-1 grid-cols-1 gap-3 sm:grid-cols-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Día</Label>
+                      <Input
+                        value={row.day}
+                        onChange={(e) =>
+                          updateScheduleRow(index, 'day', e.target.value)
+                        }
+                        placeholder="Ej. Domingo"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs">Hora</Label>
+                      <Input
+                        value={row.time}
+                        onChange={(e) =>
+                          updateScheduleRow(index, 'time', e.target.value)
+                        }
+                        placeholder="Ej. 10:00 AM"
+                      />
+                    </div>
+                    <div className="space-y-1.5 sm:col-span-1">
+                      <Label className="text-xs">Actividad</Label>
+                      <Input
+                        value={row.label}
+                        onChange={(e) =>
+                          updateScheduleRow(index, 'label', e.target.value)
+                        }
+                        placeholder="Ej. Culto general"
+                      />
+                    </div>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="shrink-0 text-destructive hover:text-destructive"
+                    onClick={() => removeScheduleRow(index)}
+                    aria-label="Eliminar horario"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))
+            )}
           </CardContent>
         </Card>
       </main>
     </div>
+  );
+}
+
+export default function EditChurchPage() {
+  const params = useParams();
+  const id =
+    typeof params?.id === 'string' ? params.id : Array.isArray(params?.id) ? params.id[0] : '';
+
+  const [church, setChurch] = React.useState<ChurchLocation | null>(null);
+  const [loadState, setLoadState] = React.useState<'loading' | 'error' | 'ready'>('loading');
+  const [errMsg, setErrMsg] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (!id?.trim()) {
+      setLoadState('error');
+      setErrMsg('Identificador no válido.');
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      setLoadState('loading');
+      setErrMsg(null);
+      try {
+        const res = await fetch(`/api/churches/${encodeURIComponent(id)}`, {
+          cache: 'no-store',
+          headers: { Accept: 'application/json' },
+        });
+        const data = (await res.json().catch(() => ({}))) as {
+          church?: ChurchLocation;
+          error?: string;
+        };
+        if (!res.ok) {
+          throw new Error(data.error || 'No se pudo cargar la ubicación.');
+        }
+        if (cancelled) return;
+        if (!data.church) {
+          setLoadState('error');
+          setErrMsg('No se recibieron datos.');
+          return;
+        }
+        setChurch(data.church);
+        setLoadState('ready');
+      } catch (e) {
+        if (!cancelled) {
+          setLoadState('error');
+          setErrMsg(e instanceof Error ? e.message : 'Error al cargar.');
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  if (loadState === 'loading') {
+    return (
+      <div className="flex flex-1 flex-col">
+        <AppHeader title="Editar ubicación" description="Cargando…" />
+        <main className="flex-1 p-8">
+          <p className="text-sm text-muted-foreground">Cargando…</p>
+        </main>
+      </div>
+    );
+  }
+
+  if (loadState === 'error' || !church) {
+    return (
+      <div className="flex flex-1 flex-col">
+        <AppHeader
+          title="Ubicación no encontrada"
+          description={errMsg ?? 'No hay una ubicación con este identificador.'}
+        />
+        <main className="flex-1 p-8">
+          <Button asChild variant="outline">
+            <Link href="/churches">Volver a ubicaciones</Link>
+          </Button>
+        </main>
+      </div>
+    );
+  }
+
+  return (
+    <EditTempleForm
+      key={church.id}
+      templeId={church.id}
+      initial={{
+        name: church.name,
+        address: church.address,
+        municipality: church.municipality,
+        lat: church.lat,
+        lng: church.lng,
+        embedUrl: church.embedUrl,
+        shareMapUrl: church.shareMapUrl,
+        schedule: church.schedule,
+      }}
+    />
   );
 }

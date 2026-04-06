@@ -10,6 +10,16 @@ import { MemberDemographics } from '@/components/dashboard/member-demographics';
 import { UpcomingEvents } from '@/components/dashboard/upcoming-events';
 import { PrayerRequests } from '@/components/dashboard/prayer-requests';
 import { TotalGroups } from '@/components/dashboard/total-groups';
+import { MinistriesManageCard } from '@/components/dashboard/ministries-manage-card';
+import { PrayerRequestsManageCard } from '@/components/dashboard/prayer-requests-manage-card';
+import { GroupsManageCard } from '@/components/dashboard/groups-manage-card';
+import { VolunteersTasksManageCard } from '@/components/dashboard/volunteers-tasks-manage-card';
+import { EventsManageCard } from '@/components/dashboard/events-manage-card';
+import { SermonsLibraryManageCard } from '@/components/dashboard/sermons-library-manage-card';
+import { CeremoniesManageCard } from '@/components/dashboard/ceremonies-manage-card';
+import { FacilitiesManageCard } from '@/components/dashboard/facilities-manage-card';
+import { ReportsManageCard } from '@/components/dashboard/reports-manage-card';
+import { SettingsManageCard } from '@/components/dashboard/settings-manage-card';
 import { TotalMinistries } from '@/components/dashboard/total-ministries';
 import { TotalVolunteers } from '@/components/dashboard/total-volunteers';
 import { UpcomingEventsCard } from '@/components/dashboard/upcoming-events-card';
@@ -71,6 +81,18 @@ export default function DashboardPage() {
           <TotalGroups />
           <TotalMinistries />
           <TotalVolunteers />
+        </div>
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+          <GroupsManageCard />
+          <MinistriesManageCard />
+          <PrayerRequestsManageCard />
+          <VolunteersTasksManageCard />
+          <EventsManageCard />
+          <SermonsLibraryManageCard />
+          <CeremoniesManageCard />
+          <FacilitiesManageCard />
+          <ReportsManageCard />
+          <SettingsManageCard />
         </div>
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           <GivingTrends timeRange={timeRange} />

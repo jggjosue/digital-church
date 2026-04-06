@@ -4,14 +4,11 @@
 import {
   BarChart,
   Building,
-  Calendar,
   Heart,
   LayoutDashboard,
-  Settings,
   Users,
-  HelpCircle,
   FileText,
-  Video,
+  BookHeart,
   ChevronDown,
   UserPlus,
   Plus,
@@ -22,16 +19,21 @@ import {
   LayoutGrid,
   ClipboardList,
   UserCog,
-  BookHeart,
+  Search,
+  Calendar,
+  CalendarDays,
+  HandHeart,
   Library,
   Clapperboard,
   Mic,
-  ImageIcon,
-  Search,
+  Image as ImageLucide,
+  Settings,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import * as React from 'react';
+import { UserButton } from '@clerk/nextjs';
+import { CHURCH_NAME, CHURCH_TAGLINE } from '@/components/church-account-dropdown';
 
 import {
   Tooltip,
@@ -40,7 +42,6 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from './ui/collapsible';
 
@@ -56,20 +57,11 @@ const navItems = [
     ]
   },
   { 
-    label: 'Oración', 
-    icon: Heart, 
+    label: 'Iglesias', 
+    icon: Building, 
     subItems: [
-      { href: '/prayer', icon: List, label: 'Peticiones' },
-      { href: '/prayer/new', icon: Plus, label: 'Nueva Oración' },
-    ]
-  },
-  { 
-    label: 'Grupos', 
-    icon: Users, 
-    subItems: [
-      { href: '/groups', icon: Users, label: 'Directorio de Grupos' },
-      { href: '/groups/new', icon: Plus, label: 'Nuevo Grupo' },
-      { href: '/groups/add-members', icon: UserPlus, label: 'Agregar Miembros' },
+        { href: '/churches', icon: Search, label: 'Buscar' },
+        { href: '/churches/new', icon: Plus, label: 'Añadir Ubicación' },
     ]
   },
   { 
@@ -82,22 +74,10 @@ const navItems = [
     ]
   },
   { 
-    label: 'Voluntarios', 
-    icon: Heart, 
+    label: 'Asistencia', 
+    icon: BarChart, 
     subItems: [
-      { href: '/volunteers', icon: List, label: 'Gestión' },
-      { href: '/volunteers/new', icon: Plus, label: 'Agregar Voluntario' },
-      { href: '/volunteers/tasks', icon: List, label: 'Tareas' },
-      { href: '/volunteers/planning', icon: Calendar, label: 'Planeación' },
-    ]
-  },
-  { 
-    label: 'Eventos', 
-    icon: Calendar, 
-    subItems: [
-      { href: '/events', icon: List, label: 'Gestionar' },
-      { href: '/events/new', icon: Plus, label: 'Nuevo Evento' },
-      { href: '/events/activities', icon: List, label: 'Actividades' },
+      { href: '/attendance', icon: ClipboardList, label: 'Gestión' },
     ]
   },
   { 
@@ -112,18 +92,6 @@ const navItems = [
     ]
   },
   { 
-    label: 'Biblioteca', 
-    icon: Library, 
-    subItems: [
-      { href: '/sermons', icon: Library, label: 'Librería' },
-      { href: '/sermons/list', icon: Video, label: 'Sermón' },
-      { href: '/sermons/videos', icon: Clapperboard, label: 'Vídeos' },
-      { href: '/sermons/audio', icon: Mic, label: 'Audio' },
-      { href: '/sermons/images', icon: ImageIcon, label: 'Imagen' },
-      { href: '/sermons/new', icon: Plus, label: 'Nuevo sermón' },
-    ]
-  },
-  { 
     label: 'Finanzas', 
     icon: DollarSign, 
     subItems: [
@@ -135,60 +103,93 @@ const navItems = [
       { href: '/financial/new-transaction', icon: Plus, label: 'Nueva Transacción' },
     ]
   },
-  { 
-    label: 'Asistencia', 
-    icon: BarChart, 
+  {
+    label: 'Oración',
+    icon: BookHeart,
     subItems: [
-      { href: '/attendance', icon: ClipboardList, label: 'Gestión' },
-    ]
+      { href: '/prayer', icon: List, label: 'Peticiones' },
+      { href: '/prayer/new', icon: Plus, label: 'Nueva petición' },
+    ],
   },
-  { 
-    label: 'Ceremonias', 
-    icon: BookHeart, 
+  {
+    label: 'Grupos',
+    icon: Users,
     subItems: [
-        { href: '/ceremonies', icon: List, label: 'Registros' },
-        { href: '/ceremonies/new', icon: Plus, label: 'Agregar Ceremonia' },
-        { href: '/ceremonies/export', icon: FileText, label: 'Exportar Datos' },
-    ]
+      { href: '/groups', icon: Users, label: 'Directorio de grupos' },
+      { href: '/groups/new', icon: Plus, label: 'Nuevo grupo' },
+      { href: '/groups/add-members', icon: UserPlus, label: 'Agregar miembros' },
+    ],
   },
-  { 
-    label: 'Iglesias', 
-    icon: Building, 
+  {
+    label: 'Voluntarios',
+    icon: HandHeart,
     subItems: [
-        { href: '/churches', icon: Search, label: 'Buscar' },
-        { href: '/churches/new', icon: Plus, label: 'Añadir Ubicación' },
-    ]
+      { href: '/volunteers', icon: List, label: 'Gestión' },
+      { href: '/volunteers/new', icon: Plus, label: 'Nuevo voluntario' },
+      { href: '/volunteers/tasks', icon: List, label: 'Tareas' },
+      { href: '/volunteers/planning', icon: Calendar, label: 'Planeación' },
+    ],
   },
-  { 
-    label: 'Instalaciones', 
-    icon: Building, 
+  {
+    label: 'Eventos',
+    icon: Calendar,
     subItems: [
-      { href: '/facilities', icon: List, label: 'Gestión' },
-      { href: '/facilities/new', icon: Plus, label: 'Registrar Salón' },
-    ]
+      { href: '/events', icon: CalendarDays, label: 'Calendario y gestión' },
+      { href: '/events/new', icon: Plus, label: 'Nuevo evento' },
+      { href: '/events/activities', icon: List, label: 'Actividades' },
+    ],
   },
-  { 
-    label: 'Reportes', 
-    icon: FileText, 
+  {
+    label: 'Biblioteca',
+    icon: Library,
     subItems: [
-      { href: '/reports', icon: FileText, label: 'Generador de Reportes' },
+      { href: '/sermons', icon: Library, label: 'Librería' },
+      { href: '/sermons/list', icon: List, label: 'Lista de sermones' },
+      { href: '/sermons/videos', icon: Clapperboard, label: 'Vídeos' },
+      { href: '/sermons/audio', icon: Mic, label: 'Audio' },
+      { href: '/sermons/images', icon: ImageLucide, label: 'Imágenes' },
+      { href: '/sermons/new', icon: Plus, label: 'Nuevo sermón' },
+    ],
+  },
+  {
+    label: 'Ceremonias',
+    icon: BookHeart,
+    subItems: [
+      { href: '/ceremonies', icon: List, label: 'Registros' },
+      { href: '/ceremonies/new', icon: Plus, label: 'Nueva ceremonia' },
+      { href: '/ceremonies/export', icon: FileText, label: 'Exportar datos' },
+    ],
+  },
+  {
+    label: 'Instalaciones',
+    icon: Building,
+    subItems: [
+      { href: '/facilities', icon: List, label: 'Gestión de salones' },
+      { href: '/facilities/new', icon: Plus, label: 'Registrar salón' },
+    ],
+  },
+  {
+    label: 'Reportes',
+    icon: FileText,
+    subItems: [
+      { href: '/reports', icon: FileText, label: 'Generador de reportes' },
       { href: '/reports/volunteers', icon: Users, label: 'Voluntarios' },
-    ]
+    ],
   },
-  { 
-    label: 'Configuración', 
-    icon: Settings, 
+  {
+    label: 'Configuración',
+    icon: Settings,
     subItems: [
-      { href: '/settings', icon: UserCog, label: 'Roles y Permisos' },
-      { href: '/settings/new', icon: Plus, label: 'Nuevo Rol' },
+      { href: '/settings', icon: UserCog, label: 'Roles y permisos' },
+      { href: '/settings/new', icon: Plus, label: 'Nuevo rol' },
       { href: '/settings/users', icon: Users, label: 'Usuarios' },
-    ]
+    ],
   },
 ];
 
-const bottomNavItems = [
-    { href: '/help', icon: HelpCircle, label: 'Ayuda' },
-]
+//const bottomNavItems = [
+  // { href: '/help', icon: HelpCircle, label: 'Ayuda' },
+//];
 
 export function MobileSidebar() {
   const pathname = usePathname();
@@ -219,14 +220,18 @@ export function MobileSidebar() {
 
   return (
     <div className="flex h-full w-full flex-col bg-background">
-      <div className="flex h-16 items-center gap-3 px-6 border-b">
-        <Avatar className="h-8 w-8">
-            <AvatarImage src="https://picsum.photos/seed/logo/32/32" alt="Grace Church"/>
-            <AvatarFallback>GC</AvatarFallback>
-        </Avatar>
-        <div>
-            <p className="font-semibold text-foreground">Grace Church</p>
-            <p className="text-sm text-muted-foreground">Admin Portal</p>
+      <div className="flex min-h-16 items-center gap-3 border-b px-4 py-3">
+        <UserButton
+          appearance={{
+            elements: {
+              avatarBox: 'h-9 w-9 shrink-0',
+              userButtonPopoverCard: 'rounded-lg',
+            },
+          }}
+        />
+        <div className="min-w-0 flex-1">
+          <p className="truncate font-semibold text-foreground">{CHURCH_NAME}</p>
+          <p className="truncate text-xs text-muted-foreground">{CHURCH_TAGLINE}</p>
         </div>
       </div>
       <nav className="flex-1 space-y-1 px-4 py-2 overflow-y-auto">
@@ -279,7 +284,7 @@ export function MobileSidebar() {
         ))}
       </nav>
       <div className="mt-auto space-y-1 p-4">
-        {bottomNavItems.map((item) => (
+        {/*bottomNavItems.map((item) => (
           <Link
             key={item.href}
             href={item.href}
@@ -292,7 +297,7 @@ export function MobileSidebar() {
             <item.icon className="h-4 w-4" />
             <span>{item.label}</span>
           </Link>
-        ))}
+        ))*/}
       </div>
     </div>
   );

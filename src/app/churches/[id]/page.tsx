@@ -1,126 +1,303 @@
-
 'use client';
 
 import * as React from 'react';
+import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Edit,
   Trash2,
-  Phone,
+  MapPin,
+  ExternalLink,
+  Clock,
   Mail,
   User,
-  MapPin,
+  Phone,
 } from 'lucide-react';
 import Link from 'next/link';
 import { AppHeader } from '@/components/app-header';
-import Image from 'next/image';
-import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import type { ChurchLocation } from '@/lib/church-locations';
 
-const locationDetails = {
-    id: 1,
-    name: 'Main Campus - Downtown',
-    address: '123 Main St, Los Angeles, CA 90012',
-    phone: '(213) 555-0182',
-    email: 'downtown@gracechurch.org',
-    campusPastor: 'Pastor John Smith',
-    description: 'Our main campus located in the heart of the city, serving as a hub for our community outreach and primary worship services. We have programs for all ages and a vibrant congregation.',
-    imageUrl: PlaceHolderImages.find(p => p.id === 'event-bible-study')?.imageUrl || 'https://picsum.photos/seed/main-campus/1200/500',
-    imageHint: 'large church interior worship'
-};
+export default function ChurchDetailsPage() {
+  const params = useParams();
+  const router = useRouter();
+  const id = typeof params?.id === 'string' ? params.id : Array.isArray(params?.id) ? params.id[0] : '';
 
-export default function ChurchDetailsPage({ params }: { params: { id: string } }) {
-  // In a real app, you would fetch data based on params.id
-  const location = locationDetails;
+  const [church, setChurch] = React.useState<ChurchLocation | null>(null);
+  const [loadState, setLoadState] = React.useState<'loading' | 'error' | 'ready'>('loading');
+  const [message, setMessage] = React.useState<string | null>(null);
+  const [deleting, setDeleting] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!id?.trim()) {
+      setLoadState('error');
+      setMessage('Identificador no válido.');
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      setLoadState('loading');
+      setMessage(null);
+      try {
+        const res = await fetch(`/api/churches/${encodeURIComponent(id)}`, {
+          cache: 'no-store',
+          headers: { Accept: 'application/json' },
+        });
+        const data = (await res.json().catch(() => ({}))) as {
+          church?: ChurchLocation;
+          error?: string;
+        };
+        if (!res.ok) {
+          throw new Error(data.error || 'No se pudo cargar la ubicación.');
+        }
+        if (cancelled) return;
+        if (!data.church) {
+          setLoadState('error');
+          setMessage('No se recibieron datos.');
+          return;
+        }
+        setChurch(data.church);
+        setLoadState('ready');
+      } catch (e) {
+        if (!cancelled) {
+          setLoadState('error');
+          setMessage(e instanceof Error ? e.message : 'Error al cargar.');
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  async function handleDelete() {
+    if (!id?.trim()) return;
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/churches/${encodeURIComponent(id)}`, { method: 'DELETE' });
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        throw new Error(data.error || 'No se pudo eliminar.');
+      }
+      router.push('/churches');
+      router.refresh();
+    } catch (e) {
+      setMessage(e instanceof Error ? e.message : 'Error al eliminar.');
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  if (loadState === 'loading') {
+    return (
+      <div className="flex flex-1 flex-col">
+        <AppHeader title="Ubicación" description="Cargando…" />
+        <main className="flex-1 p-8">
+          <p className="text-sm text-muted-foreground">Cargando ubicación…</p>
+        </main>
+      </div>
+    );
+  }
+
+  if (loadState === 'error' || !church) {
+    return (
+      <div className="flex flex-1 flex-col">
+        <AppHeader title="Ubicación no encontrada" description={message ?? 'No hay una ubicación con este identificador.'} />
+        <main className="flex-1 p-8">
+          <Button asChild variant="outline">
+            <Link href="/churches">Volver a ubicaciones</Link>
+          </Button>
+        </main>
+      </div>
+    );
+  }
+
+  const postalLine =
+    church.city && church.state
+      ? [church.address, church.city, church.state, church.zip].filter(Boolean).join(', ')
+      : null;
 
   return (
     <AlertDialog>
-        <div className="flex flex-col flex-1">
-        <AppHeader
-            title={location.name}
-            description={location.address}
-        >
-            <div className="flex gap-2">
-                <AlertDialogTrigger asChild>
-                    <Button variant="destructive"><Trash2 className="mr-2 h-4 w-4"/>Eliminar</Button>
-                </AlertDialogTrigger>
-                <Button asChild><Link href={`/churches/${params.id}/edit`}><Edit className="mr-2 h-4 w-4"/>Editar Ubicación</Link></Button>
-            </div>
+      <div className="flex flex-1 flex-col">
+        <AppHeader title={church.name} description={church.address}>
+          <div className="flex gap-2">
+            <AlertDialogTrigger asChild>
+              <Button variant="destructive" type="button" disabled={deleting}>
+                <Trash2 className="mr-2 h-4 w-4" />
+                Eliminar
+              </Button>
+            </AlertDialogTrigger>
+            <Button asChild>
+              <Link href={`/churches/${id}/edit`}>
+                <Edit className="mr-2 h-4 w-4" />
+                Editar Ubicación
+              </Link>
+            </Button>
+          </div>
         </AppHeader>
         <main className="flex-1 bg-muted/20 p-4 sm:p-8">
-        <div className="max-w-6xl mx-auto">
+          <div className="mx-auto max-w-6xl space-y-6">
             <Card className="overflow-hidden">
-                <div className="relative h-64 w-full">
-                    <iframe
-                        width="100%"
-                        height="100%"
-                        frameBorder="0"
-                        style={{ border: 0 }}
-                        src={`https://maps.google.com/maps?q=${encodeURIComponent(location.address)}&t=&z=15&ie=UTF8&iwloc=&output=embed`}
-                        allowFullScreen
-                    ></iframe>
-                </div>
-                <CardContent className="p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        <div className="md:col-span-2">
-                            <h2 className="text-2xl font-bold mb-4">Acerca de este Campus</h2>
-                            <p className="text-muted-foreground">{location.description}</p>
+              <div className="relative h-64 w-full md:h-80">
+                <iframe
+                  width="100%"
+                  height="100%"
+                  frameBorder={0}
+                  style={{ border: 0 }}
+                  title={`Mapa: ${church.name}`}
+                  src={church.embedUrl}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
+              </div>
+              <CardContent className="p-6">
+                <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+                  <div className="space-y-4 md:col-span-2">
+                    <h2 className="text-2xl font-bold">Acerca de este templo</h2>
+                    {church.description ? (
+                      <p className="whitespace-pre-wrap text-muted-foreground">{church.description}</p>
+                    ) : (
+                      <p className="text-muted-foreground">
+                        Ubicación de ICIAR Nayarit en {church.municipality}. Horarios y detalles actualizados
+                        también en el sitio oficial.
+                      </p>
+                    )}
+                    {postalLine ? (
+                      <p className="text-sm text-muted-foreground">
+                        <span className="font-medium text-foreground">Dirección postal:</span> {postalLine}
+                      </p>
+                    ) : null}
+                    {!church.description ? (
+                      <Button variant="outline" size="sm" asChild>
+                        <a
+                          href="https://iciarnayarit.com/templos"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2"
+                        >
+                          Ver en iciarnayarit.com
+                          <ExternalLink className="h-4 w-4" />
+                        </a>
+                      </Button>
+                    ) : null}
+                  </div>
+                  <div>
+                    <h3 className="mb-4 text-lg font-semibold">Información</h3>
+                    <div className="space-y-4 text-sm">
+                      {church.phone ? (
+                        <div className="flex items-start gap-3">
+                          <Phone className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                          <div>
+                            <p className="text-muted-foreground">Teléfono</p>
+                            <p className="font-medium">{church.phone}</p>
+                          </div>
                         </div>
+                      ) : null}
+                      {church.campusPastor ? (
+                        <div className="flex items-start gap-3">
+                          <User className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                          <div>
+                            <p className="text-muted-foreground">Pastor del campus</p>
+                            <p className="font-medium">{church.campusPastor}</p>
+                          </div>
+                        </div>
+                      ) : null}
+                      {church.contactEmail ? (
+                        <div className="flex items-start gap-3">
+                          <Mail className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                          <div>
+                            <p className="text-muted-foreground">Correo</p>
+                            <a
+                              href={`mailto:${church.contactEmail}`}
+                              className="font-medium text-primary hover:underline"
+                            >
+                              {church.contactEmail}
+                            </a>
+                          </div>
+                        </div>
+                      ) : null}
+                      <div className="flex items-start gap-3">
+                        <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                         <div>
-                            <h3 className="text-lg font-semibold mb-4">Información Clave</h3>
-                            <div className="space-y-4 text-sm">
-                                <div className="flex items-center gap-3">
-                                    <User className="h-4 w-4 text-muted-foreground" />
-                                    <div>
-                                        <p className="text-muted-foreground">Pastor del Campus</p>
-                                        <p className="font-medium">{location.campusPastor}</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <Phone className="h-4 w-4 text-muted-foreground" />
-                                    <div>
-                                        <p className="text-muted-foreground">Teléfono</p>
-                                        <p className="font-medium">{location.phone}</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <Mail className="h-4 w-4 text-muted-foreground" />
-                                    <div>
-                                        <p className="text-muted-foreground">Email</p>
-                                        <p className="font-medium">{location.email}</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-3">
-                                    <MapPin className="h-4 w-4 text-muted-foreground" />
-                                    <div>
-                                        <p className="text-muted-foreground">Dirección</p>
-                                        <p className="font-medium">{location.address}</p>
-                                    </div>
-                                </div>
-                            </div>
+                          <p className="text-muted-foreground">Municipio</p>
+                          <p className="font-medium">{church.municipality}</p>
                         </div>
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <Clock className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                        <div>
+                          <p className="mb-2 text-muted-foreground">Horarios publicados</p>
+                          {church.schedule.length === 0 ? (
+                            <p className="font-medium text-muted-foreground">Sin horarios en el registro.</p>
+                          ) : (
+                            <ul className="space-y-2 font-medium">
+                              {church.schedule.map((row, i) => (
+                                <li key={i}>
+                                  <span className="text-foreground">{row.day}</span>{' '}
+                                  <span className="text-muted-foreground">{row.time}</span>
+                                  <span className="text-muted-foreground"> — {row.label}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                      </div>
+                      <Button variant="link" className="h-auto p-0" asChild>
+                        <a
+                          href={church.shareMapUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1"
+                        >
+                          Abrir en Google Maps
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </a>
+                      </Button>
                     </div>
-                </CardContent>
-            </Card>
-        </div>
-        </main>
-        </div>
-        <AlertDialogContent>
-            <AlertDialogHeader>
-                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-                    <Trash2 className="h-6 w-6 text-red-600" />
+                  </div>
                 </div>
-                <AlertDialogTitle className='text-center'>¿Estás seguro?</AlertDialogTitle>
-                <AlertDialogDescription className='text-center'>
-                    Esta acción no se puede deshacer. Esto eliminará permanentemente la ubicación.
-                </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter className="sm:justify-center">
-                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction className="bg-destructive hover:bg-destructive/90">Confirmar Eliminación</AlertDialogAction>
-            </AlertDialogFooter>
-        </AlertDialogContent>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+      </div>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+            <Trash2 className="h-6 w-6 text-red-600" />
+          </div>
+          <AlertDialogTitle className="text-center">¿Estás seguro?</AlertDialogTitle>
+          <AlertDialogDescription className="text-center">
+            Esta acción no se puede deshacer. Esto eliminará permanentemente la ubicación de la base de datos.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter className="sm:justify-center">
+          <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+          <AlertDialogAction
+            className="bg-destructive hover:bg-destructive/90"
+            disabled={deleting}
+            onClick={(e) => {
+              e.preventDefault();
+              void handleDelete();
+            }}
+          >
+            {deleting ? 'Eliminando…' : 'Confirmar eliminación'}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
     </AlertDialog>
   );
 }

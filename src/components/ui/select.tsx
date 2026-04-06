@@ -111,25 +111,47 @@ const SelectLabel = React.forwardRef<
 ))
 SelectLabel.displayName = SelectPrimitive.Label.displayName
 
+type SelectItemProps = React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item> & {
+  /** Texto extra solo en la lista; no se muestra en el trigger cerrado (solo `children` va en ItemText). */
+  secondary?: React.ReactNode;
+};
+
 const SelectItem = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Item>,
-  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Item>
->(({ className, children, ...props }, ref) => (
+  SelectItemProps
+>(({ className, children, secondary, ...props }, ref) => (
   <SelectPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      "relative flex w-full cursor-default select-none rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
+      secondary != null ? "items-start" : "items-center",
       className
     )}
     {...props}
   >
-    <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">
+    <span
+      className={cn(
+        "absolute left-2 flex h-3.5 w-3.5 items-center justify-center",
+        secondary != null ? "top-2.5" : "top-1/2 -translate-y-1/2"
+      )}
+    >
       <SelectPrimitive.ItemIndicator>
         <Check className="h-4 w-4" />
       </SelectPrimitive.ItemIndicator>
     </span>
 
-    <SelectPrimitive.ItemText>{children}</SelectPrimitive.ItemText>
+    <div className="flex min-w-0 flex-1 flex-col gap-1">
+      <SelectPrimitive.ItemText
+        className={cn(secondary != null && "font-medium leading-tight")}
+      >
+        {children}
+      </SelectPrimitive.ItemText>
+      {secondary != null ? (
+        <span className="pr-2 text-xs font-normal leading-snug text-muted-foreground">
+          {secondary}
+        </span>
+      ) : null}
+    </div>
   </SelectPrimitive.Item>
 ))
 SelectItem.displayName = SelectPrimitive.Item.displayName

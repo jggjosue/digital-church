@@ -62,8 +62,22 @@
   * {
     @apply border-border;
   }
+  html {
+    height: 100%;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
   body {
     @apply bg-background text-foreground;
+    min-height: 100dvh;
+    min-height: -webkit-fill-available;
+  }
+  @media (hover: none) and (pointer: coarse) {
+    a[href],
+    button,
+    [role='button'] {
+      touch-action: manipulation;
+    }
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-sans);

@@ -2,16 +2,15 @@
 'use client';
 
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -22,8 +21,107 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import Link from 'next/link';
 import { AppHeader } from '@/components/app-header';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { useToast } from '@/hooks/use-toast';
+
+const formSchema = z.object({
+  locationName: z
+    .string()
+    .min(1, { message: 'El nombre de la ubicación es requerido.' }),
+  address: z.string().min(1, { message: 'La dirección es requerida.' }),
+  city: z.string().min(1, { message: 'La ciudad es requerida.' }),
+  state: z.string().min(1, { message: 'El estado es requerido.' }),
+  zip: z.string().min(1, { message: 'El código postal es requerido.' }),
+  country: z.string().min(1, { message: 'Seleccione un país.' }),
+  phone: z.string(),
+  campusPastor: z
+    .string()
+    .min(1, { message: 'El pastor del campus es requerido.' }),
+  contactEmail: z.union([z.literal(''), z.string().email({ message: 'Correo no válido.' })]),
+  description: z
+    .string()
+    .min(1, { message: 'La descripción del campus es requerida.' }),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
+const NEW_LOCATION_FORM_ID = 'new-location-form';
 
 export default function NewChurchPage() {
+  const { toast } = useToast();
+  const router = useRouter();
+  const [saving, setSaving] = React.useState(false);
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      locationName: '',
+      address: '',
+      city: '',
+      state: '',
+      zip: '',
+      country: '',
+      phone: '',
+      campusPastor: '',
+      contactEmail: '',
+      description: '',
+    },
+  });
+
+  const onSubmit = async (values: FormValues) => {
+    setSaving(true);
+    try {
+      const res = await fetch('/api/churches', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: values.locationName.trim(),
+          address: values.address.trim(),
+          city: values.city.trim(),
+          state: values.state.trim(),
+          zip: values.zip.trim(),
+          country: values.country,
+          phone: values.phone.trim(),
+          campusPastor: values.campusPastor.trim(),
+          contactEmail: values.contactEmail.trim(),
+          description: values.description.trim(),
+        }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        message?: string;
+        id?: string;
+      };
+      if (!res.ok) {
+        throw new Error(data.error || 'No se pudo guardar la ubicación.');
+      }
+      toast({
+        title: 'Ubicación guardada',
+        description: data.message || `${values.locationName} se registró en la base de datos.`,
+      });
+      router.push('/churches');
+      router.refresh();
+    } catch (err) {
+      console.error(err);
+      toast({
+        variant: 'destructive',
+        title: 'No se pudo guardar',
+        description: err instanceof Error ? err.message : 'Error al guardar en la base de datos.',
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
   return (
     <div className="flex flex-col flex-1">
       <AppHeader
@@ -31,84 +129,202 @@ export default function NewChurchPage() {
         description="Rellene los detalles a continuación para registrar un nuevo campus de la iglesia."
       >
         <div className="flex items-center gap-2">
-            <Button variant="ghost" asChild>
-                <Link href="/churches">Cancelar</Link>
-            </Button>
-            <Button>Guardar Ubicación</Button>
+          <Button variant="ghost" asChild>
+            <Link href="/churches">Cancelar</Link>
+          </Button>
+          <Button type="submit" form={NEW_LOCATION_FORM_ID} disabled={saving}>
+            {saving ? 'Guardando…' : 'Guardar Ubicación'}
+          </Button>
         </div>
       </AppHeader>
       <main className="flex-1 space-y-6 p-4 sm:p-8 bg-muted/20">
-        <Card className="max-w-3xl mx-auto">
-          <CardHeader>
-            <CardTitle>Información de la Ubicación</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="location-name">Nombre de la Ubicación</Label>
-              <Input id="location-name" placeholder="Ej., Campus del Valle Norte" />
-            </div>
+        <Form {...form}>
+          <form
+            id={NEW_LOCATION_FORM_ID}
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-6"
+          >
+            <Card className="max-w-3xl mx-auto">
+              <CardHeader>
+                <CardTitle>Información de la Ubicación</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="locationName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nombre de la Ubicación</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Ej., Campus del Valle Norte"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <div className="space-y-2">
-              <Label htmlFor="address">Dirección</Label>
-              <Input id="address" placeholder="123 Calle Principal" />
-            </div>
+                <FormField
+                  control={form.control}
+                  name="address"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Dirección</FormLabel>
+                      <FormControl>
+                        <Input placeholder="123 Calle Principal" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-              <div className="space-y-2">
-                <Label htmlFor="city">Ciudad</Label>
-                <Input id="city" placeholder="Los Ángeles" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="state">Estado</Label>
-                <Input id="state" placeholder="CA" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="zip">Código Postal</Label>
-                <Input id="zip" placeholder="90012" />
-              </div>
-            </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                  <FormField
+                    control={form.control}
+                    name="city"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Ciudad</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Los Ángeles" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="state"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Estado</FormLabel>
+                        <FormControl>
+                          <Input placeholder="CA" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="zip"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Código Postal</FormLabel>
+                        <FormControl>
+                          <Input placeholder="90012" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
 
-            <div className="space-y-2">
-                <Label htmlFor="country">País</Label>
-                <Select>
-                    <SelectTrigger id="country">
-                        <SelectValue placeholder="Seleccione un país" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="usa">Estados Unidos</SelectItem>
-                        <SelectItem value="canada">Canadá</SelectItem>
-                        <SelectItem value="mexico">México</SelectItem>
-                    </SelectContent>
-                </Select>
-            </div>
-             <div className="space-y-2">
-                <Label htmlFor="phone">Número de Teléfono</Label>
-                <Input id="phone" placeholder="(123) 456-7890" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="max-w-3xl mx-auto">
-          <CardHeader>
-            <CardTitle>Detalles del Campus</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-2">
-                <Label htmlFor="campus-pastor">Pastor del Campus</Label>
-                <Input id="campus-pastor" placeholder="Nombre del pastor principal del campus" />
-            </div>
-             <div className="space-y-2">
-                <Label htmlFor="contact-email">Email de Contacto</Label>
-                <Input id="contact-email" type="email" placeholder="campus.principal@ejemplo.com" />
-            </div>
-             <div className="space-y-2">
-                <Label htmlFor="description">Descripción del Campus</Label>
-                <Textarea id="description" placeholder="Proporcione una breve descripción de este campus, sus servicios o su comunidad." />
-            </div>
-          </CardContent>
-        </Card>
+                <FormField
+                  control={form.control}
+                  name="country"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>País</FormLabel>
+                      <Select
+                        onValueChange={field.onChange}
+                        value={field.value || undefined}
+                      >
+                        <FormControl>
+                          <SelectTrigger id="country">
+                            <SelectValue placeholder="Seleccione un país" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="usa">Estados Unidos</SelectItem>
+                          <SelectItem value="canada">Canadá</SelectItem>
+                          <SelectItem value="mexico">México</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="phone"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Número de Teléfono</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="(123) 456-7890"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
+
+            <Card className="max-w-3xl mx-auto">
+              <CardHeader>
+                <CardTitle>Detalles del Campus</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="campusPastor"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Pastor del Campus</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Nombre del pastor principal del campus"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="contactEmail"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email de Contacto</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="email"
+                          placeholder="campus.principal@ejemplo.com"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Descripción del Campus</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Proporcione una breve descripción de este campus, sus servicios o su comunidad."
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
+          </form>
+        </Form>
       </main>
     </div>
   );
 }
-

@@ -3,16 +3,16 @@
 
 import * as React from 'react';
 import {
-  FileUp,
   LayoutGrid,
   List,
   Mail,
+  Menu,
   MoreHorizontal,
   Plus,
   Search,
-  UserPlus,
   SlidersHorizontal,
   Trash2,
+  X,
 } from 'lucide-react';
 import {
   Avatar,
@@ -49,7 +49,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { membersData } from '@/lib/data';
+import { groupData } from '@/lib/data';
+import { useToast } from '@/hooks/use-toast';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Label } from '@/components/ui/label';
@@ -57,8 +58,51 @@ import Link from 'next/link';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { AppHeader } from '@/components/app-header';
+import { cn } from '@/lib/utils';
 
-type Member = (typeof membersData)[0];
+type MemberListItem = {
+  id: string;
+  name: string;
+  email: string;
+  phone1: string;
+  phone2: string;
+  status: string;
+  groups: string[];
+  photoDataUrl: string | null;
+};
+
+type Member = MemberListItem;
+
+function membershipStatusLabel(code: string): string {
+  const map: Record<string, string> = {
+    active: 'Activo',
+    visitor: 'Visitante',
+    inactive: 'Inactivo',
+  };
+  return map[code] ?? code;
+}
+
+function mapApiMemberToRow(doc: {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  groups: string[];
+  membershipStatus: string;
+  photoDataUrl: string | null;
+}): MemberListItem {
+  return {
+    id: doc.id,
+    name: `${doc.firstName} ${doc.lastName}`.trim(),
+    email: doc.email,
+    phone1: doc.phone,
+    phone2: '',
+    status: membershipStatusLabel(doc.membershipStatus),
+    groups: Array.isArray(doc.groups) ? doc.groups : [],
+    photoDataUrl: doc.photoDataUrl ?? null,
+  };
+}
 
 const statusColors = {
   Activo: 'bg-green-500',
@@ -73,131 +117,320 @@ const groupColors = {
   'Nuevo Miembro': 'bg-green-100 text-green-800',
 };
 
-const allGroups = [...new Set(membersData.flatMap(m => m.groups))];
+const STATUS_FILTER_META = [
+  {
+    id: 'active',
+    value: 'Activo',
+    label: 'Activo',
+    hint: 'Asistencia constante a la iglesia.',
+  },
+  {
+    id: 'visitor',
+    value: 'Visitante',
+    label: 'Visitante',
+    hint: 'Poco tiempo asistiendo al templo.',
+  },
+  {
+    id: 'inactive',
+    value: 'Inactivo',
+    label: 'Inactivo',
+    hint: 'Regresando a la iglesia.',
+  },
+] as const;
 
+type SidebarFilters = {
+  status: string[];
+  group: string;
+  tags: string;
+};
 
-function Filters({ filters, onFilterChange, onApply, onClear }: { filters: any, onFilterChange: any, onApply: any, onClear: any }) {
-    const handleStatusChange = (status: string, checked: boolean) => {
-        const newStatus = checked
-            ? [...filters.status, status]
-            : filters.status.filter((s: string) => s !== status);
-        onFilterChange('status', newStatus);
-    };
+function MembersFilterFields({
+  filters,
+  onFilterChange,
+  onApply,
+  onClear,
+  groupOptions,
+}: {
+  filters: SidebarFilters;
+  onFilterChange: (key: keyof SidebarFilters, value: string | string[]) => void;
+  onApply: () => void;
+  onClear: () => void;
+  groupOptions: string[];
+}) {
+  const handleStatusChange = (status: string, checked: boolean) => {
+    const newStatus = checked
+      ? [...filters.status, status]
+      : filters.status.filter((s) => s !== status);
+    onFilterChange('status', newStatus);
+  };
 
-    return (
-        <>
-            <h2 className="text-lg font-semibold">Filtros</h2>
-            <div className="mt-6 space-y-6">
-            <div>
-                <h3 className="text-sm font-medium text-muted-foreground">
-                Estado de Membresía
-                </h3>
-                <div className="mt-2 space-y-2">
-                    <div className="flex items-center gap-2">
-                        <Checkbox id="active" onCheckedChange={(checked) => handleStatusChange('Activo', !!checked)} checked={filters.status.includes('Activo')} />
-                        <Label htmlFor="active" className="text-sm">Activo</Label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Checkbox id="visitor" onCheckedChange={(checked) => handleStatusChange('Visitante', !!checked)} checked={filters.status.includes('Visitante')} />
-                        <Label htmlFor="visitor" className="text-sm">Visitante</Label>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Checkbox id="inactive" onCheckedChange={(checked) => handleStatusChange('Inactivo', !!checked)} checked={filters.status.includes('Inactivo')} />
-                        <Label htmlFor="inactive" className="text-sm">Inactivo</Label>
-                    </div>
+  return (
+    <>
+      <div className="space-y-6">
+        <div>
+          <h3 className="text-sm font-medium text-muted-foreground">
+            Estado de Membresía
+          </h3>
+          <div className="mt-2 space-y-4">
+            {STATUS_FILTER_META.map((s) => (
+              <div key={s.id} className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id={`member-filter-${s.id}`}
+                    onCheckedChange={(checked) =>
+                      handleStatusChange(s.value, !!checked)
+                    }
+                    checked={filters.status.includes(s.value)}
+                  />
+                  <Label
+                    htmlFor={`member-filter-${s.id}`}
+                    className="text-sm font-medium leading-none"
+                  >
+                    {s.label}
+                  </Label>
                 </div>
-            </div>
-            <div>
-                <h3 className="text-sm font-medium text-muted-foreground">
-                Grupos
-                </h3>
-                <Select value={filters.group} onValueChange={(value) => onFilterChange('group', value)}>
-                    <SelectTrigger>
-                        <SelectValue placeholder="Todos los Grupos" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="all">Todos los Grupos</SelectItem>
-                        {allGroups.map(group => (
-                            <SelectItem key={group} value={group}>{group}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-            </div>
-            <div>
-                <h3 className="text-sm font-medium text-muted-foreground">Etiquetas</h3>
-                <Input placeholder="Ej. Bautizado, Nuevo" value={filters.tags} onChange={(e) => onFilterChange('tags', e.target.value)} />
-            </div>
-            </div>
-            <div className="mt-8 space-y-2">
-                <Button className="w-full" onClick={onApply}>Aplicar Filtros</Button>
-                <Button variant="ghost" className="w-full" onClick={onClear}>Limpiar Todo</Button>
-            </div>
-        </>
-    )
+                <p className="pl-6 text-xs text-muted-foreground leading-snug">
+                  {s.hint}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div>
+          <h3 className="text-sm font-medium text-muted-foreground">Grupos</h3>
+          <Select
+            value={filters.group}
+            onValueChange={(value) => onFilterChange('group', value)}
+          >
+            <SelectTrigger className="mt-2">
+              <SelectValue placeholder="Todos los Grupos" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los Grupos</SelectItem>
+              {groupOptions.map((group) => (
+                <SelectItem key={group} value={group}>
+                  {group}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <h3 className="text-sm font-medium text-muted-foreground">Etiquetas</h3>
+          <div className="relative mt-2">
+            <Input
+              className={cn(filters.tags.trim() && 'pr-10')}
+              placeholder="Ej. Bautizado, Nuevo"
+              value={filters.tags}
+              onChange={(e) => onFilterChange('tags', e.target.value)}
+            />
+            {filters.tags.trim() ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute right-0.5 top-1/2 h-8 w-8 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                onClick={() => onFilterChange('tags', '')}
+                aria-label="Borrar texto de etiquetas"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            ) : null}
+          </div>
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            Separe varias palabras con coma. Se busca en nombre, correo, estado y
+            grupos.
+          </p>
+        </div>
+      </div>
+      <div className="mt-8 space-y-2">
+        <Button type="button" className="w-full" onClick={onApply}>
+          Aplicar Filtros
+        </Button>
+        <Button type="button" variant="ghost" className="w-full" onClick={onClear}>
+          Limpiar Todo
+        </Button>
+      </div>
+    </>
+  );
+}
+
+function MembersFiltersMobileSheet({
+  filters,
+  onFilterChange,
+  onApply,
+  onClear,
+  groupOptions,
+}: {
+  filters: SidebarFilters;
+  onFilterChange: (key: keyof SidebarFilters, value: string | string[]) => void;
+  onApply: () => void;
+  onClear: () => void;
+  groupOptions: string[];
+}) {
+  return (
+    <>
+      <h2 className="text-lg font-semibold">Filtros</h2>
+      <div className="mt-6">
+        <MembersFilterFields
+          filters={filters}
+          onFilterChange={onFilterChange}
+          onApply={onApply}
+          onClear={onClear}
+          groupOptions={groupOptions}
+        />
+      </div>
+    </>
+  );
+}
+
+const defaultSidebarFilters: SidebarFilters = {
+  status: [],
+  group: 'all',
+  tags: '',
+};
+
+function parseTagTerms(tags: string): string[] {
+  return tags
+    .split(/[,;]/)
+    .map((t) => t.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+function memberMatchesTags(member: Member, terms: string[]): boolean {
+  if (terms.length === 0) return true;
+  const haystack = [
+    member.name,
+    member.email,
+    member.phone1,
+    member.phone2,
+    member.status,
+    ...member.groups,
+  ]
+    .join(' ')
+    .toLowerCase();
+  return terms.every((term) => haystack.includes(term));
+}
+
+function filterMembers(
+  source: Member[],
+  searchTerm: string,
+  applied: SidebarFilters
+): Member[] {
+  let data = source;
+
+  if (searchTerm.trim()) {
+    const q = searchTerm.trim().toLowerCase();
+    data = data.filter(
+      (member) =>
+        member.name.toLowerCase().includes(q) ||
+        member.email.toLowerCase().includes(q) ||
+        (member.phone1 && member.phone1.toLowerCase().includes(q)) ||
+        (member.phone2 && member.phone2.toLowerCase().includes(q)) ||
+        member.status.toLowerCase().includes(q) ||
+        member.groups.some((g) => g.toLowerCase().includes(q))
+    );
+  }
+
+  if (applied.status.length > 0) {
+    data = data.filter((member) => applied.status.includes(member.status));
+  }
+
+  if (applied.group !== 'all') {
+    data = data.filter((member) => member.groups.includes(applied.group));
+  }
+
+  const tagTerms = parseTagTerms(applied.tags);
+  if (tagTerms.length > 0) {
+    data = data.filter((member) => memberMatchesTags(member, tagTerms));
+  }
+
+  return data;
 }
 
 export default function MembersPage() {
-  const [selected, setSelected] = React.useState<number[]>([]);
+  const { toast } = useToast();
+  const [members, setMembers] = React.useState<MemberListItem[]>([]);
+  const [listStatus, setListStatus] = React.useState<'loading' | 'ok' | 'error'>(
+    'loading'
+  );
+  const [selected, setSelected] = React.useState<string[]>([]);
   const [view, setView] = React.useState<'table' | 'card'>('table');
   const [searchTerm, setSearchTerm] = React.useState('');
-  const [filters, setFilters] = React.useState({
-    status: [] as string[],
-    group: 'all',
-    tags: ''
-  });
-  const [filteredMembers, setFilteredMembers] = React.useState<Member[]>(membersData);
+  const [pendingFilters, setPendingFilters] =
+    React.useState<SidebarFilters>(defaultSidebarFilters);
+  const [appliedFilters, setAppliedFilters] =
+    React.useState<SidebarFilters>(defaultSidebarFilters);
+  const [filtersPanelOpen, setFiltersPanelOpen] = React.useState(true);
   const [memberToDelete, setMemberToDelete] = React.useState<Member | null>(null);
   const [isBulkDelete, setIsBulkDelete] = React.useState(false);
   const [currentPage, setCurrentPage] = React.useState(1);
   const itemsPerPage = 20;
 
-  const handleFilterChange = (key: string, value: any) => {
-    setFilters(prev => ({...prev, [key]: value}));
+  const fetchMembers = React.useCallback(async () => {
+    setListStatus('loading');
+    try {
+      const res = await fetch('/api/members');
+      const data = (await res.json()) as {
+        members?: unknown[];
+        error?: string;
+      };
+      if (!res.ok) {
+        throw new Error(data.error || 'No se pudieron cargar los miembros.');
+      }
+      const rows = (data.members ?? []).map((raw) =>
+        mapApiMemberToRow(raw as Parameters<typeof mapApiMemberToRow>[0])
+      );
+      setMembers(rows);
+      setListStatus('ok');
+    } catch (e) {
+      console.error(e);
+      setMembers([]);
+      setListStatus('error');
+      toast({
+        variant: 'destructive',
+        title: 'Error al cargar',
+        description:
+          e instanceof Error ? e.message : 'No se pudo leer el directorio.',
+      });
+    }
+  }, [toast]);
+
+  React.useEffect(() => {
+    fetchMembers();
+  }, [fetchMembers]);
+
+  const groupOptions = React.useMemo(() => {
+    const s = new Set<string>();
+    groupData.forEach((g) => s.add(g.name));
+    members.forEach((m) => m.groups.forEach((g) => s.add(g)));
+    return [...s].sort((a, b) => a.localeCompare(b, 'es'));
+  }, [members]);
+
+  const handleFilterChange = (key: keyof SidebarFilters, value: string | string[]) => {
+    setPendingFilters((prev) => ({ ...prev, [key]: value }));
   };
 
-  const applyFilters = React.useCallback(() => {
-    let data = membersData;
-
-    // Search term filter
-    if (searchTerm) {
-        const lowercasedFilter = searchTerm.toLowerCase();
-        data = data.filter(member => 
-            member.name.toLowerCase().includes(lowercasedFilter) ||
-            member.email.toLowerCase().includes(lowercasedFilter) ||
-            (member.phone1 && member.phone1.toLowerCase().includes(lowercasedFilter)) ||
-            member.status.toLowerCase().includes(lowercasedFilter)
-        );
-    }
-
-    // Status filter
-    if (filters.status.length > 0) {
-        data = data.filter(member => filters.status.includes(member.status));
-    }
-
-    // Group filter
-    if (filters.group !== 'all') {
-        data = data.filter(member => member.groups.includes(filters.group));
-    }
-
-    setFilteredMembers(data);
-    setCurrentPage(1); // Reset to first page on filter change
-  }, [searchTerm, filters]);
-
+  const applySidebarFilters = React.useCallback(() => {
+    setAppliedFilters({ ...pendingFilters });
+    setCurrentPage(1);
+  }, [pendingFilters]);
 
   const clearFilters = () => {
-    setFilters({
-        status: [],
-        group: 'all',
-        tags: ''
-    });
+    setPendingFilters(defaultSidebarFilters);
+    setAppliedFilters(defaultSidebarFilters);
     setSearchTerm('');
-    setFilteredMembers(membersData);
     setCurrentPage(1);
   };
-  
+
+  const filteredMembers = React.useMemo(
+    () => filterMembers(members, searchTerm, appliedFilters),
+    [members, searchTerm, appliedFilters]
+  );
+
   React.useEffect(() => {
-    applyFilters();
-  }, [searchTerm, filters, applyFilters]);
+    setCurrentPage(1);
+  }, [searchTerm, appliedFilters]);
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -207,7 +440,7 @@ export default function MembersPage() {
     }
   };
 
-  const handleSelectOne = (id: number, checked: boolean) => {
+  const handleSelectOne = (id: string, checked: boolean) => {
     if (checked) {
       setSelected([...selected, id]);
     } else {
@@ -215,16 +448,45 @@ export default function MembersPage() {
     }
   };
 
-  const handleDelete = () => {
-    if (isBulkDelete) {
-        setFilteredMembers(prev => prev.filter(m => !selected.includes(m.id)));
-        setSelected([]);
-    } else if (memberToDelete) {
-        setFilteredMembers(prev => prev.filter(m => m.id !== memberToDelete.id));
-        setSelected(prev => prev.filter(id => id !== memberToDelete.id));
+  const handleDelete = async () => {
+    const ids = isBulkDelete
+      ? selected
+      : memberToDelete
+        ? [memberToDelete.id]
+        : [];
+    if (ids.length === 0) {
+      setMemberToDelete(null);
+      setIsBulkDelete(false);
+      return;
     }
-    setMemberToDelete(null);
-    setIsBulkDelete(false);
+    try {
+      const res = await fetch('/api/members', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        throw new Error(data.error || 'No se pudo eliminar.');
+      }
+      toast({
+        title: ids.length > 1 ? 'Miembros eliminados' : 'Miembro eliminado',
+        description:
+          ids.length > 1
+            ? `Se eliminaron ${ids.length} registros de la base de datos.`
+            : 'El registro se eliminó de la base de datos.',
+      });
+      setSelected([]);
+      setMemberToDelete(null);
+      setIsBulkDelete(false);
+      await fetchMembers();
+    } catch (e) {
+      toast({
+        variant: 'destructive',
+        title: 'Error al eliminar',
+        description: e instanceof Error ? e.message : 'Inténtelo de nuevo.',
+      });
+    }
   };
 
   const totalPages = Math.ceil(filteredMembers.length / itemsPerPage);
@@ -253,11 +515,51 @@ export default function MembersPage() {
                 </Button>
                 <ThemeToggle />
             </AppHeader>
-            <div className="flex flex-1 md:grid md:grid-cols-[280px_1fr]">
-                <aside className="hidden w-80 border-r bg-background p-6 md:block">
-                    <Filters filters={filters} onFilterChange={handleFilterChange} onApply={applyFilters} onClear={clearFilters}/>
+            <div className="flex min-h-0 flex-1 flex-col md:flex-row">
+                <aside
+                  className={cn(
+                    'hidden shrink-0 flex-col overflow-hidden border-r bg-background transition-[width] duration-200 ease-in-out md:flex',
+                    filtersPanelOpen ? 'w-80' : 'w-14'
+                  )}
+                >
+                  <div
+                    className={cn(
+                      'flex shrink-0 items-center gap-3 border-b border-border/40 p-4',
+                      !filtersPanelOpen && 'flex-col justify-center gap-2 py-4'
+                    )}
+                  >
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="shrink-0"
+                      onClick={() => setFiltersPanelOpen((o) => !o)}
+                      aria-expanded={filtersPanelOpen}
+                      aria-label={
+                        filtersPanelOpen
+                          ? 'Contraer panel de filtros'
+                          : 'Expandir panel de filtros'
+                      }
+                    >
+                      <Menu className="h-5 w-5" />
+                    </Button>
+                    {filtersPanelOpen ? (
+                      <h2 className="text-lg font-semibold">Filtros</h2>
+                    ) : null}
+                  </div>
+                  {filtersPanelOpen ? (
+                    <div className="flex-1 overflow-y-auto p-6 pt-4">
+                      <MembersFilterFields
+                        filters={pendingFilters}
+                        onFilterChange={handleFilterChange}
+                        onApply={applySidebarFilters}
+                        onClear={clearFilters}
+                        groupOptions={groupOptions}
+                      />
+                    </div>
+                  ) : null}
                 </aside>
-                <main className="flex-1 p-8">
+                <main className="min-w-0 flex-1 p-8">
                     <Card>
                         <CardHeader>
                         <div className="flex items-center justify-between">
@@ -275,7 +577,13 @@ export default function MembersPage() {
                                     </SheetTrigger>
                                     <SheetContent side="left" className="w-[300px]">
                                     <div className="p-6">
-                                        <Filters filters={filters} onFilterChange={handleFilterChange} onApply={applyFilters} onClear={clearFilters}/>
+                                        <MembersFiltersMobileSheet
+                                          filters={pendingFilters}
+                                          onFilterChange={handleFilterChange}
+                                          onApply={applySidebarFilters}
+                                          onClear={clearFilters}
+                                          groupOptions={groupOptions}
+                                        />
                                     </div>
                                     </SheetContent>
                                 </Sheet>
@@ -318,13 +626,32 @@ export default function MembersPage() {
                             </div>
                         )}
                         
-                        {filteredMembers.length === 0 && (
-                            <div className="text-center py-12 text-muted-foreground">
-                                No se encontraron miembros que coincidan con sus filtros.
+                        {listStatus === 'loading' ? (
+                            <div className="py-12 text-center text-muted-foreground">
+                                Cargando miembros…
                             </div>
-                        )}
+                        ) : listStatus === 'error' ? (
+                            <div className="space-y-4 py-12 text-center">
+                                <p className="text-muted-foreground">
+                                    No se pudo cargar el directorio.
+                                </p>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    onClick={() => fetchMembers()}
+                                >
+                                    Reintentar
+                                </Button>
+                            </div>
+                        ) : filteredMembers.length === 0 ? (
+                            <div className="py-12 text-center text-muted-foreground">
+                                {members.length === 0
+                                    ? 'Aún no hay miembros registrados. Use «Añadir Nuevo Miembro» para crear uno.'
+                                    : 'No se encontraron miembros que coincidan con sus filtros.'}
+                            </div>
+                        ) : null}
 
-                        {view === 'table' && filteredMembers.length > 0 ? (
+                        {listStatus === 'ok' && view === 'table' && filteredMembers.length > 0 ? (
                             <div className="overflow-x-auto">
                             <Table>
                             <TableHeader>
@@ -362,7 +689,7 @@ export default function MembersPage() {
                                     <div className="flex items-center gap-3">
                                     <Avatar>
                                         <AvatarImage
-                                        src={`https://picsum.photos/seed/${member.id}/40/40`}
+                                        src={member.photoDataUrl || undefined}
                                         alt={member.name}
                                         />
                                         <AvatarFallback>
@@ -431,7 +758,7 @@ export default function MembersPage() {
                             </TableBody>
                         </Table>
                         </div>
-                        ) : view === 'card' && filteredMembers.length > 0 ? (
+                        ) : listStatus === 'ok' && view === 'card' && filteredMembers.length > 0 ? (
                         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                             {paginatedMembers.map((member) => (
                             <Card key={member.id} className="relative">
@@ -445,7 +772,10 @@ export default function MembersPage() {
                                 <Link href={`/members/${member.id}`}>
                                     <CardContent className="flex flex-col items-center justify-center text-center p-6">
                                     <Avatar className="h-20 w-20 mb-4">
-                                        <AvatarImage src={`https://picsum.photos/seed/${member.id}/80/80`} alt={member.name} />
+                                        <AvatarImage
+                                            src={member.photoDataUrl || undefined}
+                                            alt={member.name}
+                                        />
                                         <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
                                     </Avatar>
                                     <p className="text-lg font-bold">{member.name}</p>
@@ -465,9 +795,15 @@ export default function MembersPage() {
                             ))}
                         </div>
                         ) : null}
+                        {listStatus === 'ok' && filteredMembers.length > 0 ? (
                          <div className="flex items-center justify-between pt-4">
                             <div className="text-sm text-muted-foreground">
-                                Mostrando {paginatedMembers.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} a {Math.min(currentPage * itemsPerPage, filteredMembers.length)} de {filteredMembers.length} resultados
+                                Mostrando{' '}
+                                {paginatedMembers.length > 0
+                                  ? (currentPage - 1) * itemsPerPage + 1
+                                  : 0}{' '}
+                                a {Math.min(currentPage * itemsPerPage, filteredMembers.length)} de{' '}
+                                {filteredMembers.length} resultados
                             </div>
                             <Pagination>
                                 <PaginationContent>
@@ -487,6 +823,7 @@ export default function MembersPage() {
                                 </PaginationContent>
                             </Pagination>
                         </div>
+                        ) : null}
                         </CardContent>
                     </Card>
                 </main>
@@ -504,7 +841,13 @@ export default function MembersPage() {
             </AlertDialogHeader>
             <AlertDialogFooter>
                 <AlertDialogCancel onClick={() => {setMemberToDelete(null); setIsBulkDelete(false)}}>Cancelar</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDelete}>Continuar</AlertDialogAction>
+                <AlertDialogAction
+                  onClick={() => {
+                    void handleDelete();
+                  }}
+                >
+                  Continuar
+                </AlertDialogAction>
             </AlertDialogFooter>
         </AlertDialogContent>
     </AlertDialog>

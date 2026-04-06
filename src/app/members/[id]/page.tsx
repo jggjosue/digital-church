@@ -3,19 +3,19 @@
 
 import * as React from 'react';
 import {
-  ArrowLeft,
   Mail,
   Phone,
   Home,
-  Cake,
   UserPlus,
-  Users,
-  MessageSquare,
-  FileText,
   Edit,
-  MoreHorizontal,
+  Briefcase,
+  Building2,
+  MapPin,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
+import { format } from 'date-fns';
+import { es } from 'date-fns/locale';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -28,93 +28,242 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AppHeader } from '@/components/app-header';
 
-const member = {
-    id: 1,
-    name: 'John Doe',
-    fullName: 'John Michael Doe',
-    preferredName: 'John',
-    gender: 'Male',
-    maritalStatus: 'Married',
-    baptismDate: 'April 12, 2010',
-    status: 'Active Member',
-    avatarUrl: 'https://picsum.photos/seed/1/100/100',
-    email: 'john.doe@example.com',
-    phone: '+1 234 567 890',
-    address: '123 Main St, Anytown, USA 12345',
-    dob: 'October 25, 1985',
-    family: [
-        { id: 1, name: 'Jane Doe', relation: 'Spouse', avatarUrl: 'https://picsum.photos/seed/2/40/40' },
-        { id: 2, name: 'Jimmy Doe', relation: 'Child', avatarUrl: 'https://picsum.photos/seed/3/40/40' },
-    ],
-    groups: ['Volunteers', 'Choir', "Men's Bible Study"],
-    activity: [
-        { id: 1, type: 'Profile created', by: 'Admin User', date: 'Jan 23, 2023', icon: UserPlus },
-        { id: 2, type: 'Added to group Volunteers', by: '', date: 'Feb 10, 2023', icon: Users },
-        { id: 3, type: 'Sent email: "Welcome to the Choir!"', by: '', date: 'Mar 05, 2023', icon: MessageSquare },
-        { id: 4, type: 'Note added by Jane Smith', by: '', date: 'Apr 12, 2023', icon: FileText },
-    ],
-    attendance: {
-        overall: '85%',
-        last3Months: '92%',
-        absencesYTD: 4,
-        lastAttended: 'Oct 29, 2023',
-    },
-    giving: {
-        ytd: 2400.00,
-        lastYear: 3250.00,
-        lastGiftAmount: 100.00,
-        lastGiftDate: 'Oct 22, 2023',
-    },
-    notes: [
-        { id: 1, author: 'Jane Smith', date: 'Apr 12, 2023', content: 'John expresó interés en unirse al equipo de bienvenida. Hice un seguimiento con él y está emocionado de comenzar a servir el próximo mes.' },
-        { id: 2, author: 'Pastor John', date: 'Feb 28, 2023', content: 'Me reuní con John para tomar un café y discutir sus metas espirituales. Parece estar en un buen lugar y buscando crecer en su fe.' },
-    ]
+type ApiMember = {
+  id: string;
+  createdAt: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  address: string;
+  dob: string;
+  spiritualBirthday: string | null;
+  groups: string[];
+  churchIds: string[];
+  membershipStatus: string;
+  photoDataUrl: string | null;
+  department: string | null;
+  staffRole: string | null;
 };
 
-const groupColors: { [key: string]: string } = {
-    Volunteers: 'bg-blue-100 text-blue-800 border-blue-200',
-    Choir: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    "Men's Bible Study": 'bg-purple-100 text-purple-800 border-purple-200',
-  };
+function memberIdFromParams(params: ReturnType<typeof useParams>): string {
+  const raw = params?.id;
+  if (Array.isArray(raw)) return (raw[0] && String(raw[0])) || '';
+  if (typeof raw === 'string') return raw;
+  return '';
+}
 
-export default function MemberProfilePage({ params }: { params: { id: string } }) {
-  // In a real app, you would fetch the member data based on params.id
+function membershipStatusLabel(code: string): string {
+  const map: Record<string, string> = {
+    active: 'Activo',
+    visitor: 'Visitante',
+    inactive: 'Inactivo',
+  };
+  return map[code] ?? code;
+}
+
+function statusBadgeClass(code: string): string {
+  if (code === 'active') {
+    return 'bg-green-100 text-green-800 border-green-200';
+  }
+  if (code === 'visitor') {
+    return 'bg-amber-100 text-amber-900 border-amber-200';
+  }
+  if (code === 'inactive') {
+    return 'bg-muted text-muted-foreground border-border';
+  }
+  return 'bg-muted text-muted-foreground border-border';
+}
+
+function statusDotClass(code: string): string {
+  if (code === 'active') return 'bg-green-500';
+  if (code === 'visitor') return 'bg-amber-500';
+  return 'bg-muted-foreground';
+}
+
+const groupColors: Record<string, string> = {
+  Voluntarios: 'bg-blue-100 text-blue-800 border-blue-200',
+  Coro: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+  'Grupo de Jóvenes': 'bg-purple-100 text-purple-800 border-purple-200',
+  'Estudio Bíblico de Hombres': 'bg-purple-100 text-purple-800 border-purple-200',
+  'Clase de Nuevos Miembros': 'bg-green-100 text-green-800 border-green-200',
+};
+
+function formatDateIso(iso: string | null | undefined): string {
+  if (!iso) return '—';
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return '—';
+  return format(d, 'PPP', { locale: es });
+}
+
+export default function MemberProfilePage() {
+  const params = useParams();
+  const id = memberIdFromParams(params);
+
+  const [member, setMember] = React.useState<ApiMember | null>(null);
+  const [churchNamesById, setChurchNamesById] = React.useState<Record<string, string>>(
+    {}
+  );
+  const [loadState, setLoadState] = React.useState<'loading' | 'error' | 'ready'>('loading');
+  const [loadMessage, setLoadMessage] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (!id) {
+      setLoadState('error');
+      setLoadMessage('Identificador de miembro no válido.');
+      return;
+    }
+
+    let cancelled = false;
+    (async () => {
+      setLoadState('loading');
+      setLoadMessage(null);
+      try {
+        const [mRes, cRes] = await Promise.all([
+          fetch(`/api/members/${encodeURIComponent(id)}`, {
+            cache: 'no-store',
+            headers: { Accept: 'application/json' },
+          }),
+          fetch('/api/churches', { cache: 'no-store' }),
+        ]);
+        const data = (await mRes.json().catch(() => ({}))) as {
+          member?: ApiMember;
+          error?: string;
+        };
+        if (!mRes.ok) {
+          throw new Error(data.error || 'No se pudo cargar el miembro.');
+        }
+        if (cancelled) return;
+        if (!data.member) {
+          setLoadState('error');
+          setLoadMessage('No se recibieron datos del miembro.');
+          return;
+        }
+        const cJson = (await cRes.json().catch(() => ({}))) as {
+          churches?: { id: string; name: string }[];
+        };
+        const map: Record<string, string> = {};
+        for (const c of cJson.churches ?? []) {
+          map[c.id] = c.name;
+        }
+        setMember(data.member);
+        setChurchNamesById(map);
+        setLoadState('ready');
+      } catch (e) {
+        if (!cancelled) {
+          setLoadState('error');
+          setLoadMessage(e instanceof Error ? e.message : 'Error al cargar.');
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  const displayName = member
+    ? `${member.firstName} ${member.lastName}`.trim() || 'Sin nombre'
+    : '';
+  const initials = member
+    ? `${member.firstName?.[0] ?? ''}${member.lastName?.[0] ?? ''}`.toUpperCase() || '?'
+    : '?';
+
+  if (loadState === 'loading') {
+    return (
+      <div className="flex flex-1 flex-col">
+        <AppHeader title="Perfil de miembro" description="Cargando…" />
+        <main className="flex-1 p-6">
+          <p className="text-sm text-muted-foreground">Cargando perfil…</p>
+        </main>
+      </div>
+    );
+  }
+
+  if (loadState === 'error' || !member) {
+    return (
+      <div className="flex flex-1 flex-col">
+        <AppHeader title="Perfil de miembro" description="No se pudo mostrar el perfil." />
+        <main className="flex-1 space-y-4 p-6">
+          <p className="text-sm text-destructive">{loadMessage ?? 'Miembro no encontrado.'}</p>
+          <Button variant="outline" asChild>
+            <Link href="/members">Volver al directorio</Link>
+          </Button>
+        </main>
+      </div>
+    );
+  }
+
+  const statusLabel = membershipStatusLabel(member.membershipStatus);
+  const badgeClass = statusBadgeClass(member.membershipStatus);
+  const dotClass = statusDotClass(member.membershipStatus);
   
   return (
     <div className="flex flex-col flex-1">
       <AppHeader
-        title={member.name}
+        title={displayName}
         description={
-            <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200 font-medium">
-                <span className="h-2 w-2 rounded-full mr-2 bg-green-500"></span>
-                {member.status}
+          <Badge variant="outline" className={`font-medium ${badgeClass}`}>
+            <span className={`mr-2 h-2 w-2 shrink-0 rounded-full ${dotClass}`} />
+            {statusLabel}
             </Badge>
         }
       >
-        <div className="flex items-center gap-2">
-            <Button variant="outline" asChild><Link href={`/members/${params.id}/edit`}><Edit className="mr-2 h-4 w-4" /> Editar Perfil</Link></Button>
-            <Button><MoreHorizontal className="h-4 w-4" /></Button>
-        </div>
+        <Button variant="outline" className="w-full justify-center sm:w-auto" asChild>
+          <Link href={`/members/${id}/edit`}>
+            <Edit className="mr-2 h-4 w-4 shrink-0" /> Editar perfil
+          </Link>
+        </Button>
       </AppHeader>
-      <main className="flex-1 p-8 space-y-6">
-      <div className="grid grid-cols-3 gap-6">
-        <div className="col-span-1 space-y-6">
+      <main className="flex-1 space-y-4 p-4 sm:space-y-6 sm:p-6 lg:p-8">
+        <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
+          <Avatar className="h-24 w-24">
+            <AvatarImage src={member.photoDataUrl ?? undefined} alt="" className="object-cover" />
+            <AvatarFallback className="text-lg">{initials}</AvatarFallback>
+          </Avatar>
+          <div className="text-center sm:text-left">
+            <p className="text-sm text-muted-foreground">{member.email}</p>
+            {member.department || member.staffRole ? (
+              <div className="mt-2 flex flex-wrap justify-center gap-2 sm:justify-start">
+                {member.department ? (
+                  <Badge variant="secondary" className="font-normal">
+                    <Building2 className="mr-1 h-3 w-3" />
+                    {member.department}
+                  </Badge>
+                ) : null}
+                {member.staffRole ? (
+                  <Badge variant="outline" className="font-normal">
+                    <Briefcase className="mr-1 h-3 w-3" />
+                    {member.staffRole}
+                  </Badge>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-3">
+          <div className="space-y-4 sm:space-y-6 lg:col-span-1">
           <Card>
             <CardHeader>
-              <CardTitle>Información de Contacto</CardTitle>
+                <CardTitle>Información de contacto</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
                 <div className="flex items-center gap-3">
-                    <Mail className="h-4 w-4 text-muted-foreground" />
-                    <span>{member.email}</span>
+                  <Mail className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <a href={`mailto:${member.email}`} className="break-all text-primary hover:underline">
+                    {member.email}
+                  </a>
                 </div>
                  <div className="flex items-center gap-3">
-                    <Phone className="h-4 w-4 text-muted-foreground" />
-                    <span>{member.phone}</span>
+                  <Phone className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <a href={`tel:${member.phone.replace(/\D/g, '')}`} className="hover:underline">
+                    {member.phone}
+                  </a>
                 </div>
-                 <div className="flex items-center gap-3">
-                    <Home className="h-4 w-4 text-muted-foreground" />
-                    <span>{member.address}</span>
+                <div className="flex items-start gap-3">
+                  <Home className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                  <span className="min-w-0 break-words">{member.address}</span>
                 </div>
             </CardContent>
           </Card>
@@ -124,21 +273,19 @@ export default function MemberProfilePage({ params }: { params: { id: string } }
               <CardTitle>Detalles</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
-                <div className="flex items-start justify-between">
-                    <span className="text-muted-foreground">Fecha de Nacimiento</span>
-                    <span className="font-medium">{member.dob}</span>
+                <div className="flex flex-col gap-0.5 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                  <span className="shrink-0 text-muted-foreground">Fecha de nacimiento</span>
+                  <span className="font-medium sm:text-right">{formatDateIso(member.dob)}</span>
                 </div>
-                <div className="flex items-start justify-between">
-                    <span className="text-muted-foreground">Fecha de Bautismo</span>
-                    <span className="font-medium">{member.baptismDate}</span>
+                <div className="flex flex-col gap-0.5 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                  <span className="shrink-0 text-muted-foreground">Fecha de Bautismo</span>
+                  <span className="font-medium sm:text-right">
+                    {formatDateIso(member.spiritualBirthday)}
+                  </span>
                 </div>
-                 <div className="flex items-start justify-between">
-                    <span className="text-muted-foreground">Género</span>
-                    <span className="font-medium">{member.gender}</span>
-                </div>
-                 <div className="flex items-start justify-between">
-                    <span className="text-muted-foreground">Estado Civil</span>
-                    <span className="font-medium">{member.maritalStatus}</span>
+                <div className="flex flex-col gap-0.5 sm:flex-row sm:items-start sm:justify-between sm:gap-4">
+                  <span className="shrink-0 text-muted-foreground">Alta en el directorio</span>
+                  <span className="font-medium sm:text-right">{formatDateIso(member.createdAt)}</span>
                 </div>
             </CardContent>
           </Card>
@@ -147,123 +294,114 @@ export default function MemberProfilePage({ params }: { params: { id: string } }
             <CardHeader>
               <CardTitle>Familia</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-                {member.family.map(familyMember => (
-                    <div key={familyMember.id} className="flex items-center gap-3">
-                        <Avatar className="h-10 w-10">
-                            <AvatarImage src={familyMember.avatarUrl} />
-                            <AvatarFallback>{familyMember.name.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                            <p className="font-medium">{familyMember.name}</p>
-                            <p className="text-sm text-muted-foreground">{familyMember.relation}</p>
-                        </div>
-                    </div>
-                ))}
+              <CardContent>
+                <p className="text-sm text-muted-foreground">
+                  Aún no hay vínculos familiares registrados en el sistema.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Grupos y ministerios</CardTitle>
+              </CardHeader>
+              <CardContent className="flex flex-wrap gap-2">
+                {member.groups.length > 0 ? (
+                  member.groups.map((group) => (
+                    <Badge
+                      key={group}
+                      variant="outline"
+                      className={groupColors[group] ?? 'border-border bg-muted/50 text-foreground'}
+                    >
+                      {group}
+                    </Badge>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">Sin grupos asignados.</p>
+                )}
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Grupos y Ministerios</CardTitle>
+                <CardTitle>Templos</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-wrap gap-2">
-                {member.groups.map(group => (
-                    <Badge key={group} variant="outline" className={groupColors[group] || 'bg-gray-100 text-gray-800'}>{group}</Badge>
-                ))}
+                {member.churchIds.length > 0 ? (
+                  member.churchIds.map((cid) => (
+                    <Badge key={cid} variant="outline" className="font-normal">
+                      <MapPin className="mr-1 h-3 w-3 shrink-0" />
+                      {cid === 'otro' ? 'Otro' : churchNamesById[cid] ?? cid}
+                    </Badge>
+                  ))
+                ) : (
+                  <p className="text-sm text-muted-foreground">Sin templos asignados.</p>
+                )}
             </CardContent>
           </Card>
         </div>
 
-        <div className="col-span-2 space-y-6">
-            <div className='grid grid-cols-2 gap-6'>
+          <div className="space-y-4 sm:space-y-6 lg:col-span-2">
+            <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
                 <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <CardTitle>Resumen de Asistencia</CardTitle>
-                        <Button variant="link" className='p-0 h-auto' asChild>
-                            <Link href={`/members/${params.id}/attendance`}>Ver Historial Completo</Link>
+                <CardHeader className="flex flex-col gap-3 space-y-0 sm:flex-row sm:items-start sm:justify-between">
+                  <CardTitle className="text-lg sm:text-xl">Resumen de asistencia</CardTitle>
+                  <Button variant="link" className="h-auto justify-start p-0 sm:shrink-0" asChild>
+                    <Link href={`/members/${id}/attendance`}>Ver historial completo</Link>
                         </Button>
                     </CardHeader>
-                    <CardContent className="grid grid-cols-2 gap-4">
-                        <div className='bg-muted/50 p-4 rounded-lg'>
-                            <p className='text-2xl font-bold'>{member.attendance.overall}</p>
-                            <p className='text-sm text-muted-foreground'>Total</p>
-                        </div>
-                        <div className='bg-muted/50 p-4 rounded-lg'>
-                            <p className='text-2xl font-bold'>{member.attendance.last3Months}</p>
-                            <p className='text-sm text-muted-foreground'>Últimos 3 Meses</p>
-                        </div>
-                        <div className='bg-muted/50 p-4 rounded-lg'>
-                            <p className='text-2xl font-bold'>{member.attendance.absencesYTD}</p>
-                            <p className='text-sm text-muted-foreground'>Ausencias (YTD)</p>
-                        </div>
-                        <div className='bg-muted/50 p-4 rounded-lg'>
-                            <p className='text-lg font-bold'>{member.attendance.lastAttended}</p>
-                            <p className='text-sm text-muted-foreground'>Última Asistencia</p>
-                        </div>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    No hay datos de asistencia vinculados a este perfil. Use el historial cuando esté
+                    disponible.
+                  </p>
                     </CardContent>
                 </Card>
 
                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between">
-                        <CardTitle>Resumen de Donaciones</CardTitle>
-                         <Button variant="link" className='p-0 h-auto' asChild>
-                            <Link href={`/members/${params.id}/donations`}>Ver Historial Completo</Link>
+                <CardHeader className="flex flex-col gap-3 space-y-0 sm:flex-row sm:items-start sm:justify-between">
+                  <CardTitle className="text-lg sm:text-xl">Resumen de donaciones</CardTitle>
+                  <Button variant="link" className="h-auto justify-start p-0 sm:shrink-0" asChild>
+                    <Link href={`/members/${id}/donations`}>Ver historial completo</Link>
                         </Button>
                     </CardHeader>
-                    <CardContent className="grid grid-cols-2 gap-4">
-                         <div className='bg-muted/50 p-4 rounded-lg'>
-                            <p className='text-2xl font-bold'>${member.giving.ytd.toFixed(2)}</p>
-                            <p className='text-sm text-muted-foreground'>Donaciones YTD</p>
-                        </div>
-                         <div className='bg-muted/50 p-4 rounded-lg'>
-                            <p className='text-2xl font-bold'>${member.giving.lastYear.toFixed(2)}</p>
-                            <p className='text-sm text-muted-foreground'>Donaciones del Año Pasado</p>
-                        </div>
-                        <div className='col-span-2 bg-muted/50 p-4 rounded-lg'>
-                            <p className='text-lg font-bold'>${member.giving.lastGiftAmount.toFixed(2)} el {member.giving.lastGiftDate}</p>
-                            <p className='text-sm text-muted-foreground'>Última Donación</p>
-                        </div>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    No hay datos de donaciones vinculados a este perfil. Use el historial cuando esté
+                    disponible.
+                  </p>
                     </CardContent>
                 </Card>
             </div>
 
-
           <Card>
-            <CardContent className="p-4">
+              <CardContent className="p-3 sm:p-4">
                 <Tabs defaultValue="activity">
-                    <TabsList>
-                        <TabsTrigger value="activity">Actividad</TabsTrigger>
-                        <TabsTrigger value="notes">Notas</TabsTrigger>
+                  <TabsList className="grid h-auto w-full grid-cols-2 p-1 sm:inline-flex sm:w-auto">
+                    <TabsTrigger value="activity" className="text-xs sm:text-sm">
+                      Actividad
+                    </TabsTrigger>
+                    <TabsTrigger value="notes" className="text-xs sm:text-sm">
+                      Notas
+                    </TabsTrigger>
                     </TabsList>
                     <TabsContent value="activity" className="mt-4">
                         <ul className="space-y-6">
-                            {member.activity.map(item => (
-                                <li key={item.id} className="flex items-start gap-4 relative">
-                                    <div className="absolute left-5 top-5 -bottom-5 w-px bg-border -z-10"></div>
-                                    <div className="flex-shrink-0 h-10 w-10 rounded-full bg-muted flex items-center justify-center">
-                                        <item.icon className="h-5 w-5 text-muted-foreground" />
+                      <li className="flex items-start gap-3 sm:gap-4">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted max-sm:h-8 max-sm:w-8">
+                          <UserPlus className="h-4 w-4 text-muted-foreground sm:h-5 sm:w-5" />
                                     </div>
-                                    <div className="flex-grow flex items-center justify-between pt-2">
-                                        <p className="text-sm">{item.type} <span className="font-medium">{item.by}</span></p>
-                                        <p className="text-xs text-muted-foreground">{item.date}</p>
+                        <div className="flex min-w-0 flex-1 flex-col gap-1 pt-1 sm:flex-row sm:items-start sm:justify-between sm:pt-2">
+                          <p className="text-sm">Miembro registrado en el directorio</p>
+                          <p className="shrink-0 text-xs text-muted-foreground sm:text-right">
+                            {formatDateIso(member.createdAt)}
+                          </p>
                                     </div>
                                 </li>
-                            ))}
                         </ul>
                     </TabsContent>
                      <TabsContent value="notes" className="mt-4">
-                        <div className="space-y-4">
-                            {member.notes.map(note => (
-                                <div key={note.id} className="p-4 rounded-lg border bg-muted/50">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <p className="font-semibold text-sm">{note.author}</p>
-                                        <p className="text-xs text-muted-foreground">{note.date}</p>
-                                    </div>
-                                    <p className="text-sm text-muted-foreground">{note.content}</p>
-                                </div>
-                            ))}
-                        </div>
+                    <p className="text-sm text-muted-foreground">No hay notas registradas.</p>
                     </TabsContent>
                 </Tabs>
             </CardContent>

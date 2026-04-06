@@ -2,13 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import {
-  ArrowLeft,
-  Calendar as CalendarIcon,
-  Search,
-  Trash2,
-  Upload,
-} from 'lucide-react';
+import { Calendar as CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -28,68 +22,368 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { useParams, useRouter } from 'next/navigation';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AppHeader } from '@/components/app-header';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Upload } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import { assignableMemberGroups } from '@/lib/data';
+import { TempleAssignmentCard } from '@/components/temple-assignment-card';
 
-const availableGroups = [
-    'Youth Group',
-    'Choir',
-    'Volunteers',
-    'New Members Class',
-    "Men's Bible Study",
+const STAFF_ROLE_NONE = '__none__';
+
+const formSchema = z.object({
+  firstName: z.string().min(1, { message: 'El nombre es requerido.' }),
+  lastName: z.string().min(1, { message: 'El apellido es requerido.' }),
+  email: z.string().email({ message: 'Por favor ingrese un correo electrónico válido.' }).min(1, { message: 'El correo electrónico es requerido.' }),
+  phone: z.string().min(1, { message: 'El número de teléfono es requerido.' }),
+  address: z.string().min(1, { message: 'La dirección es requerida.' }),
+  dob: z.date({
+    required_error: 'La fecha de nacimiento es requerida.',
+  }),
+  spiritualBirthday: z.date().optional(),
+  groups: z.array(z.string()).nonempty({ message: 'Debe seleccionar al menos un grupo.' }),
+  churchIds: z
+    .array(z.string())
+    .min(1, { message: 'Debe seleccionar al menos un templo.' }),
+  membershipStatus: z.string({
+    required_error: 'El estado de membresía es requerido.',
+  }).min(1, { message: 'El estado de membresía es requerido.' }),
+  staffRoleKind: z
+    .string()
+    .refine((v) => v !== STAFF_ROLE_NONE, {
+      message: 'Seleccione Pastor o Congregante.',
+    }),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
+const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
+
+const STAFF_ROLE_OPTIONS = [
+  { value: STAFF_ROLE_NONE, label: 'Sin especificar' },
+  { value: 'Pastor', label: 'Pastor' },
+  { value: 'Congregante', label: 'Congregante' },
+] as const;
+
+function staffRoleToApi(kind: string): string | undefined {
+  if (!kind || kind === STAFF_ROLE_NONE) return undefined;
+  return kind;
+}
+
+/** Valores guardados distintos de Pastor/Congregante (p. ej. texto libre antiguo) se muestran como «Sin especificar». */
+function staffRoleKindFromApi(stored: string | null | undefined): string {
+  const r = (stored ?? '').trim();
+  if (!r) return STAFF_ROLE_NONE;
+  if (r === 'Pastor' || r === 'Congregante') return r;
+  return STAFF_ROLE_NONE;
+}
+
+const MEMBERSHIP_STATUS_OPTIONS = [
+  {
+    value: 'active' as const,
+    label: 'Activo',
+    description: 'Cuando la asistencia a la iglesia es constante.',
+  },
+  {
+    value: 'visitor' as const,
+    label: 'Visitante',
+    description: 'Cuando lleva poco tiempo asistiendo a un templo.',
+  },
+  {
+    value: 'inactive' as const,
+    label: 'Inactivo',
+    description: 'Cuando está regresando a la iglesia.',
+  },
 ];
 
-const member = {
-    id: 1,
-    name: 'John Doe',
-    firstName: 'John',
-    lastName: 'Doe',
-    email: 'john.doe@example.com',
-    phone: '+1 234 567 890',
-    address: '123 Main St, Anytown, USA 12345',
-    dob: new Date('1985-10-25'),
-    spiritualBirthday: new Date('2010-04-12'),
-    family: [
-        { id: 1, name: 'Jane Doe', relation: 'Spouse', avatarUrl: 'https://picsum.photos/seed/2/40/40' },
-    ],
-    groups: ['Volunteers', 'Choir'],
-    status: 'Active Member',
-    avatarUrl: 'https://picsum.photos/seed/1/100/100'
+const MEMBERSHIP_CODES = new Set(['active', 'visitor', 'inactive']);
+
+type ApiMember = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  address: string;
+  dob: string;
+  spiritualBirthday: string | null;
+  groups: string[];
+  churchIds: string[];
+  membershipStatus: string;
+  photoDataUrl: string | null;
+  staffRole: string | null;
 };
 
+function memberIdFromParams(params: ReturnType<typeof useParams>): string {
+  const raw = params?.id;
+  if (Array.isArray(raw)) return (raw[0] && String(raw[0])) || '';
+  if (typeof raw === 'string') return raw;
+  return '';
+}
 
-export default function EditMemberPage({ params }: { params: { id: string } }) {
-    const [dateOfBirth, setDateOfBirth] = React.useState<Date | undefined>(member.dob);
-    const [spiritualBirthday, setSpiritualBirthday] = React.useState<Date | undefined>(member.spiritualBirthday);
-    const [selectedGroups, setSelectedGroups] = React.useState<string[]>(member.groups);
+/** Valores previos a `reset` tras cargar la API (solo evita error de tipos en useForm). */
+const EMPTY_FORM_DEFAULTS = {
+  firstName: '',
+  lastName: '',
+  email: '',
+  phone: '',
+  address: '',
+  dob: new Date(),
+  groups: [],
+  churchIds: [],
+  membershipStatus: 'active',
+  staffRoleKind: STAFF_ROLE_NONE,
+} as unknown as FormValues;
+
+export default function EditMemberPage() {
+  const params = useParams();
+  const router = useRouter();
+  const id = memberIdFromParams(params);
+  const { toast } = useToast();
+  const photoInputRef = React.useRef<HTMLInputElement>(null);
+  const photoUploadIdRef = React.useRef<string | null>(null);
+  const [photoDataUrl, setPhotoDataUrl] = React.useState<string | null>(null);
+  const [loadState, setLoadState] = React.useState<'loading' | 'error' | 'ready'>('loading');
+  const [loadMessage, setLoadMessage] = React.useState<string | null>(null);
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: EMPTY_FORM_DEFAULTS,
+  });
+
+  React.useEffect(() => {
+    if (!id) {
+      setLoadState('error');
+      setLoadMessage('Identificador de miembro no válido.');
+      return;
+    }
+
+    let cancelled = false;
+    (async () => {
+      setLoadState('loading');
+      setLoadMessage(null);
+      try {
+        const res = await fetch(`/api/members/${encodeURIComponent(id)}`, {
+          cache: 'no-store',
+          headers: { Accept: 'application/json' },
+        });
+        const data = (await res.json().catch(() => ({}))) as {
+          member?: ApiMember;
+          error?: string;
+        };
+        if (!res.ok) {
+          throw new Error(data.error || 'No se pudo cargar el miembro.');
+        }
+        const m = data.member;
+        if (cancelled) return;
+        if (!m) {
+          setLoadState('error');
+          setLoadMessage('No se recibieron datos del miembro.');
+          return;
+        }
+
+        const dob = new Date(m.dob);
+        const dobOk = !Number.isNaN(dob.getTime()) ? dob : new Date();
+
+        let spiritual: Date | undefined;
+        if (m.spiritualBirthday) {
+          const s = new Date(m.spiritualBirthday);
+          if (!Number.isNaN(s.getTime())) spiritual = s;
+        }
+
+        const membershipStatus = MEMBERSHIP_CODES.has(m.membershipStatus)
+          ? m.membershipStatus
+          : 'active';
+
+        form.reset({
+          firstName: m.firstName ?? '',
+          lastName: m.lastName ?? '',
+          email: m.email ?? '',
+          phone: m.phone ?? '',
+          address: m.address ?? '',
+          dob: dobOk,
+          spiritualBirthday: spiritual,
+          groups: m.groups.length > 0 ? m.groups : [],
+          churchIds: m.churchIds.length > 0 ? m.churchIds : [],
+          membershipStatus,
+          staffRoleKind: staffRoleKindFromApi(m.staffRole),
+        });
+        setPhotoDataUrl(m.photoDataUrl);
+        photoUploadIdRef.current = null;
+        setLoadState('ready');
+      } catch (e) {
+        if (!cancelled) {
+          setLoadState('error');
+          setLoadMessage(e instanceof Error ? e.message : 'Error al cargar.');
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id, form.reset]);
 
     const handleGroupToggle = (group: string) => {
-        setSelectedGroups(prev => 
-            prev.includes(group) 
-                ? prev.filter(g => g !== group)
-                : [...prev, group]
-        );
+    const currentGroups = form.getValues('groups') || [];
+    const newGroups = currentGroups.includes(group)
+      ? currentGroups.filter((g) => g !== group)
+      : [...currentGroups, group];
+    form.setValue('groups', newGroups as FormValues['groups'], {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+  };
+
+  const onPhotoSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > MAX_PHOTO_BYTES) {
+      toast({
+        variant: 'destructive',
+        title: 'Archivo demasiado grande',
+        description: 'Use una imagen de hasta 10MB.',
+      });
+      e.target.value = '';
+      return;
     }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = typeof reader.result === 'string' ? reader.result : null;
+      setPhotoDataUrl(dataUrl);
+
+      void (async () => {
+        if (!dataUrl) return;
+        const prevId = photoUploadIdRef.current;
+        if (prevId) {
+          await fetch(
+            `/api/member-photo-uploads?id=${encodeURIComponent(prevId)}`,
+            { method: 'DELETE' }
+          ).catch(() => {});
+          photoUploadIdRef.current = null;
+        }
+        try {
+          const res = await fetch('/api/member-photo-uploads', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ photoDataUrl: dataUrl }),
+          });
+          const data = (await res.json().catch(() => ({}))) as {
+            error?: string;
+            photoUploadId?: string;
+          };
+          if (!res.ok) {
+            throw new Error(data.error || 'No se pudo guardar la imagen.');
+          }
+          if (data.photoUploadId) {
+            photoUploadIdRef.current = data.photoUploadId;
+          }
+          toast({
+            title: 'Foto guardada',
+            description: 'La imagen quedó almacenada en la base de datos. Pulse Guardar cambios para actualizar el perfil.',
+          });
+        } catch (err) {
+          console.error(err);
+          toast({
+            variant: 'destructive',
+            title: 'No se pudo guardar la foto',
+            description:
+              err instanceof Error
+                ? err.message
+                : 'Se usará la vista previa al guardar los cambios.',
+          });
+        }
+      })();
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const onSubmit = async (values: FormValues) => {
+    if (!id) return;
+    try {
+      const uploadedId = photoUploadIdRef.current;
+      const res = await fetch(`/api/members/${encodeURIComponent(id)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          firstName: values.firstName,
+          lastName: values.lastName,
+          email: values.email,
+          phone: values.phone,
+          address: values.address,
+          dob: values.dob.toISOString(),
+          spiritualBirthday: values.spiritualBirthday?.toISOString() ?? null,
+          groups: values.groups,
+          churchIds: values.churchIds,
+          membershipStatus: values.membershipStatus,
+          photoUploadId: uploadedId ?? undefined,
+          photoDataUrl: uploadedId ? undefined : photoDataUrl,
+          staffRole: staffRoleToApi(values.staffRoleKind),
+        }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        message?: string;
+      };
+      if (!res.ok) {
+        throw new Error(data.error || 'No se pudo guardar los cambios.');
+      }
+      toast({
+        title: 'Cambios guardados',
+        description: data.message || 'El perfil se actualizó correctamente.',
+      });
+      photoUploadIdRef.current = null;
+      router.push('/members');
+    } catch (err) {
+      console.error(err);
+      toast({
+        variant: 'destructive',
+        title: 'No se pudo guardar',
+        description:
+          err instanceof Error ? err.message : 'Error al actualizar en la base de datos.',
+      });
+    }
+  };
 
   return (
     <div className="flex flex-col flex-1">
       <AppHeader
         title="Editar Miembro"
-        description="Actualice los detalles del perfil del miembro."
+        description="Actualice los datos del perfil. La información se carga desde el directorio de miembros."
       >
         <div className="flex items-center gap-2">
           <Button variant="ghost" asChild>
-            <Link href={`/members/${params.id}`}>Cancelar</Link>
+            <Link href={id ? `/members/${id}` : '/members'}>Cancelar</Link>
           </Button>
-          <Button>Guardar Cambios</Button>
+          <Button
+            type="button"
+            disabled={loadState !== 'ready' || form.formState.isSubmitting}
+            onClick={form.handleSubmit(onSubmit)}
+          >
+            {form.formState.isSubmitting ? 'Guardando…' : 'Guardar Cambios'}
+          </Button>
         </div>
       </AppHeader>
-    <main className="flex-1 space-y-6 p-4 sm:p-8 bg-muted/20">
-      <div className="space-y-8">
+      <main className="flex-1 space-y-6 bg-muted/20 p-4 sm:p-8">
+        {loadState === 'loading' ? (
+          <p className="text-sm text-muted-foreground">Cargando datos del miembro…</p>
+        ) : null}
+        {loadState === 'error' ? (
+          <p className="text-sm text-destructive">{loadMessage ?? 'No se pudo cargar el miembro.'}</p>
+        ) : null}
+
+        {loadState === 'ready' ? (
+          <Form {...form} key={`edit-member-${id}`}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
           <Card>
               <CardHeader>
                   <CardTitle>Información Personal</CardTitle>
@@ -97,112 +391,209 @@ export default function EditMemberPage({ params }: { params: { id: string } }) {
               </CardHeader>
               <CardContent className="space-y-6">
                   <div className="flex items-center gap-6">
-                      <Avatar className="w-24 h-24">
-                          <AvatarImage src={member.avatarUrl} />
-                          <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
+                    <Avatar className="h-24 w-24">
+                      {photoDataUrl ? (
+                        <AvatarImage src={photoDataUrl} alt="Foto del miembro" className="object-cover" />
+                      ) : null}
+                      <AvatarFallback className="rounded-full bg-muted">
+                        <Upload className="h-8 w-8 text-muted-foreground" />
+                      </AvatarFallback>
                       </Avatar>
                       <div>
-                          <Button variant="outline">Cambiar Foto</Button>
-                          <p className="text-xs text-muted-foreground mt-2">PNG, JPG, GIF hasta 10MB.</p>
+                      <input
+                        ref={photoInputRef}
+                        type="file"
+                        accept="image/png,image/jpeg,image/gif,image/webp"
+                        className="sr-only"
+                        onChange={onPhotoSelected}
+                      />
+                      <Button variant="outline" type="button" onClick={() => photoInputRef.current?.click()}>
+                        Cambiar foto
+                      </Button>
+                      <p className="mt-2 text-xs text-muted-foreground">PNG, JPG, GIF hasta 10MB.</p>
                       </div>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                          <Label htmlFor="first-name">Nombre</Label>
-                          <Input id="first-name" defaultValue={member.firstName} />
-                      </div>
-                      <div className="space-y-2">
-                          <Label htmlFor="last-name">Apellido</Label>
-                          <Input id="last-name" defaultValue={member.lastName} />
-                      </div>
+                  <div className="grid grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="firstName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nombre</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Nombre" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="lastName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Apellido</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Apellido(s)" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                          <Label htmlFor="email">Correo Electrónico</Label>
-                          <Input id="email" type="email" defaultValue={member.email} />
-                      </div>
-                      <div className="space-y-2">
-                          <Label htmlFor="phone">Número de Teléfono</Label>
-                          <Input id="phone" type="tel" defaultValue={member.phone} />
-                      </div>
+                  <div className="grid grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Correo Electrónico</FormLabel>
+                          <FormControl>
+                            <Input type="email" placeholder="correo@ejemplo.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Número de Teléfono</FormLabel>
+                          <FormControl>
+                            <Input type="tel" placeholder="+1 (555) 000-0000" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
-                   <div className="space-y-2">
-                      <Label htmlFor="address">Dirección</Label>
-                      <Input id="address" defaultValue={member.address} />
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                          <Label htmlFor="dob">Fecha de Nacimiento</Label>
+                  <FormField
+                    control={form.control}
+                    name="address"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Dirección</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Calle, ciudad, país" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="grid grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="dob"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel>Fecha de Nacimiento</FormLabel>
                           <Popover>
                               <PopoverTrigger asChild>
+                              <FormControl>
                               <Button
-                                  variant={"outline"}
+                                  variant="outline"
                                   className={cn(
-                                  "w-full justify-start text-left font-normal",
-                                  !dateOfBirth && "text-muted-foreground"
+                                    'w-full justify-start text-left font-normal',
+                                    !field.value && 'text-muted-foreground'
                                   )}
                               >
                                   <CalendarIcon className="mr-2 h-4 w-4" />
-                                  {dateOfBirth ? format(dateOfBirth, "PPP") : <span>mm/dd/yyyy</span>}
+                                  {field.value ? format(field.value, 'PPP') : <span>mm/dd/yyyy</span>}
                               </Button>
+                              </FormControl>
                               </PopoverTrigger>
                               <PopoverContent className="w-auto p-0">
-                              <Calendar mode="single" selected={dateOfBirth} onSelect={setDateOfBirth} initialFocus captionLayout="dropdown-buttons" fromYear={1900} toYear={new Date().getFullYear()} />
+                              <Calendar
+                                mode="single"
+                                selected={field.value}
+                                onSelect={field.onChange}
+                                initialFocus
+                                captionLayout="dropdown-buttons"
+                                fromYear={1900}
+                                toYear={new Date().getFullYear()}
+                              />
                               </PopoverContent>
                           </Popover>
-                      </div>
-                      <div className="space-y-2">
-                          <Label htmlFor="spiritual-bday">Cumpleaños Espiritual</Label>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="spiritualBirthday"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel>Fecha de Bautismo</FormLabel>
                            <Popover>
                               <PopoverTrigger asChild>
+                              <FormControl>
                               <Button
-                                  variant={"outline"}
+                                  variant="outline"
                                   className={cn(
-                                  "w-full justify-start text-left font-normal",
-                                  !spiritualBirthday && "text-muted-foreground"
+                                    'w-full justify-start text-left font-normal',
+                                    !field.value && 'text-muted-foreground'
                                   )}
                               >
                                   <CalendarIcon className="mr-2 h-4 w-4" />
-                                  {spiritualBirthday ? format(spiritualBirthday, "PPP") : <span>mm/dd/yyyy</span>}
+                                  {field.value ? format(field.value, 'PPP') : <span>mm/dd/yyyy</span>}
                               </Button>
+                              </FormControl>
                               </PopoverTrigger>
                               <PopoverContent className="w-auto p-0">
-                              <Calendar mode="single" selected={spiritualBirthday} onSelect={setSpiritualBirthday} initialFocus captionLayout="dropdown-buttons" fromYear={1900} toYear={new Date().getFullYear()} />
+                              <Calendar
+                                mode="single"
+                                selected={field.value}
+                                onSelect={field.onChange}
+                                initialFocus
+                                captionLayout="dropdown-buttons"
+                                fromYear={1900}
+                                toYear={new Date().getFullYear()}
+                              />
                               </PopoverContent>
                           </Popover>
-                      </div>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
               </CardContent>
           </Card>
 
           <Card>
               <CardHeader>
-                  <CardTitle>Familia y Relaciones</CardTitle>
-                  <CardDescription>Conecte este miembro con su familia.</CardDescription>
+                  <CardTitle>Directorio de personal</CardTitle>
+                  <CardDescription>
+                    Indique si el miembro es Pastor o Congregante; con ello podrá listarse en el directorio de
+                    personal.
+                  </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                  <div>
-                      <Label htmlFor="add-family">Añadir Miembro de la Familia</Label>
-                      <div className="relative mt-2">
-                          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                          <Input id="add-family" placeholder="Buscar miembros existentes..." className="pl-9" />
-                      </div>
-                  </div>
-                  <div className="border rounded-lg p-4 flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                          <Avatar>
-                              <AvatarImage src="https://picsum.photos/seed/2/40/40" />
-                              <AvatarFallback>JD</AvatarFallback>
-                          </Avatar>
-                          <div>
-                              <p className="font-medium">Jane Doe</p>
-                              <p className="text-sm text-muted-foreground">Cónyuge</p>
-                          </div>
-                      </div>
-                      <Button variant="ghost" size="icon">
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                  </div>
+                <CardContent className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="staffRoleKind"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Cargo o rol (obligatorio)</FormLabel>
+                        <Select value={field.value ?? STAFF_ROLE_NONE} onValueChange={field.onChange}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Seleccione un cargo" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {STAFF_ROLE_OPTIONS.map((opt) => (
+                              <SelectItem key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
               </CardContent>
           </Card>
 
@@ -212,38 +603,85 @@ export default function EditMemberPage({ params }: { params: { id: string } }) {
                   <CardDescription>Asigne el miembro a grupos relevantes.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                  <div>
-                      <Label>Asignar a Grupos</Label>
-                      <div className="mt-2 space-y-3 rounded-md border p-4 max-h-60 overflow-y-auto">
-                          {availableGroups.map(group => (
+                  <FormField
+                    control={form.control}
+                    name="groups"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Asignar a Grupos</FormLabel>
+                        <div className="mt-2 max-h-60 space-y-3 overflow-y-auto rounded-md border p-4">
+                          {assignableMemberGroups.map((group) => (
                               <div key={group} className="flex items-center gap-3">
                                   <Checkbox 
-                                      id={group} 
-                                      checked={selectedGroups.includes(group)}
+                                id={`edit-member-group-${group}`}
+                                checked={field.value?.includes(group)}
                                       onCheckedChange={() => handleGroupToggle(group)}
                                   />
-                                  <Label htmlFor={group} className="font-normal">{group}</Label>
+                              <Label htmlFor={`edit-member-group-${group}`} className="cursor-pointer font-normal">
+                                {group}
+                              </Label>
                               </div>
                           ))}
                       </div>
-                       <p className="text-xs text-muted-foreground mt-2">Puede seleccionar múltiples grupos.</p>
-                  </div>
-                   <div className="space-y-2">
-                      <Label htmlFor="membership-status">Estado de Membresía</Label>
-                      <Select defaultValue="active">
-                          <SelectTrigger id="membership-status">
-                              <SelectValue />
+                        <p className="mt-2 text-xs text-muted-foreground">Puede seleccionar múltiples grupos.</p>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="membershipStatus"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Estado de Membresía</FormLabel>
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Seleccione un estado" />
                           </SelectTrigger>
-                          <SelectContent>
-                              <SelectItem value="active">Activo</SelectItem>
-                              <SelectItem value="visitor">Visitante</SelectItem>
-                              <SelectItem value="inactive">Inactivo</SelectItem>
+                          </FormControl>
+                          <SelectContent className="min-w-[min(100vw-2rem,22rem)]">
+                            {MEMBERSHIP_STATUS_OPTIONS.map((opt) => (
+                              <SelectItem
+                                key={opt.value}
+                                value={opt.value}
+                                secondary={opt.description}
+                                className="py-2.5"
+                              >
+                                {opt.label}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                       </Select>
-                  </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
               </CardContent>
           </Card>
-      </div>
+
+              <FormField
+                control={form.control}
+                name="churchIds"
+                render={({ field }) => (
+                  <FormItem>
+                    <TempleAssignmentCard
+                      selectedIds={field.value ?? []}
+                      onToggle={(churchId) => {
+                        const current = field.value ?? [];
+                        const next = current.includes(churchId)
+                          ? current.filter((cid) => cid !== churchId)
+                          : [...current, churchId];
+                        field.onChange(next);
+                      }}
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </form>
+          </Form>
+        ) : null}
     </main>
     </div>
   );
