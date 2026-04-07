@@ -72,7 +72,7 @@ export function AuthenticatedChrome({ children }: { children: React.ReactNode })
     return () => {
       cancelled = true;
     };
-  }, [isAuthPage, isLandingHome, isMembersNewRoute, router]);
+  }, [isAuthPage, isLandingHome, isMembersNewRoute, pathname, router]);
 
   if (isAuthPage || isLandingHome) {
     return <>{children}</>;
