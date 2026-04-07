@@ -333,14 +333,14 @@ export default function AttendanceChurchDetailPage() {
               </TableHeader>
               <TableBody>
                 {records.length === 0 ? (
-                  <TableRow>
+                  <TableRow key="empty-row">
                     <TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">
                       No hay registros aún para este templo.
                     </TableCell>
                   </TableRow>
                 ) : (
-                  records.map((r) => (
-                    <TableRow key={r.id}>
+                  records.map((r, index) => (
+                    <TableRow key={`${r.id || 'no-id'}-${r.createdAt || 'no-date'}-${index}`}>
                       <TableCell>
                         {r.eventType === 'service'
                           ? r.eventWeekday || '—'

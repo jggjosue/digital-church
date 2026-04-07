@@ -226,7 +226,7 @@ export default function DonationReportsPage() {
                     <TableHead>Donante</TableHead>
                     <TableHead>Fecha</TableHead>
                     <TableHead>Fondo</TableHead>
-                    <TableHead>Método de Pago</TableHead>
+                    <TableHead></TableHead>
                     <TableHead className="text-right">Monto</TableHead>
                   </TableRow>
                 </TableHeader>

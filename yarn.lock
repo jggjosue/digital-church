@@ -4367,6 +4367,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/nodemailer@npm:^8.0.0":
+  version: 8.0.0
+  resolution: "@types/nodemailer@npm:8.0.0"
+  dependencies:
+    "@types/node": "npm:*"
+  checksum: 10c0/e5031df5d6557f4cdb9a0dbe1a96f3f54dc59c23d47477103fd42b5c9bc925ea1b4e51be560af5620b4d0c66fcfb015ce5ca8f914ed2f3a3086be6149d5932da
+  languageName: node
+  linkType: hard
+
 "@types/pg-pool@npm:2.0.4":
   version: 2.0.4
   resolution: "@types/pg-pool@npm:2.0.4"
@@ -8110,6 +8119,7 @@ __metadata:
     "@types/jspdf": "npm:^2.0.0"
     "@types/lokijs": "npm:^1.5.14"
     "@types/node": "npm:^20"
+    "@types/nodemailer": "npm:^8.0.0"
     "@types/react": "npm:^18"
     "@types/react-dom": "npm:^18"
     "@vercel/analytics": "npm:^2.0.1"
@@ -8130,6 +8140,7 @@ __metadata:
     mongodb: "npm:^7.1.1"
     next: "npm:15.3.8"
     next-themes: "npm:^0.3.0"
+    nodemailer: "npm:^8.0.4"
     patch-package: "npm:^8.0.0"
     postcss: "npm:^8"
     react: "npm:^18.3.1"
@@ -8202,6 +8213,13 @@ __metadata:
   version: 0.4.0
   resolution: "node-int64@npm:0.4.0"
   checksum: 10c0/a6a4d8369e2f2720e9c645255ffde909c0fbd41c92ea92a5607fc17055955daac99c1ff589d421eee12a0d24e99f7bfc2aabfeb1a4c14742f6c099a51863f31a
+  languageName: node
+  linkType: hard
+
+"nodemailer@npm:^8.0.4":
+  version: 8.0.4
+  resolution: "nodemailer@npm:8.0.4"
+  checksum: 10c0/5fb6fa72645b541c18b84b861de46f4740449e1d7c987b4d9ef715d815d613f93262225bc319e217df6215d6f123efadb9a412dcf937fe0a41cbecf279dfb2a0
   languageName: node
   linkType: hard
 

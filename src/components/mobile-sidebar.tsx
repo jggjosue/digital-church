@@ -28,6 +28,7 @@ import {
   Mic,
   Image as ImageLucide,
   Settings,
+  Package,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -51,8 +52,8 @@ const navItems = [
     label: 'Directorio', 
     icon: Users, 
     subItems: [
-      { href: '/members', icon: Users, label: 'Miembros' },
       { href: '/members/new', icon: UserPlus, label: 'Nuevo' },
+      { href: '/members', icon: Users, label: 'Miembros' },
       { href: '/members/staff', icon: UserCog, label: 'Pastoral' },
     ]
   },
@@ -60,16 +61,16 @@ const navItems = [
     label: 'Iglesias', 
     icon: Building, 
     subItems: [
+      { href: '/churches/new', icon: Plus, label: 'Añadir Ubicación' },
         { href: '/churches', icon: Search, label: 'Buscar' },
-        { href: '/churches/new', icon: Plus, label: 'Añadir Ubicación' },
     ]
   },
   { 
     label: 'Ministerios', 
     icon: Building, 
     subItems: [
-      { href: '/ministries', icon: List, label: 'Gestionar' },
       { href: '/ministries/new', icon: Plus, label: 'Nuevo Ministerio' },
+      { href: '/ministries', icon: List, label: 'Gestionar' },
       { href: '/ministries/assign-members', icon: UserPlus, label: 'Asignar Miembros' },
     ]
   },
@@ -77,9 +78,9 @@ const navItems = [
     label: 'Asistencia',
     icon: BarChart,
     subItems: [
-      { href: '/attendance', icon: Search, label: 'Templos' },
-      { href: '/attendance/report', icon: FileText, label: 'Reporte' },
+      { href: '/attendance', icon: Search, label: 'Servicio' },
       { href: '/attendance/registro', icon: ClipboardList, label: 'Registro' },
+      { href: '/attendance/report', icon: FileText, label: 'Reporte' },
     ],
   },
   { 
@@ -87,10 +88,19 @@ const navItems = [
     icon: Heart, 
     subItems: [
       { href: '/donations/new', icon: Plus, label: 'Nueva Donación' },
-      { href: '/donations/pledges', icon: List, label: 'Gestión de Promesas' },
+      { href: '/donations/fundraising/new', icon: Plus, label: 'Crear Campaña' },
       { href: '/donations', icon: Heart, label: 'Donaciones y ofrendas' },
+      //{ href: '/donations/pledges', icon: List, label: 'Gestión de Promesas' },
       { href: '/donations/giving-statement', icon: FileText, label: 'Declaración de Donación' },
       { href: '/donations/fundraising', icon: PiggyBank, label: 'Recaudación de Fondos' },
+    ]
+  },
+  { 
+    label: 'Inventario',
+    icon: Package, 
+    subItems: [
+      { href: '/inventario', icon: List, label: 'Gestión de inventario' },
+      { href: '/donations/new', icon: Plus, label: 'Nueva Artículo' },
     ]
   },
   /*{ 

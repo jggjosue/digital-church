@@ -6,7 +6,9 @@ import {
   CheckCircle2,
   ChevronDown,
   ClipboardCheck,
+  Download,
   FileText,
+  Loader2,
   Smile,
   UploadCloud,
   Users,
@@ -19,6 +21,7 @@ import { AppHeader } from '@/components/app-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import {
   Select,
@@ -63,7 +66,9 @@ type ChurchItem = {
 
 type AttendanceRegistryApiRecord = {
   churchId: string;
+  churchName: string;
   year: string;
+  eventName?: string;
   records: Record<MonthKey, MonthRecord>;
   initializedMonths: MonthKey[];
 };
@@ -103,6 +108,47 @@ const normalizeString = (value: unknown) =>
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
     .trim();
+
+const getRowChurchIdFromImportRow = (row: Record<string, string>) =>
+  (
+    row.churchid ||
+    row['church id'] ||
+    row.church_id ||
+    row.idtemplo ||
+    row['id templo'] ||
+    row.id_templo ||
+    row.idiglesia ||
+    row['id iglesia'] ||
+    row.id_iglesia ||
+    ''
+  ).trim();
+
+const getRowChurchNameFromImportRow = (row: Record<string, string>) =>
+  (row.iglesia || row.templo || row.church || row.parroquia || row.sede || row.campus || '').trim();
+
+const validateImportRowChurch = (
+  row: Record<string, string>,
+  churchId: string,
+  churchName: string
+): { ok: true } | { ok: false; message: string } => {
+  const rowId = getRowChurchIdFromImportRow(row);
+  const rowName = getRowChurchNameFromImportRow(row);
+  if (!rowId && !rowName) return { ok: true };
+  if (rowId && rowId !== churchId) {
+    return {
+      ok: false,
+      message:
+        'El archivo contiene registros de otro templo (identificador distinto al seleccionado). Se canceló la importación.',
+    };
+  }
+  if (!rowId && rowName && normalizeString(rowName) !== normalizeString(churchName)) {
+    return {
+      ok: false,
+      message: `El archivo indica el templo "${rowName}", que no coincide con el seleccionado (${churchName}).`,
+    };
+  }
+  return { ok: true };
+};
 
 const monthMap: Record<string, MonthKey> = {
   enero: 'enero',
@@ -145,6 +191,7 @@ const distributeWeeklyTotal = (total: number) => {
   return Array.from({ length: 7 }, (_, idx) => base + (idx < remainder ? 1 : 0));
 };
 const WEEK_DAY_LABELS = ['Lun', 'Mar', 'Mie', 'Jue', 'Vie', 'Sab', 'Dom'] as const;
+const IMPORT_DAY_NAMES = ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado', 'domingo'] as const;
 
 const parseCsvLine = (line: string) => {
   const values: string[] = [];
@@ -371,10 +418,12 @@ export default function AttendanceRegistroPage() {
   >({});
   const [editingCategoryLabel, setEditingCategoryLabel] = React.useState('');
   const [isSaving, setIsSaving] = React.useState(false);
+  const [isImporting, setIsImporting] = React.useState(false);
   const [isLoadingRegistry, setIsLoadingRegistry] = React.useState(false);
   const [lastSavedByYearAndChurch, setLastSavedByYearAndChurch] = React.useState<
     Record<string, AttendanceRegistryApiRecord>
   >({});
+  const [eventName, setEventName] = React.useState('');
 
   const monthOrder: MonthKey[] = MONTH_ORDER;
   const yearOptions = YEAR_OPTIONS;
@@ -677,11 +726,23 @@ export default function AttendanceRegistroPage() {
       return;
     }
 
+    const trimmedEventName = eventName.trim();
+    if (!trimmedEventName) {
+      toast({
+        variant: 'destructive',
+        title: 'Nombre del evento',
+        description: 'Indica el nombre del evento para este templo y año antes de guardar.',
+      });
+      return;
+    }
+
     setIsSaving(true);
     try {
       const payload: AttendanceRegistryApiRecord = {
         churchId: selectedChurchId,
+        churchName: selectedChurchName,
         year: selectedYear,
+        eventName: trimmedEventName,
         records: currentYearRecords,
         initializedMonths,
       };
@@ -718,6 +779,7 @@ export default function AttendanceRegistroPage() {
     if (!snapshot) {
       setRecordsByYear((prev) => ({ ...prev, [selectedYear]: cloneMonthData(initialData) }));
       setInitializedMonthsByYear((prev) => ({ ...prev, [selectedYear]: [...MONTH_ORDER] }));
+      setEventName('');
       toast({
         title: 'Cambios descartados',
         description: 'Se restauró el estado inicial para este año.',
@@ -729,6 +791,7 @@ export default function AttendanceRegistroPage() {
       ...prev,
       [selectedYear]: snapshot.initializedMonths,
     }));
+    setEventName(snapshot.eventName ?? '');
     toast({
       title: 'Cambios descartados',
       description: 'Se restauraron los últimos datos guardados.',
@@ -802,11 +865,92 @@ export default function AttendanceRegistroPage() {
     });
   };
 
+  const handlePickImportFile = () => {
+    if (!selectedChurchId) {
+      toast({
+        variant: 'destructive',
+        title: 'Selecciona un templo',
+        description: 'Debes seleccionar un templo antes de importar asistencia.',
+      });
+      return;
+    }
+    fileInputRef.current?.click();
+  };
+
+  const handleDownloadImportTemplate = () => {
+    if (!selectedChurchId) {
+      toast({
+        variant: 'destructive',
+        title: 'Selecciona un templo',
+        description: 'Debes seleccionar un templo antes de descargar la plantilla.',
+      });
+      return;
+    }
+
+    const rows: Array<Record<string, string | number>> = [];
+    for (const month of monthOrder) {
+      const monthLabel = currentYearRecords[month].month;
+      const categories = currentYearRecords[month].categories;
+      for (let weekIndex = 0; weekIndex < 5; weekIndex += 1) {
+        const weekDays = weekDaysForMonth(month, weekIndex);
+        for (let dayIndex = 0; dayIndex < 7; dayIndex += 1) {
+          const dayInfo = weekDays[dayIndex];
+          for (const category of categories) {
+            rows.push({
+              churchId: selectedChurchId,
+              iglesia: selectedChurchName,
+              year: selectedYear,
+              mes: monthLabel,
+              semana: weekIndex + 1,
+              dia: IMPORT_DAY_NAMES[dayIndex],
+              diaCorto: dayInfo.dayLabel,
+              diaNumero: dayInfo.dateLabel,
+              fecha: dayInfo.fullDateLabel,
+              categoria: category.label,
+              asistencia: '',
+            });
+          }
+        }
+      }
+    }
+
+    const workbook = XLSX.utils.book_new();
+    const sheet = XLSX.utils.json_to_sheet(rows);
+    XLSX.utils.book_append_sheet(workbook, sheet, 'PlantillaAsistencia');
+    const safeChurchName = selectedChurchName
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z0-9-_]+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '')
+      .toLowerCase();
+    const fileName = `plantilla-asistencia-${selectedYear}-${safeChurchName || 'templo'}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
+    toast({
+      title: 'Plantilla descargada',
+      description: `Se descargó el formato para ${selectedChurchName} (${selectedYear}).`,
+    });
+  };
+
   const handleImportMonthlyData = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    if (!selectedChurchId) {
+      toast({
+        variant: 'destructive',
+        title: 'Selecciona un templo',
+        description: 'Debes seleccionar un templo antes de importar asistencia.',
+      });
+      return;
+    }
+
+    setIsImporting(true);
     try {
+      await new Promise<void>((resolve) => {
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+      });
+
       const rows = await extractRowsFromFile(file);
       if (rows.length === 0) {
         toast({
@@ -815,6 +959,24 @@ export default function AttendanceRegistroPage() {
           description: 'No encontramos filas para importar.',
         });
         return;
+      }
+
+      for (const row of rows) {
+        const categoryLabel = row.categoria || row.category || row.grupo || '';
+        const attendanceRaw = row.asistencia || row.attendance || row.valor || row.total || '';
+        if (!categoryLabel || !attendanceRaw) continue;
+        const attendance = Number(attendanceRaw);
+        if (Number.isNaN(attendance) || attendance < 0) continue;
+
+        const churchCheck = validateImportRowChurch(row, selectedChurchId, selectedChurchName);
+        if (!churchCheck.ok) {
+          toast({
+            variant: 'destructive',
+            title: 'Importación cancelada',
+            description: churchCheck.message,
+          });
+          return;
+        }
       }
 
       const nextYearRecords = cloneMonthData(currentYearRecords);
@@ -894,6 +1056,7 @@ export default function AttendanceRegistroPage() {
         description: error instanceof Error ? error.message : 'No se pudo procesar el archivo.',
       });
     } finally {
+      setIsImporting(false);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -934,9 +1097,15 @@ export default function AttendanceRegistroPage() {
   }, [toast]);
 
   React.useEffect(() => {
+    if (!selectedChurchId) {
+      setEventName('');
+      return;
+    }
+
+    let cancelled = false;
     const loadRegistry = async () => {
-      if (!selectedChurchId) return;
       setIsLoadingRegistry(true);
+      setEventName('');
       try {
         const response = await fetch(
           `/api/attendance/registro?churchId=${encodeURIComponent(selectedChurchId)}&year=${encodeURIComponent(selectedYear)}`,
@@ -952,6 +1121,7 @@ export default function AttendanceRegistroPage() {
         if (!response.ok) {
           throw new Error(json.error || 'No se pudo cargar el registro de asistencia.');
         }
+        if (cancelled) return;
         if (!json.record) {
           setRecordsByYear((prev) => ({ ...prev, [selectedYear]: cloneMonthData(initialData) }));
           setInitializedMonthsByYear((prev) => ({ ...prev, [selectedYear]: [...MONTH_ORDER] }));
@@ -965,6 +1135,7 @@ export default function AttendanceRegistroPage() {
             record.initializedMonths.length > 0 ? record.initializedMonths : [...MONTH_ORDER],
         }));
         setLastSavedByYearAndChurch((prev) => ({ ...prev, [saveKey]: record }));
+        setEventName(record.eventName?.trim() ? record.eventName.trim() : '');
       } catch (error) {
         toast({
           variant: 'destructive',
@@ -972,14 +1143,33 @@ export default function AttendanceRegistroPage() {
           description: error instanceof Error ? error.message : 'Inténtalo de nuevo.',
         });
       } finally {
-        setIsLoadingRegistry(false);
+        if (!cancelled) {
+          setIsLoadingRegistry(false);
+        }
       }
     };
     void loadRegistry();
+    return () => {
+      cancelled = true;
+    };
   }, [selectedChurchId, selectedYear, toast, saveKey]);
 
   return (
-    <div className="flex flex-1 flex-col">
+    <div className="relative flex flex-1 flex-col">
+      {isImporting ? (
+        <div
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-background/75 backdrop-blur-sm"
+          role="status"
+          aria-live="polite"
+          aria-busy="true"
+        >
+          <Loader2 className="h-14 w-14 animate-spin text-primary" aria-hidden />
+          <p className="text-xl font-semibold text-foreground">Cargando datos en el formulario…</p>
+          <p className="max-w-md text-center text-sm text-muted-foreground">
+            Procesando el archivo e incorporando asistencia por mes y día. Espera un momento.
+          </p>
+        </div>
+      ) : null}
       <AppHeader
         title={`Asistencia Anual ${selectedYear}`}
         description={`Registro centralizado de métricas por categorías. Templo seleccionado: ${selectedChurchName}.`}
@@ -1034,6 +1224,21 @@ export default function AttendanceRegistroPage() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            <div className="mt-4 space-y-2">
+              <Label htmlFor="attendance-event-name" className="text-sm font-medium text-muted-foreground">
+                Nombre del evento (este templo y año)
+              </Label>
+              <Input
+                id="attendance-event-name"
+                value={eventName}
+                onChange={(event) => setEventName(event.target.value)}
+                placeholder="Ej. Culto dominical, vigilia, campamento…"
+                disabled={!selectedChurchId || isLoadingRegistry}
+                maxLength={200}
+                autoComplete="off"
+              />
             </div>
           </CardContent>
         </Card>
@@ -1326,7 +1531,7 @@ export default function AttendanceRegistroPage() {
         })}
 
         <section className="space-y-6">
-          <Card className="overflow-hidden border-dashed">
+          <Card className={cn('overflow-hidden border-dashed', isImporting && 'pointer-events-none opacity-60')}>
             <CardContent className="flex min-h-[320px] flex-col items-center justify-center gap-6 p-6 text-center sm:p-10">
               <input
                 ref={fileInputRef}
@@ -1343,14 +1548,38 @@ export default function AttendanceRegistroPage() {
                 <p className="text-2xl text-muted-foreground">
                   Selecciona un Excel o CSV para cargar asistencia por mes y día.
                 </p>
+                <p className="text-base text-muted-foreground">
+                  Los registros se asocian al templo elegido arriba. Si el archivo trae columnas de iglesia o ID de
+                  templo, deben coincidir con la selección actual.
+                </p>
               </div>
-              <Button
-                type="button"
-                className="h-16 min-w-[320px] bg-sky-500 text-2xl font-semibold hover:bg-sky-600"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                Seleccionar archivo
-              </Button>
+              <div className="flex flex-col items-center gap-3 sm:flex-row">
+                <Button
+                  type="button"
+                  className="h-16 min-w-[320px] bg-sky-500 text-2xl font-semibold hover:bg-sky-600"
+                  onClick={handlePickImportFile}
+                  disabled={isImporting || !selectedChurchId || churchesState !== 'ready' || churches.length === 0}
+                >
+                  {isImporting ? (
+                    <>
+                      <Loader2 className="mr-2 h-6 w-6 animate-spin" />
+                      Procesando…
+                    </>
+                  ) : (
+                    'Seleccionar archivo'
+                  )}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-16 min-w-[320px] text-xl font-semibold"
+                  onClick={handleDownloadImportTemplate}
+                  disabled={isImporting || !selectedChurchId || churchesState !== 'ready' || churches.length === 0}
+                >
+                  <Download className="mr-2 h-5 w-5" />
+                  Descargar Excel ejemplo
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
@@ -1421,19 +1650,9 @@ export default function AttendanceRegistroPage() {
           <div className="flex flex-col items-center justify-center gap-4 pb-4 sm:flex-row">
             <Button
               type="button"
-              variant="outline"
-              className="h-14 min-w-[260px] text-xl"
-              onClick={handleCancelEdit}
-              disabled={isSaving || isLoadingRegistry}
-            >
-              <X className="mr-2 h-5 w-5" />
-              Cancelar Edición
-            </Button>
-            <Button
-              type="button"
               className="h-14 min-w-[320px] text-xl"
               onClick={handleSaveRegistry}
-              disabled={isSaving || isLoadingRegistry || !selectedChurchId}
+              disabled={isSaving || isLoadingRegistry || isImporting || !selectedChurchId}
             >
               <CheckCircle2 className="mr-2 h-5 w-5" />
               {isSaving ? 'Guardando...' : `Guardar Registro ${selectedYear}`}

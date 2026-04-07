@@ -7,9 +7,17 @@ export const CHURCHES_COLLECTION = 'churches';
 /** @deprecated Usar `CHURCHES_COLLECTION`. */
 export const CHURCH_LOCATIONS_COLLECTION = CHURCHES_COLLECTION;
 
+/** Área interna de un templo (salón, almacén, etc.) para asignar ítems de inventario. */
+export type ChurchInventoryArea = {
+  id: string;
+  name: string;
+};
+
 export type ChurchLocation = {
   id: string;
   name: string;
+  /** Áreas internas opcionales para inventario por templo. */
+  inventoryAreas?: ChurchInventoryArea[];
   /** Dirección en una sola línea (compatibilidad UI). */
   address: string;
   municipality: string;

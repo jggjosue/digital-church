@@ -1,8 +1,16 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { CHURCHES_COLLECTION, type ChurchLocation } from '@/lib/church-locations';
 import { getDb } from '@/lib/mongodb';
 
-const ATTENDANCE_REGISTRY_COLLECTION = 'attendance_registry';
+const normalizeComparable = (value: string) =>
+  value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+
+const ATTENDANCE_REGISTRY_COLLECTION = 'attendance';
 
 const monthKeySchema = z.enum([
   'enero',
@@ -36,7 +44,13 @@ const recordsSchema = z.record(monthKeySchema, monthRecordSchema);
 
 const saveSchema = z.object({
   churchId: z.string().min(1),
+  churchName: z.string().min(1),
   year: z.string().regex(/^\d{4}$/),
+  eventName: z
+    .string()
+    .trim()
+    .min(1, 'Indica el nombre del evento')
+    .max(200, 'El nombre del evento es demasiado largo'),
   records: recordsSchema,
   initializedMonths: z.array(monthKeySchema),
 });
@@ -66,7 +80,9 @@ export async function GET(request: Request) {
           projection: {
             _id: 0,
             churchId: 1,
+            churchName: 1,
             year: 1,
+            eventName: 1,
             records: 1,
             initializedMonths: 1,
             createdAt: 1,
@@ -96,10 +112,32 @@ export async function PUT(request: Request) {
     const payload = parsed.data;
     const now = new Date().toISOString();
     const db = await getDb();
+    const church = await db
+      .collection<ChurchLocation>(CHURCHES_COLLECTION)
+      .findOne({ id: payload.churchId }, { projection: { _id: 0, id: 1, name: 1 } });
+
+    if (!church) {
+      return NextResponse.json(
+        { error: 'El templo seleccionado no existe. No se puede guardar la asistencia.' },
+        { status: 400 }
+      );
+    }
+    if (normalizeComparable(church.name) !== normalizeComparable(payload.churchName)) {
+      return NextResponse.json(
+        {
+          error:
+            'Los datos del templo no coinciden con el registro. Vuelve a cargar la página y selecciona el templo correcto.',
+        },
+        { status: 400 }
+      );
+    }
+
     await db.collection<AttendanceRegistryDoc>(ATTENDANCE_REGISTRY_COLLECTION).updateOne(
       { churchId: payload.churchId, year: payload.year },
       {
         $set: {
+          churchName: church.name,
+          eventName: payload.eventName,
           records: payload.records,
           initializedMonths: payload.initializedMonths,
           updatedAt: now,

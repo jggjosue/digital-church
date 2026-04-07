@@ -14,6 +14,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from '@/components/ui/chart';
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -21,6 +27,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Bar, BarChart, CartesianGrid, XAxis } from 'recharts';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 
 type ChurchDoc = {
   id: string;
@@ -40,6 +49,70 @@ type ChurchWithRecords = {
   records: AttendanceRecord[];
 };
 
+type MonthKey =
+  | 'enero'
+  | 'febrero'
+  | 'marzo'
+  | 'abril'
+  | 'mayo'
+  | 'junio'
+  | 'julio'
+  | 'agosto'
+  | 'septiembre'
+  | 'octubre'
+  | 'noviembre'
+  | 'diciembre';
+
+type CategoryRecord = {
+  id: string;
+  label: string;
+  weeks: number[][];
+};
+
+type MonthRecord = {
+  month: string;
+  period: string;
+  categories: CategoryRecord[];
+};
+
+type AttendanceRegistryRecord = {
+  churchId: string;
+  churchName: string;
+  year: string;
+  records: Record<MonthKey, MonthRecord>;
+  initializedMonths: MonthKey[];
+};
+
+const YEAR_OPTIONS = Array.from({ length: 11 }, (_, index) => (2020 + index).toString());
+const MONTH_ORDER: MonthKey[] = [
+  'enero',
+  'febrero',
+  'marzo',
+  'abril',
+  'mayo',
+  'junio',
+  'julio',
+  'agosto',
+  'septiembre',
+  'octubre',
+  'noviembre',
+  'diciembre',
+];
+
+const monthlyChartConfig = {
+  asistencia: {
+    label: 'Asistencia',
+    color: 'hsl(var(--primary))',
+  },
+} satisfies ChartConfig;
+
+const categoryChartConfig = {
+  asistencia: {
+    label: 'Asistencia',
+    color: 'hsl(var(--chart-2))',
+  },
+} satisfies ChartConfig;
+
 const monthFormatter = new Intl.DateTimeFormat('es-ES', { month: 'long' });
 const fullMonthFormatter = new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric' });
 
@@ -48,11 +121,38 @@ const toMonthLabel = (date: Date) => {
   return `${label.charAt(0).toUpperCase()}${label.slice(1)}`;
 };
 
+const normalizeString = (value: string) =>
+  value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+
+type AutoTableDoc = jsPDF & {
+  autoTable: (options: {
+    head: string[][];
+    body: Array<Array<string | number>>;
+    startY?: number;
+    theme?: 'striped' | 'grid' | 'plain';
+    headStyles?: Record<string, unknown>;
+    styles?: Record<string, unknown>;
+  }) => void;
+  lastAutoTable?: {
+    finalY: number;
+  };
+};
+
 export default function AttendanceReportPage() {
+  const currentYear = new Date().getFullYear().toString();
   const [loadState, setLoadState] = React.useState<'loading' | 'ready' | 'error'>('loading');
   const [churches, setChurches] = React.useState<ChurchWithRecords[]>([]);
   const [selectedChurchId, setSelectedChurchId] = React.useState<string>('');
+  const [selectedYear, setSelectedYear] = React.useState<string>(
+    YEAR_OPTIONS.includes(currentYear) ? currentYear : YEAR_OPTIONS[0]
+  );
   const [errorMessage, setErrorMessage] = React.useState<string | null>(null);
+  const [registryState, setRegistryState] = React.useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  const [registryRecord, setRegistryRecord] = React.useState<AttendanceRegistryRecord | null>(null);
 
   React.useEffect(() => {
     const load = async () => {
@@ -108,6 +208,188 @@ export default function AttendanceReportPage() {
     [churches, selectedChurchId]
   );
 
+  React.useEffect(() => {
+    const loadRegistry = async () => {
+      if (!selectedChurchId) {
+        setRegistryRecord(null);
+        setRegistryState('idle');
+        return;
+      }
+      setRegistryState('loading');
+      try {
+        const response = await fetch(
+          `/api/attendance/registro?churchId=${encodeURIComponent(selectedChurchId)}&year=${encodeURIComponent(selectedYear)}`,
+          {
+            cache: 'no-store',
+            headers: { Accept: 'application/json' },
+          }
+        );
+        const json = (await response.json().catch(() => ({}))) as {
+          record?: AttendanceRegistryRecord | null;
+          error?: string;
+        };
+        if (!response.ok) {
+          throw new Error(json.error || 'No se pudo cargar el registro anual de asistencia.');
+        }
+        setRegistryRecord(json.record ?? null);
+        setRegistryState('ready');
+      } catch (_e) {
+        setRegistryRecord(null);
+        setRegistryState('error');
+      }
+    };
+    void loadRegistry();
+  }, [selectedChurchId, selectedYear]);
+
+  const monthlyChartData = React.useMemo(() => {
+    if (!registryRecord) return [] as Array<{ label: string; month: string; asistencia: number }>;
+
+    return MONTH_ORDER.map((monthKey) => {
+      const monthData = registryRecord.records[monthKey];
+      const monthLabel = toMonthLabel(new Date(Number(selectedYear), MONTH_ORDER.indexOf(monthKey), 1));
+      if (!monthData) {
+        return { label: monthLabel, month: monthLabel, asistencia: 0 };
+      }
+      const monthTotal = monthData.categories.reduce((sum, category) => {
+        return (
+          sum +
+          category.weeks.reduce(
+            (weekSum, days) =>
+              weekSum + days.reduce((daySum, dayValue) => daySum + (Number.isFinite(dayValue) ? dayValue : 0), 0),
+            0
+          )
+        );
+      }, 0);
+      return {
+        label: monthLabel,
+        month: monthLabel,
+        asistencia: monthTotal,
+      };
+    });
+  }, [registryRecord, selectedYear]);
+
+  const yearlyAttendanceTotal = React.useMemo(
+    () => monthlyChartData.reduce((sum, item) => sum + item.asistencia, 0),
+    [monthlyChartData]
+  );
+
+  const categoryChartData = React.useMemo(() => {
+    if (!registryRecord) return [] as Array<{ label: string; asistencia: number }>;
+
+    const totalsByCategory = new Map<string, { label: string; asistencia: number }>();
+    for (const monthKey of MONTH_ORDER) {
+      const monthData = registryRecord.records[monthKey];
+      if (!monthData) continue;
+      for (const category of monthData.categories) {
+        const key = normalizeString(category.label) || category.id;
+        const current = totalsByCategory.get(key) ?? { label: category.label, asistencia: 0 };
+        const categoryTotal = category.weeks.reduce(
+          (weekSum, days) =>
+            weekSum + days.reduce((daySum, dayValue) => daySum + (Number.isFinite(dayValue) ? dayValue : 0), 0),
+          0
+        );
+        current.asistencia += categoryTotal;
+        totalsByCategory.set(key, current);
+      }
+    }
+
+    return Array.from(totalsByCategory.values()).sort((a, b) => b.asistencia - a.asistencia);
+  }, [registryRecord]);
+
+  const handleDownloadPdf = () => {
+    if (!selectedChurch) return;
+
+    const doc = new jsPDF() as AutoTableDoc;
+    const generatedAt = new Date().toLocaleString('es-ES');
+    const monthlyRows = monthlyChartData.map((item) => [item.month, item.asistencia]);
+    const categoryRows = categoryChartData.map((item) => [item.label, item.asistencia]);
+    const semesterRows = stats.monthlyRows.map((row) => [
+      row.month,
+      row.attendanceCount,
+      row.peak,
+      row.trend === 'up' ? '↗' : row.trend === 'down' ? '↘' : '→',
+    ]);
+    const growthRows = stats.monthlyRows.map((row) => [
+      row.month,
+      row.attendanceCount,
+      row.trend === 'up' ? '↗ Subiendo' : row.trend === 'down' ? '↘ Bajando' : '→ Estable',
+    ]);
+
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.text('Reporte de Asistencia Mensual', 14, 18);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(11);
+    doc.text(`Templo: ${selectedChurch.name}`, 14, 26);
+    doc.text(`Año: ${selectedYear}`, 14, 32);
+    doc.text(`Rango de eventos: ${stats.dateLabel}`, 14, 38);
+    doc.text(`Generado: ${generatedAt}`, 14, 44);
+
+    doc.autoTable({
+      head: [['Resumen general', 'Cantidad']],
+      body: [
+        ['Servicios', stats.serviceCount],
+        ['Eventos', stats.eventCount],
+        ['Presencial', stats.presencialCount],
+        ['Online', stats.onlineCount],
+        ['Total anual de asistencia', yearlyAttendanceTotal || stats.total],
+      ],
+      startY: 50,
+      theme: 'striped',
+      headStyles: { fillColor: [14, 165, 233] },
+      styles: { fontSize: 10 },
+    });
+
+    const firstTableEnd = doc.lastAutoTable?.finalY ?? 60;
+    doc.autoTable({
+      head: [['La asistencia mensual', 'Cantidad de asistencia']],
+      body: monthlyRows,
+      startY: firstTableEnd + 8,
+      theme: 'striped',
+      headStyles: { fillColor: [59, 130, 246] },
+      styles: { fontSize: 10 },
+    });
+
+    const secondTableEnd = doc.lastAutoTable?.finalY ?? firstTableEnd + 16;
+    doc.autoTable({
+      head: [[`Asistencia por categoría (${selectedYear})`, 'Cantidad de asistencia']],
+      body: categoryRows.length > 0 ? categoryRows : [['Sin datos', 0]],
+      startY: secondTableEnd + 8,
+      theme: 'striped',
+      headStyles: { fillColor: [34, 197, 94] },
+      styles: { fontSize: 10 },
+    });
+
+    const thirdTableEnd = doc.lastAutoTable?.finalY ?? secondTableEnd + 16;
+    doc.autoTable({
+      head: [['Historial semestral', 'Cantidad de asistencia', 'Pico', 'Tendencia']],
+      body: [...semesterRows, ['Total', stats.semesterAttendanceTotal, '-', '-']],
+      startY: thirdTableEnd + 8,
+      theme: 'striped',
+      headStyles: { fillColor: [37, 99, 235] },
+      styles: { fontSize: 10 },
+    });
+
+    const fourthTableEnd = doc.lastAutoTable?.finalY ?? thirdTableEnd + 16;
+    doc.autoTable({
+      head: [['Crecimiento mensual', 'Cantidad de asistencia', 'Comportamiento']],
+      body: growthRows.length > 0 ? growthRows : [['Sin datos', 0, '→ Estable']],
+      startY: fourthTableEnd + 8,
+      theme: 'striped',
+      headStyles: { fillColor: [245, 158, 11] },
+      styles: { fontSize: 10 },
+    });
+
+    const churchFileName = selectedChurch.name
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z0-9-_]+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '')
+      .toLowerCase();
+    doc.save(`reporte-asistencia-${selectedYear}-${churchFileName || 'templo'}.pdf`);
+  };
+
   const stats = React.useMemo(() => {
     const records = selectedChurch?.records ?? [];
     if (records.length === 0) {
@@ -119,7 +401,13 @@ export default function AttendanceReportPage() {
         onlineCount: 0,
         dateLabel: 'Sin datos',
         barHeights: new Array(12).fill(8),
-        monthlyRows: [] as Array<{ month: string; avg: number; peak: number; trend: 'up' | 'down' | 'flat' }>,
+        monthlyRows: [] as Array<{
+          month: string;
+          attendanceCount: number;
+          peak: number;
+          trend: 'up' | 'down' | 'flat';
+        }>,
+        semesterAttendanceTotal: 0,
         growthBars: [8, 8, 8, 8, 8, 8],
       };
     }
@@ -168,17 +456,19 @@ export default function AttendanceReportPage() {
     const monthlyRows = last6Keys.map((key, idx) => {
       const [year, month] = key.split('-').map(Number);
       const date = new Date(year, month - 1, 1);
-      const avg = monthBuckets.get(key) ?? 0;
+      const attendanceCount = monthBuckets.get(key) ?? 0;
       const peak = Math.max(...Array.from((monthDayPeak.get(key) ?? new Map()).values()), 0);
-      const prev = idx > 0 ? monthBuckets.get(last6Keys[idx - 1]) ?? 0 : avg;
-      const trend: 'up' | 'down' | 'flat' = avg > prev ? 'up' : avg < prev ? 'down' : 'flat';
+      const prev = idx > 0 ? monthBuckets.get(last6Keys[idx - 1]) ?? 0 : attendanceCount;
+      const trend: 'up' | 'down' | 'flat' =
+        attendanceCount > prev ? 'up' : attendanceCount < prev ? 'down' : 'flat';
       return {
         month: toMonthLabel(date),
-        avg,
+        attendanceCount,
         peak,
         trend,
       };
     });
+    const semesterAttendanceTotal = monthlyRows.reduce((sum, row) => sum + row.attendanceCount, 0);
 
     const growthValues = last6Keys.map((key) => monthBuckets.get(key) ?? 0);
     const max6 = Math.max(...growthValues, 1);
@@ -193,6 +483,7 @@ export default function AttendanceReportPage() {
       dateLabel,
       barHeights,
       monthlyRows,
+      semesterAttendanceTotal,
       growthBars,
     };
   }, [selectedChurch]);
@@ -224,11 +515,27 @@ export default function AttendanceReportPage() {
               ))}
             </SelectContent>
           </Select>
+          <Select
+            value={selectedYear}
+            onValueChange={setSelectedYear}
+            disabled={loadState !== 'ready' || churches.length === 0}
+          >
+            <SelectTrigger className="w-[140px] bg-background">
+              <SelectValue placeholder="Año" />
+            </SelectTrigger>
+            <SelectContent>
+              {YEAR_OPTIONS.map((year) => (
+                <SelectItem key={year} value={year}>
+                  {year}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <Button variant="outline">
             <CalendarDays className="mr-2 h-4 w-4" />
             {stats.dateLabel}
           </Button>
-          <Button disabled={!selectedChurch}>
+          <Button disabled={!selectedChurch} onClick={handleDownloadPdf}>
             <Download className="mr-2 h-4 w-4" />
             Descargar PDF
           </Button>
@@ -315,7 +622,7 @@ export default function AttendanceReportPage() {
         <section className="rounded-xl bg-card p-6 shadow-sm">
           <p className="text-sm font-semibold text-muted-foreground">Asistencia total hoy</p>
           <div className="mt-1 flex items-center gap-4">
-            <h2 className="text-6xl font-bold leading-none">{stats.total}</h2>
+            <h2 className="text-6xl font-bold leading-none">{yearlyAttendanceTotal || stats.total}</h2>
             <Badge className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
               <TrendingUp className="mr-1 h-3.5 w-3.5" />
               Datos dinámicos por templo
@@ -335,6 +642,87 @@ export default function AttendanceReportPage() {
           </div>
         </section>
 
+        <Card>
+          <CardHeader>
+            <CardTitle>La asistencia mensual ({selectedYear})</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {registryState === 'loading' ? (
+              <Skeleton className="h-[340px] w-full" />
+            ) : null}
+            {registryState === 'error' ? (
+              <p className="text-sm text-destructive">No se pudo cargar la gráfica de asistencia anual.</p>
+            ) : null}
+            {registryState === 'ready' && monthlyChartData.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No hay registros de asistencia anual para este templo y año.
+              </p>
+            ) : null}
+            {registryState === 'ready' && monthlyChartData.length > 0 ? (
+              <ChartContainer config={monthlyChartConfig} className="h-[340px] w-full">
+                <BarChart accessibilityLayer data={monthlyChartData} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
+                  <CartesianGrid vertical={false} />
+                  <XAxis dataKey="label" tickLine={false} axisLine={false} interval={0} minTickGap={18} />
+                  <ChartTooltip
+                    content={
+                      <ChartTooltipContent
+                        labelFormatter={(_, payload) => {
+                          const point = payload?.[0]?.payload as { month?: string } | undefined;
+                          if (!point?.month) return 'Asistencia mensual';
+                          return point.month;
+                        }}
+                      />
+                    }
+                  />
+                  <Bar dataKey="asistencia" fill="var(--color-asistencia)" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ChartContainer>
+            ) : null}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Asistencia por categoría ({selectedYear})</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {registryState === 'loading' ? (
+              <Skeleton className="h-[340px] w-full" />
+            ) : null}
+            {registryState === 'error' ? (
+              <p className="text-sm text-destructive">No se pudo cargar la gráfica por categorías.</p>
+            ) : null}
+            {registryState === 'ready' && categoryChartData.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No hay categorías con asistencia registrada para este templo y año.
+              </p>
+            ) : null}
+            {registryState === 'ready' && categoryChartData.length > 0 ? (
+              <ChartContainer config={categoryChartConfig} className="h-[340px] w-full">
+                <BarChart
+                  accessibilityLayer
+                  data={categoryChartData}
+                  margin={{ top: 8, right: 8, left: 8, bottom: 8 }}
+                >
+                  <CartesianGrid vertical={false} />
+                  <XAxis dataKey="label" tickLine={false} axisLine={false} interval={0} minTickGap={18} />
+                  <ChartTooltip
+                    content={
+                      <ChartTooltipContent
+                        labelFormatter={(_, payload) => {
+                          const point = payload?.[0]?.payload as { label?: string } | undefined;
+                          return point?.label || 'Categoría';
+                        }}
+                      />
+                    }
+                  />
+                  <Bar dataKey="asistencia" fill="var(--color-asistencia)" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ChartContainer>
+            ) : null}
+          </CardContent>
+        </Card>
+
         <section className="grid grid-cols-1 gap-6 xl:grid-cols-3">
           <Card className="xl:col-span-2">
             <CardHeader>
@@ -346,7 +734,7 @@ export default function AttendanceReportPage() {
                   <thead className="text-left text-muted-foreground">
                     <tr className="border-b">
                       <th className="py-3">Mes</th>
-                      <th className="py-3">Promedio</th>
+                      <th className="py-3">Cantidad de asistencia</th>
                       <th className="py-3">Pico</th>
                       <th className="py-3">Tendencia</th>
                     </tr>
@@ -355,7 +743,7 @@ export default function AttendanceReportPage() {
                     {stats.monthlyRows.map((row) => (
                       <tr key={row.month} className="border-b last:border-0">
                         <td className="py-3 font-semibold">{row.month}</td>
-                        <td className="py-3">{row.avg}</td>
+                        <td className="py-3">{row.attendanceCount}</td>
                         <td className="py-3">{row.peak}</td>
                         <td className="py-3">
                           {row.trend === 'up'
@@ -366,6 +754,12 @@ export default function AttendanceReportPage() {
                         </td>
                       </tr>
                     ))}
+                    <tr className="border-t-2">
+                      <td className="py-3 font-extrabold">Total</td>
+                      <td className="py-3 font-extrabold">{stats.semesterAttendanceTotal}</td>
+                      <td className="py-3">-</td>
+                      <td className="py-3">-</td>
+                    </tr>
                   </tbody>
                 </table>
               </div>
