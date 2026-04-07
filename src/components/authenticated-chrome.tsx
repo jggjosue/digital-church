@@ -36,6 +36,7 @@ const FOOTER_ROUTES = new Set([
 export function AuthenticatedChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [memberLookup, setMemberLookup] = React.useState<'idle' | 'exists' | 'missing'>('idle');
   const isAuthPage = pathname ? AUTH_ROUTE.test(pathname) : false;
   const isLandingHome = pathname === '/' || pathname === '';
   const normalizedPath = pathname?.replace(/\/+$/, '') || '/';
@@ -44,9 +45,29 @@ export function AuthenticatedChrome({ children }: { children: React.ReactNode })
 
   React.useEffect(() => {
     let cancelled = false;
-    if (isAuthPage || isLandingHome || isMembersNewRoute) return;
+    if (isAuthPage || isLandingHome) return;
     void (async () => {
       try {
+        const meRes = await fetch('/api/members/me', {
+          cache: 'no-store',
+          headers: { Accept: 'application/json' },
+        });
+        const meData = (await meRes.json().catch(() => ({}))) as { member?: { id?: string } | null };
+        const hasMember = Boolean(meData.member?.id);
+        if (!cancelled) {
+          setMemberLookup(hasMember ? 'exists' : 'missing');
+        }
+        if (!hasMember) {
+          if (!cancelled && !isMembersNewRoute) {
+            router.replace('/members/new');
+          }
+          return;
+        }
+
+        if (isMembersNewRoute) {
+          return;
+        }
+
         const res = await fetch('/api/members/me-role', {
           cache: 'no-store',
           headers: { Accept: 'application/json' },
@@ -75,6 +96,11 @@ export function AuthenticatedChrome({ children }: { children: React.ReactNode })
   }, [isAuthPage, isLandingHome, isMembersNewRoute, pathname, router]);
 
   if (isAuthPage || isLandingHome) {
+    return <>{children}</>;
+  }
+
+  const showMembersOnlyPanel = isMembersNewRoute && memberLookup !== 'exists';
+  if (showMembersOnlyPanel) {
     return <>{children}</>;
   }
 

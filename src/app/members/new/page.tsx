@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
@@ -65,6 +66,15 @@ const STAFF_ROLE_OPTIONS = [
   { value: 'Congregante', label: 'Congregante' },
   { value: 'Directiva', label: 'Directiva' },
   { value: 'Presidente', label: 'Presidente' },
+  { value: 'Responsable de una Comisión', label: 'Responsable de una Comisión' },
+  { value: 'Consejo de pastores', label: 'Consejo de Pastores' },
+  { value: 'Director de Instituto', label: 'Director de Instituto' },
+  { value: 'Pastor Regional', label: 'Pastor Regional' },
+  { value: 'Pastor de Zona', label: 'Pastor de Zona' },
+  { value: 'Pastor Presbiterial', label: 'Pastor Presbiterial' },
+  { value: 'Director General', label: 'Director General' },
+  { value: 'Estudiante del Instituto', label: 'Estudiante del Instituto' },
+  { value: 'Responsable de una Secretaría', label: 'Responsable de una Secretaría' },
 ] as const;
 
 type StaffRoleOption = (typeof STAFF_ROLE_OPTIONS)[number]['value'];
@@ -82,6 +92,14 @@ function staffRoleKindFromApi(stored: string | null | undefined): StaffRoleOptio
     'Congregante',
     'Directiva',
     'Presidente',
+    'Responsable de Comisión',
+    'Consejo de pastores',
+    'Director de Instituto',
+    'Pastor Regional',
+    'Pastor de Zona',
+    'Pastor Presbiterial',
+    'Director General',
+    'Estudiante del Instituto',
   ]);
   return valid.has(r as StaffRoleOption) ? (r as StaffRoleOption) : STAFF_ROLE_NONE;
 }
@@ -101,9 +119,11 @@ const DEFAULT_MEMBERSHIP_STATUS = 'active' as const;
 
 export default function NewMemberPage() {
     const { toast } = useToast();
+    const router = useRouter();
     const { user, isLoaded: clerkLoaded } = useUser();
     const [ministriesFromDb, setMinistriesFromDb] = React.useState<MinistryDocument[]>([]);
     const [isNewPortalUser, setIsNewPortalUser] = React.useState(false);
+    const [isUnregisteredPortalUser, setIsUnregisteredPortalUser] = React.useState(false);
     const [isCongregantePortalUser, setIsCongregantePortalUser] = React.useState(false);
     const [groupsLoad, setGroupsLoad] = React.useState<
       'loading' | 'ready' | 'error'
@@ -216,7 +236,12 @@ export default function NewMemberPage() {
               staffRole?: string | null;
             } | null;
           };
-          if (!res.ok || cancelled || !data.member) return;
+          if (!res.ok || cancelled) return;
+          if (!data.member) {
+            setIsUnregisteredPortalUser(true);
+            return;
+          }
+          setIsUnregisteredPortalUser(false);
           const m = data.member;
           const dob = m.dob ? new Date(m.dob) : undefined;
           const dobOk = dob && !Number.isNaN(dob.getTime()) ? dob : undefined;
@@ -287,6 +312,10 @@ export default function NewMemberPage() {
                 title: 'Miembro guardado',
                 description: `${values.firstName} ${values.lastName} se guardó correctamente.`,
             });
+            if (isUnregisteredPortalUser) {
+              router.replace('/churches');
+              return;
+            }
             form.reset({
                 firstName: '',
                 lastName: '',
@@ -313,11 +342,11 @@ export default function NewMemberPage() {
   return (
     <div className="flex flex-col flex-1">
       <AppHeader
-        title={isNewPortalUser ? 'Registra tus Datos' : 'Añadir Nuevo Miembro'}
+        title={isNewPortalUser || isUnregisteredPortalUser ? 'Registra tus Datos' : 'Añadir Nuevo Miembro'}
         description="Ingrese los detalles a continuación para crear un nuevo perfil de miembro."
       >
         <div className="flex items-center gap-2">
-          {!isNewPortalUser ? (
+          {!isNewPortalUser && !isUnregisteredPortalUser ? (
             <Button variant="ghost" asChild>
               <Link href="/members">Cancelar</Link>
             </Button>
@@ -329,8 +358,10 @@ export default function NewMemberPage() {
           >
             {form.formState.isSubmitting
               ? 'Guardando…'
-              : isNewPortalUser || isCongregantePortalUser
-                ? 'Actualizar'
+              : isUnregisteredPortalUser
+                ? 'Guardar'
+                : isNewPortalUser || isCongregantePortalUser
+                  ? 'Actualizar'
                 : 'Guardar Miembro'}
           </Button>
         </div>
@@ -488,12 +519,27 @@ export default function NewMemberPage() {
               <CardHeader>
                 <CardTitle>Directorio de personal</CardTitle>
                 <CardDescription>
-                  Indique el cargo del miembro (Pastor, Congregante, Directiva o Presidente); con ello
-                  podrá listarse en el directorio de
-                  personal.
+                  Indique el cargo del miembro según el listado; con ello podrá listarse en el directorio de personal.
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="organization-iciar">Organización</Label>
+                    <Input id="organization-iciar" value="ICIAR" disabled readOnly />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="presbytery">Presbiterio</Label>
+                    <Select value="pacifico-norte" disabled>
+                      <SelectTrigger id="presbytery">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pacifico-norte">Pacífico Norte</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
                 <FormField
                   control={form.control}
                   name="staffRoleKind"

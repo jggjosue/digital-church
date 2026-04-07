@@ -70,6 +70,14 @@ const STAFF_ROLE_OPTIONS = [
   { value: 'Congregante', label: 'Congregante' },
   { value: 'Directiva', label: 'Directiva' },
   { value: 'Presidente', label: 'Presidente' },
+  { value: 'Responsable de Comisión', label: 'Responsable de Comisión' },
+  { value: 'Consejo de pastores', label: 'Consejo de pastores' },
+  { value: 'Director de Instituto', label: 'Director de Instituto' },
+  { value: 'Pastor Regional', label: 'Pastor Regional' },
+  { value: 'Pastor de Zona', label: 'Pastor de Zona' },
+  { value: 'Pastor Presbiterial', label: 'Pastor Presbiterial' },
+  { value: 'Director General', label: 'Director General' },
+  { value: 'Estudiante del Instituto', label: 'Estudiante del Instituto' },
 ] as const;
 
 function staffRoleToApi(kind: string): string | undefined {
@@ -87,12 +95,15 @@ function toTitleCase(value: string): string {
     .join(' ');
 }
 
+const STAFF_ROLE_VALID = new Set(
+  STAFF_ROLE_OPTIONS.map((o) => o.value).filter((v) => v !== STAFF_ROLE_NONE)
+);
+
 /** Valores guardados fuera del catálogo actual se muestran como «Sin especificar». */
 function staffRoleKindFromApi(stored: string | null | undefined): string {
   const r = (stored ?? '').trim();
   if (!r) return STAFF_ROLE_NONE;
-  if (r === 'Pastor' || r === 'Congregante' || r === 'Directiva' || r === 'Presidente') return r;
-  return STAFF_ROLE_NONE;
+  return STAFF_ROLE_VALID.has(r) ? r : STAFF_ROLE_NONE;
 }
 
 const MEMBERSHIP_STATUS_OPTIONS = [
