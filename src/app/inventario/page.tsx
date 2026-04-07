@@ -38,6 +38,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Progress } from '@/components/ui/progress';
+import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import {
   type CategoryOption,
@@ -59,7 +60,91 @@ const LOCATION_DIST_TONES = [
   'bg-cyan-600',
 ] as const;
 
+function csvEscapeCell(value: string): string {
+  if (/[",\r\n]/.test(value)) {
+    return `"${value.replace(/"/g, '""')}"`;
+  }
+  return value;
+}
+
+function downloadInventoryTableCsv(rows: ResourceRow[]) {
+  const headers = [
+    'Nombre del recurso',
+    'Categoría',
+    'Ubicación (área)',
+    'Cantidad',
+    'Condición',
+    'Estado',
+  ];
+  const lines = [
+    headers.join(','),
+    ...rows.map((r) =>
+      [
+        csvEscapeCell(r.name),
+        csvEscapeCell(r.category),
+        csvEscapeCell(r.location),
+        String(r.quantity),
+        csvEscapeCell(CONDITION_META[r.condition].label),
+        csvEscapeCell(STATUS_BADGE[r.status].label),
+      ].join(',')
+    ),
+  ];
+  const blob = new Blob([`\uFEFF${lines.join('\r\n')}`], {
+    type: 'text/csv;charset=utf-8',
+  });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `inventario-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function formatAuditInventoryDescription(
+  iso: string | null,
+  load: 'loading' | 'ready' | 'error'
+): string {
+  if (load === 'loading') return 'Cargando la fecha de última actividad…';
+  if (load === 'error') return 'No se pudo obtener la fecha de última actividad.';
+  if (!iso) {
+    return 'Aún no hay registros en el inventario. Añada recursos para iniciar el seguimiento digital.';
+  }
+  const d = new Date(iso);
+  const dateStr = d.toLocaleDateString('es-MX', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+  const diffMs = Date.now() - d.getTime();
+  const days = Math.floor(diffMs / 86_400_000);
+  if (days < 0) {
+    return `Última actividad registrada: ${dateStr}. Mantenga actualizado el inventario digital.`;
+  }
+  if (days === 0) {
+    return `La última actualización del inventario fue hoy (${dateStr}). Mantenga actualizado el inventario digital.`;
+  }
+  if (days === 1) {
+    return `La última actualización del inventario fue ayer (${dateStr}). Mantenga actualizado el inventario digital.`;
+  }
+  return `La última actualización del inventario fue el ${dateStr} (hace ${days} días). Mantenga actualizado el inventario digital.`;
+}
+
+/** Progreso visual según antigüedad de la última actividad (más reciente = mayor). */
+function auditProgressFromLastActivity(iso: string | null): number {
+  if (!iso) return 0;
+  const days = (Date.now() - new Date(iso).getTime()) / 86_400_000;
+  if (days <= 7) return 100;
+  if (days <= 14) return 85;
+  if (days <= 30) return 65;
+  if (days <= 60) return 45;
+  if (days <= 90) return 30;
+  return 15;
+}
+
 export default function InventarioPage() {
+  const { toast } = useToast();
   const [church, setChurch] = React.useState('all');
   const [churches, setChurches] = React.useState<ChurchLocation[]>([]);
   const [churchesLoad, setChurchesLoad] = React.useState<'loading' | 'ready' | 'error'>(
@@ -73,6 +158,7 @@ export default function InventarioPage() {
   const [inventoryLoad, setInventoryLoad] = React.useState<'loading' | 'ready' | 'error'>(
     'loading'
   );
+  const [lastInventoryActivityAt, setLastInventoryActivityAt] = React.useState<string | null>(null);
   const [resourceCategories, setResourceCategories] = React.useState<CategoryOption[]>([]);
   const [customCategories, setCustomCategories] = React.useState<
     { value: string; label: string; optionId: number }[]
@@ -212,19 +298,29 @@ export default function InventarioPage() {
           cache: 'no-store',
           headers: { Accept: 'application/json' },
         });
-        const json = (await res.json().catch(() => ({}))) as { items?: ResourceRow[] };
+        const json = (await res.json().catch(() => ({}))) as {
+          items?: ResourceRow[];
+          lastInventoryActivityAt?: string | null;
+        };
         if (!cancelled) {
           if (res.ok) {
             setFromApi(json.items ?? []);
+            setLastInventoryActivityAt(
+              typeof json.lastInventoryActivityAt === 'string'
+                ? json.lastInventoryActivityAt
+                : null
+            );
             setInventoryLoad('ready');
           } else {
             setFromApi([]);
+            setLastInventoryActivityAt(null);
             setInventoryLoad('error');
           }
         }
       } catch {
         if (!cancelled) {
           setFromApi([]);
+          setLastInventoryActivityAt(null);
           setInventoryLoad('error');
         }
       }
@@ -330,6 +426,30 @@ export default function InventarioPage() {
 
   const formatInt = (n: number) =>
     new Intl.NumberFormat('es-MX', { maximumFractionDigits: 0 }).format(n);
+
+  const handleExportCsv = React.useCallback(() => {
+    if (inventoryLoad !== 'ready') {
+      toast({
+        title: 'Espere',
+        description: 'El inventario aún se está cargando.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (filtered.length === 0) {
+      toast({
+        title: 'Sin datos',
+        description: 'No hay filas en la vista actual para exportar.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    downloadInventoryTableCsv(filtered);
+    toast({
+      title: 'CSV descargado',
+      description: `Se exportaron ${formatInt(filtered.length)} filas.`,
+    });
+  }, [filtered, inventoryLoad, toast]);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -525,7 +645,14 @@ export default function InventarioPage() {
                       <List className="h-4 w-4" />
                     </Button>
                   </div>
-                  <Button variant="ghost" size="sm" className="gap-2 text-primary" type="button">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-2 text-primary"
+                    type="button"
+                    onClick={handleExportCsv}
+                    disabled={inventoryLoad !== 'ready' || filtered.length === 0}
+                  >
                     <Download className="h-4 w-4" />
                     Exportar CSV
                   </Button>
@@ -755,18 +882,21 @@ export default function InventarioPage() {
               <CardHeader>
                 <CardTitle className="text-primary-foreground">Auditoría de inventario</CardTitle>
                 <CardDescription className="text-primary-foreground/90">
-                  La última auditoría completa de recursos fue hace 14 días. Mantenga actualizado el
-                  inventario digital.
+                  {formatAuditInventoryDescription(lastInventoryActivityAt, inventoryLoad)}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
                   <div className="mb-1 flex justify-between text-sm">
                     <span>Progreso de auditoría</span>
-                    <span className="font-semibold">65%</span>
+                    <span className="font-semibold">
+                      {inventoryLoad === 'loading'
+                        ? '…'
+                        : `${auditProgressFromLastActivity(lastInventoryActivityAt)} %`}
+                    </span>
                   </div>
                   <Progress
-                    value={65}
+                    value={auditProgressFromLastActivity(lastInventoryActivityAt)}
                     className="h-2 bg-primary-foreground/25"
                     indicatorClassName="bg-primary-foreground"
                   />
@@ -775,8 +905,9 @@ export default function InventarioPage() {
                   type="button"
                   variant="secondary"
                   className="w-full bg-primary-foreground text-primary hover:bg-primary-foreground/90"
+                  asChild
                 >
-                  Iniciar auditoría mensual
+                  <Link href="/inventario/nuevo">Iniciar auditoría mensual</Link>
                 </Button>
               </CardContent>
             </Card>

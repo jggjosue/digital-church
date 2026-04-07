@@ -38,6 +38,28 @@ export default function ChurchDetailsPage() {
   const [loadState, setLoadState] = React.useState<'loading' | 'error' | 'ready'>('loading');
   const [message, setMessage] = React.useState<string | null>(null);
   const [deleting, setDeleting] = React.useState(false);
+  const [canManageChurch, setCanManageChurch] = React.useState(true);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/members/me-role', {
+          cache: 'no-store',
+          headers: { Accept: 'application/json' },
+        });
+        const data = (await res.json().catch(() => ({}))) as { staffRole?: string | null };
+        if (cancelled) return;
+        const role = String(data.staffRole ?? '').trim().toLowerCase();
+        setCanManageChurch(role !== 'congregante');
+      } catch {
+        if (!cancelled) setCanManageChurch(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   React.useEffect(() => {
     if (!id?.trim()) {
@@ -132,20 +154,22 @@ export default function ChurchDetailsPage() {
     <AlertDialog>
       <div className="flex flex-1 flex-col">
         <AppHeader title={church.name} description={church.address}>
-          <div className="flex gap-2">
-            <AlertDialogTrigger asChild>
-              <Button variant="destructive" type="button" disabled={deleting}>
-                <Trash2 className="mr-2 h-4 w-4" />
-                Eliminar
+          {canManageChurch ? (
+            <div className="flex gap-2">
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" type="button" disabled={deleting}>
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Eliminar
+                </Button>
+              </AlertDialogTrigger>
+              <Button asChild>
+                <Link href={`/churches/${id}/edit`}>
+                  <Edit className="mr-2 h-4 w-4" />
+                  Editar Ubicación
+                </Link>
               </Button>
-            </AlertDialogTrigger>
-            <Button asChild>
-              <Link href={`/churches/${id}/edit`}>
-                <Edit className="mr-2 h-4 w-4" />
-                Editar Ubicación
-              </Link>
-            </Button>
-          </div>
+            </div>
+          ) : null}
         </AppHeader>
         <main className="flex-1 bg-muted/20 p-4 sm:p-8">
           <div className="mx-auto max-w-6xl space-y-6">
@@ -274,30 +298,33 @@ export default function ChurchDetailsPage() {
           </div>
         </main>
       </div>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
-            <Trash2 className="h-6 w-6 text-red-600" />
-          </div>
-          <AlertDialogTitle className="text-center">¿Estás seguro?</AlertDialogTitle>
-          <AlertDialogDescription className="text-center">
-            Esta acción no se puede deshacer. Esto eliminará permanentemente la ubicación de la base de datos.
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <AlertDialogFooter className="sm:justify-center">
-          <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
-          <AlertDialogAction
-            className="bg-destructive hover:bg-destructive/90"
-            disabled={deleting}
-            onClick={(e) => {
-              e.preventDefault();
-              void handleDelete();
-            }}
-          >
-            {deleting ? 'Eliminando…' : 'Confirmar eliminación'}
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
+      {canManageChurch ? (
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
+              <Trash2 className="h-6 w-6 text-red-600" />
+            </div>
+            <AlertDialogTitle className="text-center">¿Estás seguro?</AlertDialogTitle>
+            <AlertDialogDescription className="text-center">
+              Esta acción no se puede deshacer. Esto eliminará permanentemente la ubicación de la base
+              de datos.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="sm:justify-center">
+            <AlertDialogCancel disabled={deleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive hover:bg-destructive/90"
+              disabled={deleting}
+              onClick={(e) => {
+                e.preventDefault();
+                void handleDelete();
+              }}
+            >
+              {deleting ? 'Eliminando…' : 'Confirmar eliminación'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      ) : null}
     </AlertDialog>
   );
 }

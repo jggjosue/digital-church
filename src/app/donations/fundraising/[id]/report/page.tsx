@@ -65,6 +65,28 @@ export default function FundraisingCampaignReportPage() {
   const [loadState, setLoadState] = React.useState<'loading' | 'ready' | 'error'>('loading');
   const [loadError, setLoadError] = React.useState<string | null>(null);
   const [campaign, setCampaign] = React.useState<FundraisingCampaignDoc | null>(null);
+  const [canEditCampaign, setCanEditCampaign] = React.useState(true);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/members/me-role', {
+          cache: 'no-store',
+          headers: { Accept: 'application/json' },
+        });
+        const data = (await res.json().catch(() => ({}))) as { staffRole?: string | null };
+        if (cancelled) return;
+        const role = String(data.staffRole ?? '').trim().toLowerCase();
+        setCanEditCampaign(role !== 'congregante');
+      } catch {
+        if (!cancelled) setCanEditCampaign(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   React.useEffect(() => {
     if (!campaignId) {
@@ -253,9 +275,11 @@ export default function FundraisingCampaignReportPage() {
             </Card>
 
             <div className="flex justify-end">
-              <Button variant="outline" asChild>
-                <Link href={`/donations/fundraising/${campaign.id}/edit`}>Editar campaña</Link>
-              </Button>
+              {canEditCampaign ? (
+                <Button variant="outline" asChild>
+                  <Link href={`/donations/fundraising/${campaign.id}/edit`}>Editar campaña</Link>
+                </Button>
+              ) : null}
             </div>
           </div>
         ) : null}

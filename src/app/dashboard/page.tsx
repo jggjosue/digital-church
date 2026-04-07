@@ -17,15 +17,49 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { MemberGrowthChart } from '@/components/dashboard/member-growth-chart';
 import { AppHeader } from '@/components/app-header';
 import { Badge } from '@/components/ui/badge';
+import type { DashboardStats } from '@/lib/dashboard-stats';
 
 export type TimeRange = 'this-week' | 'this-month' | 'this-quarter' | 'this-year';
 
 export default function DashboardPage() {
   const [timeRange, setTimeRange] = React.useState<TimeRange>('this-week');
+  const [stats, setStats] = React.useState<DashboardStats | null>(null);
+  const [loadState, setLoadState] = React.useState<'loading' | 'ready' | 'error'>(
+    'loading'
+  );
 
   const handleTimeRangeChange = (value: string) => {
     setTimeRange(value as TimeRange);
   };
+
+  React.useEffect(() => {
+    let cancelled = false;
+    setLoadState('loading');
+    void (async () => {
+      try {
+        const res = await fetch(`/api/dashboard?range=${encodeURIComponent(timeRange)}`, {
+          cache: 'no-store',
+          headers: { Accept: 'application/json' },
+        });
+        const data = (await res.json()) as DashboardStats & { error?: string };
+        if (!res.ok) {
+          throw new Error(data.error || 'Error al cargar el panel');
+        }
+        if (!cancelled) {
+          setStats(data as DashboardStats);
+          setLoadState('ready');
+        }
+      } catch {
+        if (!cancelled) {
+          setStats(null);
+          setLoadState('error');
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [timeRange]);
 
   return (
     <div className="flex flex-1 flex-col">
@@ -36,6 +70,7 @@ export default function DashboardPage() {
         <Tabs
           defaultValue="this-week"
           className="hidden sm:block"
+          value={timeRange}
           onValueChange={handleTimeRangeChange}
         >
           <TabsList>
@@ -49,64 +84,78 @@ export default function DashboardPage() {
       </AppHeader>
       <main className="flex-1 bg-gradient-to-b from-muted/20 to-background p-4 sm:p-8">
         <div className="mx-auto w-full max-w-7xl space-y-8">
-        <div className="sm:hidden">
-          <Tabs
-            defaultValue="this-week"
-            className="w-full"
-            onValueChange={handleTimeRangeChange}
-          >
-            <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="this-week">Semana</TabsTrigger>
-              <TabsTrigger value="this-month">Mes</TabsTrigger>
-              <TabsTrigger value="this-quarter">Trim.</TabsTrigger>
-              <TabsTrigger value="this-year">Año</TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
-              Resumen general
-            </h2>
-            <Badge variant="secondary">Actualizado en tiempo real</Badge>
+          <div className="sm:hidden">
+            <Tabs
+              className="w-full"
+              value={timeRange}
+              onValueChange={handleTimeRangeChange}
+            >
+              <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="this-week">Semana</TabsTrigger>
+                <TabsTrigger value="this-month">Mes</TabsTrigger>
+                <TabsTrigger value="this-quarter">Trim.</TabsTrigger>
+                <TabsTrigger value="this-year">Año</TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <TotalMembers timeRange={timeRange} />
-            <WeeklyAttendance timeRange={timeRange} />
-            <GivingThisMonth timeRange={timeRange} />
-            <UpcomingEventsCard />
-          </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <TotalGroups />
-            <TotalMinistries />
-            <TotalVolunteers />
-          </div>
-        </section>
-        <section className="space-y-4">
-          <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
-            Tendencias
-          </h2>
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <GivingTrends timeRange={timeRange} />
-            <MemberGrowthChart timeRange={timeRange} />
-          </div>
-        </section>
-        <section className="space-y-4">
-          <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
-            Actividad reciente
-          </h2>
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-            <div className="lg:col-span-2">
-              <MemberDemographics />
+          <section className="space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                Resumen general
+              </h2>
+              <Badge variant="secondary">
+                {loadState === 'loading'
+                  ? 'Cargando…'
+                  : loadState === 'error'
+                    ? 'Actualizando los datos del panel...'
+                    : ''}
+              </Badge>
             </div>
-            <div className="lg:col-span-3">
-              <div className="grid grid-cols-1 gap-6">
-                <UpcomingEvents />
-                <PrayerRequests />
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              <TotalMembers stats={stats} loading={loadState === 'loading'} />
+              <WeeklyAttendance
+                stats={stats}
+                loading={loadState === 'loading'}
+                timeRange={timeRange}
+              />
+              <GivingThisMonth stats={stats} loading={loadState === 'loading'} />
+              <UpcomingEventsCard stats={stats} loading={loadState === 'loading'} />
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+              <TotalGroups stats={stats} loading={loadState === 'loading'} />
+              <TotalMinistries stats={stats} loading={loadState === 'loading'} />
+              <TotalVolunteers stats={stats} loading={loadState === 'loading'} />
+            </div>
+          </section>
+          <section className="space-y-4">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Tendencias
+            </h2>
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+              <GivingTrends stats={stats} loading={loadState === 'loading'} timeRange={timeRange} />
+              <MemberGrowthChart
+                stats={stats}
+                loading={loadState === 'loading'}
+                timeRange={timeRange}
+              />
+            </div>
+          </section>
+          <section className="space-y-4">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Actividad reciente
+            </h2>
+            <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+              <div className="lg:col-span-2">
+                <MemberDemographics stats={stats} loading={loadState === 'loading'} />
+              </div>
+              <div className="lg:col-span-3">
+                <div className="grid grid-cols-1 gap-6">
+                  <UpcomingEvents stats={stats} loading={loadState === 'loading'} />
+                  <PrayerRequests stats={stats} loading={loadState === 'loading'} />
+                </div>
               </div>
             </div>
-          </div>
-        </section>
+          </section>
         </div>
       </main>
     </div>

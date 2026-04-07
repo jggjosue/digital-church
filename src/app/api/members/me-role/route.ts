@@ -11,13 +11,13 @@ export async function GET() {
   try {
     const { userId } = await auth();
     if (!userId) {
-      return NextResponse.json({ isAdmin: false }, { status: 200 });
+      return NextResponse.json({ isAdmin: false, isNew: false, staffRole: null }, { status: 200 });
     }
 
     const user = await currentUser();
     const email = user?.primaryEmailAddress?.emailAddress?.trim().toLowerCase();
     if (!email) {
-      return NextResponse.json({ isAdmin: false }, { status: 200 });
+      return NextResponse.json({ isAdmin: false, isNew: false, staffRole: null }, { status: 200 });
     }
 
     const db = await getDb();
@@ -26,10 +26,15 @@ export async function GET() {
       { projection: { _id: 0, staffRole: 1 } }
     );
 
-    const role = String(member?.staffRole ?? '').trim().toLowerCase();
-    return NextResponse.json({ isAdmin: role === 'admin' });
+    const rawRole = String(member?.staffRole ?? '').trim();
+    const role = rawRole.toLowerCase();
+    return NextResponse.json({
+      isAdmin: role === 'admin',
+      isNew: role === 'nuevo',
+      staffRole: rawRole || null,
+    });
   } catch (e) {
     console.error('[api/members/me-role GET]', e);
-    return NextResponse.json({ isAdmin: false }, { status: 200 });
+    return NextResponse.json({ isAdmin: false, isNew: false, staffRole: null }, { status: 200 });
   }
 }

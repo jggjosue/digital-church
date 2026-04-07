@@ -1,16 +1,21 @@
+'use client';
 
-"use client"
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { upcomingEvents } from "@/lib/data"
-import { Calendar } from "lucide-react"
+} from '@/components/ui/card';
+import type { DashboardStats } from '@/lib/dashboard-stats';
+import { Calendar } from 'lucide-react';
 
-export function UpcomingEventsCard() {
-  const totalEvents = upcomingEvents.length;
+interface UpcomingEventsCardProps {
+  stats: DashboardStats | null;
+  loading: boolean;
+}
+
+export function UpcomingEventsCard({ stats, loading }: UpcomingEventsCardProps) {
+  const totalEvents = stats?.eventsThisMonth ?? 0;
 
   return (
     <Card className="border-border/70 shadow-sm transition-shadow hover:shadow-md">
@@ -21,9 +26,11 @@ export function UpcomingEventsCard() {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="text-3xl font-semibold tracking-tight">{totalEvents}</div>
+        <div className="text-3xl font-semibold tracking-tight">
+          {loading ? '…' : totalEvents.toLocaleString()}
+        </div>
         <p className="mt-1 text-xs text-muted-foreground">Eventos programados este mes</p>
       </CardContent>
     </Card>
-  )
+  );
 }

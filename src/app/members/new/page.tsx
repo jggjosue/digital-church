@@ -2,6 +2,7 @@
 'use client';
 
 import * as React from 'react';
+import { useUser } from '@clerk/nextjs';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -52,7 +53,7 @@ const formSchema = z.object({
   staffRoleKind: z
     .string()
     .refine((v) => v !== STAFF_ROLE_NONE, {
-      message: 'Seleccione Pastor o Congregante.',
+      message: 'Seleccione un cargo válido.',
     }),
 });
 
@@ -62,11 +63,27 @@ const STAFF_ROLE_OPTIONS = [
   { value: STAFF_ROLE_NONE, label: 'Sin especificar' },
   { value: 'Pastor', label: 'Pastor' },
   { value: 'Congregante', label: 'Congregante' },
+  { value: 'Directiva', label: 'Directiva' },
+  { value: 'Presidente', label: 'Presidente' },
 ] as const;
+
+type StaffRoleOption = (typeof STAFF_ROLE_OPTIONS)[number]['value'];
 
 function staffRoleToApi(kind: string): string | undefined {
   if (!kind || kind === STAFF_ROLE_NONE) return undefined;
   return kind;
+}
+
+function staffRoleKindFromApi(stored: string | null | undefined): StaffRoleOption {
+  const r = String(stored ?? '').trim();
+  const valid = new Set<StaffRoleOption>([
+    STAFF_ROLE_NONE,
+    'Pastor',
+    'Congregante',
+    'Directiva',
+    'Presidente',
+  ]);
+  return valid.has(r as StaffRoleOption) ? (r as StaffRoleOption) : STAFF_ROLE_NONE;
 }
 
 function toTitleCase(value: string): string {
@@ -84,10 +101,42 @@ const DEFAULT_MEMBERSHIP_STATUS = 'active' as const;
 
 export default function NewMemberPage() {
     const { toast } = useToast();
+    const { user, isLoaded: clerkLoaded } = useUser();
     const [ministriesFromDb, setMinistriesFromDb] = React.useState<MinistryDocument[]>([]);
+    const [isNewPortalUser, setIsNewPortalUser] = React.useState(false);
+    const [isCongregantePortalUser, setIsCongregantePortalUser] = React.useState(false);
     const [groupsLoad, setGroupsLoad] = React.useState<
       'loading' | 'ready' | 'error'
     >('loading');
+
+    React.useEffect(() => {
+      let cancelled = false;
+      (async () => {
+        try {
+          const res = await fetch('/api/members/me-role', {
+            cache: 'no-store',
+            headers: { Accept: 'application/json' },
+          });
+          const data = (await res.json().catch(() => ({}))) as {
+            isNew?: boolean;
+            staffRole?: string | null;
+          };
+          if (!cancelled) {
+            setIsNewPortalUser(data.isNew === true);
+            const role = String(data.staffRole ?? '').trim().toLowerCase();
+            setIsCongregantePortalUser(role === 'congregante');
+          }
+        } catch {
+          if (!cancelled) {
+            setIsNewPortalUser(false);
+            setIsCongregantePortalUser(false);
+          }
+        }
+      })();
+      return () => {
+        cancelled = true;
+      };
+    }, []);
 
     React.useEffect(() => {
       let cancelled = false;
@@ -134,6 +183,68 @@ export default function NewMemberPage() {
             staffRoleKind: STAFF_ROLE_NONE,
         }
     });
+
+    React.useEffect(() => {
+      if (!clerkLoaded || !user) return;
+      let cancelled = false;
+
+      const firstName = String(user.firstName ?? '').trim();
+      const lastName = String(user.lastName ?? '').trim();
+      const email = String(user.primaryEmailAddress?.emailAddress ?? '').trim().toLowerCase();
+
+      form.setValue('firstName', firstName, { shouldValidate: true });
+      form.setValue('lastName', lastName, { shouldValidate: true });
+      form.setValue('email', email, { shouldValidate: true });
+
+      void (async () => {
+        try {
+          const res = await fetch('/api/members/me', {
+            cache: 'no-store',
+            headers: { Accept: 'application/json' },
+          });
+          const data = (await res.json().catch(() => ({}))) as {
+            member?: {
+              firstName?: string;
+              lastName?: string;
+              email?: string;
+              phone?: string;
+              address?: string;
+              dob?: string;
+              spiritualBirthday?: string | null;
+              groups?: string[];
+              churchIds?: string[];
+              staffRole?: string | null;
+            } | null;
+          };
+          if (!res.ok || cancelled || !data.member) return;
+          const m = data.member;
+          const dob = m.dob ? new Date(m.dob) : undefined;
+          const dobOk = dob && !Number.isNaN(dob.getTime()) ? dob : undefined;
+          const spiritual = m.spiritualBirthday ? new Date(m.spiritualBirthday) : undefined;
+          const spiritualOk =
+            spiritual && !Number.isNaN(spiritual.getTime()) ? spiritual : undefined;
+
+          form.reset({
+            firstName: String(m.firstName ?? firstName),
+            lastName: String(m.lastName ?? lastName),
+            email: String(m.email ?? email).toLowerCase(),
+            phone: String(m.phone ?? ''),
+            address: String(m.address ?? ''),
+            dob: dobOk,
+            spiritualBirthday: spiritualOk,
+            groups: Array.isArray(m.groups) ? m.groups : [],
+            churchIds: Array.isArray(m.churchIds) ? m.churchIds : [],
+            staffRoleKind: staffRoleKindFromApi(m.staffRole),
+          });
+        } catch {
+          // Si falla, dejamos los datos de Clerk como base.
+        }
+      })();
+
+      return () => {
+        cancelled = true;
+      };
+    }, [clerkLoaded, user, form]);
 
     const handleGroupToggle = (group: string) => {
         const currentGroups = form.getValues('groups') || [];
@@ -202,19 +313,25 @@ export default function NewMemberPage() {
   return (
     <div className="flex flex-col flex-1">
       <AppHeader
-        title="Añadir Nuevo Miembro"
+        title={isNewPortalUser ? 'Registra tus Datos' : 'Añadir Nuevo Miembro'}
         description="Ingrese los detalles a continuación para crear un nuevo perfil de miembro."
       >
         <div className="flex items-center gap-2">
-          <Button variant="ghost" asChild>
-            <Link href="/members">Cancelar</Link>
-          </Button>
+          {!isNewPortalUser ? (
+            <Button variant="ghost" asChild>
+              <Link href="/members">Cancelar</Link>
+            </Button>
+          ) : null}
           <Button
             type="button"
             disabled={form.formState.isSubmitting}
             onClick={form.handleSubmit(onSubmit)}
           >
-            {form.formState.isSubmitting ? 'Guardando…' : 'Guardar Miembro'}
+            {form.formState.isSubmitting
+              ? 'Guardando…'
+              : isNewPortalUser || isCongregantePortalUser
+                ? 'Actualizar'
+                : 'Guardar Miembro'}
           </Button>
         </div>
       </AppHeader>
@@ -263,8 +380,16 @@ export default function NewMemberPage() {
                                 <FormItem>
                                     <FormLabel>Correo Electrónico</FormLabel>
                                     <FormControl>
-                                        <Input type="email" placeholder="john.doe@example.com" {...field} />
+                                        <Input
+                                          type="email"
+                                          placeholder="john.doe@example.com"
+                                          disabled
+                                          {...field}
+                                        />
                                     </FormControl>
+                                    <p className="text-xs text-muted-foreground">
+                                      Este correo se toma automáticamente desde Clerk.
+                                    </p>
                                     <FormMessage />
                                 </FormItem>
                             )}
@@ -363,7 +488,8 @@ export default function NewMemberPage() {
               <CardHeader>
                 <CardTitle>Directorio de personal</CardTitle>
                 <CardDescription>
-                  Indique si el miembro es Pastor o Congregante; con ello podrá listarse en el directorio de
+                  Indique el cargo del miembro (Pastor, Congregante, Directiva o Presidente); con ello
+                  podrá listarse en el directorio de
                   personal.
                 </CardDescription>
               </CardHeader>
@@ -399,7 +525,7 @@ export default function NewMemberPage() {
               <CardHeader>
                   <CardTitle>Grupos y Ministerios</CardTitle>
                   <CardDescription>
-                    Asigne el miembro a grupos y ministerios existentes en la colección `members`.
+                    Seleccion el ministerio en los que participa.
                   </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -408,7 +534,6 @@ export default function NewMemberPage() {
                     name="groups"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Asignar a ministerios</FormLabel>
                             <div className="mt-2 max-h-60 space-y-3 overflow-y-auto rounded-md border p-4">
                                 {groupsLoad === 'loading' ? (
                                   <p className="text-sm text-muted-foreground">

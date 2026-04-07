@@ -59,6 +59,28 @@ export default function FundraisingPage() {
   const [statusFilter, setStatusFilter] = React.useState('all');
   const [detailCampaign, setDetailCampaign] = React.useState<FundraisingCampaignDoc | null>(null);
   const [detailOpen, setDetailOpen] = React.useState(false);
+  const [canCreateCampaign, setCanCreateCampaign] = React.useState(true);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/members/me-role', {
+          cache: 'no-store',
+          headers: { Accept: 'application/json' },
+        });
+        const data = (await res.json().catch(() => ({}))) as { staffRole?: string | null };
+        if (cancelled) return;
+        const role = String(data.staffRole ?? '').trim().toLowerCase();
+        setCanCreateCampaign(role !== 'congregante');
+      } catch {
+        if (!cancelled) setCanCreateCampaign(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -120,11 +142,13 @@ export default function FundraisingPage() {
         title="Campañas de Recaudación de Fondos"
         description="Cree y gestione sus campañas de recaudación de fondos."
       >
-        <Button type="button" asChild>
-          <Link href="/donations/fundraising/new">
-            <Plus className="mr-2 h-4 w-4" /> Crear Campaña
-          </Link>
-        </Button>
+        {canCreateCampaign ? (
+          <Button type="button" asChild>
+            <Link href="/donations/fundraising/new">
+              <Plus className="mr-2 h-4 w-4" /> Crear Campaña
+            </Link>
+          </Button>
+        ) : null}
       </AppHeader>
       <main className="flex-1 space-y-6 bg-muted/20 p-4 sm:p-8">
         <div className="flex flex-col items-center gap-4 sm:flex-row">
@@ -259,19 +283,21 @@ export default function FundraisingPage() {
                     )}
                     {(campaign.status === 'Active' || campaign.status === 'Upcoming') && (
                       <div className="flex shrink-0 items-center gap-0.5 self-end sm:self-center">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                          asChild
-                        >
-                          <Link
-                            href={`/donations/fundraising/${campaign.id}/edit`}
-                            aria-label="Editar campaña"
+                        {canCreateCampaign ? (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                            asChild
                           >
-                            <Pencil className="h-4 w-4" />
-                          </Link>
-                        </Button>
+                            <Link
+                              href={`/donations/fundraising/${campaign.id}/edit`}
+                              aria-label="Editar campaña"
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Link>
+                          </Button>
+                        ) : null}
                         <Button
                           variant="ghost"
                           size="icon"
@@ -288,19 +314,21 @@ export default function FundraisingPage() {
                       </div>
                     )}
                     {campaign.status === 'Draft' && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-8 w-8 shrink-0 self-end text-muted-foreground hover:text-foreground sm:self-center"
-                        asChild
-                      >
-                        <Link
-                          href={`/donations/fundraising/${campaign.id}/edit`}
-                          aria-label="Editar borrador"
+                      canCreateCampaign ? (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 shrink-0 self-end text-muted-foreground hover:text-foreground sm:self-center"
+                          asChild
                         >
-                          <Pencil className="h-4 w-4" />
-                        </Link>
-                      </Button>
+                          <Link
+                            href={`/donations/fundraising/${campaign.id}/edit`}
+                            aria-label="Editar borrador"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Link>
+                        </Button>
+                      ) : null
                     )}
                   </CardFooter>
                 </Card>

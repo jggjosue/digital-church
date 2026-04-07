@@ -50,6 +50,16 @@ function normalizeDoc(raw: Record<string, unknown> | null): MemberDocument | nul
       raw.staffRole === null || raw.staffRole === undefined
         ? null
         : String(raw.staffRole).trim() || null,
+    portalRoleId:
+      raw.portalRoleId === null || raw.portalRoleId === undefined
+        ? null
+        : String(raw.portalRoleId).trim() || null,
+    staffRoleGrants:
+      raw.staffRoleGrants &&
+      typeof raw.staffRoleGrants === 'object' &&
+      !Array.isArray(raw.staffRoleGrants)
+        ? (raw.staffRoleGrants as MemberDocument['staffRoleGrants'])
+        : null,
   };
 }
 
@@ -92,7 +102,7 @@ export async function PATCH(
       return NextResponse.json({ error: 'Id inválido.' }, { status: 400 });
     }
 
-    const json = await request.json();
+    const json = (await request.json()) as Record<string, unknown>;
     const parsed = createMemberSchema.safeParse(json);
     if (!parsed.success) {
       return NextResponse.json(
@@ -137,6 +147,18 @@ export async function PATCH(
           ? String(body.department).trim()
           : null;
     }
+    if (Object.prototype.hasOwnProperty.call(json, 'portalRoleId')) {
+      const v = json.portalRoleId;
+      setPayload.portalRoleId =
+        v === null || v === ''
+          ? null
+          : typeof v === 'string'
+            ? v.trim()
+            : null;
+    }
+    if (Object.prototype.hasOwnProperty.call(json, 'staffRoleGrants')) {
+      setPayload.staffRoleGrants = json.staffRoleGrants ?? null;
+    }
     const normalizedId = id.trim();
     const members = db.collection('members');
 
@@ -174,6 +196,16 @@ export async function PATCH(
             ? String(body.department).trim()
             : null,
         staffRole,
+        portalRoleId: Object.prototype.hasOwnProperty.call(json, 'portalRoleId')
+          ? json.portalRoleId === null || json.portalRoleId === ''
+            ? null
+            : typeof json.portalRoleId === 'string'
+              ? json.portalRoleId.trim()
+              : null
+          : null,
+        staffRoleGrants: Object.prototype.hasOwnProperty.call(json, 'staffRoleGrants')
+          ? (json.staffRoleGrants as MemberDocument['staffRoleGrants']) ?? null
+          : null,
       };
       await members.insertOne(doc);
     }

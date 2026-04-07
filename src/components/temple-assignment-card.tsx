@@ -85,13 +85,11 @@ export function TempleAssignmentCard({
       <CardHeader>
         <CardTitle>Templos</CardTitle>
         <CardDescription>
-          Lista tomada de las ubicaciones registradas en la base de datos (colección de iglesias).
-          Marque el o los templos con los que se relaciona el miembro.
+          Marque él o los templos en los que se congrega habitualmente.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">
-          <Label>Asignar a templos</Label>
           <div className="mt-2 max-h-60 space-y-3 overflow-y-auto rounded-md border p-4">
             {loadState === 'loading' ? (
               <p className="text-sm text-muted-foreground">Cargando templos desde la base de datos…</p>

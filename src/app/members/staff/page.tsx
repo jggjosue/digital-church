@@ -167,7 +167,7 @@ function FilterPanelFields({
   return (
     <div className="space-y-6">
       <p className="text-sm text-muted-foreground">
-        Listado de pastores desde la colección members (staffRole = Pastor).
+        Listado de pastores.
       </p>
       <div>
         <h3 className="text-sm font-medium text-muted-foreground">Rol / Posición</h3>
@@ -341,7 +341,7 @@ export default function StaffDirectoryPage() {
     <div className="flex flex-col flex-1">
       <AppHeader
         title="Directorio pastoral"
-        description="Pastores de la colección members, validados por staffRole igual a Pastor."
+        description="Lista de Pastores registrados."
       >
         <Button asChild>
           <Link href="/members">
@@ -441,8 +441,7 @@ export default function StaffDirectoryPage() {
 
             {!loadError && !loading && filteredStaff.length === 0 ? (
               <p className="py-12 text-center text-sm text-muted-foreground">
-                No hay pastores en members con staffRole igual a Pastor, o ningún resultado coincide con los
-                filtros y la búsqueda.
+                No hay resultados que coincidan con los filtros y la búsqueda.
               </p>
             ) : null}
 

@@ -34,6 +34,8 @@ export type ResourceRow = {
   /** Presente cuando la ubicación viene de un templo (`inventoryAreas`). */
   churchId?: string;
   areaId?: string;
+  /** Fecha ISO de alta o última modificación guardada en la colección `inventory`. */
+  updatedAt?: string;
 };
 
 export type InventoryDoc = ResourceRow;
@@ -182,6 +184,7 @@ export function buildResourceRow(input: {
     quantity: input.quantity,
     condition: input.condition,
     status: input.status,
+    updatedAt: new Date().toISOString(),
   };
 }
 
@@ -216,5 +219,6 @@ export function buildResourceRowFromTempleArea(input: {
     status: input.status,
     churchId: input.churchId,
     areaId: input.areaId,
+    updatedAt: new Date().toISOString(),
   };
 }

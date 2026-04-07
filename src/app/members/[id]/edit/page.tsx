@@ -26,14 +26,12 @@ import { useParams, useRouter } from 'next/navigation';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AppHeader } from '@/components/app-header';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { TempleAssignmentCard } from '@/components/temple-assignment-card';
 import type { MinistryDocument } from '@/lib/ministries';
@@ -60,18 +58,18 @@ const formSchema = z.object({
   staffRoleKind: z
     .string()
     .refine((v) => v !== STAFF_ROLE_NONE, {
-      message: 'Seleccione Pastor o Congregante.',
+      message: 'Seleccione un cargo válido.',
     }),
 });
 
 type FormValues = z.infer<typeof formSchema>;
 
-const MAX_PHOTO_BYTES = 10 * 1024 * 1024;
-
 const STAFF_ROLE_OPTIONS = [
   { value: STAFF_ROLE_NONE, label: 'Sin especificar' },
   { value: 'Pastor', label: 'Pastor' },
   { value: 'Congregante', label: 'Congregante' },
+  { value: 'Directiva', label: 'Directiva' },
+  { value: 'Presidente', label: 'Presidente' },
 ] as const;
 
 function staffRoleToApi(kind: string): string | undefined {
@@ -89,11 +87,11 @@ function toTitleCase(value: string): string {
     .join(' ');
 }
 
-/** Valores guardados distintos de Pastor/Congregante (p. ej. texto libre antiguo) se muestran como «Sin especificar». */
+/** Valores guardados fuera del catálogo actual se muestran como «Sin especificar». */
 function staffRoleKindFromApi(stored: string | null | undefined): string {
   const r = (stored ?? '').trim();
   if (!r) return STAFF_ROLE_NONE;
-  if (r === 'Pastor' || r === 'Congregante') return r;
+  if (r === 'Pastor' || r === 'Congregante' || r === 'Directiva' || r === 'Presidente') return r;
   return STAFF_ROLE_NONE;
 }
 
@@ -159,8 +157,7 @@ export default function EditMemberPage() {
   const router = useRouter();
   const id = memberIdFromParams(params);
   const { toast } = useToast();
-  const photoInputRef = React.useRef<HTMLInputElement>(null);
-  const photoUploadIdRef = React.useRef<string | null>(null);
+  /** Foto existente en BD; se reenvía al guardar para no borrarla (la API usa `null` como «sin foto»). */
   const [photoDataUrl, setPhotoDataUrl] = React.useState<string | null>(null);
   const [loadState, setLoadState] = React.useState<'loading' | 'error' | 'ready'>('loading');
   const [loadMessage, setLoadMessage] = React.useState<string | null>(null);
@@ -232,7 +229,6 @@ export default function EditMemberPage() {
           staffRoleKind: staffRoleKindFromApi(m.staffRole),
         });
         setPhotoDataUrl(m.photoDataUrl);
-        photoUploadIdRef.current = null;
         setLoadState('ready');
       } catch (e) {
         if (!cancelled) {
@@ -294,73 +290,9 @@ export default function EditMemberPage() {
     });
   };
 
-  const onPhotoSelected = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    if (file.size > MAX_PHOTO_BYTES) {
-      toast({
-        variant: 'destructive',
-        title: 'Archivo demasiado grande',
-        description: 'Use una imagen de hasta 10MB.',
-      });
-      e.target.value = '';
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = () => {
-      const dataUrl = typeof reader.result === 'string' ? reader.result : null;
-      setPhotoDataUrl(dataUrl);
-
-      void (async () => {
-        if (!dataUrl) return;
-        const prevId = photoUploadIdRef.current;
-        if (prevId) {
-          await fetch(
-            `/api/member-photo-uploads?id=${encodeURIComponent(prevId)}`,
-            { method: 'DELETE' }
-          ).catch(() => {});
-          photoUploadIdRef.current = null;
-        }
-        try {
-          const res = await fetch('/api/member-photo-uploads', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ photoDataUrl: dataUrl }),
-          });
-          const data = (await res.json().catch(() => ({}))) as {
-            error?: string;
-            photoUploadId?: string;
-          };
-          if (!res.ok) {
-            throw new Error(data.error || 'No se pudo guardar la imagen.');
-          }
-          if (data.photoUploadId) {
-            photoUploadIdRef.current = data.photoUploadId;
-          }
-          toast({
-            title: 'Foto guardada',
-            description: 'La imagen quedó almacenada en la base de datos. Pulse Guardar cambios para actualizar el perfil.',
-          });
-        } catch (err) {
-          console.error(err);
-          toast({
-            variant: 'destructive',
-            title: 'No se pudo guardar la foto',
-            description:
-              err instanceof Error
-                ? err.message
-                : 'Se usará la vista previa al guardar los cambios.',
-          });
-        }
-      })();
-    };
-    reader.readAsDataURL(file);
-  };
-
   const onSubmit = async (values: FormValues) => {
     if (!id) return;
     try {
-      const uploadedId = photoUploadIdRef.current;
       const res = await fetch(`/api/members/${encodeURIComponent(id)}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -375,8 +307,7 @@ export default function EditMemberPage() {
           groups: values.groups,
           churchIds: values.churchIds,
           membershipStatus: values.membershipStatus,
-          photoUploadId: uploadedId ?? undefined,
-          photoDataUrl: uploadedId ? undefined : photoDataUrl,
+          photoDataUrl,
           staffRole: staffRoleToApi(values.staffRoleKind),
         }),
       });
@@ -391,7 +322,6 @@ export default function EditMemberPage() {
         title: 'Cambios guardados',
         description: data.message || 'El perfil se actualizó correctamente.',
       });
-      photoUploadIdRef.current = null;
       router.push('/members');
     } catch (err) {
       console.error(err);
@@ -440,29 +370,6 @@ export default function EditMemberPage() {
                   <CardDescription>Detalles básicos sobre el miembro.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
-                  <div className="flex items-center gap-6">
-                    <Avatar className="h-24 w-24">
-                      {photoDataUrl ? (
-                        <AvatarImage src={photoDataUrl} alt="Foto del miembro" className="object-cover" />
-                      ) : null}
-                      <AvatarFallback className="rounded-full bg-muted">
-                        <Upload className="h-8 w-8 text-muted-foreground" />
-                      </AvatarFallback>
-                      </Avatar>
-                      <div>
-                      <input
-                        ref={photoInputRef}
-                        type="file"
-                        accept="image/png,image/jpeg,image/gif,image/webp"
-                        className="sr-only"
-                        onChange={onPhotoSelected}
-                      />
-                      <Button variant="outline" type="button" onClick={() => photoInputRef.current?.click()}>
-                        Cambiar foto
-                      </Button>
-                      <p className="mt-2 text-xs text-muted-foreground">PNG, JPG, GIF hasta 10MB.</p>
-                      </div>
-                  </div>
                   <div className="grid grid-cols-2 gap-6">
                     <FormField
                       control={form.control}
@@ -615,8 +522,8 @@ export default function EditMemberPage() {
               <CardHeader>
                   <CardTitle>Directorio de personal</CardTitle>
                   <CardDescription>
-                    Indique si el miembro es Pastor o Congregante; con ello podrá listarse en el directorio de
-                    personal.
+                    Indique el cargo del miembro (Pastor, Congregante, Directiva o Presidente); con ello
+                    podrá listarse en el directorio de personal.
                   </CardDescription>
               </CardHeader>
                 <CardContent className="space-y-6">

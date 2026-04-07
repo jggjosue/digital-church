@@ -26,6 +26,17 @@ export const createMemberSchema = z.object({
    */
   department: z.string().max(120).optional(),
   staffRole: z.string().max(200).optional(),
+  /** Id del documento en la colección `staff_roles`. */
+  portalRoleId: z.string().uuid().nullable().optional(),
+  staffRoleGrants: z
+    .object({
+      roleId: z.string().uuid(),
+      name: z.string().min(1),
+      description: z.string(),
+      modules: z.record(z.array(z.string())),
+    })
+    .nullable()
+    .optional(),
 });
 
 export type MemberDocument = {
@@ -46,6 +57,13 @@ export type MemberDocument = {
   /** Departamento para directorios filtrados; `null` = sin asignar en el formulario. */
   department: string | null;
   staffRole: string | null;
+  portalRoleId?: string | null;
+  staffRoleGrants?: {
+    roleId: string;
+    name: string;
+    description: string;
+    modules: Record<string, string[]>;
+  } | null;
 };
 
 /** Límite aproximado para evitar superar el tope de 16MB de un documento BSON con foto en base64. */
@@ -58,39 +76,69 @@ export async function GET(request: Request) {
     const department = searchParams.get('department')?.trim();
     const group = searchParams.get('group')?.trim();
     const q = searchParams.get('q')?.trim();
+    /** Ej. `?staffRoles=Admin,Pastor` → solo miembros cuyo `staffRole` coincide (sin distinguir mayúsculas). */
+    const staffRolesRaw = searchParams.get('staffRoles')?.trim();
     const limitParam = Number(searchParams.get('limit') ?? '0');
     const limit = Number.isFinite(limitParam) && limitParam > 0 ? Math.min(limitParam, 50) : 0;
-    const filter: Record<string, unknown> = department ? { department } : {};
+
+    const conditions: Record<string, unknown>[] = [];
+
+    if (department) {
+      conditions.push({ department });
+    }
     if (group) {
-      filter.groups = group;
+      conditions.push({ groups: group });
+    }
+    if (staffRolesRaw) {
+      const roles = staffRolesRaw
+        .split(',')
+        .map((r) => r.trim())
+        .filter(Boolean);
+      if (roles.length > 0) {
+        const pattern = roles
+          .map((r) => r.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+          .join('|');
+        conditions.push({
+          staffRole: { $regex: `^(${pattern})$`, $options: 'i' },
+        });
+      }
     }
     if (q) {
       const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const byName = new RegExp(escaped, 'i');
       const compact = q.replace(/\s+/g, '');
       const byFullName = compact ? new RegExp(compact, 'i') : byName;
-      filter.$or = [
-        { firstName: byName },
-        { lastName: byName },
-        { email: byName },
-        { phone: byName },
-        {
-          $expr: {
-            $regexMatch: {
-              input: {
-                $replaceAll: {
-                  input: { $concat: ['$firstName', '$lastName'] },
-                  find: ' ',
-                  replacement: '',
+      conditions.push({
+        $or: [
+          { firstName: byName },
+          { lastName: byName },
+          { email: byName },
+          { phone: byName },
+          {
+            $expr: {
+              $regexMatch: {
+                input: {
+                  $replaceAll: {
+                    input: { $concat: ['$firstName', '$lastName'] },
+                    find: ' ',
+                    replacement: '',
+                  },
                 },
+                regex: byFullName.source,
+                options: 'i',
               },
-              regex: byFullName.source,
-              options: 'i',
             },
           },
-        },
-      ];
+        ],
+      });
     }
+
+    const filter: Record<string, unknown> =
+      conditions.length === 0
+        ? {}
+        : conditions.length === 1
+          ? conditions[0]!
+          : { $and: conditions };
 
     const db = await getDb();
     let query = db
@@ -176,12 +224,24 @@ export async function POST(request: Request) {
         ? String(body.staffRole).trim()
         : null;
 
-    const doc: MemberDocument = {
-      id: randomUUID(),
-      createdAt: new Date().toISOString(),
+    const portalRoleId =
+      body.portalRoleId !== undefined && body.portalRoleId !== null
+        ? String(body.portalRoleId).trim()
+        : body.portalRoleId === null
+          ? null
+          : undefined;
+
+    const normalizedEmail = body.email.trim().toLowerCase();
+    const members = db.collection<MemberDocument>('members');
+    const existing = await members.findOne(
+      { email: normalizedEmail },
+      { projection: { _id: 0, id: 1, createdAt: 1 } }
+    );
+
+    const setPayload: Partial<MemberDocument> = {
       firstName: body.firstName.trim(),
       lastName: body.lastName.trim(),
-      email: body.email.trim().toLowerCase(),
+      email: normalizedEmail,
       phone: body.phone.trim(),
       address: body.address.trim(),
       dob: body.dob,
@@ -192,14 +252,46 @@ export async function POST(request: Request) {
       photoDataUrl,
       department,
       staffRole,
+      ...(portalRoleId !== undefined ? { portalRoleId } : {}),
+      ...(body.staffRoleGrants !== undefined ? { staffRoleGrants: body.staffRoleGrants } : {}),
     };
 
-    await db.collection<MemberDocument>('members').insertOne(doc);
+    if (existing?.id) {
+      await members.updateOne({ id: existing.id }, { $set: setPayload });
+      return NextResponse.json({
+        ok: true,
+        id: existing.id,
+        message: 'Miembro actualizado correctamente según el correo registrado.',
+      });
+    }
 
-    return NextResponse.json(
-      { ok: true, id: doc.id, message: 'Miembro guardado correctamente.' },
-      { status: 201 }
-    );
+    const doc: MemberDocument = {
+      id: randomUUID(),
+      createdAt: new Date().toISOString(),
+      firstName: setPayload.firstName ?? '',
+      lastName: setPayload.lastName ?? '',
+      email: setPayload.email ?? '',
+      phone: setPayload.phone ?? '',
+      address: setPayload.address ?? '',
+      dob: setPayload.dob ?? '',
+      spiritualBirthday: setPayload.spiritualBirthday ?? null,
+      groups: setPayload.groups ?? [],
+      churchIds: setPayload.churchIds ?? [],
+      membershipStatus: setPayload.membershipStatus ?? 'active',
+      photoDataUrl: setPayload.photoDataUrl ?? null,
+      department: setPayload.department ?? null,
+      staffRole: setPayload.staffRole ?? null,
+      ...(portalRoleId !== undefined ? { portalRoleId } : {}),
+      ...(body.staffRoleGrants !== undefined ? { staffRoleGrants: body.staffRoleGrants } : {}),
+    };
+
+    await members.insertOne(doc);
+
+    return NextResponse.json({
+      ok: true,
+      id: doc.id,
+      message: 'Miembro guardado correctamente.',
+    });
   } catch (e) {
     console.error('[api/members POST]', e);
     const message =

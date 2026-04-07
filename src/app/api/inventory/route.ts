@@ -1,3 +1,4 @@
+import { ObjectId } from 'mongodb';
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
 import { CHURCHES_COLLECTION, type ChurchLocation } from '@/lib/church-locations';
@@ -29,15 +30,33 @@ const STATUSES: ResourceStatus[] = ['available', 'in_use', 'maintenance'];
 export async function GET() {
   try {
     const db = await getDb();
-    const collection = db.collection<InventoryDoc>(COLLECTION);
-    const items = await collection
-      .find(
-        { docType: { $ne: INVENTORY_DOC_TYPE_CHURCH_AREAS } },
-        { projection: { _id: 0 } }
-      )
+    const collection = db.collection(COLLECTION);
+    const raw = await collection
+      .find({ docType: { $ne: INVENTORY_DOC_TYPE_CHURCH_AREAS } })
       .sort({ name: 1 })
       .toArray();
-    return NextResponse.json({ items });
+
+    let lastMs = 0;
+    for (const doc of raw) {
+      const rec = doc as Record<string, unknown> & { _id?: unknown };
+      let ms = 0;
+      if (typeof rec.updatedAt === 'string') {
+        const t = new Date(rec.updatedAt).getTime();
+        if (!Number.isNaN(t)) ms = t;
+      }
+      if (ms === 0 && rec._id instanceof ObjectId) {
+        ms = rec._id.getTimestamp().getTime();
+      }
+      if (ms > lastMs) lastMs = ms;
+    }
+    const lastInventoryActivityAt = lastMs > 0 ? new Date(lastMs).toISOString() : null;
+
+    const items = raw.map((doc) => {
+      const { _id, ...rest } = doc as Record<string, unknown> & { _id?: unknown };
+      return rest;
+    }) as InventoryDoc[];
+
+    return NextResponse.json({ items, lastInventoryActivityAt });
   } catch (e) {
     console.error('[api/inventory GET]', e);
     const message =

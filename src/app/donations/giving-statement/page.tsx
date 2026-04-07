@@ -226,6 +226,7 @@ export default function GivingStatementPage() {
   const [selectedYear, setSelectedYear] = React.useState(String(initialYear));
   const [donorInput, setDonorInput] = React.useState('');
   const [selectedDonor, setSelectedDonor] = React.useState<DonorSuggestion | null>(null);
+  const [lockedDonor, setLockedDonor] = React.useState<DonorSuggestion | null>(null);
   const [donorSuggestions, setDonorSuggestions] = React.useState<DonorSuggestion[]>([]);
   const [donorSearchState, setDonorSearchState] = React.useState<
     'idle' | 'loading' | 'ready' | 'error'
@@ -246,6 +247,48 @@ export default function GivingStatementPage() {
 
   const yearNum = Number.parseInt(selectedYear, 10);
   const previewYear = Number.isNaN(yearNum) ? initialYear : yearNum;
+
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/members/me', {
+          cache: 'no-store',
+          headers: { Accept: 'application/json' },
+        });
+        const data = (await res.json().catch(() => ({}))) as {
+          member?: {
+            id?: string;
+            firstName?: string;
+            lastName?: string;
+            staffRole?: string | null;
+          } | null;
+        };
+        if (!res.ok || cancelled) return;
+        const m = data.member;
+        if (!m?.id) return;
+        const role = String(m.staffRole ?? '').trim().toLowerCase();
+        if (role !== 'congregante') return;
+        const donor: DonorSuggestion = {
+          memberId: String(m.id),
+          firstName: String(m.firstName ?? '').trim(),
+          lastName: String(m.lastName ?? '').trim(),
+        };
+        suppressDonorSearchRef.current = true;
+        setLockedDonor(donor);
+        setSelectedDonor(donor);
+        setDonorInput(donorDisplayName(donor));
+        setDonorSuggestions([]);
+        setDonorSearchState('idle');
+        setDonorListOpen(false);
+      } catch {
+        // sin bloqueo si falla
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   React.useEffect(() => {
     setStatementPageIndex(0);
@@ -509,12 +552,15 @@ export default function GivingStatementPage() {
                       placeholder="Todos los donantes"
                       autoComplete="off"
                       value={donorInput}
+                      disabled={lockedDonor != null}
                       onChange={(e) => {
+                        if (lockedDonor) return;
                         setDonorInput(e.target.value);
                         setSelectedDonor(null);
                         setDonorListOpen(true);
                       }}
                       onFocus={() => {
+                        if (lockedDonor) return;
                         if (donorInput.trim().length >= 1) setDonorListOpen(true);
                       }}
                       onBlur={() => {
@@ -522,7 +568,7 @@ export default function GivingStatementPage() {
                       }}
                     />
                   </div>
-                  {donorListOpen && donorInput.trim().length >= 1 ? (
+                  {lockedDonor == null && donorListOpen && donorInput.trim().length >= 1 ? (
                     <div
                       className="rounded-md border bg-background shadow-sm"
                       role="listbox"
@@ -560,7 +606,7 @@ export default function GivingStatementPage() {
                       ))}
                     </div>
                   ) : null}
-                  {selectedDonor ? (
+                  {selectedDonor && !lockedDonor ? (
                     <button
                       type="button"
                       className="text-xs text-primary underline-offset-4 hover:underline"

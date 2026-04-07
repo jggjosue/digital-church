@@ -1,5 +1,6 @@
 import { randomUUID } from 'crypto';
 import { NextResponse } from 'next/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { z } from 'zod';
 import { CHURCHES_COLLECTION, type ChurchLocation } from '@/lib/church-locations';
 import { getDb } from '@/lib/mongodb';
@@ -54,6 +55,8 @@ export const createDonationSchema = z
     transferReference: z.string().max(200).optional().default(''),
     donationFrequency: frequencySchema,
     notes: z.string().max(5000).optional().default(''),
+    fundraisingCampaignId: z.string().min(1).max(200).optional(),
+    fundraisingCampaignName: z.string().min(1).max(300).optional(),
   })
   .superRefine((data, ctx) => {
     if (data.paymentMethod === 'online' && !data.transferReference.trim()) {
@@ -63,6 +66,22 @@ export const createDonationSchema = z
         message: 'La referencia de transferencia es obligatoria.',
       });
     }
+    if (data.recordCategory === 'campaigns') {
+      if (!data.fundraisingCampaignId?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['fundraisingCampaignId'],
+          message: 'Seleccione una campaña de recaudación.',
+        });
+      }
+      if (!data.fundraisingCampaignName?.trim()) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['fundraisingCampaignName'],
+          message: 'Nombre de campaña inválido.',
+        });
+      }
+    }
   });
 
 export type DonationDocument = z.infer<typeof createDonationSchema> & {
@@ -71,12 +90,44 @@ export type DonationDocument = z.infer<typeof createDonationSchema> & {
   updatedAt: string;
 };
 
+type MemberScopeDoc = {
+  id?: string;
+  email?: string;
+  staffRole?: string | null;
+};
+
 export async function GET() {
   try {
+    const { userId } = await auth();
     const db = await getDb();
+
+    let filter: Record<string, unknown> = {};
+
+    if (userId) {
+      const user = await currentUser();
+      const email = user?.primaryEmailAddress?.emailAddress?.trim().toLowerCase();
+      if (email) {
+        const member = await db.collection<MemberScopeDoc>('members').findOne(
+          { email },
+          { projection: { _id: 0, id: 1, email: 1, staffRole: 1 } }
+        );
+        const role = String(member?.staffRole ?? '').trim().toLowerCase();
+        if (role === 'congregante') {
+          const donorId = String(member?.id ?? '').trim();
+          const donorEmail = String(member?.email ?? email).trim().toLowerCase();
+          filter = {
+            $or: [
+              ...(donorId ? [{ 'donor.memberId': donorId }] : []),
+              ...(donorEmail ? [{ 'donor.email': donorEmail }] : []),
+            ],
+          };
+        }
+      }
+    }
+
     const donations = await db
       .collection<DonationDocument>(DONATION_COLLECTION)
-      .find({}, { projection: { _id: 0 } })
+      .find(filter, { projection: { _id: 0 } })
       .sort({ donationDate: -1, createdAt: -1 })
       .toArray();
 

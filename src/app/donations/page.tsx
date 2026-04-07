@@ -7,7 +7,6 @@ import {
   Search,
   ListFilter,
   Download,
-  Edit,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -749,12 +748,6 @@ export default function DonationsPage() {
                               <TableCell className="text-right">
                                 <Button variant="link" className="text-primary" asChild>
                                   <Link href={`/donations/${donation.id}`}>Ver</Link>
-                                </Button>
-                                <Button variant="link" asChild>
-                                  <Link href={`/donations/${donation.id}/edit`}>
-                                    <Edit className="mr-1 h-4 w-4" />
-                                    Editar
-                                  </Link>
                                 </Button>
                               </TableCell>
                             </TableRow>

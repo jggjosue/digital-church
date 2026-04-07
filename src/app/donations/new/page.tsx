@@ -29,6 +29,7 @@ import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { AppHeader } from '@/components/app-header';
 import { useToast } from '@/hooks/use-toast';
+import type { FundraisingCampaignDoc } from '@/lib/fundraising-seed';
 
 type ChurchItem = {
     id: string;
@@ -51,6 +52,7 @@ type MemberItem = {
 };
 
 type RecordCategory = 'donations' | 'offering' | 'pledges' | 'campaigns';
+type DonationEntryMode = 'offering' | 'fundraising';
 
 export default function NewDonationPage() {
     const { toast } = useToast();
@@ -69,6 +71,7 @@ export default function NewDonationPage() {
     const [memberSearchState, setMemberSearchState] = React.useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
     /** Donante confirmado al hacer clic en un resultado (persiste en el componente hasta que el usuario lo cambie). */
     const [selectedDonor, setSelectedDonor] = React.useState<MemberItem | null>(null);
+    const [lockedDonor, setLockedDonor] = React.useState<MemberItem | null>(null);
     const [isMemberListOpen, setIsMemberListOpen] = React.useState(false);
     /** Evita que, al rellenar el nombre tras elegir, se dispare otra búsqueda y se vuelva a abrir la lista. */
     const suppressMemberSearchRef = React.useRef(false);
@@ -78,9 +81,58 @@ export default function NewDonationPage() {
     const [amount, setAmount] = React.useState('');
     const [fundCampaign, setFundCampaign] = React.useState('general-fund');
     const [recordCategory, setRecordCategory] = React.useState<RecordCategory>('donations');
+    const [donationEntryMode, setDonationEntryMode] = React.useState<DonationEntryMode>('offering');
+    const [fundraisingCampaigns, setFundraisingCampaigns] = React.useState<FundraisingCampaignDoc[]>([]);
+    const [fundraisingState, setFundraisingState] = React.useState<'loading' | 'ready' | 'error'>('loading');
+    const [selectedFundraisingId, setSelectedFundraisingId] = React.useState('');
     const [notes, setNotes] = React.useState('');
     const [fieldErrors, setFieldErrors] = React.useState<Record<string, string>>({});
     const [saving, setSaving] = React.useState(false);
+    const isOffering = recordCategory === 'offering';
+    const isFundraisingMode = donationEntryMode === 'fundraising';
+    const isDonorLocked = lockedDonor != null && !isOffering;
+
+    React.useEffect(() => {
+        let cancelled = false;
+        (async () => {
+            try {
+                const res = await fetch('/api/members/me', {
+                    cache: 'no-store',
+                    headers: { Accept: 'application/json' },
+                });
+                const data = (await res.json().catch(() => ({}))) as {
+                    member?: {
+                        id?: string;
+                        firstName?: string;
+                        lastName?: string;
+                        email?: string;
+                        phone?: string;
+                        staffRole?: string | null;
+                    } | null;
+                };
+                if (!res.ok || cancelled) return;
+                const m = data.member;
+                if (!m?.id) return;
+                const role = String(m.staffRole ?? '').trim().toLowerCase();
+                if (role !== 'congregante') return;
+                const donor: MemberItem = {
+                    id: String(m.id),
+                    firstName: String(m.firstName ?? '').trim(),
+                    lastName: String(m.lastName ?? '').trim(),
+                    email: String(m.email ?? '').trim(),
+                    phone: String(m.phone ?? '').trim(),
+                };
+                if (!cancelled) {
+                    setLockedDonor(donor);
+                }
+            } catch {
+                // Si falla, mantiene flujo normal de búsqueda de donante.
+            }
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, []);
 
     React.useEffect(() => {
         let cancelled = false;
@@ -114,6 +166,103 @@ export default function NewDonationPage() {
     }, []);
 
     React.useEffect(() => {
+        let cancelled = false;
+        const loadFundraising = async () => {
+            setFundraisingState('loading');
+            try {
+                const response = await fetch('/api/fundraising', {
+                    cache: 'no-store',
+                    headers: { Accept: 'application/json' },
+                });
+                const json = (await response.json().catch(() => ({}))) as {
+                    campaigns?: FundraisingCampaignDoc[];
+                    error?: string;
+                };
+                if (!response.ok) {
+                    throw new Error(json.error || 'No se pudieron cargar las recaudaciones.');
+                }
+                if (cancelled) return;
+                const rows = (json.campaigns ?? []).sort((a, b) => {
+                    const ao = Number(a.sortOrder ?? 0);
+                    const bo = Number(b.sortOrder ?? 0);
+                    return ao - bo;
+                });
+                setFundraisingCampaigns(rows);
+                setSelectedFundraisingId((prev) => prev || rows[0]?.id || '');
+                setFundraisingState('ready');
+            } catch {
+                if (cancelled) return;
+                setFundraisingCampaigns([]);
+                setSelectedFundraisingId('');
+                setFundraisingState('error');
+            }
+        };
+        void loadFundraising();
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    React.useEffect(() => {
+        if (isOffering) {
+            suppressMemberSearchRef.current = true;
+            if (lockedDonor) {
+                const fullName = `${lockedDonor.firstName} ${lockedDonor.lastName}`.trim();
+                setSelectedDonor(lockedDonor);
+                setDonorSearch(fullName || lockedDonor.email || '');
+            } else {
+                setSelectedDonor({
+                    id: 'church-offering',
+                    firstName: 'Iglesia',
+                    lastName: 'Iglesia',
+                    email: '',
+                    phone: '',
+                });
+                setDonorSearch('Iglesia');
+            }
+            setMemberResults([]);
+            setMemberSearchState('idle');
+            setIsMemberListOpen(false);
+            if (fieldErrors.donor) {
+                setFieldErrors((prev) => {
+                    const next = { ...prev };
+                    delete next.donor;
+                    return next;
+                });
+            }
+            return;
+        }
+        if (selectedDonor?.id === 'church-offering') {
+            setSelectedDonor(null);
+            setDonorSearch('');
+        }
+    }, [isOffering, fieldErrors.donor, lockedDonor, selectedDonor?.id]);
+
+    React.useEffect(() => {
+        if (!lockedDonor || isOffering) return;
+        suppressMemberSearchRef.current = true;
+        const fullName = `${lockedDonor.firstName} ${lockedDonor.lastName}`.trim();
+        setSelectedDonor(lockedDonor);
+        setDonorSearch(fullName || lockedDonor.email || '');
+        setMemberResults([]);
+        setMemberSearchState('idle');
+        setIsMemberListOpen(false);
+        if (fieldErrors.donor) {
+            setFieldErrors((prev) => {
+                const next = { ...prev };
+                delete next.donor;
+                return next;
+            });
+        }
+    }, [lockedDonor, isOffering, fieldErrors.donor]);
+
+    React.useEffect(() => {
+        if (isOffering) {
+            setMemberResults([]);
+            setMemberSearchState('idle');
+            setIsMemberListOpen(false);
+            return;
+        }
         if (suppressMemberSearchRef.current) {
             suppressMemberSearchRef.current = false;
             setMemberResults([]);
@@ -156,7 +305,7 @@ export default function NewDonationPage() {
             cancelled = true;
             window.clearTimeout(timeout);
         };
-    }, [donorSearch]);
+    }, [donorSearch, isOffering]);
 
     React.useEffect(() => {
         if (!selectedChurchId) {
@@ -226,6 +375,7 @@ export default function NewDonationPage() {
     };
 
     const handleClearDonor = () => {
+        if (isDonorLocked) return;
         setSelectedDonor(null);
         setDonorSearch('');
         setMemberResults([]);
@@ -241,7 +391,7 @@ export default function NewDonationPage() {
     const validateForm = (): boolean => {
         const errors: Record<string, string> = {};
 
-        if (!selectedDonor) {
+        if (!isOffering && !selectedDonor) {
             errors.donor = 'Seleccione un donante de los resultados de búsqueda.';
         }
 
@@ -276,8 +426,18 @@ export default function NewDonationPage() {
             errors.date = 'Seleccione la fecha de la donación.';
         }
 
-        if (!fundCampaign.trim()) {
+        if (!isFundraisingMode && !fundCampaign.trim()) {
             errors.fund = 'Seleccione un fondo o campaña.';
+        }
+
+        if (isFundraisingMode) {
+            if (!selectedFundraisingId.trim()) {
+                errors.fundraising = 'Seleccione una recaudación.';
+            }
+            if (fundraisingState === 'error') {
+                errors.fundraising =
+                    'No se pudieron cargar las recaudaciones. Actualice la página.';
+            }
         }
 
         if (!paymentMethod.trim()) {
@@ -312,7 +472,7 @@ export default function NewDonationPage() {
 
         const church = churches.find((c) => c.id === selectedChurchId);
         const selectedEvent = churchEvents.find((e) => e.id === selectedChurchEventId);
-        if (!selectedDonor || !church || !selectedEvent || !date) {
+        if (!church || !selectedEvent || !date || (!isOffering && !selectedDonor)) {
             toast({
                 variant: 'destructive',
                 title: 'No se pudo guardar',
@@ -321,16 +481,29 @@ export default function NewDonationPage() {
             return;
         }
 
+        const donorPayload = isOffering
+            ? {
+                memberId: 'church-offering',
+                firstName: 'Iglesia',
+                lastName: 'Iglesia',
+                email: '',
+                phone: '',
+            }
+            : {
+                memberId: selectedDonor!.id,
+                firstName: selectedDonor!.firstName,
+                lastName: selectedDonor!.lastName,
+                email: selectedDonor!.email ?? '',
+                phone: selectedDonor!.phone ?? '',
+            };
+
         const amountValue = parseAmount(amount);
+        const selectedFundraising = isFundraisingMode
+            ? fundraisingCampaigns.find((row) => row.id === selectedFundraisingId)
+            : null;
         const body = {
-            recordCategory,
-            donor: {
-                memberId: selectedDonor.id,
-                firstName: selectedDonor.firstName,
-                lastName: selectedDonor.lastName,
-                email: selectedDonor.email ?? '',
-                phone: selectedDonor.phone ?? '',
-            },
+            recordCategory: isFundraisingMode ? ('campaigns' as const) : recordCategory,
+            donor: donorPayload,
             churchId: selectedChurchId,
             churchName: church.name,
             attendanceEvent: {
@@ -339,11 +512,17 @@ export default function NewDonationPage() {
             },
             amount: amountValue,
             donationDate: date.toISOString(),
-            fundCampaign,
+            fundCampaign: isFundraisingMode ? ('other-fund' as const) : fundCampaign,
             paymentMethod,
             transferReference: paymentMethod === 'online' ? transferNumber.trim() : '',
             donationFrequency,
             notes: notes.trim(),
+            ...(isFundraisingMode
+                ? {
+                    fundraisingCampaignId: selectedFundraising?.id ?? '',
+                    fundraisingCampaignName: selectedFundraising?.name ?? '',
+                }
+                : {}),
         };
 
         setSaving(true);
@@ -394,50 +573,124 @@ export default function NewDonationPage() {
                     <CardContent className="p-6 sm:p-8">
                         <div className="space-y-6">
                             <div className="space-y-2">
-                                <Label htmlFor="record-category">Tipo de registro</Label>
+                                <Label htmlFor="entry-mode">Tipo principal</Label>
                                 <Select
-                                    value={recordCategory}
-                                    onValueChange={(v) => setRecordCategory(v as RecordCategory)}
+                                    value={donationEntryMode}
+                                    onValueChange={(v) => {
+                                        const mode = v as DonationEntryMode;
+                                        setDonationEntryMode(mode);
+                                        if (mode === 'fundraising') {
+                                            setRecordCategory('campaigns');
+                                        } else if (recordCategory === 'campaigns') {
+                                            setRecordCategory('donations');
+                                        }
+                                    }}
                                 >
-                                    <SelectTrigger id="record-category">
-                                        <SelectValue placeholder="Seleccione tipo" />
+                                    <SelectTrigger id="entry-mode">
+                                        <SelectValue placeholder="Seleccione tipo principal" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                    <SelectItem value="donations">Donación</SelectItem>
-                                    <SelectItem value="offering">Ofrenda</SelectItem>
-                                    <SelectItem value="pledges">Promesa</SelectItem>
-                                    <SelectItem value="campaigns">Campaña</SelectItem>
+                                        <SelectItem value="offering">Ofrenda</SelectItem>
+                                        <SelectItem value="fundraising">Recaudación</SelectItem>
                                     </SelectContent>
                                 </Select>
-                                <p className="text-sm text-muted-foreground">
-                                    Clasifique si este movimiento es donación, promesa o campaña.
-                                </p>
                             </div>
+
+                            {isFundraisingMode ? (
+                                <div className="space-y-2">
+                                    <Label htmlFor="fundraising-campaign">Recaudación</Label>
+                                    <Select
+                                        value={selectedFundraisingId}
+                                        onValueChange={(v) => {
+                                            setSelectedFundraisingId(v);
+                                            if (fieldErrors.fundraising) {
+                                                setFieldErrors((prev) => {
+                                                    const next = { ...prev };
+                                                    delete next.fundraising;
+                                                    return next;
+                                                });
+                                            }
+                                        }}
+                                        disabled={fundraisingState !== 'ready' || fundraisingCampaigns.length === 0}
+                                    >
+                                        <SelectTrigger id="fundraising-campaign">
+                                            <SelectValue
+                                                placeholder={
+                                                    fundraisingState === 'loading'
+                                                        ? 'Cargando recaudaciones...'
+                                                        : fundraisingState === 'error'
+                                                            ? 'Error al cargar recaudaciones'
+                                                            : 'Seleccione una recaudación'
+                                                }
+                                            />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {fundraisingCampaigns.map((campaign) => (
+                                                <SelectItem key={campaign.id} value={campaign.id}>
+                                                    {campaign.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    {fieldErrors.fundraising ? (
+                                        <p className="text-xs text-destructive" role="alert">
+                                            {fieldErrors.fundraising}
+                                        </p>
+                                    ) : null}
+                                </div>
+                            ) : (
+                                <div className="space-y-2">
+                                    <Label htmlFor="record-category">Tipo de registro</Label>
+                                    <Select
+                                        value={recordCategory}
+                                        onValueChange={(v) => setRecordCategory(v as RecordCategory)}
+                                    >
+                                        <SelectTrigger id="record-category">
+                                            <SelectValue placeholder="Seleccione tipo" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="donations">Donación</SelectItem>
+                                            <SelectItem value="offering">Ofrenda</SelectItem>
+                                            <SelectItem value="pledges">Promesa</SelectItem>
+                                            <SelectItem value="campaigns">Campaña</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                    <p className="text-sm text-muted-foreground">
+                                        Clasifique si este movimiento es donación, promesa o campaña.
+                                    </p>
+                                </div>
+                            )}
                             <div className="space-y-2">
                                 <Label htmlFor="donor-search">Donante</Label>
                                 <div className="relative">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                     <Input
                                         id="donor-search"
-                                        placeholder="Buscar un donante existente..."
+                                        placeholder={isOffering ? 'Iglesia' : 'Buscar un donante existente...'}
                                         className="pl-9"
                                         value={donorSearch}
+                                        disabled={isOffering || isDonorLocked}
                                         onChange={(e) => {
+                                            if (isOffering || isDonorLocked) return;
                                             setDonorSearch(e.target.value);
                                             setSelectedDonor(null);
                                             setIsMemberListOpen(true);
                                         }}
                                         onFocus={() => {
+                                            if (isOffering || isDonorLocked) return;
                                             if (memberResults.length > 0 || memberSearchState !== 'idle') {
                                                 setIsMemberListOpen(true);
                                             }
                                         }}
                                         onBlur={() => {
+                                            if (isOffering || isDonorLocked) return;
                                             window.setTimeout(() => setIsMemberListOpen(false), 200);
                                         }}
                                     />
                                 </div>
-                                {isMemberListOpen &&
+                                {!isOffering &&
+                                !isDonorLocked &&
+                                isMemberListOpen &&
                                 !selectedDonor &&
                                 donorSearch.trim().length >= 2 ? (
                                     <div className="rounded-md border bg-background shadow-sm" role="listbox">
@@ -473,7 +726,7 @@ export default function NewDonationPage() {
                                         ))}
                                     </div>
                                 ) : null}
-                                {selectedDonor ? (
+                                {selectedDonor && (!isOffering || isDonorLocked) ? (
                                     <div
                                         className="rounded-lg border border-emerald-200 bg-emerald-50/80 p-3 dark:border-emerald-900 dark:bg-emerald-950/30"
                                         role="status"
@@ -488,19 +741,34 @@ export default function NewDonationPage() {
                                         <p className="text-xs text-muted-foreground">
                                             {selectedDonor.email || selectedDonor.phone || 'Sin contacto'}
                                         </p>
-                                        <Button
-                                            type="button"
-                                            variant="link"
-                                            className="h-auto p-0 text-xs text-primary"
-                                            onClick={handleClearDonor}
-                                        >
-                                            Cambiar donante
-                                        </Button>
+                                        {!isDonorLocked ? (
+                                            <Button
+                                                type="button"
+                                                variant="link"
+                                                className="h-auto p-0 text-xs text-primary"
+                                                onClick={handleClearDonor}
+                                            >
+                                                Cambiar donante
+                                            </Button>
+                                        ) : null}
                                     </div>
                                 ) : null}
-                                <p className="text-sm text-muted-foreground">
-                                    ¿No encuentra al donante? <Link href="/members/new" className="text-primary underline">Añada un nuevo perfil de donante</Link>.
-                                </p>
+                                {isOffering ? (
+                                    <p className="text-sm text-muted-foreground">
+                                        En tipo <span className="font-medium">Ofrenda</span>, el donante se fija
+                                        automáticamente en{' '}
+                                        <span className="font-medium">
+                                          {isDonorLocked
+                                            ? `${lockedDonor?.firstName ?? ''} ${lockedDonor?.lastName ?? ''}`.trim() ||
+                                              'su usuario'
+                                            : 'Iglesia'}
+                                        </span>.
+                                    </p>
+                                ) : !isDonorLocked ? (
+                                    <p className="text-sm text-muted-foreground">
+                                        ¿No encuentra al donante? <Link href="/members/new" className="text-primary underline">Añada un nuevo perfil de donante</Link>.
+                                    </p>
+                                ) : null}
                                 {fieldErrors.donor ? (
                                     <p className="text-xs text-destructive" role="alert">
                                         {fieldErrors.donor}
@@ -667,41 +935,54 @@ export default function NewDonationPage() {
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-2">
-                                    <Label htmlFor="fund-campaign">Fondo / Campaña</Label>
-                                    <Select
-                                        value={fundCampaign}
-                                        onValueChange={(v) => {
-                                            setFundCampaign(v);
-                                            if (fieldErrors.fund) {
-                                                setFieldErrors((prev) => {
-                                                    const next = { ...prev };
-                                                    delete next.fund;
-                                                    return next;
-                                                });
+                                {isFundraisingMode ? (
+                                    <div className="space-y-2">
+                                        <Label>Campaña seleccionada</Label>
+                                        <Input
+                                            readOnly
+                                            value={
+                                                fundraisingCampaigns.find((row) => row.id === selectedFundraisingId)
+                                                    ?.name ?? 'Sin selección'
                                             }
-                                        }}
-                                    >
-                                        <SelectTrigger id="fund-campaign">
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                        <SelectItem value="general-fund">Fondo Regional</SelectItem>
-                                        <SelectItem value="local-fund">Fondo Local</SelectItem>
-                                        <SelectItem value="building-fund">Fondo de Construcción</SelectItem>
-                                        <SelectItem value="missions-fund">Fondo de Misiones</SelectItem>
-                                        <SelectItem value="youth-fund">Fondo del Ministerio Juvenil</SelectItem>
-                                        <SelectItem value="benevolence-fund">Fondo de Benevolencia</SelectItem>
-                                        <SelectItem value="pastor-fund">Fondo Discrecional del Pastor</SelectItem>
-                                        <SelectItem value="other-fund">Otro Fondo</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                    {fieldErrors.fund ? (
-                                        <p className="text-xs text-destructive" role="alert">
-                                            {fieldErrors.fund}
-                                        </p>
-                                    ) : null}
-                                </div>
+                                        />
+                                    </div>
+                                ) : (
+                                    <div className="space-y-2">
+                                        <Label htmlFor="fund-campaign">Fondo / Campaña</Label>
+                                        <Select
+                                            value={fundCampaign}
+                                            onValueChange={(v) => {
+                                                setFundCampaign(v);
+                                                if (fieldErrors.fund) {
+                                                    setFieldErrors((prev) => {
+                                                        const next = { ...prev };
+                                                        delete next.fund;
+                                                        return next;
+                                                    });
+                                                }
+                                            }}
+                                        >
+                                            <SelectTrigger id="fund-campaign">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="general-fund">Fondo Regional</SelectItem>
+                                                <SelectItem value="local-fund">Fondo Local</SelectItem>
+                                                <SelectItem value="building-fund">Fondo de Construcción</SelectItem>
+                                                <SelectItem value="missions-fund">Fondo de Misiones</SelectItem>
+                                                <SelectItem value="youth-fund">Fondo del Ministerio Juvenil</SelectItem>
+                                                <SelectItem value="benevolence-fund">Fondo de Benevolencia</SelectItem>
+                                                <SelectItem value="pastor-fund">Fondo Discrecional del Pastor</SelectItem>
+                                                <SelectItem value="other-fund">Otro Fondo</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                        {fieldErrors.fund ? (
+                                            <p className="text-xs text-destructive" role="alert">
+                                                {fieldErrors.fund}
+                                            </p>
+                                        ) : null}
+                                    </div>
+                                )}
                                 <div className="space-y-2">
                                     <Label htmlFor="payment-method">Método de Pago</Label>
                                     <Select

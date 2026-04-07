@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Plus, Settings, ShieldCheck, Users } from 'lucide-react';
+import { List, Plus, Settings, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -32,21 +32,21 @@ export function SettingsManageCard() {
           </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap lg:shrink-0">
             <Button asChild className="w-full sm:w-auto">
-              <Link href="/settings">
-                <ShieldCheck className="mr-2 h-4 w-4" />
-                Roles y permisos
+              <Link href="/settings/users">
+                <Users className="mr-2 h-4 w-4" />
+                Usuarios
               </Link>
             </Button>
             <Button variant="outline" asChild className="w-full sm:w-auto">
               <Link href="/settings/new">
                 <Plus className="mr-2 h-4 w-4" />
-                Nuevo rol
+                Roles y Permisos
               </Link>
             </Button>
             <Button variant="outline" asChild className="w-full sm:w-auto">
-              <Link href="/settings/users">
-                <Users className="mr-2 h-4 w-4" />
-                Usuarios
+              <Link href="/settings/roles">
+                <List className="mr-2 h-4 w-4" />
+                Lista de Roles
               </Link>
             </Button>
           </div>

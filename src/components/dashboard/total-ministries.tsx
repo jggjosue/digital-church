@@ -1,17 +1,22 @@
+'use client';
 
-"use client"
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card"
-import { ministriesData } from "@/lib/data"
+} from '@/components/ui/card';
+import type { DashboardStats } from '@/lib/dashboard-stats';
 import { Church } from 'lucide-react';
 
-const totalMinistries = ministriesData.length;
+interface TotalMinistriesProps {
+  stats: DashboardStats | null;
+  loading: boolean;
+}
 
-export function TotalMinistries() {
+export function TotalMinistries({ stats, loading }: TotalMinistriesProps) {
+  const total = stats?.ministries ?? 0;
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -19,9 +24,9 @@ export function TotalMinistries() {
         <Church className="h-4 w-4 text-muted-foreground" />
       </CardHeader>
       <CardContent>
-        <div className="text-2xl font-bold">{totalMinistries}</div>
-         <p className="text-xs text-muted-foreground">Ministerios activos de la iglesia</p>
+        <div className="text-2xl font-bold">{loading ? '…' : total}</div>
+        <p className="text-xs text-muted-foreground">Ministerios activos de la iglesia</p>
       </CardContent>
     </Card>
-  )
+  );
 }

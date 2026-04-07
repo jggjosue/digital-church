@@ -90,6 +90,28 @@ export default function DonationDetailPage() {
   const [donation, setDonation] = React.useState<DonationDetail | null>(null);
   const [loadState, setLoadState] = React.useState<'loading' | 'ready' | 'error'>('loading');
   const [message, setMessage] = React.useState<string | null>(null);
+  const [canEditDonation, setCanEditDonation] = React.useState(true);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/members/me-role', {
+          cache: 'no-store',
+          headers: { Accept: 'application/json' },
+        });
+        const data = (await res.json().catch(() => ({}))) as { staffRole?: string | null };
+        if (cancelled) return;
+        const role = String(data.staffRole ?? '').trim().toLowerCase();
+        setCanEditDonation(role !== 'congregante');
+      } catch {
+        if (!cancelled) setCanEditDonation(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   React.useEffect(() => {
     if (!id?.trim()) {
@@ -147,7 +169,7 @@ export default function DonationDetailPage() {
         <Button variant="outline" asChild>
           <Link href="/donations">Volver al listado</Link>
         </Button>
-        {donation ? (
+        {donation && canEditDonation ? (
           <Button asChild>
             <Link href={`/donations/${donation.id}/edit`}>Editar</Link>
           </Button>
