@@ -211,7 +211,7 @@ export default function InventarioPage() {
     const loadChurches = async () => {
       setChurchesLoad('loading');
       try {
-        const res = await fetch('/api/churches', {
+        const res = await fetch('/api/churches?sessionChurchScope=1', {
           cache: 'no-store',
           headers: { Accept: 'application/json' },
         });
@@ -294,7 +294,7 @@ export default function InventarioPage() {
     const load = async () => {
       setInventoryLoad('loading');
       try {
-        const res = await fetch('/api/inventory', {
+        const res = await fetch('/api/inventory?sessionChurchScope=1', {
           cache: 'no-store',
           headers: { Accept: 'application/json' },
         });

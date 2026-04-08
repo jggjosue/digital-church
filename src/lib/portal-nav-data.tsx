@@ -89,7 +89,8 @@ export const PORTAL_NAV_ENTRIES: PortalNavEntry[] = [
     label: 'Directorio',
     icon: Users,
     subItems: [
-      { href: '/members/new', icon: UserPlus, label: 'Nuevo' },
+      { href: '/members/new', icon: UserPlus, label: 'Mis Datos' },
+      { href: '/members/add', icon: Plus, label: 'Añadir' },
       { href: '/members', icon: Users, label: 'Miembros' },
       { href: '/members/staff', icon: UserCog, label: 'Pastoral' },
     ],

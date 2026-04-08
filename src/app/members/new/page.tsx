@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
@@ -36,6 +36,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useToast } from '@/hooks/use-toast';
 import { TempleAssignmentCard } from '@/components/temple-assignment-card';
 import type { MinistryDocument } from '@/lib/ministries';
+import { isLeadershipStaffRole } from '@/lib/pastor-church-access';
 
 const STAFF_ROLE_NONE = '__none__';
 
@@ -92,7 +93,7 @@ function staffRoleKindFromApi(stored: string | null | undefined): StaffRoleOptio
     'Congregante',
     'Directiva',
     'Presidente',
-    'Responsable de Comisión',
+    'Responsable de una Comisión',
     'Consejo de pastores',
     'Director de Instituto',
     'Pastor Regional',
@@ -100,6 +101,7 @@ function staffRoleKindFromApi(stored: string | null | undefined): StaffRoleOptio
     'Pastor Presbiterial',
     'Director General',
     'Estudiante del Instituto',
+    'Responsable de una Secretaría',
   ]);
   return valid.has(r as StaffRoleOption) ? (r as StaffRoleOption) : STAFF_ROLE_NONE;
 }
@@ -120,11 +122,14 @@ const DEFAULT_MEMBERSHIP_STATUS = 'active' as const;
 export default function NewMemberPage() {
     const { toast } = useToast();
     const router = useRouter();
+    const pathname = usePathname();
+    const isAddMode = pathname?.startsWith('/members/add') ?? false;
     const { user, isLoaded: clerkLoaded } = useUser();
     const [ministriesFromDb, setMinistriesFromDb] = React.useState<MinistryDocument[]>([]);
     const [isNewPortalUser, setIsNewPortalUser] = React.useState(false);
     const [isUnregisteredPortalUser, setIsUnregisteredPortalUser] = React.useState(false);
     const [isCongregantePortalUser, setIsCongregantePortalUser] = React.useState(false);
+    const [isLeadershipPortalUser, setIsLeadershipPortalUser] = React.useState(false);
     const [groupsLoad, setGroupsLoad] = React.useState<
       'loading' | 'ready' | 'error'
     >('loading');
@@ -145,11 +150,13 @@ export default function NewMemberPage() {
             setIsNewPortalUser(data.isNew === true);
             const role = String(data.staffRole ?? '').trim().toLowerCase();
             setIsCongregantePortalUser(role === 'congregante');
+            setIsLeadershipPortalUser(isLeadershipStaffRole(data.staffRole));
           }
         } catch {
           if (!cancelled) {
             setIsNewPortalUser(false);
             setIsCongregantePortalUser(false);
+            setIsLeadershipPortalUser(false);
           }
         }
       })();
@@ -205,6 +212,7 @@ export default function NewMemberPage() {
     });
 
     React.useEffect(() => {
+      if (isAddMode) return;
       if (!clerkLoaded || !user) return;
       let cancelled = false;
 
@@ -269,7 +277,7 @@ export default function NewMemberPage() {
       return () => {
         cancelled = true;
       };
-    }, [clerkLoaded, user, form]);
+    }, [clerkLoaded, user, form, isAddMode]);
 
     const handleGroupToggle = (group: string) => {
         const currentGroups = form.getValues('groups') || [];
@@ -342,11 +350,17 @@ export default function NewMemberPage() {
   return (
     <div className="flex flex-col flex-1">
       <AppHeader
-        title={isNewPortalUser || isUnregisteredPortalUser ? 'Registra tus Datos' : 'Añadir Nuevo Miembro'}
+        title={
+          isAddMode
+            ? 'Añadir Miembros'
+            : isNewPortalUser || isUnregisteredPortalUser
+              ? 'Registra tus Datos'
+              : 'Actualizar Datos'
+        }
         description="Ingrese los detalles a continuación para crear un nuevo perfil de miembro."
       >
         <div className="flex items-center gap-2">
-          {!isNewPortalUser && !isUnregisteredPortalUser ? (
+          {!isNewPortalUser && !isUnregisteredPortalUser && !isLeadershipPortalUser ? (
             <Button variant="ghost" asChild>
               <Link href="/members">Cancelar</Link>
             </Button>
@@ -358,11 +372,13 @@ export default function NewMemberPage() {
           >
             {form.formState.isSubmitting
               ? 'Guardando…'
+              : isAddMode
+                ? 'Agregar'
               : isUnregisteredPortalUser
                 ? 'Guardar'
                 : isNewPortalUser || isCongregantePortalUser
                   ? 'Actualizar'
-                : 'Guardar Miembro'}
+                : 'Actualizar'}
           </Button>
         </div>
       </AppHeader>
@@ -414,13 +430,15 @@ export default function NewMemberPage() {
                                         <Input
                                           type="email"
                                           placeholder="john.doe@example.com"
-                                          disabled
+                                          disabled={!isAddMode}
                                           {...field}
                                         />
                                     </FormControl>
-                                    <p className="text-xs text-muted-foreground">
-                                      Este correo se toma automáticamente desde Clerk.
-                                    </p>
+                                    {!isAddMode ? (
+                                      <p className="text-xs text-muted-foreground">
+                                        Este correo se toma automáticamente desde Clerk.
+                                      </p>
+                                    ) : null}
                                     <FormMessage />
                                 </FormItem>
                             )}

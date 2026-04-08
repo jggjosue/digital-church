@@ -1,5 +1,11 @@
 import { NextResponse } from 'next/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { getDb } from '@/lib/mongodb';
+import {
+  mongoOrMemberBelongsToChurch,
+  normalizeMemberChurchIds,
+} from '@/lib/member-church-ids';
+import { isFullAccessStaffRole } from '@/lib/pastor-church-access';
 import { MINISTRIES_COLLECTION, type MinistryDocument } from '@/lib/ministries';
 import type {
   DashboardChartMonth,
@@ -108,43 +114,96 @@ function ymKey(d: Date): string {
 async function countNewMembers(
   db: Awaited<ReturnType<typeof getDb>>,
   from: Date,
-  to: Date
+  to: Date,
+  memberTempleMatch: Record<string, unknown> | null
 ): Promise<number> {
-  return db.collection(MEMBERS_COLLECTION).countDocuments({
+  const window = {
     createdAt: { $gte: from.toISOString(), $lte: to.toISOString() },
-  });
+  };
+  const filter =
+    memberTempleMatch === null
+      ? window
+      : { $and: [window, memberTempleMatch] };
+  return db.collection(MEMBERS_COLLECTION).countDocuments(filter);
 }
 
+/**
+ * `null` = sin filtro (toda la iglesia). Lista vacía = alcance por templos sin miembros coincidentes → 0.
+ */
 async function countPresentAttendance(
   db: Awaited<ReturnType<typeof getDb>>,
   from: Date,
-  to: Date
+  to: Date,
+  scopedMemberIds: string[] | null
 ): Promise<number> {
   const a = toYmd(from);
   const b = toYmd(to);
-  return db.collection(MEMBER_ATTENDANCE_COLLECTION).countDocuments({
+  const base: Record<string, unknown> = {
     status: 'Presente',
     date: { $gte: a, $lte: b },
-  });
+  };
+  if (scopedMemberIds !== null) {
+    if (scopedMemberIds.length === 0) {
+      return 0;
+    }
+    base.memberId = { $in: scopedMemberIds };
+  }
+  return db.collection(MEMBER_ATTENDANCE_COLLECTION).countDocuments(base);
 }
 
 async function sumDonations(
   db: Awaited<ReturnType<typeof getDb>>,
   from: Date,
-  to: Date
+  to: Date,
+  churchIds: string[] | null
 ): Promise<number> {
+  const match: Record<string, unknown> = {
+    donationDate: { $gte: from.toISOString(), $lte: to.toISOString() },
+  };
+  if (churchIds && churchIds.length > 0) {
+    match.churchId = { $in: churchIds };
+  }
   const agg = await db
     .collection(DONATION_COLLECTION)
     .aggregate<{ s: number }>([
-      {
-        $match: {
-          donationDate: { $gte: from.toISOString(), $lte: to.toISOString() },
-        },
-      },
+      { $match: match },
       { $group: { _id: null, s: { $sum: '$amount' } } },
     ])
     .toArray();
   return agg[0]?.s ?? 0;
+}
+
+function emptyDashboardStats(
+  monthDefs: { key: string; label: string; end: Date }[]
+): DashboardStats {
+  const ages: DashboardDemographicSlice[] = [
+    { name: '18-25', value: 0, fill: DEMO_FILLS[0]! },
+    { name: '26-40', value: 0, fill: DEMO_FILLS[1]! },
+    { name: '41-60', value: 0, fill: DEMO_FILLS[2]! },
+    { name: '60+', value: 0, fill: DEMO_FILLS[3]! },
+  ];
+  return {
+    members: { total: 0, changePct: null },
+    attendance: { total: 0, changePct: null },
+    giving: { total: 0, changePct: null },
+    eventsThisMonth: 0,
+    groups: { totalLabels: 0, activeMembershipHint: 0 },
+    ministries: 0,
+    volunteers: 0,
+    givingByMonth: monthDefs.map(({ label }) => ({
+      month: label.charAt(0).toUpperCase() + label.slice(1),
+      total: 0,
+    })),
+    membersByMonth: monthDefs.map(({ label }) => ({
+      month: label.charAt(0).toUpperCase() + label.slice(1),
+      members: 0,
+    })),
+    givingTrendPct: null,
+    membersTrendPct: null,
+    demographics: ages,
+    upcomingEvents: [],
+    prayerRequests: [],
+  };
 }
 
 function buildLastNMonthKeys(n: number): { key: string; label: string; end: Date }[] {
@@ -166,8 +225,71 @@ export async function GET(request: Request) {
     const r = valid.includes(range) ? range : 'this-week';
     const { curStart, curEnd, prevStart, prevEnd } = periodBounds(r);
     const chartMonthCount = r === 'this-year' ? 12 : r === 'this-quarter' ? 3 : 6;
+    const monthDefs = buildLastNMonthKeys(chartMonthCount);
 
     const db = await getDb();
+
+    let memberTempleMatch: Record<string, unknown> | null = null;
+    let scopedMemberIds: string[] | null = null;
+    let churchIdsScope: string[] | null = null;
+
+    const { userId } = await auth();
+    if (userId) {
+      const user = await currentUser();
+      const email = user?.primaryEmailAddress?.emailAddress?.trim().toLowerCase() ?? '';
+      if (email) {
+        const sessionMember = await db
+          .collection<Record<string, unknown>>('members')
+          .findOne(
+            { email },
+            { projection: { _id: 0, staffRole: 1, churchIds: 1, templeIds: 1 } }
+          );
+        if (sessionMember && !isFullAccessStaffRole(sessionMember.staffRole as string | null | undefined)) {
+          const ids = normalizeMemberChurchIds(sessionMember);
+          if (ids.length === 0) {
+            return NextResponse.json(emptyDashboardStats(monthDefs));
+          }
+          churchIdsScope = ids;
+          memberTempleMatch = {
+            $or: ids.map((cid) => mongoOrMemberBelongsToChurch(cid)),
+          };
+          const rows = await db
+            .collection(MEMBERS_COLLECTION)
+            .find(memberTempleMatch, { projection: { _id: 0, id: 1 } })
+            .toArray();
+          scopedMemberIds = rows
+            .map((row) => String((row as { id?: string }).id ?? '').trim())
+            .filter(Boolean);
+        }
+      }
+    }
+
+    const membersCountFilter =
+      memberTempleMatch === null ? {} : memberTempleMatch;
+    const donationMatchStages: Record<string, unknown>[] = [];
+    if (churchIdsScope && churchIdsScope.length > 0) {
+      donationMatchStages.push({ $match: { churchId: { $in: churchIdsScope } } });
+    }
+    donationMatchStages.push({
+      $project: {
+        ym: { $substr: ['$donationDate', 0, 7] },
+        amount: 1,
+      },
+    });
+    donationMatchStages.push({ $group: { _id: '$ym', total: { $sum: '$amount' } } });
+
+    const eventQuery: Record<string, unknown> = {
+      eventType: 'event',
+      eventStartDate: { $exists: true, $nin: [null, ''] },
+    };
+    if (churchIdsScope && churchIdsScope.length > 0) {
+      eventQuery.churchId = { $in: churchIdsScope };
+    }
+
+    const ministryMongoFilter: Record<string, unknown> =
+      churchIdsScope && churchIdsScope.length > 0
+        ? { churchId: { $in: churchIdsScope } }
+        : {};
 
     const [
       membersTotal,
@@ -182,53 +304,40 @@ export async function GET(request: Request) {
       membersProj,
       upcomingRaw,
     ] = await Promise.all([
-      db.collection(MEMBERS_COLLECTION).countDocuments({}),
-      countNewMembers(db, curStart, curEnd),
-      countNewMembers(db, prevStart, prevEnd),
-      countPresentAttendance(db, curStart, curEnd),
-      countPresentAttendance(db, prevStart, prevEnd),
-      sumDonations(db, curStart, curEnd),
-      sumDonations(db, prevStart, prevEnd),
-      db.collection(MINISTRIES_COLLECTION).countDocuments({}),
+      db.collection(MEMBERS_COLLECTION).countDocuments(membersCountFilter),
+      countNewMembers(db, curStart, curEnd, memberTempleMatch),
+      countNewMembers(db, prevStart, prevEnd, memberTempleMatch),
+      countPresentAttendance(db, curStart, curEnd, scopedMemberIds),
+      countPresentAttendance(db, prevStart, prevEnd, scopedMemberIds),
+      sumDonations(db, curStart, curEnd, churchIdsScope),
+      sumDonations(db, prevStart, prevEnd, churchIdsScope),
+      db.collection(MINISTRIES_COLLECTION).countDocuments(ministryMongoFilter),
       db
         .collection(DONATION_COLLECTION)
-        .aggregate<{ _id: string; total: number }>([
-          {
-            $project: {
-              ym: { $substr: ['$donationDate', 0, 7] },
-              amount: 1,
-            },
-          },
-          { $group: { _id: '$ym', total: { $sum: '$amount' } } },
-        ])
+        .aggregate<{ _id: string; total: number }>(donationMatchStages)
         .toArray(),
       db
         .collection(MEMBERS_COLLECTION)
-        .find({}, { projection: { _id: 0, dob: 1, groups: 1, membershipStatus: 1 } })
+        .find(membersCountFilter, {
+          projection: { _id: 0, dob: 1, groups: 1, membershipStatus: 1 },
+        })
         .toArray(),
       db
         .collection(ATTENDANCE_EVENTS_COLLECTION)
-        .find(
-          {
-            eventType: 'event',
-            eventStartDate: { $exists: true, $nin: [null, ''] },
+        .find(eventQuery, {
+          projection: {
+            _id: 0,
+            id: 1,
+            eventName: 1,
+            eventStartDate: 1,
+            eventTime: 1,
+            notes: 1,
           },
-          {
-            projection: {
-              _id: 0,
-              id: 1,
-              eventName: 1,
-              eventStartDate: 1,
-              eventTime: 1,
-              notes: 1,
-            },
-          }
-        )
+        })
         .toArray(),
     ]);
 
     const byYm = new Map(donationByMonthAgg.map((x) => [x._id, x.total]));
-    const monthDefs = buildLastNMonthKeys(chartMonthCount);
     const givingByMonth: DashboardChartMonth[] = monthDefs.map(({ key, label }) => ({
       month: label.charAt(0).toUpperCase() + label.slice(1),
       total: Math.round((byYm.get(key) ?? 0) * 100) / 100,
@@ -236,9 +345,12 @@ export async function GET(request: Request) {
 
     const membersByMonth: DashboardChartMonth[] = await Promise.all(
       monthDefs.map(async ({ label, end }) => {
-        const c = await db.collection(MEMBERS_COLLECTION).countDocuments({
-          createdAt: { $lte: end.toISOString() },
-        });
+        const createdWindow = { createdAt: { $lte: end.toISOString() } };
+        const c = await db.collection(MEMBERS_COLLECTION).countDocuments(
+          memberTempleMatch === null
+            ? createdWindow
+            : { $and: [createdWindow, memberTempleMatch] }
+        );
         return {
           month: label.charAt(0).toUpperCase() + label.slice(1),
           members: c,
@@ -302,7 +414,7 @@ export async function GET(request: Request) {
 
     const ministryDocs = await db
       .collection<MinistryDocument>(MINISTRIES_COLLECTION)
-      .find({}, { projection: { _id: 0, leaders: 1 } })
+      .find(ministryMongoFilter, { projection: { _id: 0, leaders: 1 } })
       .toArray();
     const leaderEmails = new Set<string>();
     for (const d of ministryDocs) {
@@ -361,9 +473,13 @@ export async function GET(request: Request) {
       try {
         const exists = await db.listCollections({ name: col }, { nameOnly: true }).toArray();
         if (exists.length === 0) continue;
+        const prayerFilter: Record<string, unknown> =
+          churchIdsScope && churchIdsScope.length > 0
+            ? { churchId: { $in: churchIdsScope } }
+            : {};
         const docs = await db
           .collection(col)
-          .find({})
+          .find(prayerFilter)
           .sort({ createdAt: -1 })
           .limit(5)
           .project({ _id: 0 })

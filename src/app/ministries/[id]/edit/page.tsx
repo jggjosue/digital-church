@@ -15,6 +15,16 @@ import { AppHeader } from '@/components/app-header';
 import type { MinistryDocument, MinistryLeader } from '@/lib/ministries';
 import { useToast } from '@/hooks/use-toast';
 
+/** Templos (`churches.id`) para filtrar el buscador de líderes: principal del ministerio o los del creador. */
+function ministryTempleIdsForMemberSearch(m: MinistryDocument): string[] {
+  const primary = m.churchId?.trim();
+  if (primary) return [primary];
+  const fromCreator = (m.creatorChurchIds ?? [])
+    .map((x) => String(x ?? '').trim())
+    .filter(Boolean);
+  return [...new Set(fromCreator)];
+}
+
 export default function EditMinistryPage() {
   const params = useParams();
   const router = useRouter();
@@ -87,6 +97,17 @@ export default function EditMinistryPage() {
       setHighlightedIndex(-1);
       return;
     }
+    if (!ministry) {
+      setFilteredLeaders([]);
+      setHighlightedIndex(-1);
+      return;
+    }
+    const templeIds = ministryTempleIdsForMemberSearch(ministry);
+    if (templeIds.length === 0) {
+      setFilteredLeaders([]);
+      setHighlightedIndex(-1);
+      return;
+    }
     const added = new Set(leaders.map((l) => String(l.id)));
     let cancelled = false;
     if (searchDebounceRef.current) {
@@ -95,10 +116,18 @@ export default function EditMinistryPage() {
     searchDebounceRef.current = setTimeout(() => {
       void (async () => {
         try {
-          const res = await fetch(
-            `/api/members?q=${encodeURIComponent(q)}&limit=8`,
-            { cache: 'no-store', headers: { Accept: 'application/json' } }
-          );
+          const params = new URLSearchParams();
+          params.set('q', q);
+          params.set('limit', '8');
+          if (templeIds.length === 1) {
+            params.set('churchId', templeIds[0]!);
+          } else {
+            params.set('churchIds', templeIds.join(','));
+          }
+          const res = await fetch(`/api/members?${params.toString()}`, {
+            cache: 'no-store',
+            headers: { Accept: 'application/json' },
+          });
           const data = (await res.json().catch(() => ({}))) as {
             members?: Array<{
               id: string;
@@ -136,7 +165,7 @@ export default function EditMinistryPage() {
         searchDebounceRef.current = null;
       }
     };
-  }, [searchTerm, leaders]);
+  }, [searchTerm, leaders, ministry]);
 
   const removeLeader = (leaderId: string) => {
     setLeaders((prev) => prev.filter((leader) => String(leader.id) !== leaderId));
@@ -252,6 +281,8 @@ export default function EditMinistryPage() {
     );
   }
 
+  const leaderSearchTempleIds = ministryTempleIdsForMemberSearch(ministry);
+
   return (
     <div className="flex flex-1 flex-col">
       <AppHeader
@@ -292,11 +323,25 @@ export default function EditMinistryPage() {
             </div>
             <div className="space-y-2">
               <Label htmlFor="ministry-leaders">Líder(es) del Ministerio</Label>
+              <p className="text-sm text-muted-foreground">
+                Solo aparecen miembros de{' '}
+                {leaderSearchTempleIds.length > 0
+                  ? leaderSearchTempleIds.length > 1
+                    ? 'los templos vinculados a este ministerio'
+                    : 'el templo vinculado a este ministerio'
+                  : 'un templo (este ministerio no tiene templo asociado en el registro)'}
+                .
+              </p>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
                   id="ministry-leaders"
-                  placeholder="Buscar en la base de datos de miembros..."
+                  placeholder={
+                    leaderSearchTempleIds.length > 0
+                      ? 'Buscar miembros de este templo…'
+                      : 'Sin templo asociado — no hay búsqueda'
+                  }
+                  disabled={leaderSearchTempleIds.length === 0}
                   className="pl-9"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}

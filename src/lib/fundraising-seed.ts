@@ -16,4 +16,10 @@ export type FundraisingCampaignDoc = {
   progress: number;
   date: string;
   sortOrder: number;
+  /** `churches.id` del templo al crear la campaña. */
+  churchId?: string;
+  /** `members.id` del usuario en sesión (si hay miembro con el email de Clerk). */
+  createdByMemberId?: string | null;
+  /** Id de usuario en Clerk al crear la campaña. */
+  createdByClerkUserId?: string | null;
 };

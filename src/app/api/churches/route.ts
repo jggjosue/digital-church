@@ -1,7 +1,14 @@
 import { NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
 import { z } from 'zod';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { getDb } from '@/lib/mongodb';
+import { normalizeMemberChurchIds } from '@/lib/member-church-ids';
+import {
+  isFullAccessStaffRole,
+  isLeadershipStaffRole,
+  resolvePastorChurchAccess,
+} from '@/lib/pastor-church-access';
 import {
   buildMapsUrlsFromAddress,
   CHURCHES_COLLECTION,
@@ -9,12 +16,62 @@ import {
   type ChurchLocation,
 } from '@/lib/church-locations';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const db = await getDb();
+    const { searchParams } = new URL(request.url);
+    const sessionChurchScope =
+      searchParams.get('sessionChurchScope') === '1' ||
+      searchParams.get('sessionChurchScope') === 'true';
+
+    let mongoFilter: Record<string, unknown> = {};
+
+    if (sessionChurchScope) {
+      const { userId } = await auth();
+      if (!userId) {
+        return NextResponse.json({ churches: [] });
+      }
+      const user = await currentUser();
+      const email = user?.primaryEmailAddress?.emailAddress?.trim().toLowerCase() ?? '';
+      if (!email) {
+        return NextResponse.json({ churches: [] });
+      }
+      const sessionMember = await db
+        .collection<Record<string, unknown>>('members')
+        .findOne(
+          { email },
+          { projection: { _id: 0, churchIds: 1, templeIds: 1, staffRole: 1 } }
+        );
+      if (!sessionMember) {
+        return NextResponse.json({ churches: [] });
+      }
+      if (isFullAccessStaffRole(sessionMember.staffRole as string | null | undefined)) {
+        mongoFilter = {};
+      } else {
+        const ids = normalizeMemberChurchIds(sessionMember);
+        if (ids.length === 0) {
+          return NextResponse.json({ churches: [] });
+        }
+        mongoFilter = { id: { $in: ids } };
+      }
+    } else {
+      const { userId } = await auth();
+      if (userId) {
+        const user = await currentUser();
+        const email = user?.primaryEmailAddress?.emailAddress?.trim().toLowerCase() ?? '';
+        const access = await resolvePastorChurchAccess(db, email);
+        if (access.mode === 'none') {
+          return NextResponse.json({ churches: [] });
+        }
+        if (access.mode === 'subset') {
+          mongoFilter = { id: { $in: access.ids } };
+        }
+      }
+    }
+
     const docs = await db
       .collection<ChurchLocation>(CHURCHES_COLLECTION)
-      .find({}, { projection: { _id: 0 } })
+      .find(mongoFilter, { projection: { _id: 0 } })
       .sort({ name: 1 })
       .toArray();
     return NextResponse.json({ churches: dedupeChurchesById(docs) });
@@ -58,6 +115,28 @@ export async function POST(request: Request) {
       country: body.country,
     });
     const db = await getDb();
+
+    type MemberCreatorDoc = { id?: string; staffRole?: string | null };
+    const { userId } = await auth();
+    let createdByMemberId: string | undefined;
+    if (userId) {
+      const user = await currentUser();
+      const email = user?.primaryEmailAddress?.emailAddress?.trim().toLowerCase();
+      if (email) {
+        const member = await db.collection<MemberCreatorDoc>('members').findOne(
+          { email },
+          { projection: { _id: 0, id: 1, staffRole: 1 } }
+        );
+        if (
+          member?.id &&
+          (isFullAccessStaffRole(member.staffRole) ||
+            isLeadershipStaffRole(member.staffRole))
+        ) {
+          createdByMemberId = String(member.id).trim();
+        }
+      }
+    }
+
     const doc: ChurchLocation = {
       id: randomUUID(),
       name: body.name.trim(),
@@ -77,8 +156,16 @@ export async function POST(request: Request) {
       campusPastor: body.campusPastor.trim(),
       contactEmail: body.contactEmail.trim(),
       description: body.description.trim(),
+      ...(createdByMemberId ? { createdByMemberId } : {}),
     };
     await db.collection<ChurchLocation>(CHURCHES_COLLECTION).insertOne(doc);
+
+    if (createdByMemberId) {
+      await db.collection('members').updateOne(
+        { id: createdByMemberId },
+        { $addToSet: { churchIds: doc.id } }
+      );
+    }
     return NextResponse.json(
       { ok: true, id: doc.id, message: 'Ubicación guardada correctamente.' },
       { status: 201 }

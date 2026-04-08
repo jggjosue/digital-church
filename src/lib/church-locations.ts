@@ -37,6 +37,8 @@ export type ChurchLocation = {
   campusPastor?: string;
   contactEmail?: string;
   description?: string;
+  /** Id del miembro (`members.id`) que creó la ubicación (p. ej. pastor que da de alta el templo). */
+  createdByMemberId?: string;
 };
 
 /** Texto secundario en listas (prioriza ciudad/estado del documento en BD). */

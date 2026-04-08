@@ -1,6 +1,8 @@
 import { randomUUID } from 'crypto';
 import { NextResponse } from 'next/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { getDb } from '@/lib/mongodb';
+import { resolvePastorChurchAccess } from '@/lib/pastor-church-access';
 import {
   CHURCHES_COLLECTION,
   type ChurchInventoryArea,
@@ -16,10 +18,25 @@ export async function GET(
     if (!id?.trim()) {
       return NextResponse.json({ error: 'Id inválido.' }, { status: 400 });
     }
+    const trimmedId = id.trim();
     const db = await getDb();
+
+    const { userId } = await auth();
+    if (userId) {
+      const user = await currentUser();
+      const email = user?.primaryEmailAddress?.emailAddress?.trim().toLowerCase() ?? '';
+      const access = await resolvePastorChurchAccess(db, email);
+      if (access.mode === 'none') {
+        return NextResponse.json({ error: 'No autorizado.' }, { status: 403 });
+      }
+      if (access.mode === 'subset' && !access.ids.includes(trimmedId)) {
+        return NextResponse.json({ error: 'No autorizado.' }, { status: 403 });
+      }
+    }
+
     const doc = await db
       .collection<ChurchLocation>(CHURCHES_COLLECTION)
-      .findOne({ id: id.trim() }, { projection: { _id: 0 } });
+      .findOne({ id: trimmedId }, { projection: { _id: 0 } });
     if (!doc) {
       return NextResponse.json({ error: 'Ubicación no encontrada.' }, { status: 404 });
     }
@@ -67,6 +84,20 @@ export async function PATCH(
     }
 
     const db = await getDb();
+
+    const { userId: patchUserId } = await auth();
+    if (patchUserId) {
+      const user = await currentUser();
+      const email = user?.primaryEmailAddress?.emailAddress?.trim().toLowerCase() ?? '';
+      const access = await resolvePastorChurchAccess(db, email);
+      if (access.mode === 'none') {
+        return NextResponse.json({ error: 'No autorizado.' }, { status: 403 });
+      }
+      if (access.mode === 'subset' && !access.ids.includes(trimmed)) {
+        return NextResponse.json({ error: 'No autorizado.' }, { status: 403 });
+      }
+    }
+
     const result = await db.collection<ChurchLocation>(CHURCHES_COLLECTION).updateOne(
       { id: trimmed },
       { $set: { inventoryAreas: cleaned } }
@@ -99,8 +130,23 @@ export async function DELETE(
       return NextResponse.json({ error: 'Id inválido.' }, { status: 400 });
     }
     const db = await getDb();
+    const trimmed = id.trim();
+
+    const { userId: delUserId } = await auth();
+    if (delUserId) {
+      const user = await currentUser();
+      const email = user?.primaryEmailAddress?.emailAddress?.trim().toLowerCase() ?? '';
+      const access = await resolvePastorChurchAccess(db, email);
+      if (access.mode === 'none') {
+        return NextResponse.json({ error: 'No autorizado.' }, { status: 403 });
+      }
+      if (access.mode === 'subset' && !access.ids.includes(trimmed)) {
+        return NextResponse.json({ error: 'No autorizado.' }, { status: 403 });
+      }
+    }
+
     const result = await db.collection(CHURCHES_COLLECTION).deleteOne({
-      id: id.trim(),
+      id: trimmed,
     });
     if (result.deletedCount === 0) {
       return NextResponse.json({ error: 'Ubicación no encontrada.' }, { status: 404 });

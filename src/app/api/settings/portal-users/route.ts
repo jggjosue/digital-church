@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { getDb } from '@/lib/mongodb';
 
 type StaffRoleRow = { id: string; name: string };
@@ -21,6 +22,24 @@ function readRoleId(raw: Record<string, unknown>): string | null {
   return null;
 }
 
+function readRoleNameFromGrants(raw: Record<string, unknown>): string | null {
+  const grants = raw.staffRoleGrants;
+  if (
+    grants &&
+    typeof grants === 'object' &&
+    !Array.isArray(grants) &&
+    typeof (grants as { name?: unknown }).name === 'string'
+  ) {
+    const name = String((grants as { name: string }).name).trim();
+    if (name) return name;
+  }
+  return null;
+}
+
+function normalizeRole(value: string | null | undefined): string {
+  return String(value ?? '').trim().toLowerCase();
+}
+
 /**
  * Miembros con rol de portal (`staffRoleGrants.roleId` o `portalRoleId`) y nombre de rol
  * resuelto desde `staff_roles` cuando el id coincide.
@@ -28,23 +47,42 @@ function readRoleId(raw: Record<string, unknown>): string | null {
 export async function GET() {
   try {
     const db = await getDb();
+    let sessionStaffRole = '';
+    const { userId } = await auth();
+    if (userId) {
+      const user = await currentUser();
+      const email = user?.primaryEmailAddress?.emailAddress?.trim().toLowerCase() ?? '';
+      if (email) {
+        const sessionMember = await db
+          .collection<Record<string, unknown>>('members')
+          .findOne({ email }, { projection: { _id: 0, staffRole: 1 } });
+        sessionStaffRole = normalizeRole(
+          typeof sessionMember?.staffRole === 'string' ? sessionMember.staffRole : null
+        );
+      }
+    }
+
+    const excludedRoles = new Set<string>(['super administrador']);
+
     const roleDocs = await db
       .collection<StaffRoleRow>('staff_roles')
       .find({}, { projection: { _id: 0, id: 1, name: 1 } })
       .toArray();
     const roleById = new Map(roleDocs.map((r) => [r.id, r.name]));
 
+    const membersFilter: Record<string, unknown> =
+      sessionStaffRole === 'super administrador'
+        ? {}
+        : {
+            $or: [
+              { 'staffRoleGrants.roleId': { $exists: true, $nin: [null, ''] } },
+              { portalRoleId: { $exists: true, $nin: [null, ''] } },
+            ],
+          };
+
     const members = await db
       .collection('members')
-      .find(
-        {
-          $or: [
-            { 'staffRoleGrants.roleId': { $exists: true, $nin: [null, ''] } },
-            { portalRoleId: { $exists: true, $nin: [null, ''] } },
-          ],
-        },
-        { projection: { _id: 0 } }
-      )
+      .find(membersFilter, { projection: { _id: 0 } })
       .sort({ createdAt: -1 })
       .toArray();
 
@@ -53,12 +91,18 @@ export async function GET() {
         const m = raw as Record<string, unknown>;
         const id = typeof m.id === 'string' ? m.id : '';
         if (!id) return null;
-
         const linkedRoleId = readRoleId(m);
         const nameFromCatalog = linkedRoleId ? roleById.get(linkedRoleId) : undefined;
-        const staffRoleFallback =
+        const rawStaffRole =
           typeof m.staffRole === 'string' && m.staffRole.trim() ? m.staffRole.trim() : null;
-        const displayRole = nameFromCatalog ?? staffRoleFallback ?? '—';
+        const grantsRoleName = readRoleNameFromGrants(m);
+        const displayRole =
+          sessionStaffRole === 'super administrador'
+            ? rawStaffRole ?? nameFromCatalog ?? grantsRoleName ?? '—'
+            : nameFromCatalog ?? grantsRoleName ?? rawStaffRole ?? '—';
+        if (sessionStaffRole !== 'super administrador' && excludedRoles.has(normalizeRole(displayRole))) {
+          return null;
+        }
 
         return {
           id,

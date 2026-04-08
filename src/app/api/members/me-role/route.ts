@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { getDb } from '@/lib/mongodb';
+import { isFullAccessStaffRole, isOnboardingStaffRole } from '@/lib/pastor-church-access';
 
 type MemberRoleDoc = {
   staffRole?: string | null;
@@ -27,10 +28,10 @@ export async function GET() {
     );
 
     const rawRole = String(member?.staffRole ?? '').trim();
-    const role = rawRole.toLowerCase();
+    const fullAccess = isFullAccessStaffRole(member?.staffRole ?? null);
     return NextResponse.json({
-      isAdmin: role === 'admin',
-      isNew: role === 'nuevo',
+      isAdmin: fullAccess,
+      isNew: fullAccess ? false : isOnboardingStaffRole(member?.staffRole ?? null),
       staffRole: rawRole || null,
     });
   } catch (e) {

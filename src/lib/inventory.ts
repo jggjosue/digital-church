@@ -36,6 +36,8 @@ export type ResourceRow = {
   areaId?: string;
   /** Fecha ISO de alta o última modificación guardada en la colección `inventory`. */
   updatedAt?: string;
+  /** `members.id` del usuario que dio de alta el recurso (sesión Clerk → email). */
+  createdByMemberId?: string;
 };
 
 export type InventoryDoc = ResourceRow;
@@ -200,12 +202,13 @@ export function buildResourceRowFromTempleArea(input: {
   quantity: number;
   condition: ConditionKey;
   status: ResourceStatus;
+  createdByMemberId?: string;
 }): ResourceRow {
   const cat = CATEGORY_OPTIONS.find((c) => c.value === input.categoryFilter);
   const categoryLabel =
     input.categoryDisplayLabel ?? cat?.label ?? input.categoryFilter;
   const locationFilter = `temple-area:${input.churchId}:${input.areaId}`;
-  return {
+  const base: ResourceRow = {
     id: newInventoryId(),
     name: input.name.trim(),
     category: categoryLabel,
@@ -221,4 +224,6 @@ export function buildResourceRowFromTempleArea(input: {
     areaId: input.areaId,
     updatedAt: new Date().toISOString(),
   };
+  const mid = input.createdByMemberId?.trim();
+  return mid ? { ...base, createdByMemberId: mid } : base;
 }

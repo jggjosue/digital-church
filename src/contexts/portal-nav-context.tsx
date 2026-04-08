@@ -6,6 +6,7 @@ import {
   portalEntriesToSidebarItems,
   type SidebarNavItem,
 } from '@/lib/portal-nav-data';
+import { isOnboardingStaffRole } from '@/lib/pastor-church-access';
 
 type PortalNavContextValue = {
   navItems: SidebarNavItem[];
@@ -55,7 +56,8 @@ export function PortalNavProvider({ children }: { children: React.ReactNode }) {
             ? filterSidebarNavByModules(base, data.modules)
             : base;
         const role = String(data.staffRole ?? '').trim().toLowerCase();
-        const shouldShowMyData = role === 'nuevo' || role === 'congregante';
+        const shouldShowMyData =
+          isOnboardingStaffRole(data.staffRole) || role === 'congregante';
         setNavItems(shouldShowMyData ? relabelMembersNew(filtered, 'Mis datos') : filtered);
       } catch {
         if (!cancelled) setNavItems(portalEntriesToSidebarItems());

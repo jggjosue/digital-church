@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server';
 import { randomUUID } from 'crypto';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { z } from 'zod';
 import { getDb } from '@/lib/mongodb';
 import { consumePhotoUpload } from '@/lib/member-photo-upload';
-import { normalizeMemberChurchIds } from '@/lib/member-church-ids';
+import { mongoOrMemberBelongsToChurch, normalizeMemberChurchIds } from '@/lib/member-church-ids';
+import { MINISTRIES_COLLECTION, type MinistryDocument } from '@/lib/ministries';
+import { isFullAccessStaffRole, isLeadershipStaffRole } from '@/lib/pastor-church-access';
 
 export const createMemberSchema = z.object({
   firstName: z.string().min(1),
@@ -64,6 +67,8 @@ export type MemberDocument = {
     description: string;
     modules: Record<string, string[]>;
   } | null;
+  /** `members.id` del usuario que editó por último (sesión Clerk → email → miembro). */
+  updatedByMemberId?: string | null;
 };
 
 /** Límite aproximado para evitar superar el tope de 16MB de un documento BSON con foto en base64. */
@@ -78,10 +83,69 @@ export async function GET(request: Request) {
     const q = searchParams.get('q')?.trim();
     /** Ej. `?staffRoles=Admin,Pastor` → solo miembros cuyo `staffRole` coincide (sin distinguir mayúsculas). */
     const staffRolesRaw = searchParams.get('staffRoles')?.trim();
+    const churchIdParam = searchParams.get('churchId')?.trim();
+    /** Varias iglesias (coma-separado), p. ej. edición de ministerio con varios `creatorChurchIds`. */
+    const churchIdsRaw = searchParams.get('churchIds')?.trim();
+    const churchIdsList = churchIdsRaw
+      ? [...new Set(churchIdsRaw.split(',').map((s) => s.trim()).filter(Boolean))]
+      : [];
+    /** Pantalla «Asignar a ministerio»: oculta pastores (rol exacto) que ya están en algún ministerio. */
+    const excludePastorsInMinistry =
+      searchParams.get('excludePastorsInMinistry') === '1' ||
+      searchParams.get('excludePastorsInMinistry') === 'true';
+    /** Si está activo, limita resultados a los templos del miembro en sesión. */
+    const sessionChurchScope =
+      searchParams.get('sessionChurchScope') === '1' ||
+      searchParams.get('sessionChurchScope') === 'true';
     const limitParam = Number(searchParams.get('limit') ?? '0');
     const limit = Number.isFinite(limitParam) && limitParam > 0 ? Math.min(limitParam, 50) : 0;
 
     const conditions: Record<string, unknown>[] = [];
+    const db = await getDb();
+
+    if (sessionChurchScope) {
+      const { userId } = await auth();
+      const denyAll = () => conditions.push({ id: '__session_church_scope_empty__' });
+
+      if (!userId) {
+        denyAll();
+      } else {
+        const user = await currentUser();
+        const email = user?.primaryEmailAddress?.emailAddress?.trim().toLowerCase() ?? '';
+        if (!email) {
+          denyAll();
+        } else {
+          const sessionMember = await db
+            .collection<Record<string, unknown>>('members')
+            .findOne(
+              { email },
+              { projection: { _id: 0, churchIds: 1, templeIds: 1, staffRole: 1 } }
+            );
+          if (!sessionMember) {
+            denyAll();
+          } else if (isFullAccessStaffRole(sessionMember.staffRole as string | null | undefined)) {
+            // Sin filtro por templos: mismo alcance que admin.
+          } else {
+            const sessionChurchIds = normalizeMemberChurchIds(sessionMember);
+            if (sessionChurchIds.length > 0) {
+              conditions.push({
+                $or: sessionChurchIds.map((cid) => mongoOrMemberBelongsToChurch(cid)),
+              });
+            } else {
+              denyAll();
+            }
+          }
+        }
+      }
+    }
+
+    if (churchIdsList.length > 0) {
+      conditions.push({
+        $or: churchIdsList.map((cid) => mongoOrMemberBelongsToChurch(cid)),
+      });
+    } else if (churchIdParam) {
+      conditions.push(mongoOrMemberBelongsToChurch(churchIdParam));
+    }
 
     if (department) {
       conditions.push({ department });
@@ -140,7 +204,6 @@ export async function GET(request: Request) {
           ? conditions[0]!
           : { $and: conditions };
 
-    const db = await getDb();
     let query = db
       .collection<MemberDocument>('members')
       .find(filter, { projection: { _id: 0 } })
@@ -149,13 +212,39 @@ export async function GET(request: Request) {
       query = query.limit(limit);
     }
     const docs = await query.toArray();
-    const members = docs.map((raw) => {
+    let members = docs.map((raw) => {
       const { templeIds: _legacyTemple, ...rest } = raw as Record<string, unknown>;
       return {
         ...rest,
         churchIds: normalizeMemberChurchIds(raw as unknown as Record<string, unknown>),
       } as MemberDocument;
     });
+
+    if (excludePastorsInMinistry && members.length > 0) {
+      const ministryDocs = await db
+        .collection<Pick<MinistryDocument, 'leaders' | 'memberAssignments'>>(MINISTRIES_COLLECTION)
+        .find({}, { projection: { _id: 0, leaders: 1, memberAssignments: 1 } })
+        .toArray();
+      const memberIdsInAnyMinistry = new Set<string>();
+      for (const doc of ministryDocs) {
+        for (const leader of doc.leaders ?? []) {
+          const id = String(leader.id ?? '').trim();
+          if (id) memberIdsInAnyMinistry.add(id);
+        }
+        for (const a of doc.memberAssignments ?? []) {
+          const id = String(a.memberId ?? '').trim();
+          if (id) memberIdsInAnyMinistry.add(id);
+        }
+      }
+      members = members.filter(
+        (m) =>
+          !(
+            isLeadershipStaffRole(m.staffRole) &&
+            memberIdsInAnyMinistry.has(String(m.id).trim())
+          )
+      );
+    }
+
     return NextResponse.json({ members });
   } catch (e) {
     console.error('[api/members GET]', e);

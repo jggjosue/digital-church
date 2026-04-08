@@ -31,3 +31,29 @@ export function normalizeMemberChurchIds(raw: Record<string, unknown>): string[]
   }
   return out;
 }
+
+/** Índices legacy (`templeIds`) que corresponden a un `churches.id` concreto. */
+export function legacyTempleIndicesForChurchId(churchId: string): string[] {
+  const id = churchId.trim();
+  if (!id) return [];
+  return Object.entries(LEGACY_TEMPLE_INDEX_TO_CHURCH_ID)
+    .filter(([, mapped]) => mapped === id)
+    .map(([idx]) => idx);
+}
+
+/**
+ * Condición Mongo para miembros vinculados a un templo (`churchIds` o `templeIds` legacy).
+ * Solo usar con `churchId` no vacío.
+ */
+export function mongoOrMemberBelongsToChurch(churchId: string): Record<string, unknown> {
+  const trimmed = churchId.trim();
+  const legacyIdx = legacyTempleIndicesForChurchId(trimmed);
+  const or: Record<string, unknown>[] = [{ churchIds: trimmed }];
+  if (legacyIdx.length > 0) {
+    or.push({ templeIds: { $in: legacyIdx } });
+  }
+  if (trimmed === 'otro') {
+    or.push({ templeIds: 'otro' });
+  }
+  return { $or: or };
+}

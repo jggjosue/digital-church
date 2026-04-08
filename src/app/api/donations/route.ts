@@ -3,7 +3,9 @@ import { NextResponse } from 'next/server';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { z } from 'zod';
 import { CHURCHES_COLLECTION, type ChurchLocation } from '@/lib/church-locations';
+import { normalizeMemberChurchIds } from '@/lib/member-church-ids';
 import { getDb } from '@/lib/mongodb';
+import { isFullAccessStaffRole } from '@/lib/pastor-church-access';
 
 const DONATION_COLLECTION = 'donation';
 
@@ -90,7 +92,7 @@ export type DonationDocument = z.infer<typeof createDonationSchema> & {
   updatedAt: string;
 };
 
-type MemberScopeDoc = {
+type MemberScopeDoc = Record<string, unknown> & {
   id?: string;
   email?: string;
   staffRole?: string | null;
@@ -109,18 +111,40 @@ export async function GET() {
       if (email) {
         const member = await db.collection<MemberScopeDoc>('members').findOne(
           { email },
-          { projection: { _id: 0, id: 1, email: 1, staffRole: 1 } }
+          { projection: { _id: 0, id: 1, email: 1, staffRole: 1, churchIds: 1, templeIds: 1 } }
         );
-        const role = String(member?.staffRole ?? '').trim().toLowerCase();
-        if (role === 'congregante') {
-          const donorId = String(member?.id ?? '').trim();
-          const donorEmail = String(member?.email ?? email).trim().toLowerCase();
-          filter = {
-            $or: [
+
+        if (!(member && isFullAccessStaffRole(member.staffRole as string | null | undefined))) {
+          const clauses: Record<string, unknown>[] = [];
+
+          const churchIds = member ? normalizeMemberChurchIds(member) : [];
+          if (member) {
+            if (churchIds.length > 0) {
+              clauses.push({ churchId: { $in: churchIds } });
+            } else {
+              // Usuario con sesión y miembro sin templos asignados: no debe ver registros.
+              clauses.push({ churchId: '__no_church_access__' });
+            }
+          }
+
+          const role = String(member?.staffRole ?? '').trim().toLowerCase();
+          if (role === 'congregante') {
+            const donorId = String(member?.id ?? '').trim();
+            const donorEmail = String(member?.email ?? email).trim().toLowerCase();
+            const donorOr: Record<string, unknown>[] = [
               ...(donorId ? [{ 'donor.memberId': donorId }] : []),
               ...(donorEmail ? [{ 'donor.email': donorEmail }] : []),
-            ],
-          };
+            ];
+            if (donorOr.length > 0) {
+              clauses.push({ $or: donorOr });
+            }
+          }
+
+          if (clauses.length === 1) {
+            filter = clauses[0]!;
+          } else if (clauses.length > 1) {
+            filter = { $and: clauses };
+          }
         }
       }
     }

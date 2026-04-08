@@ -1,6 +1,9 @@
 import { ObjectId } from 'mongodb';
 import { NextResponse } from 'next/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { getDb } from '@/lib/mongodb';
+import { normalizeMemberChurchIds } from '@/lib/member-church-ids';
+import { isFullAccessStaffRole } from '@/lib/pastor-church-access';
 import { CHURCHES_COLLECTION, type ChurchLocation } from '@/lib/church-locations';
 import {
   INVENTORY_CATEGORIES_COLLECTION,
@@ -27,14 +30,60 @@ const COLLECTION = 'inventory';
 const CONDITIONS: ConditionKey[] = ['excellent', 'good', 'repair'];
 const STATUSES: ResourceStatus[] = ['available', 'in_use', 'maintenance'];
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const db = await getDb();
     const collection = db.collection(COLLECTION);
-    const raw = await collection
+    const { searchParams } = new URL(request.url);
+    const sessionChurchScope =
+      searchParams.get('sessionChurchScope') === '1' ||
+      searchParams.get('sessionChurchScope') === 'true';
+
+    let allowedChurchIds: string[] | null = null;
+    if (sessionChurchScope) {
+      const { userId } = await auth();
+      if (!userId) {
+        return NextResponse.json({ items: [], lastInventoryActivityAt: null });
+      }
+      const user = await currentUser();
+      const email = user?.primaryEmailAddress?.emailAddress?.trim().toLowerCase() ?? '';
+      if (!email) {
+        return NextResponse.json({ items: [], lastInventoryActivityAt: null });
+      }
+      const sessionMember = await db
+        .collection<Record<string, unknown>>('members')
+        .findOne(
+          { email },
+          { projection: { _id: 0, churchIds: 1, templeIds: 1, staffRole: 1 } }
+        );
+      if (!sessionMember) {
+        return NextResponse.json({ items: [], lastInventoryActivityAt: null });
+      }
+      if (isFullAccessStaffRole(sessionMember.staffRole as string | null | undefined)) {
+        allowedChurchIds = null;
+      } else {
+        const ids = normalizeMemberChurchIds(sessionMember);
+        if (ids.length === 0) {
+          return NextResponse.json({ items: [], lastInventoryActivityAt: null });
+        }
+        allowedChurchIds = ids;
+      }
+    }
+
+    let raw = await collection
       .find({ docType: { $ne: INVENTORY_DOC_TYPE_CHURCH_AREAS } })
       .sort({ name: 1 })
       .toArray();
+
+    if (allowedChurchIds) {
+      const allowed = new Set(allowedChurchIds);
+      raw = raw.filter((doc) => {
+        const cid = typeof (doc as Record<string, unknown>).churchId === 'string'
+          ? String((doc as Record<string, unknown>).churchId).trim()
+          : '';
+        return cid !== '' && allowed.has(cid);
+      });
+    }
 
     let lastMs = 0;
     for (const doc of raw) {
@@ -104,6 +153,35 @@ export async function POST(request: Request) {
 
     const db = await getDb();
 
+    let createdByMemberId: string | undefined;
+    const { userId } = await auth();
+    if (userId) {
+      const user = await currentUser();
+      const email = user?.primaryEmailAddress?.emailAddress?.trim().toLowerCase() ?? '';
+      if (email) {
+        const sessionMember = await db
+          .collection<Record<string, unknown>>('members')
+          .findOne(
+            { email },
+            { projection: { _id: 0, id: 1, churchIds: 1, templeIds: 1, staffRole: 1 } }
+          );
+        if (sessionMember) {
+          const mid =
+            sessionMember.id != null ? String(sessionMember.id).trim() : '';
+          if (mid) createdByMemberId = mid;
+          if (!isFullAccessStaffRole(sessionMember.staffRole as string | null | undefined)) {
+            const allowed = normalizeMemberChurchIds(sessionMember);
+            if (allowed.length > 0 && !allowed.includes(churchId)) {
+              return NextResponse.json(
+                { error: 'No puede registrar inventario en un templo que no tiene asignado.' },
+                { status: 403 }
+              );
+            }
+          }
+        }
+      }
+    }
+
     let categoryDisplayLabel: string | undefined;
     if (categoryFilter === INVENTORY_DEFAULT_CATEGORY_VALUE) {
       categoryDisplayLabel = INVENTORY_DEFAULT_CATEGORY_LABEL;
@@ -164,6 +242,7 @@ export async function POST(request: Request) {
       quantity,
       condition: body.condition as ConditionKey,
       status: body.status as ResourceStatus,
+      ...(createdByMemberId !== undefined ? { createdByMemberId } : {}),
     });
 
     await invCollection.insertOne(row);

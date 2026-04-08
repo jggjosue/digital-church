@@ -74,16 +74,25 @@ export function AuthenticatedChrome({ children }: { children: React.ReactNode })
         });
         const data = (await res.json().catch(() => ({}))) as {
           isNew?: boolean;
+          isAdmin?: boolean;
           staffRole?: string | null;
         };
-        if (!cancelled && data.isNew === true) {
+        const adminBypass = data.isAdmin === true;
+        if (!cancelled && !adminBypass && data.isNew === true) {
           router.replace('/members/new');
           return;
         }
         const role = String(data.staffRole ?? '')
           .trim()
           .toLowerCase();
-        if (!cancelled && role === 'congregante' && pathname !== '/churches') {
+        const allowCongreganteRoute =
+          pathname === '/churches' ||
+          pathname === '/members/staff' ||
+          pathname === '/donations/new' ||
+          pathname === '/donations' ||
+          pathname === '/donations/giving-statement' ||
+          pathname === '/donations/fundraising';
+        if (!cancelled && !adminBypass && role === 'congregante' && !allowCongreganteRoute) {
           router.replace('/churches');
         }
       } catch {

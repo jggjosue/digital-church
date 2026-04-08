@@ -19,6 +19,17 @@ export type MinistryLeader = {
   email: string;
 };
 
+/** Registro de asignación de un miembro a un ministerio desde un templo concreto. */
+export type MinistryMemberAssignment = {
+  /** `members.id` */
+  memberId: string;
+  /** `churches.id` */
+  churchId: string;
+  /** Id de usuario en Clerk si existe en el documento del miembro. */
+  clerkUserId?: string | null;
+  assignedAt: string;
+};
+
 export type MinistryDocument = {
   id: string;
   name: string;
@@ -28,6 +39,17 @@ export type MinistryDocument = {
   /** Total de personas asociadas (por ahora coincide con líderes al crear). */
   memberCount: number;
   createdAt: string;
+  /** `members.id` del usuario que creó el registro (relación pastor / ministerio). */
+  createdByMemberId?: string;
+  /**
+   * Copia de `members.churchIds` (y legado `templeIds`) del creador al guardar,
+   * para enlazar ministerio con los templos de la iglesia en ese momento.
+   */
+  creatorChurchIds?: string[];
+  /** Templo principal (`churches.id`) elegido al crear; debe ser uno creado por el pastor. */
+  churchId?: string;
+  /** Asignaciones de miembros (por templo) registradas desde «Asignar miembros». */
+  memberAssignments?: MinistryMemberAssignment[];
 };
 
 /** Valores permitidos en API y formularios de edición. */

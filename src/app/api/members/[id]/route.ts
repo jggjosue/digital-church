@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { getDb } from '@/lib/mongodb';
 import { consumePhotoUpload } from '@/lib/member-photo-upload';
 import { createMemberSchema, type MemberDocument } from '../route';
@@ -54,6 +55,10 @@ function normalizeDoc(raw: Record<string, unknown> | null): MemberDocument | nul
       raw.portalRoleId === null || raw.portalRoleId === undefined
         ? null
         : String(raw.portalRoleId).trim() || null,
+    updatedByMemberId:
+      raw.updatedByMemberId === null || raw.updatedByMemberId === undefined
+        ? null
+        : String(raw.updatedByMemberId).trim() || null,
     staffRoleGrants:
       raw.staffRoleGrants &&
       typeof raw.staffRoleGrants === 'object' &&
@@ -113,6 +118,21 @@ export async function PATCH(
 
     const body = parsed.data;
     const db = await getDb();
+
+    let updatedByMemberId: string | undefined;
+    const { userId } = await auth();
+    if (userId) {
+      const user = await currentUser();
+      const email = user?.primaryEmailAddress?.emailAddress?.trim().toLowerCase() ?? '';
+      if (email) {
+        const editor = await db
+          .collection<{ id?: string }>('members')
+          .findOne({ email }, { projection: { _id: 0, id: 1 } });
+        const mid = editor?.id != null ? String(editor.id).trim() : '';
+        if (mid) updatedByMemberId = mid;
+      }
+    }
+
     let photoDataUrl = await consumePhotoUpload(
       db,
       body.photoUploadId,
@@ -158,6 +178,9 @@ export async function PATCH(
     }
     if (Object.prototype.hasOwnProperty.call(json, 'staffRoleGrants')) {
       setPayload.staffRoleGrants = json.staffRoleGrants ?? null;
+    }
+    if (updatedByMemberId !== undefined) {
+      setPayload.updatedByMemberId = updatedByMemberId;
     }
     const normalizedId = id.trim();
     const members = db.collection('members');
@@ -206,6 +229,7 @@ export async function PATCH(
         staffRoleGrants: Object.prototype.hasOwnProperty.call(json, 'staffRoleGrants')
           ? (json.staffRoleGrants as MemberDocument['staffRoleGrants']) ?? null
           : null,
+        ...(updatedByMemberId !== undefined ? { updatedByMemberId } : {}),
       };
       await members.insertOne(doc);
     }

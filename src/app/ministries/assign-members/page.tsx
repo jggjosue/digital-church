@@ -2,13 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import {
-  ArrowLeft,
-  Search,
-  Plus,
-  CheckCircle,
-  AlertCircle,
-} from 'lucide-react';
+import { Search, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -26,12 +20,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { membersData } from '@/lib/data';
 import { Checkbox } from '@/components/ui/checkbox';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
     Breadcrumb,
     BreadcrumbItem,
@@ -42,6 +35,7 @@ import {
   } from '@/components/ui/breadcrumb';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AppHeader } from '@/components/app-header';
+import { useToast } from '@/hooks/use-toast';
 import type { MinistryDocument } from '@/lib/ministries';
 
 const statusColors: { [key: string]: string } = {
@@ -50,7 +44,6 @@ const statusColors: { [key: string]: string } = {
     Inactivo: 'bg-red-100 text-red-800 border-red-200',
 };
 
-type Member = (typeof membersData)[0];
 type ApiMember = {
   id: string;
   firstName: string;
@@ -77,16 +70,61 @@ function membershipStatusLabel(code: string): string {
   return map[code] ?? 'Activo';
 }
 
+type ChurchOption = { id: string; name: string };
+
 export default function AssignMembersToMinistryPage() {
+  const router = useRouter();
+  const { toast } = useToast();
+  const [assigning, setAssigning] = React.useState(false);
   const [selectedMembers, setSelectedMembers] = React.useState<string[]>([]);
+  const [selectedChurchId, setSelectedChurchId] = React.useState('');
   const [selectedMinistryId, setSelectedMinistryId] = React.useState('');
   const [searchTerm, setSearchTerm] = React.useState('');
+  const [churches, setChurches] = React.useState<ChurchOption[]>([]);
+  const [churchesLoadState, setChurchesLoadState] = React.useState<'loading' | 'ready' | 'error'>(
+    'loading'
+  );
   const [ministries, setMinistries] = React.useState<MinistryDocument[]>([]);
   const [ministriesLoadState, setMinistriesLoadState] = React.useState<'loading' | 'ready' | 'error'>('loading');
   const [memberRows, setMemberRows] = React.useState<MemberRow[]>([]);
   const [membersLoadState, setMembersLoadState] = React.useState<'loading' | 'ready' | 'error'>('loading');
-  const [showSuccess, setShowSuccess] = React.useState(false);
-  const [showError, setShowError] = React.useState(false);
+  React.useEffect(() => {
+    setSelectedMembers([]);
+  }, [selectedChurchId]);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setChurchesLoadState('loading');
+      try {
+        const res = await fetch('/api/churches', {
+          cache: 'no-store',
+          headers: { Accept: 'application/json' },
+        });
+        const data = (await res.json().catch(() => ({}))) as {
+          churches?: { id: string; name: string }[];
+          error?: string;
+        };
+        if (!res.ok) {
+          throw new Error(data.error || 'No se pudieron cargar los templos.');
+        }
+        if (cancelled) return;
+        const rows = (data.churches ?? []).map((c) => ({
+          id: String(c.id ?? '').trim(),
+          name: String(c.name ?? '').trim() || 'Sin nombre',
+        }));
+        setChurches(rows.filter((c) => c.id));
+        setChurchesLoadState('ready');
+      } catch {
+        if (cancelled) return;
+        setChurches([]);
+        setChurchesLoadState('error');
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -118,31 +156,56 @@ export default function AssignMembersToMinistryPage() {
     };
   }, []);
 
-  const handleAddMembers = () => {
-    // Simulate API call
-    const isSuccess = Math.random() > 0.3; // Simulate success or failure
-    if (isSuccess) {
-      setShowSuccess(true);
-      setShowError(false);
-      setTimeout(() => setShowSuccess(false), 3000);
-    } else {
-      setShowError(true);
-      setShowSuccess(false);
-      setTimeout(() => setShowError(false), 3000);
+  const handleAddMembers = async () => {
+    const churchId = selectedChurchId.trim();
+    const ministryId = selectedMinistryId.trim();
+    const memberIds = [...new Set(selectedMembers.map((x) => x.trim()).filter(Boolean))];
+    if (!churchId || !ministryId || memberIds.length === 0) return;
+
+    setAssigning(true);
+    try {
+      const res = await fetch(`/api/ministries/${encodeURIComponent(ministryId)}/assign-members`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({ churchId, memberIds }),
+      });
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        message?: string;
+      };
+      if (!res.ok) {
+        throw new Error(data.error || 'No se pudo guardar la asignación.');
+      }
+      toast({
+        title: 'Asignación guardada',
+        description: data.message ?? 'Los miembros quedaron registrados en el ministerio.',
+      });
+      router.push('/ministries');
+      router.refresh();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : 'Error al asignar.';
+      toast({ variant: 'destructive', title: 'No se pudo asignar', description: msg });
+    } finally {
+      setAssigning(false);
     }
   };
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelectedMembers(filteredMembers.map((m) => m.id));
+      setSelectedMembers((prev) => {
+        const set = new Set(prev);
+        for (const m of filteredMembers) set.add(m.id);
+        return [...set];
+      });
     } else {
-      setSelectedMembers([]);
+      const remove = new Set(filteredMembers.map((m) => m.id));
+      setSelectedMembers((prev) => prev.filter((id) => !remove.has(id)));
     }
   };
 
   const handleSelectOne = (id: string, checked: boolean) => {
     if (checked) {
-      setSelectedMembers((prev) => [...prev, id]);
+      setSelectedMembers((prev) => (prev.includes(id) ? prev : [...prev, id]));
     } else {
       setSelectedMembers((prev) => prev.filter((i) => i !== id));
     }
@@ -152,15 +215,21 @@ export default function AssignMembersToMinistryPage() {
     let cancelled = false;
     const timeout = setTimeout(() => {
       void (async () => {
+        if (!selectedChurchId.trim()) {
+          if (!cancelled) {
+            setMemberRows([]);
+            setMembersLoadState('ready');
+          }
+          return;
+        }
         setMembersLoadState('loading');
         try {
           const q = searchTerm.trim();
-          const selectedMinistryName =
-            ministries.find((m) => m.id === selectedMinistryId)?.name?.trim() ?? '';
           const params = new URLSearchParams();
-          params.set('limit', '20');
+          params.set('limit', '50');
+          params.set('churchId', selectedChurchId.trim());
+          params.set('excludePastorsInMinistry', '1');
           if (q) params.set('q', q);
-          if (selectedMinistryName) params.set('group', selectedMinistryName);
           const url = `/api/members?${params.toString()}`;
           const res = await fetch(url, {
             cache: 'no-store',
@@ -194,9 +263,18 @@ export default function AssignMembersToMinistryPage() {
       cancelled = true;
       clearTimeout(timeout);
     };
-  }, [searchTerm, selectedMinistryId, ministries]);
+  }, [searchTerm, selectedChurchId]);
 
   const filteredMembers = React.useMemo(() => memberRows, [memberRows]);
+
+  const headerCheckboxState = React.useMemo(() => {
+    const ids = filteredMembers.map((m) => m.id);
+    if (ids.length === 0) return false as boolean | 'indeterminate';
+    const n = ids.filter((id) => selectedMembers.includes(id)).length;
+    if (n === 0) return false;
+    if (n === ids.length) return true;
+    return 'indeterminate';
+  }, [filteredMembers, selectedMembers]);
 
   return (
     <div className="flex flex-col flex-1">
@@ -218,42 +296,72 @@ export default function AssignMembersToMinistryPage() {
       >
         <div className="flex flex-col sm:flex-row items-center gap-2">
             <Button variant="ghost" asChild><Link href="/ministries">Cancelar</Link></Button>
-            <Button onClick={handleAddMembers} disabled={selectedMembers.length === 0}>
-                <Plus className="mr-2 h-4 w-4" /> Asignar {selectedMembers.length > 0 ? selectedMembers.length : ''} {selectedMembers.length === 1 ? 'Miembro' : 'Miembros'}
+            <Button
+              onClick={() => void handleAddMembers()}
+              disabled={
+                assigning ||
+                selectedMembers.length === 0 ||
+                !selectedChurchId.trim() ||
+                !selectedMinistryId.trim()
+              }
+            >
+                <Plus className="mr-2 h-4 w-4" />
+                {assigning
+                  ? 'Guardando…'
+                  : `Asignar ${selectedMembers.length > 0 ? selectedMembers.length : ''} ${selectedMembers.length === 1 ? 'Miembro' : 'Miembros'}`}
             </Button>
         </div>
       </AppHeader>
     <main className="flex-1 bg-muted/20 p-4 sm:p-8">
       <div className="space-y-4 max-w-5xl mx-auto">
-        {showSuccess && (
-            <Alert variant="default" className="bg-green-50 border-green-200 text-green-900">
-                <CheckCircle className="h-4 w-4 text-green-600" />
-                <AlertTitle className="font-semibold">Éxito</AlertTitle>
-                <AlertDescription>
-                    Los miembros seleccionados han sido asignados exitosamente al ministerio.
-                </AlertDescription>
-            </Alert>
-        )}
-        {showError && (
-             <Alert variant="destructive">
-                <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Error</AlertTitle>
-                <AlertDescription>
-                    No se pudieron asignar los miembros. Por favor, intente de nuevo.
-                </AlertDescription>
-            </Alert>
-        )}
-
         <Card>
             <CardHeader>
                 <CardTitle>Seleccionar Miembros y Ministerio</CardTitle>
-                <CardDescription>
-                    Primero, seleccione el ministerio de destino y luego elija los miembros para asignar.
-                </CardDescription>
             </CardHeader>
             <CardContent>
-                 <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                 <div className="mb-6 space-y-4">
+                    <div>
+                        <label className="mb-2 block text-sm font-medium text-foreground">
+                            Templo
+                        </label>
+                        <Select
+                          value={selectedChurchId || undefined}
+                          onValueChange={(v) => setSelectedChurchId(v)}
+                        >
+                            <SelectTrigger>
+                                <SelectValue placeholder="Seleccione un templo…" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {churchesLoadState === 'loading' ? (
+                                  <SelectItem value="__ch-loading__" disabled>
+                                    Cargando templos…
+                                  </SelectItem>
+                                ) : null}
+                                {churchesLoadState === 'error' ? (
+                                  <SelectItem value="__ch-error__" disabled>
+                                    No se pudieron cargar los templos
+                                  </SelectItem>
+                                ) : null}
+                                {churchesLoadState === 'ready' && churches.length === 0 ? (
+                                  <SelectItem value="__ch-empty__" disabled>
+                                    No hay templos disponibles
+                                  </SelectItem>
+                                ) : null}
+                                {churchesLoadState === 'ready'
+                                  ? churches.map((c) => (
+                                      <SelectItem key={c.id} value={c.id}>
+                                        {c.name}
+                                      </SelectItem>
+                                    ))
+                                  : null}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="flex flex-col gap-4 sm:flex-row">
                     <div className='flex-1'>
+                        <label className="mb-2 block text-sm font-medium text-foreground">
+                            Ministerio
+                        </label>
                         <Select value={selectedMinistryId} onValueChange={setSelectedMinistryId}>
                             <SelectTrigger>
                                 <SelectValue placeholder="Seleccione un ministerio..." />
@@ -284,42 +392,63 @@ export default function AssignMembersToMinistryPage() {
                             </SelectContent>
                         </Select>
                     </div>
-                    <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          placeholder="Buscar por nombre, email o número de teléfono..."
-                          className="pl-9"
-                          value={searchTerm}
-                          onChange={(e) => setSearchTerm(e.target.value)}
-                        />
+                    <div className="flex-1">
+                        <label className="mb-2 block text-sm font-medium text-foreground">
+                            Buscar
+                        </label>
+                        <div className="relative">
+                          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                          <Input
+                            placeholder="Nombre, email o teléfono…"
+                            className="pl-9"
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            disabled={!selectedChurchId.trim()}
+                          />
+                        </div>
+                    </div>
                     </div>
                 </div>
                 <div className="overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="w-12"><Checkbox onCheckedChange={(checked) => handleSelectAll(!!checked)} /></TableHead>
+                                <TableHead className="w-12">
+                                  <Checkbox
+                                    checked={headerCheckboxState}
+                                    onCheckedChange={(checked) => handleSelectAll(checked === true)}
+                                    disabled={filteredMembers.length === 0}
+                                    aria-label="Seleccionar todos los miembros visibles"
+                                  />
+                                </TableHead>
                                 <TableHead>NOMBRE</TableHead>
                                 <TableHead>CONTACTO</TableHead>
                                 <TableHead>ESTADO</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {membersLoadState === 'loading' ? (
+                            {!selectedChurchId.trim() ? (
+                              <TableRow>
+                                <TableCell colSpan={4} className="py-8 text-center text-sm text-muted-foreground">
+                                  Seleccione un templo para ver a los miembros asignados a esa ubicación.
+                                </TableCell>
+                              </TableRow>
+                            ) : null}
+                            {selectedChurchId.trim() && membersLoadState === 'loading' ? (
                               <TableRow>
                                 <TableCell colSpan={4} className="py-8 text-center text-sm text-muted-foreground">
                                   Buscando miembros en la base de datos...
                                 </TableCell>
                               </TableRow>
                             ) : null}
-                            {membersLoadState === 'error' ? (
+                            {selectedChurchId.trim() && membersLoadState === 'error' ? (
                               <TableRow>
                                 <TableCell colSpan={4} className="py-8 text-center text-sm text-destructive">
                                   No se pudo consultar la colección members.
                                 </TableCell>
                               </TableRow>
                             ) : null}
-                            {membersLoadState === 'ready'
+                            {selectedChurchId.trim() && membersLoadState === 'ready'
                               ? filteredMembers.map((member) => (
                                 <TableRow key={member.id}>
                                     <TableCell>
@@ -349,10 +478,12 @@ export default function AssignMembersToMinistryPage() {
                                 </TableRow>
                             ))
                               : null}
-                            {membersLoadState === 'ready' && filteredMembers.length === 0 ? (
+                            {selectedChurchId.trim() &&
+                            membersLoadState === 'ready' &&
+                            filteredMembers.length === 0 ? (
                               <TableRow>
                                 <TableCell colSpan={4} className="py-8 text-center text-sm text-muted-foreground">
-                                  No hay miembros que coincidan con la búsqueda.
+                                  No hay miembros en este templo que coincidan con la búsqueda.
                                 </TableCell>
                               </TableRow>
                             ) : null}

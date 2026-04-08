@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { getDb } from '@/lib/mongodb';
+import { isLeadershipStaffRole } from '@/lib/pastor-church-access';
+import { exactPastorCanAccessMinistry } from '@/lib/pastor-ministry-access';
 import {
   MINISTRIES_COLLECTION,
   MINISTRY_CATEGORY_VALUES,
@@ -36,6 +39,24 @@ export async function GET(
     if (!doc) {
       return NextResponse.json({ error: 'Ministerio no encontrado.' }, { status: 404 });
     }
+
+    const { userId } = await auth();
+    if (userId) {
+      const user = await currentUser();
+      const email = user?.primaryEmailAddress?.emailAddress?.trim().toLowerCase() ?? '';
+      if (email) {
+        const member = await db
+          .collection<{ id?: string; staffRole?: string | null }>('members')
+          .findOne({ email }, { projection: { _id: 0, id: 1, staffRole: 1 } });
+        if (member && isLeadershipStaffRole(member.staffRole)) {
+          const mid = String(member.id ?? '').trim();
+          if (!exactPastorCanAccessMinistry(doc, mid, email)) {
+            return NextResponse.json({ error: 'No autorizado.' }, { status: 403 });
+          }
+        }
+      }
+    }
+
     return NextResponse.json({ ministry: doc });
   } catch (e) {
     console.error('[api/ministries/[id] GET]', e);
@@ -70,6 +91,31 @@ export async function PATCH(
     }));
     const memberCount = leaders.length;
     const db = await getDb();
+
+    const existing = await db
+      .collection<MinistryDocument>(MINISTRIES_COLLECTION)
+      .findOne({ id: id.trim() }, { projection: { _id: 0 } });
+    if (!existing) {
+      return NextResponse.json({ error: 'Ministerio no encontrado.' }, { status: 404 });
+    }
+
+    const { userId: patchUserId } = await auth();
+    if (patchUserId) {
+      const user = await currentUser();
+      const email = user?.primaryEmailAddress?.emailAddress?.trim().toLowerCase() ?? '';
+      if (email) {
+        const member = await db
+          .collection<{ id?: string; staffRole?: string | null }>('members')
+          .findOne({ email }, { projection: { _id: 0, id: 1, staffRole: 1 } });
+        if (member && isLeadershipStaffRole(member.staffRole)) {
+          const mid = String(member.id ?? '').trim();
+          if (!exactPastorCanAccessMinistry(existing, mid, email)) {
+            return NextResponse.json({ error: 'No autorizado.' }, { status: 403 });
+          }
+        }
+      }
+    }
+
     const setPayload: Partial<MinistryDocument> = {
       name: body.name.trim(),
       description: body.description.trim(),
@@ -107,6 +153,31 @@ export async function DELETE(
       return NextResponse.json({ error: 'Id inválido.' }, { status: 400 });
     }
     const db = await getDb();
+
+    const existing = await db
+      .collection<MinistryDocument>(MINISTRIES_COLLECTION)
+      .findOne({ id: id.trim() }, { projection: { _id: 0 } });
+    if (!existing) {
+      return NextResponse.json({ error: 'Ministerio no encontrado.' }, { status: 404 });
+    }
+
+    const { userId: delUserId } = await auth();
+    if (delUserId) {
+      const user = await currentUser();
+      const email = user?.primaryEmailAddress?.emailAddress?.trim().toLowerCase() ?? '';
+      if (email) {
+        const member = await db
+          .collection<{ id?: string; staffRole?: string | null }>('members')
+          .findOne({ email }, { projection: { _id: 0, id: 1, staffRole: 1 } });
+        if (member && isLeadershipStaffRole(member.staffRole)) {
+          const mid = String(member.id ?? '').trim();
+          if (!exactPastorCanAccessMinistry(existing, mid, email)) {
+            return NextResponse.json({ error: 'No autorizado.' }, { status: 403 });
+          }
+        }
+      }
+    }
+
     const result = await db
       .collection<MinistryDocument>(MINISTRIES_COLLECTION)
       .deleteOne({ id: id.trim() });

@@ -1,7 +1,25 @@
 import { NextResponse } from 'next/server';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { getDb } from '@/lib/mongodb';
+import { isFullAccessStaffRole, isLeadershipStaffRole } from '@/lib/pastor-church-access';
 import type { StaffRoleDocument } from '@/lib/staff-roles';
+
+/** Misma matriz de módulos que antes tenía solo el rol «Pastor». */
+const LEADERSHIP_PORTAL_MODULES = {
+  Panel: ['Panel'],
+  Iglesias: ['Añadir Ubicación', 'Buscar'],
+  Ministerios: ['Nuevo Ministerio', 'Gestionar', 'Asignar Miembros'],
+  Asistencia: ['Servicio', 'Registro', 'Reporte'],
+  Ofrendas: [
+    'Nueva Donación',
+    'Crear Campaña',
+    'Donaciones y ofrendas',
+    'Declaración de Donación',
+    'Recaudación de Fondos',
+  ],
+  Directorio: ['Mis Datos', 'Añadir', 'Miembros', 'Pastoral'],
+  Inventario: ['Gestión de inventario', 'Nueva Artículo'],
+} as const;
 
 type MemberNavDoc = {
   staffRole?: string | null;
@@ -40,7 +58,7 @@ export async function GET() {
 
     const staffRole = member.staffRole ?? null;
     const sr = String(member.staffRole ?? '').trim().toLowerCase();
-    if (sr === 'admin') {
+    if (isFullAccessStaffRole(staffRole)) {
       return NextResponse.json({ access: 'full' as const, staffRole });
     }
 
@@ -62,47 +80,10 @@ export async function GET() {
       });
     }
 
-    // Regla fija solicitada para Pastor.
-    if (sr === 'pastor') {
+    if (isLeadershipStaffRole(staffRole)) {
       return NextResponse.json({
         access: 'partial' as const,
-        modules: {
-          Panel: ['Panel'],
-          Iglesias: ['Añadir Ubicación', 'Buscar'],
-          Ministerios: ['Nuevo Ministerio', 'Gestionar', 'Asignar Miembros'],
-          Asistencia: ['Servicio', 'Registro', 'Reporte'],
-          Ofrendas: [
-            'Nueva Donación',
-            'Crear Campaña',
-            'Donaciones y ofrendas',
-            'Declaración de Donación',
-            'Recaudación de Fondos',
-          ],
-          Directorio: ['Nuevo', 'Miembros', 'Pastoral'],
-          Inventario: ['Gestión de inventario', 'Nueva Artículo'],
-        },
-        staffRole,
-      });
-    }
-
-    // Regla fija solicitada para Directiva.
-    if (sr === 'directiva') {
-      return NextResponse.json({
-        access: 'partial' as const,
-        modules: {
-          Panel: ['Panel'],
-          Iglesias: ['Buscar'],
-          Ministerios: ['Gestionar', 'Asignar Miembros'],
-          Asistencia: ['Servicio', 'Registro', 'Reporte'],
-          Ofrendas: [
-            'Nueva Donación',
-            'Donaciones y ofrendas',
-            'Declaración de Donación',
-            'Recaudación de Fondos',
-          ],
-          Directorio: ['Nuevo', 'Miembros', 'Pastoral'],
-          Inventario: ['Gestión de inventario', 'Nueva Artículo'],
-        },
+        modules: LEADERSHIP_PORTAL_MODULES,
         staffRole,
       });
     }

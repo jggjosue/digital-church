@@ -81,6 +81,8 @@ const baseCategories: CategoryRecord[] = [
 ];
 
 const YEAR_OPTIONS = Array.from({ length: 11 }, (_, index) => (2020 + index).toString());
+/** Valor interno del Select para «escribir otro nombre» (no debe coincidir con nombres reales). */
+const EVENT_NAME_CUSTOM = '__event_custom__';
 const MONTH_ORDER: MonthKey[] = [
   'enero',
   'febrero',
@@ -424,6 +426,8 @@ export default function AttendanceRegistroPage() {
     Record<string, AttendanceRegistryApiRecord>
   >({});
   const [eventName, setEventName] = React.useState('');
+  const [eventNameSuggestions, setEventNameSuggestions] = React.useState<string[]>([]);
+  const [eventNamesLoading, setEventNamesLoading] = React.useState(false);
 
   const monthOrder: MonthKey[] = MONTH_ORDER;
   const yearOptions = YEAR_OPTIONS;
@@ -1154,6 +1158,48 @@ export default function AttendanceRegistroPage() {
     };
   }, [selectedChurchId, selectedYear, toast, saveKey]);
 
+  React.useEffect(() => {
+    if (!selectedChurchId.trim()) {
+      setEventNameSuggestions([]);
+      setEventNamesLoading(false);
+      return;
+    }
+    let cancelled = false;
+    setEventNamesLoading(true);
+    void (async () => {
+      try {
+        const res = await fetch(
+          `/api/attendance/registro/event-names?churchId=${encodeURIComponent(selectedChurchId)}&year=${encodeURIComponent(selectedYear)}`,
+          { cache: 'no-store', headers: { Accept: 'application/json' } }
+        );
+        const json = (await res.json().catch(() => ({}))) as { names?: string[] };
+        if (cancelled) return;
+        setEventNameSuggestions(Array.isArray(json.names) ? json.names : []);
+      } catch {
+        if (!cancelled) setEventNameSuggestions([]);
+      } finally {
+        if (!cancelled) setEventNamesLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+      setEventNamesLoading(false);
+    };
+  }, [selectedChurchId, selectedYear]);
+
+  const eventNameSelectValue = React.useMemo(() => {
+    if (!eventName.trim()) return '';
+    if (eventNameSuggestions.includes(eventName)) return eventName;
+    return EVENT_NAME_CUSTOM;
+  }, [eventName, eventNameSuggestions]);
+
+  const showCustomEventNameInput =
+    Boolean(selectedChurchId) &&
+    !isLoadingRegistry &&
+    !eventNamesLoading &&
+    eventNameSuggestions.length > 0 &&
+    eventNameSelectValue === EVENT_NAME_CUSTOM;
+
   return (
     <div className="relative flex flex-1 flex-col">
       {isImporting ? (
@@ -1227,18 +1273,72 @@ export default function AttendanceRegistroPage() {
             </div>
 
             <div className="mt-4 space-y-2">
-              <Label htmlFor="attendance-event-name" className="text-sm font-medium text-muted-foreground">
-                Nombre del evento (este templo y año)
+              <Label className="text-sm font-medium text-muted-foreground">
+                Seleccione el evento
               </Label>
-              <Input
-                id="attendance-event-name"
-                value={eventName}
-                onChange={(event) => setEventName(event.target.value)}
-                placeholder="Ej. Culto dominical, vigilia, campamento…"
-                disabled={!selectedChurchId || isLoadingRegistry}
-                maxLength={200}
-                autoComplete="off"
-              />
+              {!selectedChurchId ? (
+                <Select disabled>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Seleccione primero un templo" />
+                  </SelectTrigger>
+                </Select>
+              ) : isLoadingRegistry ? (
+                <Select disabled>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Cargando registro…" />
+                  </SelectTrigger>
+                </Select>
+              ) : eventNamesLoading ? (
+                <Select disabled>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Cargando eventos…" />
+                  </SelectTrigger>
+                </Select>
+              ) : eventNameSuggestions.length > 0 ? (
+                <div className="space-y-2">
+                  <Select
+                    value={eventNameSelectValue === '' ? undefined : eventNameSelectValue}
+                    onValueChange={(v) => {
+                      if (v === EVENT_NAME_CUSTOM) {
+                        setEventName((prev) =>
+                          eventNameSuggestions.includes(prev) ? '' : prev
+                        );
+                        return;
+                      }
+                      setEventName(v);
+                    }}
+                  >
+                    <SelectTrigger className="w-full" id="attendance-event-name-select">
+                      <SelectValue placeholder="Seleccione un evento" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {eventNameSuggestions.map((name) => (
+                        <SelectItem key={name} value={name}>
+                          {name}
+                        </SelectItem>
+                      ))}
+                      <SelectItem value={EVENT_NAME_CUSTOM}>Otro nombre…</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {showCustomEventNameInput ? (
+                    <Input
+                      id="attendance-event-name-custom"
+                      value={eventName}
+                      onChange={(e) => setEventName(e.target.value)}
+                      placeholder="Ej. Culto dominical, vigilia, campamento…"
+                      maxLength={200}
+                      autoComplete="off"
+                      aria-label="Nombre del evento (texto libre)"
+                    />
+                  ) : null}
+                </div>
+              ) : (
+                <Select disabled>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="No hay eventos registrados en este templo" />
+                  </SelectTrigger>
+                </Select>
+              )}
             </div>
           </CardContent>
         </Card>

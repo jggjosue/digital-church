@@ -270,6 +270,14 @@ export default function NewDonationPage() {
             return;
         }
 
+        const churchId = selectedChurchId.trim();
+        if (!churchId) {
+            setMemberResults([]);
+            setMemberSearchState('idle');
+            setIsMemberListOpen(false);
+            return;
+        }
+
         const q = donorSearch.trim();
         if (q.length < 2) {
             setMemberResults([]);
@@ -281,7 +289,12 @@ export default function NewDonationPage() {
         const timeout = window.setTimeout(async () => {
             setMemberSearchState('loading');
             try {
-                const response = await fetch(`/api/members?q=${encodeURIComponent(q)}&limit=8`, {
+                const params = new URLSearchParams();
+                params.set('q', q);
+                params.set('limit', '8');
+                params.set('churchId', churchId);
+                params.set('staffRoles', 'Pastor');
+                const response = await fetch(`/api/members?${params.toString()}`, {
                     cache: 'no-store',
                     headers: { Accept: 'application/json' },
                 });
@@ -305,7 +318,7 @@ export default function NewDonationPage() {
             cancelled = true;
             window.clearTimeout(timeout);
         };
-    }, [donorSearch, isOffering]);
+    }, [donorSearch, isOffering, selectedChurchId]);
 
     React.useEffect(() => {
         if (!selectedChurchId) {
@@ -661,23 +674,82 @@ export default function NewDonationPage() {
                                 </div>
                             )}
                             <div className="space-y-2">
+                                <Label htmlFor="church">Templo</Label>
+                                <Select
+                                    value={selectedChurchId}
+                                    onValueChange={(v) => {
+                                        setSelectedChurchId(v);
+                                        setSelectedDonor(null);
+                                        setDonorSearch('');
+                                        setMemberResults([]);
+                                        setMemberSearchState('idle');
+                                        setIsMemberListOpen(false);
+                                        setFieldErrors((prev) => {
+                                            const next = { ...prev };
+                                            delete next.church;
+                                            delete next.event;
+                                            delete next.donor;
+                                            return next;
+                                        });
+                                    }}
+                                    disabled={churchesState !== 'ready' || churches.length === 0}
+                                >
+                                    <SelectTrigger id="church">
+                                        <SelectValue
+                                            placeholder={
+                                                churchesState === 'loading'
+                                                    ? 'Cargando templos...'
+                                                    : churchesState === 'error'
+                                                        ? 'Error al cargar templos'
+                                                        : 'Selecciona un templo'
+                                            }
+                                        />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {churches.map((church) => (
+                                            <SelectItem key={church.id} value={church.id}>
+                                                {church.name}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <p className="text-sm text-muted-foreground">
+                                    La búsqueda de donante solo incluye miembros con rol Pastor en el directorio y
+                                    vinculados a este templo.
+                                </p>
+                                {fieldErrors.church ? (
+                                    <p className="text-xs text-destructive" role="alert">
+                                        {fieldErrors.church}
+                                    </p>
+                                ) : null}
+                            </div>
+
+                            <div className="space-y-2">
                                 <Label htmlFor="donor-search">Donante</Label>
                                 <div className="relative">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                     <Input
                                         id="donor-search"
-                                        placeholder={isOffering ? 'Iglesia' : 'Buscar un donante existente...'}
+                                        placeholder={
+                                            isOffering
+                                                ? 'Iglesia'
+                                                : !selectedChurchId.trim()
+                                                  ? 'Seleccione primero el templo'
+                                                  : 'Buscar miembro donante de este templo…'
+                                        }
                                         className="pl-9"
                                         value={donorSearch}
-                                        disabled={isOffering || isDonorLocked}
+                                        disabled={
+                                            isOffering || isDonorLocked || !selectedChurchId.trim()
+                                        }
                                         onChange={(e) => {
-                                            if (isOffering || isDonorLocked) return;
+                                            if (isOffering || isDonorLocked || !selectedChurchId.trim()) return;
                                             setDonorSearch(e.target.value);
                                             setSelectedDonor(null);
                                             setIsMemberListOpen(true);
                                         }}
                                         onFocus={() => {
-                                            if (isOffering || isDonorLocked) return;
+                                            if (isOffering || isDonorLocked || !selectedChurchId.trim()) return;
                                             if (memberResults.length > 0 || memberSearchState !== 'idle') {
                                                 setIsMemberListOpen(true);
                                             }
@@ -690,19 +762,20 @@ export default function NewDonationPage() {
                                 </div>
                                 {!isOffering &&
                                 !isDonorLocked &&
+                                selectedChurchId.trim() &&
                                 isMemberListOpen &&
                                 !selectedDonor &&
                                 donorSearch.trim().length >= 2 ? (
                                     <div className="rounded-md border bg-background shadow-sm" role="listbox">
                                         {memberSearchState === 'loading' ? (
-                                            <p className="px-3 py-2 text-sm text-muted-foreground">Buscando miembros...</p>
+                                            <p className="px-3 py-2 text-sm text-muted-foreground">Buscando pastores...</p>
                                         ) : null}
                                         {memberSearchState === 'error' ? (
                                             <p className="px-3 py-2 text-sm text-destructive">Error al buscar miembros.</p>
                                         ) : null}
                                         {memberSearchState === 'ready' && memberResults.length === 0 ? (
                                             <p className="px-3 py-2 text-sm text-muted-foreground">
-                                                No se encontraron miembros.
+                                                No hay pastores en este templo que coincidan con la búsqueda.
                                             </p>
                                         ) : null}
                                         {memberResults.map((member) => (
@@ -766,53 +839,16 @@ export default function NewDonationPage() {
                                     </p>
                                 ) : !isDonorLocked ? (
                                     <p className="text-sm text-muted-foreground">
-                                        ¿No encuentra al donante? <Link href="/members/new" className="text-primary underline">Añada un nuevo perfil de donante</Link>.
+                                        ¿No encuentra al pastor?{' '}
+                                        <Link href="/members/new" className="text-primary underline">
+                                            Añada un nuevo perfil
+                                        </Link>{' '}
+                                        con rol Pastor y templos correctos.
                                     </p>
                                 ) : null}
                                 {fieldErrors.donor ? (
                                     <p className="text-xs text-destructive" role="alert">
                                         {fieldErrors.donor}
-                                    </p>
-                                ) : null}
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="church">Templo</Label>
-                                <Select
-                                    value={selectedChurchId}
-                                    onValueChange={(v) => {
-                                        setSelectedChurchId(v);
-                                        setFieldErrors((prev) => {
-                                            const next = { ...prev };
-                                            delete next.church;
-                                            delete next.event;
-                                            return next;
-                                        });
-                                    }}
-                                    disabled={churchesState !== 'ready' || churches.length === 0}
-                                >
-                                    <SelectTrigger id="church">
-                                        <SelectValue
-                                            placeholder={
-                                                churchesState === 'loading'
-                                                    ? 'Cargando templos...'
-                                                    : churchesState === 'error'
-                                                        ? 'Error al cargar templos'
-                                                        : 'Selecciona un templo'
-                                            }
-                                        />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {churches.map((church) => (
-                                            <SelectItem key={church.id} value={church.id}>
-                                                {church.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                {fieldErrors.church ? (
-                                    <p className="text-xs text-destructive" role="alert">
-                                        {fieldErrors.church}
                                     </p>
                                 ) : null}
                             </div>

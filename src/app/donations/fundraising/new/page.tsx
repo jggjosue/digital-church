@@ -27,6 +27,8 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import type { FundraisingCampaignDoc, FundraisingStatus } from '@/lib/fundraising-seed';
 
+type ChurchItem = { id: string; name: string };
+
 const statusColors: Record<FundraisingStatus, string> = {
   Active: 'bg-green-100 text-green-800 border-green-200',
   Completed: 'bg-blue-100 text-blue-800 border-blue-200',
@@ -53,6 +55,9 @@ export default function NewFundraisingCampaignPage() {
   const { toast } = useToast();
 
   const [saving, setSaving] = React.useState(false);
+  const [churches, setChurches] = React.useState<ChurchItem[]>([]);
+  const [selectedChurchId, setSelectedChurchId] = React.useState('');
+  const [churchesState, setChurchesState] = React.useState<'loading' | 'ready' | 'error'>('loading');
 
   const [name, setName] = React.useState('');
   const [description, setDescription] = React.useState('');
@@ -85,6 +90,34 @@ export default function NewFundraisingCampaignPage() {
     }
   };
 
+  React.useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      setChurchesState('loading');
+      try {
+        const res = await fetch('/api/churches', {
+          cache: 'no-store',
+          headers: { Accept: 'application/json' },
+        });
+        const json = (await res.json().catch(() => ({}))) as { churches?: ChurchItem[] };
+        if (!res.ok) throw new Error('No se pudieron cargar los templos.');
+        if (cancelled) return;
+        const rows = (json.churches ?? []).sort((a, b) => a.name.localeCompare(b.name, 'es'));
+        setChurches(rows);
+        setSelectedChurchId((prev) => prev || rows[0]?.id || '');
+        setChurchesState('ready');
+      } catch {
+        if (!cancelled) {
+          setChurches([]);
+          setChurchesState('error');
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -93,6 +126,14 @@ export default function NewFundraisingCampaignPage() {
 
     if (!name.trim()) {
       toast({ title: 'Revise el formulario', description: 'El título es obligatorio.', variant: 'destructive' });
+      return;
+    }
+    if (!selectedChurchId.trim()) {
+      toast({
+        title: 'Revise el formulario',
+        description: 'Seleccione el templo al que pertenece la campaña.',
+        variant: 'destructive',
+      });
       return;
     }
     if (!Number.isFinite(raisedParsed) || raisedParsed < 0) {
@@ -120,6 +161,7 @@ export default function NewFundraisingCampaignPage() {
           raised: raisedParsed,
           goal: goalParsed,
           date: dateLabel.trim(),
+          churchId: selectedChurchId.trim(),
         }),
       });
       const json = (await res.json().catch(() => ({}))) as {
@@ -227,6 +269,38 @@ export default function NewFundraisingCampaignPage() {
                   rows={4}
                   placeholder="Breve descripción para donantes y equipo."
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="new-campaign-church">Templo</Label>
+                <Select
+                  value={selectedChurchId}
+                  onValueChange={setSelectedChurchId}
+                  disabled={churchesState !== 'ready' || churches.length === 0}
+                >
+                  <SelectTrigger id="new-campaign-church" className="w-full">
+                    <SelectValue
+                      placeholder={
+                        churchesState === 'loading'
+                          ? 'Cargando templos…'
+                          : churchesState === 'error'
+                            ? 'Error al cargar templos'
+                            : 'Seleccione un templo'
+                      }
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {churches.map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-muted-foreground">
+                  Se guarda con la campaña. El usuario en sesión queda registrado automáticamente en el
+                  servidor (Clerk y miembro del directorio si aplica).
+                </p>
               </div>
 
               <div className="space-y-2">

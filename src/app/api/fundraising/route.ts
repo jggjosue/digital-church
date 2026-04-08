@@ -1,6 +1,10 @@
 import type { Collection } from 'mongodb';
 import { NextResponse } from 'next/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
+import { CHURCHES_COLLECTION, type ChurchLocation } from '@/lib/church-locations';
+import { normalizeMemberChurchIds } from '@/lib/member-church-ids';
 import { getDb } from '@/lib/mongodb';
+import { isFullAccessStaffRole } from '@/lib/pastor-church-access';
 import type { FundraisingCampaignDoc, FundraisingStatus } from '@/lib/fundraising-seed';
 
 const COLLECTION = 'fundraising';
@@ -39,9 +43,34 @@ export async function GET() {
   try {
     const db = await getDb();
     const collection = db.collection<FundraisingCampaignDoc>(COLLECTION);
+    let filter: Record<string, unknown> = {};
+
+    const { userId } = await auth();
+    if (userId) {
+      const user = await currentUser();
+      const email = user?.primaryEmailAddress?.emailAddress?.trim().toLowerCase() ?? '';
+      if (email) {
+        const member = await db
+          .collection<Record<string, unknown>>('members')
+          .findOne(
+            { email },
+            { projection: { _id: 0, churchIds: 1, templeIds: 1, staffRole: 1 } }
+          );
+        if (member && !isFullAccessStaffRole(member.staffRole as string | null | undefined)) {
+          const churchIds = normalizeMemberChurchIds(member);
+          if (churchIds.length > 0) {
+            filter = { churchId: { $in: churchIds } };
+          } else {
+            filter = { churchId: '__no_church_access__' };
+          }
+        } else if (!member) {
+          filter = { churchId: '__no_church_access__' };
+        }
+      }
+    }
 
     const campaigns = await collection
-      .find({}, { projection: { _id: 0 } })
+      .find(filter, { projection: { _id: 0 } })
       .sort({ sortOrder: 1 })
       .toArray();
 
@@ -91,7 +120,36 @@ export async function POST(request: Request) {
 
     const date = typeof body.date === 'string' ? body.date.trim() : '';
 
+    const churchId = typeof body.churchId === 'string' ? body.churchId.trim() : '';
+    if (!churchId) {
+      return NextResponse.json({ error: 'Debe indicar el templo (churchId).' }, { status: 400 });
+    }
+
     const db = await getDb();
+    const church = await db
+      .collection<ChurchLocation>(CHURCHES_COLLECTION)
+      .findOne({ id: churchId }, { projection: { _id: 0, id: 1 } });
+    if (!church) {
+      return NextResponse.json({ error: 'Templo no encontrado.' }, { status: 400 });
+    }
+
+    let createdByMemberId: string | null = null;
+    let createdByClerkUserId: string | null = null;
+    const { userId } = await auth();
+    if (userId) {
+      createdByClerkUserId = userId;
+      const user = await currentUser();
+      const email = user?.primaryEmailAddress?.emailAddress?.trim().toLowerCase() ?? '';
+      if (email) {
+        const member = await db
+          .collection<{ id?: string }>('members')
+          .findOne({ email }, { projection: { _id: 0, id: 1 } });
+        if (member?.id) {
+          createdByMemberId = String(member.id);
+        }
+      }
+    }
+
     const collection = db.collection<FundraisingCampaignDoc>(COLLECTION);
 
     const baseId = slugifyBase(name);
@@ -111,6 +169,9 @@ export async function POST(request: Request) {
       progress: computeProgress(raised, goal),
       date,
       sortOrder,
+      churchId,
+      createdByMemberId,
+      createdByClerkUserId,
     };
 
     await collection.insertOne(campaign);

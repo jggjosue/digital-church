@@ -20,12 +20,22 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { useParams } from 'next/navigation';
 import { AppHeader } from '@/components/app-header';
 import type { MinistryDocument } from '@/lib/ministries';
 import { ministryCategoryLabel } from '@/lib/ministries';
+import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const statusColors: Record<string, string> = {
   Activo: 'bg-green-100 text-green-800 border-green-200',
@@ -38,14 +48,69 @@ const roleColors: Record<string, string> = {
   Miembro: 'bg-gray-100 text-gray-800 border-gray-200',
 };
 
+function membershipStatusLabel(code: string): string {
+  const map: Record<string, string> = {
+    active: 'Activo',
+    visitor: 'Visitante',
+    inactive: 'Inactivo',
+  };
+  return map[code] ?? 'Activo';
+}
+
+type MemberBrief = {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  membershipStatus: string;
+};
+
+type RosterRow = {
+  key: string;
+  memberId: string;
+  mode: 'leader' | 'assignment';
+  churchId?: string;
+  name: string;
+  email: string;
+  phone: string;
+  role: 'Líder' | 'Miembro';
+  status: string;
+};
+
 export default function MinistryDetailsPage() {
   const params = useParams();
+  const { toast } = useToast();
   const id =
     typeof params?.id === 'string' ? params.id : Array.isArray(params?.id) ? params.id[0] : '';
 
   const [ministry, setMinistry] = React.useState<MinistryDocument | null>(null);
   const [loadState, setLoadState] = React.useState<'loading' | 'error' | 'ready'>('loading');
   const [message, setMessage] = React.useState<string | null>(null);
+  const [memberDetails, setMemberDetails] = React.useState<Record<string, MemberBrief>>({});
+  const [detailsLoadState, setDetailsLoadState] = React.useState<'idle' | 'loading' | 'ready'>(
+    'idle'
+  );
+  const [searchQuery, setSearchQuery] = React.useState('');
+  const [pendingRemove, setPendingRemove] = React.useState<RosterRow | null>(null);
+  const [removing, setRemoving] = React.useState(false);
+
+  const fetchMinistry = React.useCallback(async () => {
+    const res = await fetch(`/api/ministries/${encodeURIComponent(id)}`, {
+      cache: 'no-store',
+      headers: { Accept: 'application/json' },
+    });
+    const data = (await res.json().catch(() => ({}))) as {
+      ministry?: MinistryDocument;
+      error?: string;
+    };
+    if (!res.ok) {
+      throw new Error(data.error || 'No se pudo cargar el ministerio.');
+    }
+    if (!data.ministry) {
+      throw new Error('No se recibieron datos.');
+    }
+    return data.ministry;
+  }, [id]);
 
   React.useEffect(() => {
     if (!id?.trim()) {
@@ -58,24 +123,9 @@ export default function MinistryDetailsPage() {
       setLoadState('loading');
       setMessage(null);
       try {
-        const res = await fetch(`/api/ministries/${encodeURIComponent(id)}`, {
-          cache: 'no-store',
-          headers: { Accept: 'application/json' },
-        });
-        const data = (await res.json().catch(() => ({}))) as {
-          ministry?: MinistryDocument;
-          error?: string;
-        };
-        if (!res.ok) {
-          throw new Error(data.error || 'No se pudo cargar el ministerio.');
-        }
+        const m = await fetchMinistry();
         if (cancelled) return;
-        if (!data.ministry) {
-          setLoadState('error');
-          setMessage('No se recibieron datos.');
-          return;
-        }
-        setMinistry(data.ministry);
+        setMinistry(m);
         setLoadState('ready');
       } catch (e) {
         if (!cancelled) {
@@ -87,7 +137,160 @@ export default function MinistryDetailsPage() {
     return () => {
       cancelled = true;
     };
-  }, [id]);
+  }, [id, fetchMinistry]);
+
+  React.useEffect(() => {
+    if (!ministry) {
+      setMemberDetails({});
+      setDetailsLoadState('idle');
+      return;
+    }
+    const ids = new Set<string>();
+    for (const l of ministry.leaders ?? []) {
+      const mid = String(l.id ?? '').trim();
+      if (mid) ids.add(mid);
+    }
+    for (const a of ministry.memberAssignments ?? []) {
+      const mid = String(a.memberId ?? '').trim();
+      if (mid) ids.add(mid);
+    }
+    if (ids.size === 0) {
+      setMemberDetails({});
+      setDetailsLoadState('ready');
+      return;
+    }
+
+    let cancelled = false;
+    setDetailsLoadState('loading');
+    void (async () => {
+      const entries = await Promise.all(
+        [...ids].map(async (mid) => {
+          try {
+            const res = await fetch(`/api/members/${encodeURIComponent(mid)}`, {
+              cache: 'no-store',
+              headers: { Accept: 'application/json' },
+            });
+            const data = (await res.json().catch(() => ({}))) as {
+              member?: MemberBrief;
+            };
+            if (!res.ok || !data.member) return [mid, null] as const;
+            return [mid, data.member] as const;
+          } catch {
+            return [mid, null] as const;
+          }
+        })
+      );
+      if (cancelled) return;
+      const map: Record<string, MemberBrief> = {};
+      for (const [mid, m] of entries) {
+        if (m) map[mid] = m;
+      }
+      setMemberDetails(map);
+      setDetailsLoadState('ready');
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [ministry]);
+
+  const rosterRows = React.useMemo((): RosterRow[] => {
+    if (!ministry) return [];
+    const leaderIdSet = new Set(
+      (ministry.leaders ?? []).map((l) => String(l.id ?? '').trim()).filter(Boolean)
+    );
+    const rows: RosterRow[] = [];
+
+    for (const l of ministry.leaders ?? []) {
+      const memberId = String(l.id ?? '').trim();
+      if (!memberId) continue;
+      const d = memberDetails[memberId];
+      const nameFromMember = d
+        ? `${d.firstName ?? ''} ${d.lastName ?? ''}`.trim() || 'Sin nombre'
+        : '';
+      rows.push({
+        key: `leader-${memberId}`,
+        memberId,
+        mode: 'leader',
+        name: nameFromMember || l.name,
+        email: d?.email ?? l.email,
+        phone: d?.phone?.trim() ? d.phone : '—',
+        role: 'Líder',
+        status: d ? membershipStatusLabel(d.membershipStatus) : 'Activo',
+      });
+    }
+
+    for (const a of ministry.memberAssignments ?? []) {
+      const memberId = String(a.memberId ?? '').trim();
+      const churchId = String(a.churchId ?? '').trim();
+      if (!memberId || !churchId) continue;
+      if (leaderIdSet.has(memberId)) continue;
+      const d = memberDetails[memberId];
+      rows.push({
+        key: `assign-${memberId}-${churchId}`,
+        memberId,
+        mode: 'assignment',
+        churchId,
+        name: d ? `${d.firstName ?? ''} ${d.lastName ?? ''}`.trim() || 'Sin nombre' : 'Sin nombre',
+        email: d?.email ?? '—',
+        phone: d?.phone?.trim() ? d.phone : '—',
+        role: 'Miembro',
+        status: d ? membershipStatusLabel(d.membershipStatus) : 'Activo',
+      });
+    }
+
+    return rows;
+  }, [ministry, memberDetails]);
+
+  const filteredRows = React.useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return rosterRows;
+    return rosterRows.filter(
+      (r) =>
+        r.name.toLowerCase().includes(q) ||
+        r.email.toLowerCase().includes(q) ||
+        r.phone.toLowerCase().includes(q)
+    );
+  }, [rosterRows, searchQuery]);
+
+  const confirmRemove = async () => {
+    if (!pendingRemove || !id?.trim()) return;
+    setRemoving(true);
+    try {
+      const body =
+        pendingRemove.mode === 'leader'
+          ? { mode: 'leader' as const, memberId: pendingRemove.memberId }
+          : {
+              mode: 'assignment' as const,
+              memberId: pendingRemove.memberId,
+              churchId: pendingRemove.churchId!,
+            };
+      const res = await fetch(`/api/ministries/${encodeURIComponent(id)}/roster`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = (await res.json().catch(() => ({}))) as { error?: string; message?: string };
+      if (!res.ok) {
+        throw new Error(data.error || 'No se pudo eliminar.');
+      }
+      toast({
+        title: pendingRemove.mode === 'leader' ? 'Líder retirado' : 'Miembro retirado',
+        description: data.message ?? 'Cambios guardados.',
+      });
+      setPendingRemove(null);
+      const next = await fetchMinistry();
+      setMinistry(next);
+    } catch (e) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: e instanceof Error ? e.message : 'No se pudo completar la acción.',
+      });
+    } finally {
+      setRemoving(false);
+    }
+  };
 
   if (loadState === 'loading') {
     return (
@@ -113,15 +316,6 @@ export default function MinistryDetailsPage() {
     );
   }
 
-  const rows = ministry.leaders.map((leader) => ({
-    key: leader.id,
-    name: leader.name,
-    email: leader.email,
-    phone: '—',
-    role: 'Líder' as const,
-    status: 'Activo',
-  }));
-
   return (
     <div className="flex flex-1 flex-col">
       <AppHeader
@@ -145,16 +339,22 @@ export default function MinistryDetailsPage() {
       <main className="flex-1 bg-muted/20 p-4 sm:p-8">
         <Card>
           <CardHeader>
-            <CardTitle>Líderes y equipo ({rows.length})</CardTitle>
+            <CardTitle>Líderes y equipo ({rosterRows.length})</CardTitle>
             <CardDescription>
-              Personas registradas como líderes de {ministry.name}. Total contabilizado:{' '}
-              {ministry.memberCount} miembros.
+              Personas registradas en {ministry.name}. Total contabilizado: {ministry.memberCount}{' '}
+              miembros.
+              {detailsLoadState === 'loading' ? ' Cargando datos de contacto…' : null}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="relative mb-6">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input placeholder="Buscar por nombre o email..." className="pl-9" disabled />
+              <Input
+                placeholder="Buscar por nombre, email o teléfono…"
+                className="pl-9"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
             <div className="overflow-x-auto">
               <Table>
@@ -168,20 +368,22 @@ export default function MinistryDetailsPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {rows.length === 0 ? (
+                  {filteredRows.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={5} className="text-center text-muted-foreground">
-                        No hay líderes en este registro.
+                        {rosterRows.length === 0
+                          ? 'No hay personas en este registro.'
+                          : 'Ningún resultado para la búsqueda.'}
                       </TableCell>
                     </TableRow>
                   ) : (
-                    rows.map((member) => (
+                    filteredRows.map((member) => (
                       <TableRow key={member.key}>
                         <TableCell>
                           <div className="flex items-center gap-3">
                             <Avatar className="h-9 w-9">
                               <AvatarImage
-                                src={`https://picsum.photos/seed/${encodeURIComponent(member.key)}/40/40`}
+                                src={`https://picsum.photos/seed/${encodeURIComponent(member.memberId)}/40/40`}
                                 alt={member.name}
                               />
                               <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
@@ -210,10 +412,23 @@ export default function MinistryDetailsPage() {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="icon" type="button" disabled>
-                            <Edit className="h-4 w-4" />
+                          <Button variant="ghost" size="icon" type="button" asChild>
+                            <Link href={`/members/${encodeURIComponent(member.memberId)}/edit`}>
+                              <span className="sr-only">Editar miembro</span>
+                              <Edit className="h-4 w-4" />
+                            </Link>
                           </Button>
-                          <Button variant="ghost" size="icon" type="button" disabled>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            type="button"
+                            onClick={() => setPendingRemove(member)}
+                            aria-label={
+                              member.mode === 'leader'
+                                ? 'Quitar como líder'
+                                : 'Quitar del ministerio'
+                            }
+                          >
                             <Trash2 className="h-4 w-4 text-destructive" />
                           </Button>
                         </TableCell>
@@ -226,6 +441,33 @@ export default function MinistryDetailsPage() {
           </CardContent>
         </Card>
       </main>
+
+      <AlertDialog open={!!pendingRemove} onOpenChange={(open) => !open && setPendingRemove(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {pendingRemove?.mode === 'leader' ? '¿Quitar a este líder?' : '¿Quitar a este miembro?'}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingRemove
+                ? pendingRemove.mode === 'leader'
+                  ? `${pendingRemove.name} dejará de figurar como líder de «${ministry.name}». Debe quedar al menos un líder; si es el único, use «Editar ministerio» para asignar otro antes.`
+                  : `${pendingRemove.name} dejará de estar asignado a «${ministry.name}» desde este templo.`
+                : null}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={removing}>Cancelar</AlertDialogCancel>
+            <Button
+              variant="destructive"
+              disabled={removing}
+              onClick={() => void confirmRemove()}
+            >
+              {removing ? 'Eliminando…' : 'Eliminar'}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

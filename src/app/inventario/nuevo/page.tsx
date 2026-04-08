@@ -48,7 +48,7 @@ export default function InventarioNuevoPage() {
     const load = async () => {
       setChurchesLoad('loading');
       try {
-        const res = await fetch('/api/churches', {
+        const res = await fetch('/api/churches?sessionChurchScope=1', {
           cache: 'no-store',
           headers: { Accept: 'application/json' },
         });
