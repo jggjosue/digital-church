@@ -4,6 +4,8 @@ import { CHURCHES_COLLECTION, type ChurchLocation } from '@/lib/church-locations
 import { getDb } from '@/lib/mongodb';
 import { resolveDonationsReadScope } from '@/lib/donations-scope';
 import { createDonationSchema, type DonationDocument } from '@/lib/donation-schema';
+import { recordAudit } from '@/lib/audit-log';
+import { hasPortalPermission, OFFERING_PERMISSIONS } from '@/lib/portal-permissions';
 
 const DONATION_COLLECTION = 'donation';
 
@@ -19,6 +21,7 @@ export type { DonationDocument };
 export async function GET() {
   try {
     const db = await getDb();
+    if (!await hasPortalPermission(db, 'Ofrendas', OFFERING_PERMISSIONS.VIEW)) return NextResponse.json({ error: 'No tienes permiso para ver ofrendas.' }, { status: 403 });
     const scope = await resolveDonationsReadScope(db);
 
     let filter: Record<string, unknown> = {};
@@ -58,6 +61,7 @@ export async function POST(request: Request) {
     const payload = parsed.data;
 
     const db = await getDb();
+    if (!await hasPortalPermission(db, 'Ofrendas', 'Añadir Donación')) return NextResponse.json({ error: 'No tienes permiso para añadir donaciones.' }, { status: 403 });
     const church = await db
       .collection<ChurchLocation>(CHURCHES_COLLECTION)
       .findOne({ id: payload.churchId }, { projection: { _id: 0, id: 1, name: 1 } });
@@ -99,6 +103,7 @@ export async function POST(request: Request) {
     };
 
     await db.collection<DonationDocument>(DONATION_COLLECTION).insertOne(doc);
+    await recordAudit({ db, request, action: 'create', collection: DONATION_COLLECTION, entityId: doc.id, after: doc, sourceScreen: '/donations/new' });
 
     return NextResponse.json(
       {

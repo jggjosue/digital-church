@@ -30,6 +30,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { AppHeader } from '@/components/app-header';
+import { ResourceSaveButton } from '@/components/resource-save-button';
 
 export default function NewCeremonyPage() {
     const [date, setDate] = React.useState<Date | undefined>();
@@ -44,7 +45,7 @@ export default function NewCeremonyPage() {
                     <Button variant="ghost" asChild>
                         <Link href="/ceremonies">Cancelar</Link>
                     </Button>
-                    <Button>Guardar Registro</Button>
+                    <ResourceSaveButton resource="ceremonies" successHref="/ceremonies" fields={{ type: '#ceremony-type', participants: { selector: '#participants', transform: 'csv' }, officiant: '#officiant', notes: '#notes' }} extra={{ date: date?.toISOString(), status: 'scheduled' }}>Guardar Registro</ResourceSaveButton>
                 </div>
             </AppHeader>
             <main className="flex-1 space-y-6 p-4 sm:p-8 bg-muted/20">

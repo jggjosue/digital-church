@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
 import type { StaffRoleDocument } from '@/lib/staff-roles';
+import { hasSettingsAccess, SETTINGS_PERMISSIONS } from '@/lib/settings-access';
 
 type MemberWithPortalRole = {
   id: string;
@@ -29,6 +30,7 @@ export async function GET(
     }
 
     const db = await getDb();
+    if (!await hasSettingsAccess(db, SETTINGS_PERMISSIONS.MANAGE_USERS)) return NextResponse.json({ error: 'No tienes permiso para administrar usuarios.' }, { status: 403 });
     const member = await db
       .collection<MemberWithPortalRole>('members')
       .findOne({ id: memberId }, { projection: { _id: 0 } });
@@ -38,6 +40,7 @@ export async function GET(
     }
 
     const roleId = String(member.portalRoleId ?? member.staffRoleGrants?.roleId ?? '').trim();
+    const assignedUsers = roleId ? await db.collection('members').countDocuments({ portalRoleId: roleId }) : 0;
     let role: Pick<StaffRoleDocument, 'id' | 'name' | 'description' | 'modules'> | null = null;
 
     if (roleId) {
@@ -74,6 +77,7 @@ export async function GET(
         email: String(member.email ?? ''),
       },
       role: role ?? fallbackRole,
+      assignedUsers,
     });
   } catch (e) {
     console.error('[api/settings/portal-users/[id] GET]', e);

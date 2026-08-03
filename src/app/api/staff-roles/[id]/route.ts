@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
 import { staffRoleModulesSchema, type StaffRoleDocument } from '@/lib/staff-roles';
 import { z } from 'zod';
+import { hasSettingsAccess, SETTINGS_PERMISSIONS } from '@/lib/settings-access';
 
 const updateStaffRoleSchema = z.object({
   name: z.string().min(1).max(200),
@@ -32,6 +33,7 @@ export async function PATCH(
 
     const { name, description, modules, assignToMemberId } = parsed.data;
     const db = await getDb();
+    if (!await hasSettingsAccess(db, SETTINGS_PERMISSIONS.MANAGE_ROLES)) return NextResponse.json({ error: 'No tienes permiso para editar roles.' }, { status: 403 });
 
     const role = await db
       .collection<StaffRoleDocument>('staff_roles')
@@ -39,6 +41,12 @@ export async function PATCH(
 
     if (!role) {
       return NextResponse.json({ error: 'Rol no encontrado.' }, { status: 404 });
+    }
+    const duplicate = await db.collection<StaffRoleDocument>('staff_roles').findOne({ id: { $ne: roleId }, name: name.trim() }, { collation: { locale: 'es', strength: 2 }, projection: { _id: 0, id: 1 } });
+    if (duplicate) return NextResponse.json({ error: 'Ya existe otro rol con ese nombre.' }, { status: 409 });
+    if (assignToMemberId?.trim()) {
+      const member = await db.collection('members').findOne({ id: assignToMemberId.trim() }, { projection: { _id: 1 } });
+      if (!member) return NextResponse.json({ error: 'El miembro seleccionado ya no existe.' }, { status: 404 });
     }
 
     await db.collection<StaffRoleDocument>('staff_roles').updateOne(
@@ -48,6 +56,7 @@ export async function PATCH(
           name: name.trim(),
           description: (description ?? '').trim(),
           modules,
+          updatedAt: new Date().toISOString(),
         },
       }
     );

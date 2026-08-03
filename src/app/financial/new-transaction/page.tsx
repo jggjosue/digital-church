@@ -24,6 +24,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
 import { AppHeader } from '@/components/app-header';
+import { ResourceSaveButton } from '@/components/resource-save-button';
 
 export default function NewTransactionPage() {
   const [transactionType, setTransactionType] = React.useState('income');
@@ -37,7 +38,7 @@ export default function NewTransactionPage() {
       >
         <div className="flex justify-end gap-2">
             <Button variant="outline">Cancelar</Button>
-            <Button>Guardar Transacción</Button>
+            <ResourceSaveButton resource="financial-transactions" successHref="/financial" fields={{ amount: { selector: '#amount', transform: 'number' }, category: '#category', fundId: '#fund', reference: '#payee', description: '#notes' }} extra={{ type: transactionType, date: date?.toISOString() }}>Guardar Transacción</ResourceSaveButton>
         </div>
       </AppHeader>
     <main className="flex-1 space-y-6 p-4 sm:p-8">

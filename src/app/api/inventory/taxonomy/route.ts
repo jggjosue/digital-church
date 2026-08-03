@@ -12,7 +12,7 @@ import {
   STATUS_BADGE,
 } from '@/lib/inventory';
 
-const COLLECTION = 'inventory';
+const COLLECTION = 'inventory_taxonomy';
 
 const BUILTIN_CONDITIONS: ConditionKey[] = ['excellent', 'good', 'repair'];
 const BUILTIN_STATUSES: ResourceStatus[] = ['available', 'in_use', 'maintenance'];

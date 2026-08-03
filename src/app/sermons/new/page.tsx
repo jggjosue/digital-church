@@ -28,6 +28,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { AppHeader } from '@/components/app-header';
+import { ResourceSaveButton } from '@/components/resource-save-button';
 
 export default function NewSermonPage() {
     const [date, setDate] = React.useState<Date | undefined>();
@@ -40,7 +41,7 @@ export default function NewSermonPage() {
       >
         <div className="hidden sm:flex gap-2">
             <Button variant="outline" asChild><Link href="/sermons">Cancelar</Link></Button>
-            <Button>Guardar Sermón</Button>
+            <ResourceSaveButton resource="sermons" successHref="/sermons" fields={{ title: '#sermon-title', speaker: '#speaker', series: '#series', scripture: '#topics', description: '#notes' }} extra={{ date: date?.toISOString(), status: 'draft' }}>Guardar Sermón</ResourceSaveButton>
         </div>
       </AppHeader>
     <main className="flex-1 bg-muted/20 p-4 sm:p-8">
@@ -129,7 +130,7 @@ export default function NewSermonPage() {
 
             <div className="flex flex-col sm:flex-row justify-end gap-2">
                 <Button variant="outline" asChild className="w-full sm:w-auto"><Link href="/sermons">Cancelar</Link></Button>
-                <Button className="w-full sm:w-auto">Guardar Sermón</Button>
+                <ResourceSaveButton className="w-full sm:w-auto" resource="sermons" successHref="/sermons" fields={{ title: '#sermon-title', speaker: '#speaker', series: '#series', scripture: '#topics', description: '#notes' }} extra={{ date: date?.toISOString(), status: 'draft' }}>Guardar Sermón</ResourceSaveButton>
             </div>
         </CardContent>
       </Card>

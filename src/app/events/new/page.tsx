@@ -38,6 +38,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircle } from 'lucide-react';
 import { AppHeader } from '@/components/app-header';
+import { ResourceSaveButton } from '@/components/resource-save-button';
 
 export default function NewEventPage() {
     const [startDate, setStartDate] = React.useState<Date | undefined>();
@@ -51,7 +52,7 @@ export default function NewEventPage() {
       >
         <div className="flex flex-col sm:flex-row justify-end gap-2 w-full sm:w-auto">
             <Button variant="outline" asChild><Link href="/events">Cancelar</Link></Button>
-            <Button>Crear Evento</Button>
+            <ResourceSaveButton resource="events" successHref="/events" fields={{ title: '#event-title', location: '#location', description: '#description', category: '#category' }} extra={{ startAt: startDate?.toISOString(), endAt: endDate?.toISOString(), status: 'scheduled' }}>Crear Evento</ResourceSaveButton>
         </div>
       </AppHeader>
       <main className="flex-1 space-y-6 p-4 sm:p-8 bg-muted/20">

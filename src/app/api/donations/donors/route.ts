@@ -4,6 +4,7 @@ import { normalizeMemberChurchIds } from '@/lib/member-church-ids';
 import { getDb } from '@/lib/mongodb';
 import { isFullAccessStaffRole } from '@/lib/pastor-church-access';
 import type { DonationDocument } from '../route';
+import { hasPortalPermission, OFFERING_PERMISSIONS } from '@/lib/portal-permissions';
 
 const DONATION_COLLECTION = 'donation';
 
@@ -27,6 +28,7 @@ export async function GET(request: Request) {
     const regex = new RegExp(escaped, 'i');
 
     const db = await getDb();
+    if (!await hasPortalPermission(db, 'Ofrendas', OFFERING_PERMISSIONS.VIEW)) return NextResponse.json({ error: 'No tienes permiso para ver donantes.' }, { status: 403 });
 
     const { userId } = await auth();
     const scopeClauses: Record<string, unknown>[] = [];

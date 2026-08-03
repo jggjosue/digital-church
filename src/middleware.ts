@@ -1,12 +1,11 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 
-/** Solo estas rutas son accesibles sin sesión; todo lo demás (/, /dashboard, API…) requiere login. */
+/** Rutas públicas; el resto del portal y sus APIs requieren una sesión de Clerk. */
 const isPublicRoute = createRouteMatcher([
   '/',
+  '/documentacion(.*)',
   '/sign-in(.*)',
   '/sign-up(.*)',
-  '/documentacion(.*)',
-  '/documentation(.*)',
 ]);
 
 export default clerkMiddleware(async (auth, request) => {

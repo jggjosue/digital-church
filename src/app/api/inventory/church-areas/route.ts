@@ -12,7 +12,7 @@ import {
   churchInventoryAreasDocumentId,
 } from '@/lib/inventory';
 
-const COLLECTION = 'inventory';
+const COLLECTION = 'inventory_church_areas';
 
 export async function GET(request: Request) {
   try {

@@ -4,6 +4,7 @@
 import {
   Menu,
   ChevronDown,
+  BookOpen,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -56,7 +57,7 @@ export function AppSidebar() {
   return (
     <aside
       className={cn(
-        'hidden min-h-screen shrink-0 flex-col overflow-hidden border-r bg-background transition-[width] duration-200 ease-in-out md:flex',
+        'hidden min-h-screen shrink-0 flex-col overflow-hidden border-r bg-background transition-[width] duration-200 ease-in-out lg:flex',
         collapsed ? 'w-14' : 'w-64'
       )}
     >
@@ -178,6 +179,7 @@ export function AppSidebar() {
               </Tooltip>
             )
           )}
+          <Link href="/tutorial" className={cn('flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground', pathname === '/tutorial' && 'bg-accent font-medium text-accent-foreground')}><BookOpen className="h-4 w-4" /><span>Tutorial</span></Link>
         </nav>
       </TooltipProvider>
     </aside>

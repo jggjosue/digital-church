@@ -90,7 +90,8 @@ export const PORTAL_NAV_ENTRIES: PortalNavEntry[] = [
     label: 'Ofrendas',
     icon: Heart,
     subItems: [
-      { href: '/donations/new', icon: Plus, label: 'Añadir Ofrenda' },
+      { href: '/donations/registro', icon: ClipboardList, label: 'Registro de Ofrendas' },
+      { href: '/donations/new', icon: Plus, label: 'Añadir Donación' },
       { href: '/donations/fundraising/new', icon: Megaphone, label: 'Crear Campaña' },
       { href: '/donations', icon: Heart, label: 'Donaciones y ofrendas' },
       { href: '/donations/giving-statement', icon: FileText, label: 'Declaración de Donación' },
@@ -127,6 +128,16 @@ export const PORTAL_PERMISSIONS_BY_MODULE: Record<string, string[]> = PORTAL_NAV
     return acc;
   },
   {} as Record<string, string[]>
+);
+
+/** Acciones sensibles que no equivalen a mostrar una entrada del menú. */
+PORTAL_PERMISSIONS_BY_MODULE.Ofrendas.push(
+  'Ver ofrendas',
+  'Registrar ofrendas',
+  'Editar registros históricos',
+  'Importar Excel',
+  'Descargar reportes',
+  'Eliminar categorías',
 );
 
 /** Para reutilizar en formularios (orden estable). */

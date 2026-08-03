@@ -9,7 +9,10 @@
     "build": "NODE_ENV=production next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts",
+    "test:watch": "tsx --test --watch tests/*.test.ts",
+    "db:migrate": "node scripts/migrate-mongo-collections.mjs"
   },
   "dependencies": {
     "@clerk/localizations": "^4.3.0",

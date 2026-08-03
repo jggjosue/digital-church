@@ -4,7 +4,6 @@ import * as React from 'react';
 import {
   Plus,
   Search,
-  Trash2,
   Edit,
   Mail,
 } from 'lucide-react';
@@ -100,6 +99,8 @@ type MemberApiRow = {
   staffRole: string | null;
   photoDataUrl: string | null;
   portalRoleId?: string | null;
+  roleStatus?: 'active' | 'orphaned' | 'fixed';
+  churchIds?: string[];
 };
 
 export default function UsersPage() {
@@ -155,7 +156,7 @@ export default function UsersPage() {
     if (!q) return members;
     return members.filter((m) => {
       const name = `${m.firstName} ${m.lastName}`.trim().toLowerCase();
-      return name.includes(q) || m.email.toLowerCase().includes(q);
+      return name.includes(q) || m.email.toLowerCase().includes(q) || String(m.staffRole ?? '').toLowerCase().includes(q);
     });
   }, [members, searchTerm]);
 
@@ -208,22 +209,26 @@ export default function UsersPage() {
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+  const assignedCount = members.filter((member) => member.roleStatus === 'active').length;
+  const orphanedCount = members.filter((member) => member.roleStatus === 'orphaned').length;
+  const roleCount = new Set(members.map((member) => String(member.staffRole ?? '').trim()).filter(Boolean)).size;
 
   return (
     <div className="flex flex-col flex-1">
       <AppHeader
         title="Gestión de Usuarios"
-        description="Miembros con rol del portal asignado."
+        description="Administra usuarios, roles asignados y su estado de configuración."
       >
         <div className="flex gap-2">
           <Button type="button" asChild>
             <Link href="/settings/new">
-              <Plus className="mr-2 h-4 w-4" /> Añadir Nuevo Usuario
+              <Plus className="mr-2 h-4 w-4" /> Crear rol y asignar
             </Link>
           </Button>
         </div>
       </AppHeader>
-      <main className="flex-1 bg-muted/20 p-4 sm:p-8">
+      <main className="flex-1 space-y-4 bg-muted/20 p-4 sm:p-8">
+        <div className="grid gap-3 sm:grid-cols-3"><Card><CardContent className="p-4"><p className="text-2xl font-bold">{members.length}</p><p className="text-xs text-muted-foreground">Usuarios visibles</p></CardContent></Card><Card><CardContent className="p-4"><p className="text-2xl font-bold">{assignedCount}</p><p className="text-xs text-muted-foreground">Con rol del catálogo</p></CardContent></Card><Card className={orphanedCount ? 'border-amber-300' : undefined}><CardContent className="p-4"><p className="text-2xl font-bold">{roleCount}</p><p className="text-xs text-muted-foreground">Roles en uso{orphanedCount ? ` · ${orphanedCount} vínculo(s) inválido(s)` : ''}</p></CardContent></Card></div>
         <Card>
           <CardHeader>
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -253,13 +258,14 @@ export default function UsersPage() {
                     <TableHead>Usuario</TableHead>
                     <TableHead className="hidden sm:table-cell">Email</TableHead>
                     <TableHead>Rol</TableHead>
+                    <TableHead className="hidden md:table-cell">Estado</TableHead>
                     <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {loadState === 'ready' && paginatedData.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
+                      <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
                         No hay miembros con rol de portal asignado o no coinciden con la búsqueda.
                       </TableCell>
                     </TableRow>
@@ -291,6 +297,7 @@ export default function UsersPage() {
                             {displayRoleLabel(user.staffRole)}
                           </Badge>
                         </TableCell>
+                        <TableCell className="hidden md:table-cell"><Badge variant="outline" className={user.roleStatus === 'orphaned' ? 'border-amber-300 bg-amber-50 text-amber-900' : user.roleStatus === 'active' ? 'border-emerald-200 bg-emerald-50 text-emerald-800' : ''}>{user.roleStatus === 'orphaned' ? 'Rol eliminado' : user.roleStatus === 'active' ? 'Activo' : 'Rol fijo'}</Badge></TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1">
                             <Button
@@ -311,9 +318,6 @@ export default function UsersPage() {
                               >
                                 <Edit className="h-4 w-4" />
                               </Link>
-                            </Button>
-                            <Button variant="ghost" size="icon" type="button" disabled>
-                              <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
                           </div>
                         </TableCell>

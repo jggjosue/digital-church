@@ -492,19 +492,20 @@ export default function AttendanceReportPage() {
     <div className="flex flex-1 flex-col">
       <AppHeader
         title="Reporte de Asistencia Mensual"
+        stacked
         description={
           selectedChurch
             ? `${selectedChurch.name} - resumen de servicios y eventos.`
             : 'Seleccione un templo para ver su resumen.'
         }
       >
-        <div className="flex items-center gap-2">
+        <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-[minmax(220px,1fr)_140px_minmax(300px,1fr)_auto]">
           <Select
             value={selectedChurchId}
             onValueChange={setSelectedChurchId}
             disabled={loadState !== 'ready' || churches.length === 0}
           >
-            <SelectTrigger className="w-[240px] bg-background">
+            <SelectTrigger className="w-full bg-background">
               <SelectValue placeholder="Seleccione templo" />
             </SelectTrigger>
             <SelectContent>
@@ -520,7 +521,7 @@ export default function AttendanceReportPage() {
             onValueChange={setSelectedYear}
             disabled={loadState !== 'ready' || churches.length === 0}
           >
-            <SelectTrigger className="w-[140px] bg-background">
+            <SelectTrigger className="w-full bg-background">
               <SelectValue placeholder="Año" />
             </SelectTrigger>
             <SelectContent>
@@ -531,11 +532,11 @@ export default function AttendanceReportPage() {
               ))}
             </SelectContent>
           </Select>
-          <Button variant="outline">
+          <Button variant="outline" className="min-w-0 justify-start overflow-hidden">
             <CalendarDays className="mr-2 h-4 w-4" />
-            {stats.dateLabel}
+            <span className="truncate">{stats.dateLabel}</span>
           </Button>
-          <Button disabled={!selectedChurch} onClick={handleDownloadPdf}>
+          <Button className="w-full xl:w-auto" disabled={!selectedChurch} onClick={handleDownloadPdf}>
             <Download className="mr-2 h-4 w-4" />
             Descargar PDF
           </Button>

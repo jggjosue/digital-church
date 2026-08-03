@@ -594,7 +594,7 @@ export default function NewDonationPage() {
     return (
         <div className="flex flex-col flex-1">
             <AppHeader
-                title="Añadir Ofrenda ó Donación"
+                title="Añadir Donación"
                 description="Ingrese los detalles para el nuevo registro de donación."
             >
                 <Button variant="ghost" asChild>

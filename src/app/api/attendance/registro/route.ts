@@ -7,6 +7,7 @@ import {
   type RegistryMonthRecord,
 } from '@/lib/attendance-registry-consolidated';
 import { getDb } from '@/lib/mongodb';
+import { archiveVersion, recordAudit, REGISTRY_VERSIONS_COLLECTION } from '@/lib/audit-log';
 
 const normalizeComparable = (value: string) =>
   value
@@ -15,7 +16,7 @@ const normalizeComparable = (value: string) =>
     .toLowerCase()
     .trim();
 
-const ATTENDANCE_REGISTRY_COLLECTION = 'attendance';
+const ATTENDANCE_REGISTRY_COLLECTION = 'attendance_registry';
 
 const monthKeySchema = z.enum([
   'enero',
@@ -151,7 +152,11 @@ export async function PUT(request: Request) {
       now
     );
 
-    await db.collection<AttendanceRegistryDoc>(ATTENDANCE_REGISTRY_COLLECTION).updateOne(
+    const entityId = `${payload.churchId}:${payload.year}`;
+    const collection = db.collection<AttendanceRegistryDoc>(ATTENDANCE_REGISTRY_COLLECTION);
+    const existing = await collection.findOne({ churchId: payload.churchId, year: payload.year }, { projection: { _id: 0 } });
+    if (existing) await archiveVersion({ db, request, collection: ATTENDANCE_REGISTRY_COLLECTION, entityId, document: existing, reason: 'update', versionCollection: REGISTRY_VERSIONS_COLLECTION, sourceScreen: '/attendance/registro' });
+    await collection.updateOne(
       { churchId: payload.churchId, year: payload.year },
       {
         $set: {
@@ -170,6 +175,8 @@ export async function PUT(request: Request) {
       },
       { upsert: true }
     );
+    const saved = await collection.findOne({ churchId: payload.churchId, year: payload.year }, { projection: { _id: 0 } });
+    await recordAudit({ db, request, action: existing ? 'update' : 'create', collection: ATTENDANCE_REGISTRY_COLLECTION, entityId, before: existing ?? undefined, after: saved, sourceScreen: '/attendance/registro' });
     return NextResponse.json({
       ok: true,
       message: 'Asistencia guardada correctamente.',

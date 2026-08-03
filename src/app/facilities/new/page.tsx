@@ -26,6 +26,7 @@ import {
 import Link from 'next/link';
 import { Textarea } from '@/components/ui/textarea';
 import { AppHeader } from '@/components/app-header';
+import { ResourceSaveButton } from '@/components/resource-save-button';
 import { Checkbox } from '@/components/ui/checkbox';
 
 const amenities = [
@@ -42,9 +43,7 @@ export default function NewFacilityPage() {
       >
         <div className="flex justify-end gap-2">
             <Button variant="outline" asChild><Link href="/facilities">Cancelar</Link></Button>
-            <Button>
-                <Plus className="mr-2 h-4 w-4" /> Guardar Salón
-            </Button>
+            <ResourceSaveButton resource="facilities" successHref="/facilities" fields={{ name: '#room-name', capacity: { selector: '#capacity', transform: 'number' }, category: '#category', location: '#location', notes: '#notes' }} extra={{ amenities: [], status: 'available' }}><Plus className="mr-2 h-4 w-4" /> Guardar Salón</ResourceSaveButton>
         </div>
       </AppHeader>
       <main className="flex-1 space-y-6 p-4 sm:p-8 bg-muted/20">

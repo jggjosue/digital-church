@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 import { z } from 'zod';
 import { getDb } from '@/lib/mongodb';
+import { hasSettingsAccess, SETTINGS_PERMISSIONS } from '@/lib/settings-access';
 
 const bodySchema = z.object({
   memberId: z.string().min(1),
@@ -27,6 +28,8 @@ function humanizeSmtpError(raw: string): string {
 
 export async function POST(request: Request) {
   try {
+    const db = await getDb();
+    if (!await hasSettingsAccess(db, SETTINGS_PERMISSIONS.MANAGE_USERS)) return NextResponse.json({ error: 'No tienes permiso para invitar usuarios.' }, { status: 403 });
     const user = process.env.GMAIL_USER?.trim();
     const pass = process.env.GMAIL_APP_PASSWORD?.replace(/\s/g, '') ?? '';
     if (!user || !pass) {
@@ -45,7 +48,6 @@ export async function POST(request: Request) {
       );
     }
 
-    const db = await getDb();
     const member = await db.collection('members').findOne(
       { id: parsed.data.memberId.trim() },
       { projection: { _id: 0, firstName: 1, lastName: 1, email: 1 } }

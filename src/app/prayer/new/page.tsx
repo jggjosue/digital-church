@@ -30,6 +30,7 @@ import Link from 'next/link';
 import { Checkbox } from '@/components/ui/checkbox';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { AppHeader } from '@/components/app-header';
+import { ResourceSaveButton } from '@/components/resource-save-button';
 
 export default function NewPrayerRequestPage() {
 
@@ -41,7 +42,7 @@ export default function NewPrayerRequestPage() {
       >
         <div className="flex justify-end gap-2 pt-4">
             <Button variant="outline">Cancelar</Button>
-            <Button>Enviar Petición</Button>
+            <ResourceSaveButton resource="prayer-requests" successHref="/prayer" fields={{ title: '#title', description: '#description' }} extra={{ privacy: 'public', status: 'active' }}>Enviar Petición</ResourceSaveButton>
         </div>
       </AppHeader>
     <main className="flex-1 space-y-6 p-4 sm:p-8 bg-muted/20">

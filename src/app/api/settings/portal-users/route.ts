@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { getDb } from '@/lib/mongodb';
+import { hasSettingsAccess, SETTINGS_PERMISSIONS } from '@/lib/settings-access';
 
 type StaffRoleRow = { id: string; name: string };
 
@@ -47,6 +48,7 @@ function normalizeRole(value: string | null | undefined): string {
 export async function GET() {
   try {
     const db = await getDb();
+    if (!await hasSettingsAccess(db, SETTINGS_PERMISSIONS.MANAGE_USERS)) return NextResponse.json({ error: 'No tienes permiso para administrar usuarios.' }, { status: 403 });
     let sessionStaffRole = '';
     const { userId } = await auth();
     if (userId) {
@@ -96,6 +98,7 @@ export async function GET() {
         const rawStaffRole =
           typeof m.staffRole === 'string' && m.staffRole.trim() ? m.staffRole.trim() : null;
         const grantsRoleName = readRoleNameFromGrants(m);
+        const roleExists = linkedRoleId ? roleById.has(linkedRoleId) : false;
         const displayRole =
           sessionStaffRole === 'super administrador'
             ? rawStaffRole ?? nameFromCatalog ?? grantsRoleName ?? '—'
@@ -112,6 +115,8 @@ export async function GET() {
           photoDataUrl: typeof m.photoDataUrl === 'string' ? m.photoDataUrl : null,
           staffRole: displayRole,
           portalRoleId: linkedRoleId,
+          roleStatus: linkedRoleId ? (roleExists ? 'active' : 'orphaned') : 'fixed',
+          churchIds: Array.isArray(m.churchIds) ? m.churchIds.filter((value): value is string => typeof value === 'string') : [],
         };
       })
       .filter((r): r is NonNullable<typeof r> => r != null);

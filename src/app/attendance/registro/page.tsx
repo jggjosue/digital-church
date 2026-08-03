@@ -33,20 +33,21 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import type { AttendanceRegistryConsolidated } from '@/lib/attendance-registry-consolidated';
+import { RegistrySelector } from '@/components/annual-registry/registry-selector';
+import { RegistryImportCard } from '@/components/annual-registry/registry-import-card';
+import { RegistryCalendarScroller } from '@/components/annual-registry/registry-calendar-scroller';
+import { RegistryImportPreview } from '@/components/annual-registry/registry-import-preview';
+import { RegistryDraftStatus } from '@/components/annual-registry/registry-draft-status';
+import { useRegistryDraftGuard } from '@/hooks/use-registry-draft-guard';
+import {
+  REGISTRY_MONTHS, REGISTRY_MONTH_SHORT_NAMES, REGISTRY_YEAR_OPTIONS,
+  createRegistryCategoryId, getRegistryCalendarCell, normalizeRegistryLabel,
+  parseRegistryDate, registryAnnualTotal, registryCategoryTotal,
+  registryCategoryTotals, registryMonthTotal, registryWeekTotal, readRegistrySpreadsheet,
+  type RegistryImportMode, type RegistryImportPreviewData, type RegistryMonthKey,
+} from '@/lib/annual-registry';
 
-type MonthKey =
-  | 'enero'
-  | 'febrero'
-  | 'marzo'
-  | 'abril'
-  | 'mayo'
-  | 'junio'
-  | 'julio'
-  | 'agosto'
-  | 'septiembre'
-  | 'octubre'
-  | 'noviembre'
-  | 'diciembre';
+type MonthKey = RegistryMonthKey;
 
 type CategoryRecord = {
   id: string;
@@ -66,6 +67,9 @@ type ChurchItem = {
   name: string;
 };
 
+type AttendanceImportEntry = { month: MonthKey; week: number; day: number; label: string; value: number };
+type AttendanceImportPreview = RegistryImportPreviewData & { entries: AttendanceImportEntry[] };
+
 type AttendanceRegistryApiRecord = {
   churchId: string;
   churchName: string;
@@ -84,38 +88,12 @@ const baseCategories: CategoryRecord[] = [
   { id: 'nuevos', label: 'Nuevos', weeks: [] },
 ];
 
-const YEAR_OPTIONS = Array.from({ length: 11 }, (_, index) => (2020 + index).toString());
+const YEAR_OPTIONS = REGISTRY_YEAR_OPTIONS;
 /** Valor interno del Select para «escribir otro nombre» (no debe coincidir con nombres reales). */
 const EVENT_NAME_CUSTOM = '__event_custom__';
-const MONTH_ORDER: MonthKey[] = [
-  'enero',
-  'febrero',
-  'marzo',
-  'abril',
-  'mayo',
-  'junio',
-  'julio',
-  'agosto',
-  'septiembre',
-  'octubre',
-  'noviembre',
-  'diciembre',
-];
+const MONTH_ORDER: MonthKey[] = [...REGISTRY_MONTHS];
 
-const MONTH_SHORT_LABEL: Record<MonthKey, string> = {
-  enero: 'Ene',
-  febrero: 'Feb',
-  marzo: 'Mar',
-  abril: 'Abr',
-  mayo: 'May',
-  junio: 'Jun',
-  julio: 'Jul',
-  agosto: 'Ago',
-  septiembre: 'Sep',
-  octubre: 'Oct',
-  noviembre: 'Nov',
-  diciembre: 'Dic',
-};
+const MONTH_SHORT_LABEL = Object.fromEntries(REGISTRY_MONTHS.map((month, index) => [month, REGISTRY_MONTH_SHORT_NAMES[index]])) as Record<MonthKey, string>;
 
 /** Orden del desglose en la semana pico: Adultos, Niños, Jóvenes, Nuevos; el resto por etiqueta. */
 const PEAK_BREAKDOWN_ID_ORDER = ['adultos', 'ninos', 'jovenes', 'nuevos'] as const;
@@ -126,12 +104,11 @@ const buildWeeks = (totals: number[]) => totals.map(() => buildWeekFromTotal());
 const cloneMonthData = (data: Record<MonthKey, MonthRecord>): Record<MonthKey, MonthRecord> =>
   JSON.parse(JSON.stringify(data)) as Record<MonthKey, MonthRecord>;
 
-const normalizeString = (value: unknown) =>
-  String(value ?? '')
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .trim();
+const normalizeString = normalizeRegistryLabel;
+
+const categoryIdFromLabel = createRegistryCategoryId;
+
+const parseImportDate = parseRegistryDate;
 
 const getRowChurchIdFromImportRow = (row: Record<string, string>) =>
   (
@@ -443,6 +420,8 @@ export default function AttendanceRegistroPage() {
   const [editingCategoryLabel, setEditingCategoryLabel] = React.useState('');
   const [isSaving, setIsSaving] = React.useState(false);
   const [isImporting, setIsImporting] = React.useState(false);
+  const [importPreview, setImportPreview] = React.useState<AttendanceImportPreview | null>(null);
+  const [importMode, setImportMode] = React.useState<RegistryImportMode>('replace');
   const [isLoadingRegistry, setIsLoadingRegistry] = React.useState(false);
   const [lastSavedByYearAndChurch, setLastSavedByYearAndChurch] = React.useState<
     Record<string, AttendanceRegistryApiRecord>
@@ -481,14 +460,10 @@ export default function AttendanceRegistroPage() {
   const weekDaysForMonth = (month: MonthKey, weekIndex: number) => {
     const year = Number(selectedYear);
     const monthIndex = monthIndexByKey[month];
-    const firstDay = new Date(year, monthIndex, 1);
-    const firstWeekdayMondayBased = (firstDay.getDay() + 6) % 7;
-    const daysInMonth = new Date(year, monthIndex + 1, 0).getDate();
-
     return Array.from({ length: 7 }, (_, dayIndex) => {
-      const dayNumber = weekIndex * 7 + dayIndex - firstWeekdayMondayBased + 1;
-      const inMonth = dayNumber >= 1 && dayNumber <= daysInMonth;
-      const dateObj = inMonth ? new Date(year, monthIndex, dayNumber) : null;
+      const dateObj = getRegistryCalendarCell(year, monthIndex, weekIndex, dayIndex);
+      const dayNumber = dateObj?.getDate() ?? 0;
+      const inMonth = Boolean(dateObj);
       const canEdit = Boolean(dateObj && dateObj.getTime() < todayStart.getTime());
       const monthLabel = String(monthIndex + 1).padStart(2, '0');
       return {
@@ -502,23 +477,14 @@ export default function AttendanceRegistroPage() {
   };
 
   const totalByCategoryInMonth = (month: MonthKey, categoryId: string) =>
-    currentYearRecords[month].categories
-      .find((category) => category.id === categoryId)
-      ?.weeks.reduce(
-        (sum, week) => sum + week.reduce((weekTotal, dayValue) => weekTotal + dayValue, 0),
-        0
-      ) ?? 0;
+    registryCategoryTotal(currentYearRecords[month].categories.find((category) => category.id === categoryId) ?? { id: categoryId, label: '', weeks: [] });
 
   const weekTotalByCategory = (month: MonthKey, categoryId: string, weekIndex: number) =>
     currentYearRecords[month].categories
       .find((category) => category.id === categoryId)
       ?.weeks[weekIndex]?.reduce((sum, day) => sum + day, 0) ?? 0;
 
-  const monthWeekTotal = (month: MonthKey, weekIndex: number) =>
-    currentYearRecords[month].categories.reduce(
-      (sum, category) => sum + (category.weeks[weekIndex]?.reduce((weekSum, day) => weekSum + day, 0) ?? 0),
-      0
-    );
+  const monthWeekTotal = (month: MonthKey, weekIndex: number) => registryWeekTotal(currentYearRecords[month].categories, weekIndex);
 
   const updateDayValue = (
     month: MonthKey,
@@ -588,68 +554,24 @@ export default function AttendanceRegistroPage() {
   const categoryTotal = (month: MonthKey, categoryId: string) =>
     totalByCategoryInMonth(month, categoryId);
 
-  const monthTotal = (month: MonthKey) =>
-    currentYearRecords[month].categories.reduce(
-      (sum, category) =>
-        sum +
-        category.weeks.reduce(
-          (categorySum, week) => categorySum + week.reduce((weekTotal, dayValue) => weekTotal + dayValue, 0),
-          0
-        ),
-      0
-    );
+  const monthTotal = (month: MonthKey) => registryMonthTotal(currentYearRecords[month]);
 
   const annualCategoryTotal = (categoryId: string) =>
     monthOrder.reduce((sum, month) => sum + totalByCategoryInMonth(month, categoryId), 0);
 
   const annualCategoryCards = React.useMemo(() => {
-    const totalsByLabel = new Map<
-      string,
-      { label: string; total: number; type: 'ninos' | 'jovenes' | 'adultos' | 'nuevos' | 'custom' }
-    >();
-
-    for (const month of monthOrder) {
-      for (const category of currentYearRecords[month].categories) {
-        const labelNorm = normalizeString(category.label) || category.id;
-        const categoryMonthTotal = category.weeks.reduce(
-          (sum, week) => sum + week.reduce((weekSum, day) => weekSum + day, 0),
-          0
-        );
-        const current =
-          totalsByLabel.get(labelNorm) ??
-          {
-            label: category.label,
-            total: 0,
-            type:
-              labelNorm === 'ninos'
-                ? 'ninos'
-                : labelNorm === 'jovenes'
-                  ? 'jovenes'
-                  : labelNorm === 'adultos'
-                    ? 'adultos'
-                    : labelNorm === 'nuevos'
-                      ? 'nuevos'
-                      : 'custom',
-          };
-        current.total += categoryMonthTotal;
-        totalsByLabel.set(labelNorm, current);
-      }
-    }
-
-    return Array.from(totalsByLabel.values()).sort(
-      (a, b) => b.total - a.total || a.label.localeCompare(b.label, 'es')
-    );
-  }, [currentYearRecords]);
+    return registryCategoryTotals(currentYearRecords, initializedMonths).map((category) => {
+      const labelNorm = normalizeString(category.label);
+      return { ...category, type: labelNorm === 'ninos' || labelNorm === 'jovenes' || labelNorm === 'adultos' || labelNorm === 'nuevos' ? labelNorm : 'custom' as const };
+    });
+  }, [currentYearRecords, initializedMonths]);
 
   const monthsReported = React.useMemo(
     () => monthOrder.filter((month) => monthTotal(month) > 0).length,
     [recordsByYear, selectedYear]
   );
 
-  const annualGrandTotal = React.useMemo(
-    () => monthOrder.reduce((sum, month) => sum + monthTotal(month), 0),
-    [recordsByYear, selectedYear]
-  );
+  const annualGrandTotal = React.useMemo(() => registryAnnualTotal(currentYearRecords), [currentYearRecords]);
 
   /** Por cada mes: semana con mayor total y desglose por categoría (etiquetas reales de ese mes). */
   const weeklyPeakByMonth = React.useMemo(() => {
@@ -729,7 +651,19 @@ export default function AttendanceRegistroPage() {
     const nextLabel = newCategoryByMonth[month].trim();
     if (!nextLabel) return;
 
-    const nextId = `custom-${nextLabel.toLowerCase().replace(/\s+/g, '-')}-${Date.now()}`;
+    const existingCategory = currentYearRecords[month].categories.find(
+      (category) => normalizeString(category.label) === normalizeString(nextLabel)
+    );
+    if (existingCategory) {
+      toast({
+        variant: 'destructive',
+        title: 'Categoría duplicada',
+        description: `La categoría "${existingCategory.label}" ya existe en este mes.`,
+      });
+      return;
+    }
+
+    const nextId = categoryIdFromLabel(nextLabel);
     setRecordsByYear((prev) => ({
       ...prev,
       [selectedYear]: {
@@ -816,14 +750,14 @@ export default function AttendanceRegistroPage() {
     });
   };
 
-  const handleSaveRegistry = async () => {
+  const handleSaveRegistry = async (silent = false): Promise<boolean> => {
     if (!selectedChurchId) {
       toast({
         variant: 'destructive',
         title: 'Selecciona un templo',
         description: 'Debes seleccionar un templo para guardar la asistencia.',
       });
-      return;
+      return false;
     }
 
     setIsSaving(true);
@@ -853,7 +787,6 @@ export default function AttendanceRegistroPage() {
         eventName.trim().length > 0
           ? eventName.trim()
           : `Asistencia anual ${selectedYear}`;
-      setEventName(storedEventName);
       setLastSavedByYearAndChurch((prev) => ({
         ...prev,
         [saveKey]: {
@@ -862,16 +795,11 @@ export default function AttendanceRegistroPage() {
           ...(json.consolidatedAnnual ? { consolidatedAnnual: json.consolidatedAnnual } : {}),
         },
       }));
-      toast({
-        title: 'Asistencia guardada',
-        description: json.message || 'Los cambios fueron guardados correctamente.',
-      });
+      if (!silent) toast({ title: 'Asistencia guardada', description: json.message || 'Los cambios fueron guardados correctamente.' });
+      return true;
     } catch (error) {
-      toast({
-        variant: 'destructive',
-        title: 'Error al guardar',
-        description: error instanceof Error ? error.message : 'Inténtalo de nuevo.',
-      });
+      if (!silent) toast({ variant: 'destructive', title: 'Error al guardar', description: error instanceof Error ? error.message : 'Inténtalo de nuevo.' });
+      return false;
     } finally {
       setIsSaving(false);
     }
@@ -939,33 +867,8 @@ export default function AttendanceRegistroPage() {
     };
   }, [currentYearRecords]);
 
-  const getMonthFromDate = (dateRaw: string) => {
-    const maybeDate = new Date(dateRaw);
-    if (Number.isNaN(maybeDate.getTime())) return null;
-    return MONTH_ORDER[maybeDate.getMonth()];
-  };
-
   const extractRowsFromFile = async (file: File) => {
-    if (file.name.toLowerCase().endsWith('.csv')) {
-      const text = await file.text();
-      return parseCsvRows(text);
-    }
-
-    const buffer = await file.arrayBuffer();
-    const workbook = XLSX.read(buffer, { type: 'array' });
-    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-    const rawRows = XLSX.utils.sheet_to_json<Record<string, unknown>>(firstSheet, {
-      defval: '',
-      raw: false,
-    });
-
-    return rawRows.map((row) => {
-      const normalized: Record<string, string> = {};
-      Object.entries(row).forEach(([key, value]) => {
-        normalized[normalizeString(key)] = String(value ?? '').trim();
-      });
-      return normalized;
-    });
+    return readRegistrySpreadsheet(file, { parseCsv: parseCsvRows });
   };
 
   const handlePickImportFile = () => {
@@ -1064,28 +967,11 @@ export default function AttendanceRegistroPage() {
         return;
       }
 
-      for (const row of rows) {
-        const categoryLabel = row.categoria || row.category || row.grupo || '';
-        const attendanceRaw = row.asistencia || row.attendance || row.valor || row.total || '';
-        if (!categoryLabel || !attendanceRaw) continue;
-        const attendance = Number(attendanceRaw);
-        if (Number.isNaN(attendance) || attendance < 0) continue;
-
-        const churchCheck = validateImportRowChurch(row, selectedChurchId, selectedChurchName);
-        if (!churchCheck.ok) {
-          toast({
-            variant: 'destructive',
-            title: 'Importación cancelada',
-            description: churchCheck.message,
-          });
-          return;
-        }
-      }
-
-      const nextYearRecords = cloneMonthData(currentYearRecords);
-      let importedCount = 0;
-
-      for (const row of rows) {
+      const existingCategories = new Set(Object.values(currentYearRecords).flatMap((month) => month.categories.map((category) => normalizeString(category.label))));
+      const newCategories = new Map<string, string>();
+      const seen = new Set<string>();
+      const entries: AttendanceImportEntry[] = [];
+      const previewRows = rows.map((row, index) => {
         const categoryLabel = row.categoria || row.category || row.grupo || '';
         const attendanceRaw = row.asistencia || row.attendance || row.valor || row.total || '';
         const weekRaw = row.semana || row.week || '';
@@ -1093,65 +979,39 @@ export default function AttendanceRegistroPage() {
         const monthRaw = row.mes || row.month || '';
         const dateRaw = row.fecha || row.date || '';
 
-        if (!categoryLabel || !attendanceRaw) continue;
-
         const attendance = Number(attendanceRaw);
-        if (Number.isNaN(attendance) || attendance < 0) continue;
-
-        const categoryNorm = normalizeString(categoryLabel);
-        const existingByNorm = Object.values(nextYearRecords)
-          .flatMap((month) => month.categories)
-          .find((category) => normalizeString(category.label) === categoryNorm);
-
-        const categoryId =
-          existingByNorm?.id ??
-          `custom-${categoryNorm.replace(/\s+/g, '-')}-${Math.random().toString(36).slice(2, 8)}`;
-
+        const parsedDate = dateRaw ? parseImportDate(dateRaw) : null;
         const targetMonth =
-          monthMap[normalizeString(monthRaw)] ?? (dateRaw ? getMonthFromDate(dateRaw) : null);
-        if (!targetMonth) continue;
-
-        let weekIndex = Number(weekRaw) - 1;
+          monthMap[normalizeString(monthRaw)] ?? parsedDate?.month ?? null;
+        let weekIndex = weekRaw.trim() ? Number(weekRaw) - 1 : Number.NaN;
         let dayIndex = dayMap[normalizeString(dayRaw)];
 
-        if (Number.isNaN(weekIndex) && dateRaw) {
-          const parsedDate = new Date(dateRaw);
-          if (!Number.isNaN(parsedDate.getTime())) {
-            weekIndex = Math.min(4, Math.max(0, Math.floor((parsedDate.getDate() - 1) / 7)));
-            dayIndex = parsedDate.getDay() === 0 ? 6 : parsedDate.getDay() - 1;
-          }
+        if (Number.isNaN(weekIndex) && parsedDate) {
+          weekIndex = parsedDate.weekIndex;
+        }
+        if (typeof dayIndex !== 'number' && parsedDate) {
+          dayIndex = parsedDate.dayIndex;
         }
 
-        if (Number.isNaN(weekIndex) || weekIndex < 0 || weekIndex > 4) continue;
-        if (typeof dayIndex !== 'number' || dayIndex < 0 || dayIndex > 6) continue;
-
-        const monthCategories = nextYearRecords[targetMonth].categories;
-        const categoryIdx = monthCategories.findIndex((category) => category.id === categoryId);
-        if (categoryIdx === -1) {
-          monthCategories.push({
-            id: categoryId,
-            label: categoryLabel.trim(),
-            weeks: createEmptyWeeks(),
-            isCustom: true,
-          });
-        }
-
-        const targetCategory = monthCategories.find((category) => category.id === categoryId);
-        if (!targetCategory) continue;
-
-        targetCategory.weeks[weekIndex][dayIndex] = attendance;
-        importedCount += 1;
-      }
-
-      setRecordsByYear((prev) => ({
-        ...prev,
-        [selectedYear]: nextYearRecords,
-      }));
-
-      toast({
-        title: 'Importación completada',
-        description: `Se importaron ${importedCount} registros para el año ${selectedYear}.`,
+        const churchCheck = validateImportRowChurch(row, selectedChurchId, selectedChurchName);
+        let reason = '';
+        if (!categoryLabel.trim()) reason = 'Falta la categoría.';
+        else if (attendanceRaw === '' || Number.isNaN(attendance) || attendance < 0) reason = 'Cantidad incorrecta; debe ser un número mayor o igual a cero.';
+        else if (!churchCheck.ok) reason = churchCheck.message;
+        else if (parsedDate && parsedDate.year !== selectedYear) reason = `La fecha no pertenece al año ${selectedYear}.`;
+        else if (!targetMonth) reason = 'Mes o fecha incorrecta.';
+        else if (Number.isNaN(weekIndex) || weekIndex < 0 || weekIndex > 4) reason = 'Semana incorrecta; debe estar entre 1 y 5.';
+        else if (typeof dayIndex !== 'number' || dayIndex < 0 || dayIndex > 6) reason = 'Día incorrecto o no reconocido.';
+        if (reason || !targetMonth || typeof dayIndex !== 'number') return { rowNumber: index + 2, valid: false, category: categoryLabel, date: dateRaw, reason };
+        const key = `${targetMonth}:${weekIndex}:${dayIndex}:${normalizeString(categoryLabel)}`;
+        const existingValue = currentYearRecords[targetMonth].categories.find((category) => normalizeString(category.label) === normalizeString(categoryLabel))?.weeks[weekIndex]?.[dayIndex] ?? 0;
+        const duplicate = seen.has(key) || existingValue !== 0;
+        seen.add(key);
+        if (!existingCategories.has(normalizeString(categoryLabel))) newCategories.set(normalizeString(categoryLabel), categoryLabel.trim());
+        entries.push({ month: targetMonth, week: weekIndex, day: dayIndex, label: categoryLabel.trim(), value: attendance });
+        return { rowNumber: index + 2, valid: true, category: categoryLabel.trim(), date: dateRaw || `${monthRaw} S${weekIndex + 1}`, value: attendance, duplicate };
       });
+      setImportPreview({ fileName: file.name, rows: previewRows, entries, newCategories: Array.from(newCategories.values()), total: entries.reduce((sum, entry) => sum + entry.value, 0) });
     } catch (error) {
       toast({
         variant: 'destructive',
@@ -1160,10 +1020,33 @@ export default function AttendanceRegistroPage() {
       });
     } finally {
       setIsImporting(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
     }
+  };
+
+  const closeImportPreview = () => {
+    setImportPreview(null);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const applyImportPreview = () => {
+    if (!importPreview) return;
+    const nextYearRecords = cloneMonthData(currentYearRecords);
+    const importedMonths = new Set<MonthKey>();
+    for (const entry of importPreview.entries) {
+      const categoryNorm = normalizeString(entry.label);
+      const existing = Object.values(nextYearRecords).flatMap((month) => month.categories).find((category) => normalizeString(category.label) === categoryNorm);
+      const categoryId = existing?.id ?? categoryIdFromLabel(entry.label);
+      const monthCategories = nextYearRecords[entry.month].categories;
+      if (!monthCategories.some((category) => category.id === categoryId)) monthCategories.push({ id: categoryId, label: entry.label, weeks: createEmptyWeeks(), isCustom: true });
+      const target = monthCategories.find((category) => category.id === categoryId);
+      if (!target) continue;
+      target.weeks[entry.week][entry.day] = importMode === 'sum' ? target.weeks[entry.week][entry.day] + entry.value : entry.value;
+      importedMonths.add(entry.month);
+    }
+    setRecordsByYear((prev) => ({ ...prev, [selectedYear]: nextYearRecords }));
+    setInitializedMonthsByYear((prev) => ({ ...prev, [selectedYear]: Array.from(new Set([...(prev[selectedYear] ?? []), ...importedMonths])) }));
+    toast({ title: 'Importación aplicada', description: `Se aplicaron ${importPreview.entries.length} registros para ${selectedYear}.` });
+    closeImportPreview();
   };
 
   React.useEffect(() => {
@@ -1290,6 +1173,21 @@ export default function AttendanceRegistroPage() {
     };
   }, [selectedChurchId, selectedYear]);
 
+  const draft = useRegistryDraftGuard({
+    value: { records: currentYearRecords, initializedMonths, eventName },
+    identity: `${selectedChurchId}:${selectedYear}`,
+    loading: isLoadingRegistry,
+    onRestore: (value) => {
+      setRecordsByYear((previous) => ({ ...previous, [selectedYear]: value.records }));
+      setInitializedMonthsByYear((previous) => ({ ...previous, [selectedYear]: value.initializedMonths }));
+      setEventName(value.eventName);
+    },
+    onAutoSave: () => handleSaveRegistry(true),
+  });
+  const changeChurch = (value: string) => { if (draft.confirmDiscard()) setSelectedChurchId(value); };
+  const changeYear = (value: string) => { if (draft.confirmDiscard()) setSelectedYear(value); };
+  const manualSave = async () => { if (await handleSaveRegistry()) draft.markSaved(); };
+
   const eventNameSelectValue = React.useMemo(() => {
     if (!eventName.trim()) return '';
     if (eventNameSuggestions.includes(eventName)) return eventName;
@@ -1305,6 +1203,7 @@ export default function AttendanceRegistroPage() {
 
   return (
     <div className="relative flex flex-1 flex-col">
+      <RegistryImportPreview preview={importPreview} mode={importMode} onModeChange={setImportMode} onCancel={closeImportPreview} onApply={applyImportPreview} />
       {isImporting ? (
         <div
           className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-4 bg-background/75 backdrop-blur-sm"
@@ -1324,56 +1223,21 @@ export default function AttendanceRegistroPage() {
         description={`Registro centralizado de métricas por categorías. Templo seleccionado: ${selectedChurchName}.`}
       />
 
-      <main className="flex-1 space-y-5 bg-muted/20 p-4 sm:p-8">
+      <main className="min-w-0 flex-1 space-y-5 bg-muted/20 p-3 pb-28 min-[380px]:p-4 min-[380px]:pb-28 sm:p-8 sm:pb-28">
         <Card>
           <CardContent className="p-4">
-            <div className="grid gap-3 md:grid-cols-2">
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">
-                  Selecciona el templo para guardar asistencia
-                </p>
-                <Select
-                  value={selectedChurchId}
-                  onValueChange={setSelectedChurchId}
-                  disabled={churchesState !== 'ready' || churches.length === 0}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue
-                      placeholder={
-                        churchesState === 'loading'
-                          ? 'Cargando templos...'
-                          : 'Selecciona un templo'
-                      }
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {churches.map((church) => (
-                      <SelectItem key={church.id} value={church.id}>
-                        {church.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <p className="text-sm font-medium text-muted-foreground">
-                  Selecciona el año de asistencia
-                </p>
-                <Select value={selectedYear} onValueChange={setSelectedYear}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Selecciona un año" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {yearOptions.map((year) => (
-                      <SelectItem key={year} value={year}>
-                        {year}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+            <RegistrySelector
+              churches={churches}
+              churchId={selectedChurchId}
+              onChurchChange={changeChurch}
+              churchState={churchesState}
+              year={selectedYear}
+              years={yearOptions}
+              onYearChange={changeYear}
+              churchLabel="Selecciona el templo para guardar asistencia"
+              yearLabel="Selecciona el año de asistencia"
+            />
+            <div className="mt-4"><RegistryDraftStatus dirty={draft.dirty} lastSavedAt={draft.lastSavedAt} autoSave={draft.autoSave} onAutoSaveChange={draft.setAutoSave} autoSaving={draft.autoSaving} onUndo={draft.undo} /></div>
 
             <div className="mt-4 space-y-2">
               <Label className="text-sm font-medium text-muted-foreground">
@@ -1513,9 +1377,9 @@ export default function AttendanceRegistroPage() {
                             </div>
 
                             <div className="space-y-3">
-                              <div className="overflow-x-auto">
+                              <RegistryCalendarScroller minWidth={760}>
                                 <div
-                                  className="grid min-w-[760px] gap-2"
+                                  className="grid gap-2"
                                   style={{
                                     gridTemplateColumns: `140px repeat(${currentYearRecords[monthKey].categories.length}, minmax(96px, 1fr)) 180px`,
                                   }}
@@ -1657,7 +1521,7 @@ export default function AttendanceRegistroPage() {
                                     </React.Fragment>
                                   ))}
                                 </div>
-                              </div>
+                              </RegistryCalendarScroller>
                             </div>
                           </CardContent>
                         </Card>
@@ -1739,32 +1603,16 @@ export default function AttendanceRegistroPage() {
         })}
 
         <section className="space-y-6">
-          <Card className={cn('overflow-hidden border-dashed', isImporting && 'pointer-events-none opacity-60')}>
-            <CardContent className="flex min-h-[320px] flex-col items-center justify-center gap-6 p-6 text-center sm:p-10">
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".csv,.xlsx,.xls"
-                className="hidden"
-                onChange={handleImportMonthlyData}
-              />
-              <span className="rounded-full bg-sky-100 p-6 text-sky-500">
-                <UploadCloud className="h-10 w-10" />
-              </span>
-              <div className="space-y-2">
-                <p className="text-5xl font-extrabold tracking-tight">Importar Datos Mensuales</p>
-                <p className="text-2xl text-muted-foreground">
-                  Selecciona un Excel o CSV para cargar asistencia por mes y día.
-                </p>
-                <p className="text-base text-muted-foreground">
-                  Los registros se asocian al templo elegido arriba. Si el archivo trae columnas de iglesia o ID de
-                  templo, deben coincidir con la selección actual.
-                </p>
-              </div>
-              <div className="flex flex-col items-center gap-3 sm:flex-row">
+          <RegistryImportCard
+            busy={isImporting}
+            title="Importar Datos Mensuales"
+            description="Selecciona un Excel o CSV para cargar asistencia por mes y día."
+            detail="Los registros se asocian al templo elegido arriba. Si el archivo trae columnas de iglesia o ID de templo, deben coincidir con la selección actual."
+            input={<input ref={fileInputRef} type="file" accept=".csv,.xlsx,.xls" className="hidden" onChange={handleImportMonthlyData} />}
+            actions={<>
                 <Button
                   type="button"
-                  className="h-16 min-w-[320px] bg-sky-500 text-2xl font-semibold hover:bg-sky-600"
+                  className="h-14 w-full bg-sky-500 px-4 text-base font-semibold hover:bg-sky-600 sm:h-16 sm:w-auto sm:min-w-[280px] sm:text-xl lg:min-w-[320px] lg:text-2xl"
                   onClick={handlePickImportFile}
                   disabled={isImporting || !selectedChurchId || churchesState !== 'ready' || churches.length === 0}
                 >
@@ -1780,16 +1628,15 @@ export default function AttendanceRegistroPage() {
                 <Button
                   type="button"
                   variant="outline"
-                  className="h-16 min-w-[320px] text-xl font-semibold"
+                  className="h-14 w-full px-4 text-base font-semibold sm:h-16 sm:w-auto sm:min-w-[280px] sm:text-lg lg:min-w-[320px] lg:text-xl"
                   onClick={handleDownloadImportTemplate}
                   disabled={isImporting || !selectedChurchId || churchesState !== 'ready' || churches.length === 0}
                 >
                   <Download className="mr-2 h-5 w-5" />
                   Descargar Excel ejemplo
                 </Button>
-              </div>
-            </CardContent>
-          </Card>
+            </>}
+          />
 
           <Card className="overflow-hidden border-0 bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 text-slate-50">
             <CardContent className="space-y-6 p-6 md:p-8">
@@ -1829,38 +1676,54 @@ export default function AttendanceRegistroPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-                {annualCategoryCards.map((category) => (
-                  <div
-                    key={category.label}
-                    className="rounded-2xl border border-slate-700/60 bg-slate-900/50 p-5"
-                  >
-                    <p className="inline-flex items-center gap-2 text-2xl font-bold">
-                      <span
-                        className={cn(
-                          'rounded-lg p-2',
-                          category.type === 'ninos' && 'bg-blue-500/20 text-blue-300',
-                          category.type === 'jovenes' && 'bg-violet-500/20 text-violet-300',
-                          category.type === 'adultos' && 'bg-amber-500/20 text-amber-300',
-                          category.type === 'nuevos' && 'bg-emerald-500/20 text-emerald-300',
-                          category.type === 'custom' && 'bg-cyan-500/20 text-cyan-300'
-                        )}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-300">
+                    Categorías activas
+                  </p>
+                  <span className="rounded-full bg-blue-400/15 px-3 py-1 text-xs font-bold text-blue-200">
+                    {annualCategoryCards.length}
+                  </span>
+                </div>
+                {annualCategoryCards.length > 0 ? (
+                  <div className="grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
+                    {annualCategoryCards.map((category) => (
+                      <div
+                        key={normalizeString(category.label)}
+                        className="rounded-2xl border border-slate-700/60 bg-slate-900/50 p-5"
                       >
-                        {category.type === 'ninos' ? (
-                          <Smile className="h-5 w-5" />
-                        ) : category.type === 'nuevos' ? (
-                          <UserRoundPlus className="h-5 w-5" />
-                        ) : category.type === 'custom' ? (
-                          <FileText className="h-5 w-5" />
-                        ) : (
-                          <Users className="h-5 w-5" />
-                        )}
-                      </span>
-                      {category.label}
-                    </p>
-                    <p className="mt-3 text-5xl font-extrabold">{category.total}</p>
+                        <p className="flex min-w-0 items-center gap-2 text-2xl font-bold">
+                          <span
+                            className={cn(
+                              'shrink-0 rounded-lg p-2',
+                              category.type === 'ninos' && 'bg-blue-500/20 text-blue-300',
+                              category.type === 'jovenes' && 'bg-violet-500/20 text-violet-300',
+                              category.type === 'adultos' && 'bg-amber-500/20 text-amber-300',
+                              category.type === 'nuevos' && 'bg-emerald-500/20 text-emerald-300',
+                              category.type === 'custom' && 'bg-cyan-500/20 text-cyan-300'
+                            )}
+                          >
+                            {category.type === 'ninos' ? (
+                              <Smile className="h-5 w-5" />
+                            ) : category.type === 'nuevos' ? (
+                              <UserRoundPlus className="h-5 w-5" />
+                            ) : category.type === 'custom' ? (
+                              <FileText className="h-5 w-5" />
+                            ) : (
+                              <Users className="h-5 w-5" />
+                            )}
+                          </span>
+                          <span className="min-w-0 break-words">{category.label}</span>
+                        </p>
+                        <p className="mt-3 text-5xl font-extrabold">{category.total}</p>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                ) : (
+                  <div className="rounded-2xl border border-dashed border-slate-700 p-8 text-center text-sm text-slate-400">
+                    Inicializa un mes y agrega una categoría para mostrar su total.
+                  </div>
+                )}
               </div>
 
               <div className="border-t border-slate-700/50 pt-6">
@@ -1923,12 +1786,12 @@ export default function AttendanceRegistroPage() {
             </CardContent>
           </Card>
 
-          <div className="flex flex-col items-center justify-center gap-4 pb-4 sm:flex-row">
+          <div className="sticky bottom-0 z-10 -mx-3 flex border-t bg-background/95 p-3 pb-[calc(.75rem+env(safe-area-inset-bottom,0px))] shadow-[0_-8px_24px_rgba(0,0,0,.08)] backdrop-blur min-[380px]:-mx-4 sm:-mx-8 sm:justify-end sm:px-8">
             <Button
               type="button"
-              className="h-14 min-w-[320px] text-xl"
-              onClick={handleSaveRegistry}
-              disabled={isSaving || isLoadingRegistry || isImporting || !selectedChurchId}
+              className="h-14 w-full text-base sm:w-auto sm:min-w-[280px] sm:text-lg lg:min-w-[320px] lg:text-xl"
+              onClick={() => void manualSave()}
+              disabled={isSaving || isLoadingRegistry || isImporting || !selectedChurchId || !draft.dirty}
             >
               <CheckCircle2 className="mr-2 h-5 w-5" />
               {isSaving ? 'Guardando...' : `Guardar Registro ${selectedYear}`}

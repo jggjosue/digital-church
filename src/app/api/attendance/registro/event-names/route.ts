@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
 
-const ATTENDANCE_REGISTRY_COLLECTION = 'attendance';
+const ATTENDANCE_REGISTRY_COLLECTION = 'attendance_registry';
 
 type Row = { eventName?: string; year?: string };
 

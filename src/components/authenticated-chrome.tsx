@@ -8,7 +8,7 @@ import { PortalFooter } from '@/components/portal-footer';
 import { PortalNavProvider } from '@/contexts/portal-nav-context';
 
 const AUTH_ROUTE = /^\/(sign-in|sign-up)(\/|$)/;
-const PUBLIC_CHROME_BYPASS_ROUTES = new Set(['/documentacion', '/documentation']);
+const PUBLIC_CHROME_BYPASS_ROUTES = new Set<string>(['/documentacion']);
 const FOOTER_ROUTES = new Set([
   '/dashboard',
   '/churches/new',
@@ -20,6 +20,7 @@ const FOOTER_ROUTES = new Set([
   '/attendance/registro',
   '/attendance/report',
   '/donations/new',
+  '/donations/registro',
   '/donations/fundraising/new',
   '/donations',
   '/donations/giving-statement',
@@ -32,6 +33,7 @@ const FOOTER_ROUTES = new Set([
   '/settings/new',
   '/settings/roles',
   '/settings/users',
+  '/tutorial',
 ]);
 
 export function AuthenticatedChrome({ children }: { children: React.ReactNode }) {
@@ -94,7 +96,8 @@ export function AuthenticatedChrome({ children }: { children: React.ReactNode })
           pathname === '/donations' ||
           pathname === '/donations/giving-statement' ||
           pathname === '/donations/fundraising';
-        if (!cancelled && !adminBypass && role === 'congregante' && !allowCongreganteRoute) {
+        const allowTutorial = pathname === '/tutorial';
+        if (!cancelled && !adminBypass && role === 'congregante' && !allowCongreganteRoute && !allowTutorial) {
           router.replace('/churches');
         }
       } catch {

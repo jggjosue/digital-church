@@ -18,19 +18,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { HeroPanelMock } from '@/components/landing/hero-panel-mock';
 import { LandingHeader } from '@/components/landing/landing-header';
+import { LandingFooter } from '@/components/landing/landing-footer';
 import { ICIAR_TEMPLES } from '@/lib/iciar-temples';
 import { cn } from '@/lib/utils';
 
 /** Vista de ejemplo en la tarjeta «Templo y directorio» (Templo La Nueva Jerusalén, Tepic). */
 const LANDING_MAP_EMBED = ICIAR_TEMPLES[0]!;
-
-const BRAND = 'ICIAR';
-
-const LEGAL_ENTITY_ADDRESS =
-  'Magzin LLC, 800 Third Avenue Associates, New York, NY, 10022, United States';
-
-const CLERK_PRIVACY_URL = 'https://clerk.com/legal/privacy';
-const CLERK_TERMS_URL = 'https://clerk.com/legal/terms';
 
 const ICIAR_TEMPLE_COUNT = ICIAR_TEMPLES.length;
 
@@ -582,72 +575,7 @@ export function LandingPage() {
           </div>
         </section>
 
-        <footer className="border-t border-slate-200 bg-white py-12 sm:py-14">
-          <div className="mx-auto grid max-w-6xl gap-8 px-4 sm:grid-cols-2 sm:gap-10 sm:px-6 lg:grid-cols-4">
-            <div>
-              <p className="text-lg font-bold text-slate-900">{BRAND}</p>
-              <p className="mt-3 text-sm text-slate-600">
-                Plataforma de gestión eclesiástica con integridad estructural.
-              </p>
-              <address className="mt-6 not-italic">
-                <p className="text-xs leading-relaxed text-slate-500">{LEGAL_ENTITY_ADDRESS}</p>
-              </address>
-              <p className="mt-3 text-xs text-slate-400">
-                © {new Date().getFullYear()} {BRAND}. Todos los derechos reservados.
-              </p>
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-slate-900">Legal</p>
-              <ul className="mt-4 space-y-2 text-sm text-slate-600">
-                <li>
-                  <a
-                    href={CLERK_PRIVACY_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:text-blue-600"
-                  >
-                    Política de privacidad
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href={CLERK_TERMS_URL}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="hover:text-blue-600"
-                  >
-                    Términos del servicio
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-slate-900">Contacto</p>
-              <ul className="mt-4 space-y-2 text-sm text-slate-600">
-                <li>
-                  <a href="#" className="hover:text-blue-600">
-                    Contáctenos
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:text-blue-600">
-                    Soporte
-                  </a>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-slate-900">Comunidad</p>
-              <ul className="mt-4 space-y-2 text-sm text-slate-600">
-                <li>
-                  <Link href="/documentacion" className="hover:text-blue-600">
-                    Documentación
-                  </Link>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </footer>
+        <LandingFooter />
       </main>
     </div>
   );

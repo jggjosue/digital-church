@@ -1,7 +1,7 @@
 
 'use client';
 
-import { ChevronDown } from 'lucide-react';
+import { BookOpen, ChevronDown } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import * as React from 'react';
@@ -12,11 +12,12 @@ import { usePortalNav } from '@/contexts/portal-nav-context';
 import { cn } from '@/lib/utils';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from './ui/collapsible';
 
-export function MobileSidebar() {
+export function MobileSidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   const { name, subtitle } = useChurchIdentity();
   const { navItems } = usePortalNav();
   const [openCollapsibles, setOpenCollapsibles] = React.useState<string[]>([]);
+  const handleNavigate = () => window.setTimeout(() => onNavigate?.(), 0);
 
   const isSubItemActive = (subItems: { href: string }[]) => {
     return subItems.some((subItem) => pathname.startsWith(subItem.href));
@@ -24,7 +25,7 @@ export function MobileSidebar() {
 
   const toggleCollapsible = (label: string) => {
     setOpenCollapsibles((prev) =>
-      prev.includes(label) ? prev.filter((l) => l !== label) : [...prev, label]
+      prev.includes(label) ? prev.filter((l) => l !== label) : [label]
     );
   };
 
@@ -58,7 +59,7 @@ export function MobileSidebar() {
           <p className="truncate text-xs text-muted-foreground">{subtitle}</p>
         </div>
       </div>
-      <nav className="flex-1 space-y-1 overflow-y-auto px-4 py-2">
+      <nav aria-label="Navegación principal" className="flex-1 space-y-2 overflow-y-auto px-3 py-4 sm:px-5">
         {navItems.map((item) =>
           'subItems' in item && item.subItems ? (
             <Collapsible
@@ -67,14 +68,17 @@ export function MobileSidebar() {
               onOpenChange={() => toggleCollapsible(item.label)}
             >
               <CollapsibleTrigger asChild>
-                <div
+                <button
+                  type="button"
+                  aria-expanded={openCollapsibles.includes(item.label)}
+                  aria-controls={`mobile-submenu-${item.label.replace(/\s+/g, '-').toLowerCase()}`}
                   className={cn(
-                    'flex cursor-pointer items-center justify-between gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
+                    'flex min-h-12 w-full touch-manipulation items-center justify-between gap-3 rounded-xl border border-transparent px-4 py-3 text-left text-base text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[.99] sm:min-h-14 sm:text-lg',
                     isSubItemActive(item.subItems) && 'bg-accent font-medium text-accent-foreground'
                   )}
                 >
                   <div className="flex items-center gap-3">
-                    <item.icon className="h-4 w-4" />
+                    <item.icon className="h-5 w-5 shrink-0 sm:h-6 sm:w-6" />
                     <span>{item.label}</span>
                   </div>
                   <ChevronDown
@@ -83,16 +87,17 @@ export function MobileSidebar() {
                       openCollapsibles.includes(item.label) && 'rotate-180'
                     )}
                   />
-                </div>
+                </button>
               </CollapsibleTrigger>
-              <CollapsibleContent className="space-y-1 pt-1">
+              <CollapsibleContent id={`mobile-submenu-${item.label.replace(/\s+/g, '-').toLowerCase()}`} className="space-y-2 px-2 pb-2 pt-1">
                 {item.subItems.map((subItem) => (
                   <Link
                     key={subItem.href}
                     href={subItem.href}
+                    onClick={handleNavigate}
                     className={cn(
-                      'flex items-center gap-3 rounded-lg py-2 pl-9 pr-3 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
-                      pathname === subItem.href && 'bg-accent/50 text-accent-foreground'
+                      'flex min-h-12 touch-manipulation items-center gap-3 rounded-xl border bg-background px-4 py-3 text-sm text-muted-foreground shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:min-h-14 sm:text-base',
+                      pathname === subItem.href && 'border-primary/30 bg-primary/10 font-medium text-foreground'
                     )}
                   >
                     <subItem.icon className="h-4 w-4" />
@@ -105,16 +110,18 @@ export function MobileSidebar() {
             <Link
               key={item.href}
               href={item.href!}
+              onClick={handleNavigate}
               className={cn(
-                'flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:bg-accent hover:text-accent-foreground',
+                'flex min-h-12 touch-manipulation items-center gap-3 rounded-xl border border-transparent px-4 py-3 text-base text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[.99] sm:min-h-14 sm:text-lg',
                 pathname === item.href! && 'bg-accent font-medium text-accent-foreground'
               )}
             >
-              <item.icon className="h-4 w-4" />
+              <item.icon className="h-5 w-5 shrink-0 sm:h-6 sm:w-6" />
               <span>{item.label}</span>
             </Link>
           )
         )}
+        <Link href="/tutorial" onClick={handleNavigate} className={cn('flex min-h-12 touch-manipulation items-center gap-3 rounded-xl border border-transparent px-4 py-3 text-base text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring active:scale-[.99] sm:min-h-14 sm:text-lg', pathname === '/tutorial' && 'bg-accent font-medium text-accent-foreground')}><BookOpen className="h-5 w-5 shrink-0 sm:h-6 sm:w-6" /><span>Tutorial</span></Link>
       </nav>
       <div className="mt-auto space-y-1 p-4" />
     </div>

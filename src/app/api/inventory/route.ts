@@ -28,7 +28,7 @@ import {
   type ResourceSystemCategoryDoc,
 } from '@/lib/inventory-resource';
 
-const COLLECTION = 'inventory';
+const COLLECTION = 'inventory_items';
 
 const CONDITIONS: ConditionKey[] = ['excellent', 'good', 'repair'];
 const STATUSES: ResourceStatus[] = ['available', 'in_use', 'maintenance'];
@@ -38,7 +38,7 @@ const INVENTORY_LIST_FILTER = {
 } as const;
 
 async function loadTaxonomy(db: Awaited<ReturnType<typeof getDb>>): Promise<InventoryTaxonomyDoc | null> {
-  const doc = await db.collection<InventoryTaxonomyDoc>('inventory').findOne({
+  const doc = await db.collection<InventoryTaxonomyDoc>('inventory_taxonomy').findOne({
     docType: INVENTORY_DOC_TYPE_TAXONOMY,
     id: INVENTORY_TAXONOMY_DOC_ID,
   });

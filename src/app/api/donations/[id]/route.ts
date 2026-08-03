@@ -3,6 +3,8 @@ import { CHURCHES_COLLECTION, type ChurchLocation } from '@/lib/church-locations
 import { mergeDonationIdWithScope, resolveDonationsReadScope } from '@/lib/donations-scope';
 import { createDonationSchema, type DonationDocument } from '@/lib/donation-schema';
 import { getDb } from '@/lib/mongodb';
+import { archiveVersion, recordAudit } from '@/lib/audit-log';
+import { hasPortalPermission, OFFERING_PERMISSIONS } from '@/lib/portal-permissions';
 
 const DONATION_COLLECTION = 'donation';
 
@@ -30,6 +32,7 @@ export async function GET(
       return NextResponse.json({ error: 'Id inválido.' }, { status: 400 });
     }
     const db = await getDb();
+    if (!await hasPortalPermission(db, 'Ofrendas', OFFERING_PERMISSIONS.VIEW)) return NextResponse.json({ error: 'No tienes permiso para ver ofrendas.' }, { status: 403 });
     const scope = await resolveDonationsReadScope(db);
     const donation = await db
       .collection<DonationDocument>(DONATION_COLLECTION)
@@ -69,6 +72,7 @@ export async function PUT(
     const payload = parsed.data;
 
     const db = await getDb();
+    if (!await hasPortalPermission(db, 'Ofrendas', OFFERING_PERMISSIONS.EDIT_HISTORY)) return NextResponse.json({ error: 'No tienes permiso para editar registros históricos.' }, { status: 403 });
     const collection = db.collection<DonationDocument>(DONATION_COLLECTION);
     const scope = await resolveDonationsReadScope(db);
     const existing = await collection.findOne(mergeDonationIdWithScope(id, scope), {
@@ -119,7 +123,9 @@ export async function PUT(
       updatedAt: now,
     };
 
+    await archiveVersion({ db, request, collection: DONATION_COLLECTION, entityId: id, document: existing, reason: 'update', sourceScreen: `/donations/${id}/edit` });
     await collection.replaceOne({ id }, doc);
+    await recordAudit({ db, request, action: 'update', collection: DONATION_COLLECTION, entityId: id, before: existing, after: doc, sourceScreen: `/donations/${id}/edit` });
 
     return NextResponse.json({
       ok: true,

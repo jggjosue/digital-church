@@ -22,7 +22,7 @@ import type {
 
 const DONATION_COLLECTION = 'donation';
 const MEMBERS_COLLECTION = 'members';
-const ATTENDANCE_EVENTS_COLLECTION = 'attendance';
+const ATTENDANCE_EVENTS_COLLECTION = 'attendance_events';
 const MEMBER_ATTENDANCE_COLLECTION = 'member_attendance';
 
 const DEMO_FILLS = ['hsl(217 91% 60%)', 'hsl(252 82% 64%)', 'hsl(45 93% 58%)', 'hsl(142 71% 45%)'];

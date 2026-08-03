@@ -31,6 +31,7 @@ import Link from 'next/link';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { AppHeader } from '@/components/app-header';
+import { ResourceSaveButton } from '@/components/resource-save-button';
 
 const availableSkills = [
     'Cuidado de Niños', 'Liderazgo', 'Oratoria', 'Música (Voz)', 'Música (Instrumento)',
@@ -49,7 +50,7 @@ export default function NewVolunteerPage() {
                 <Button variant="ghost" asChild className="w-full sm:w-auto">
                     <Link href="/volunteers">Cancelar</Link>
                 </Button>
-                <Button className="w-full sm:w-auto">Guardar Voluntario</Button>
+                <ResourceSaveButton className="w-full sm:w-auto" resource="volunteers" successHref="/volunteers" fields={{ firstName: '#first-name', lastName: '#last-name', email: '#email', phone: '#phone', primaryRole: '#primary-role', backgroundCheck: { selector: '#background-check', transform: 'checked' } }} extra={{ skills: [], availability: '', status: 'active' }}>Guardar Voluntario</ResourceSaveButton>
             </div>
         </AppHeader>
         <main className="flex-1 space-y-6 p-4 sm:p-8 bg-muted/20">

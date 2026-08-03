@@ -125,6 +125,7 @@ export default function EditPortalRolePage() {
   const [loading, setLoading] = React.useState(true);
   const [saving, setSaving] = React.useState(false);
   const [nameError, setNameError] = React.useState('');
+  const [assignedUsers, setAssignedUsers] = React.useState(0);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -142,12 +143,14 @@ export default function EditPortalRolePage() {
         const data = (await res.json().catch(() => ({}))) as {
           member?: MemberRow;
           role?: RoleRow | null;
+          assignedUsers?: number;
           error?: string;
         };
         if (!res.ok) throw new Error(data.error || 'No se pudo cargar la información.');
         if (cancelled) return;
 
         setMember(data.member ?? null);
+        setAssignedUsers(data.assignedUsers ?? 0);
         if (data.role) {
           setRoleId(data.role.id);
           setRoleName(String(data.role.name ?? ''));
@@ -247,8 +250,8 @@ export default function EditPortalRolePage() {
   return (
     <div className="flex flex-1 flex-col">
       <AppHeader
-        title="Editar Roles y Permisos"
-        description="Actualice el rol y los permisos del usuario seleccionado."
+        title="Editar rol y permisos"
+        description="Actualiza el rol compartido asignado al usuario seleccionado."
       >
         <div className="flex w-full flex-col justify-end gap-2 sm:w-auto sm:flex-row">
           <Button variant="outline" asChild>
@@ -274,6 +277,7 @@ export default function EditPortalRolePage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {roleId && assignedUsers > 1 ? <div className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950" role="status"><strong>Rol compartido:</strong> estos cambios se aplicarán a {assignedUsers} usuarios que tienen asignado “{roleName}”.</div> : null}
               <div className="space-y-2">
                 <Label htmlFor="role-name">Nombre del Rol</Label>
                 <Input

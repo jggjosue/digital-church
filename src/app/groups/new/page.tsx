@@ -24,6 +24,7 @@ import { Textarea } from '@/components/ui/textarea';
 import Link from 'next/link';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { AppHeader } from '@/components/app-header';
+import { ResourceSaveButton } from '@/components/resource-save-button';
 
 export default function NewGroupPage() {
     const [leader, setLeader] = React.useState<{name: string, email: string} | null>({ name: 'Jane Smith', email: 'jane.smith@example.com' });
@@ -36,9 +37,7 @@ export default function NewGroupPage() {
         >
             <div className="flex flex-col sm:flex-row justify-end gap-2 w-full sm:w-auto">
                 <Button variant="ghost" asChild><Link href="/groups">Cancelar</Link></Button>
-                <Button>
-                <Plus className="mr-2 h-4 w-4" /> Crear Grupo
-                </Button>
+                <ResourceSaveButton resource="groups" successHref="/groups" fields={{ name: '#group-name', description: '#description', category: '#category' }} extra={{ status: 'active', leaderIds: [], memberIds: [] }}><Plus className="mr-2 h-4 w-4" /> Crear Grupo</ResourceSaveButton>
             </div>
         </AppHeader>
         <main className="flex-1 space-y-6 p-4 sm:p-8 bg-muted/20">

@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import {
   LANDING_NAV_LINKS,
   LANDING_SCROLL_SECTION_IDS,
@@ -45,6 +46,7 @@ function computeActiveSection(): LandingScrollSectionId | null {
 }
 
 export function LandingHeader() {
+  const pathname = usePathname();
   const [activeId, setActiveId] = React.useState<LandingScrollSectionId | null>(null);
 
   React.useEffect(() => {
@@ -72,7 +74,7 @@ export function LandingHeader() {
             return (
               <a
                 key={id}
-                href={`#${id}`}
+                href={pathname === '/' ? `#${id}` : `/#${id}`}
                 className={cn(
                   'transition-colors',
                   active
@@ -84,6 +86,12 @@ export function LandingHeader() {
               </a>
             );
           })}
+          <Link
+            href="/documentacion"
+            className="text-slate-600 transition-colors hover:text-blue-600"
+          >
+            Documentación
+          </Link>
         </nav>
         <LandingHeaderActions activeSectionId={activeId} />
       </div>

@@ -16,6 +16,10 @@ export const staffRoleModulesSchema = z
       }
       const allowed = PORTAL_PERMISSIONS_BY_MODULE[key];
       if (!allowed) return;
+      if (new Set(mods[key]).size !== mods[key].length) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message: `Hay permisos duplicados en ${key}` });
+        return;
+      }
       for (const perm of mods[key] ?? []) {
         if (!allowed.includes(perm)) {
           ctx.addIssue({
@@ -48,4 +52,5 @@ export type StaffRoleDocument = {
   /** Clave = nombre del módulo (p. ej. Iglesias); valor = etiquetas de subítems permitidos. */
   modules: Record<string, string[]>;
   createdAt: string;
+  updatedAt?: string;
 };

@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getDb } from '@/lib/mongodb';
 
-const ATTENDANCE_COLLECTION = 'attendance';
+const ATTENDANCE_COLLECTION = 'attendance_events';
 
 /** Acepta `params` como Promise (Next 15) u objeto plano. */
 async function resolveRouteId(

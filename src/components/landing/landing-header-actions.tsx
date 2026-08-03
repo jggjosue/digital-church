@@ -3,6 +3,7 @@
 import * as React from 'react';
 import { useAuth } from '@clerk/nextjs';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
 import { LANDING_NAV_LINKS } from '@/components/landing/landing-nav-sections';
 import type { LandingScrollSectionId } from '@/components/landing/landing-nav-sections';
@@ -14,6 +15,7 @@ type Props = {
 };
 
 export function LandingHeaderActions({ activeSectionId = null }: Props) {
+  const pathname = usePathname();
   const { isSignedIn, isLoaded } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
@@ -89,7 +91,7 @@ export function LandingHeaderActions({ activeSectionId = null }: Props) {
                 return (
                   <a
                     key={id}
-                    href={`#${id}`}
+                    href={pathname === '/' ? `#${id}` : `/#${id}`}
                     onClick={() => setIsMobileMenuOpen(false)}
                     className={cn(
                       'block px-4 py-2.5 text-base font-medium hover:bg-slate-50',
@@ -100,6 +102,13 @@ export function LandingHeaderActions({ activeSectionId = null }: Props) {
                   </a>
                 );
               })}
+              <Link
+                href="/documentacion"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="block px-4 py-2.5 text-base font-medium text-slate-700 hover:bg-slate-50"
+              >
+                Documentación
+              </Link>
               <div className="my-2 border-t border-slate-100" />
               {isSignedIn ? (
                 <Link
