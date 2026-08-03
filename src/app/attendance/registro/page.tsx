@@ -647,6 +647,80 @@ export default function AttendanceRegistroPage() {
     [weeklyPeakByMonth]
   );
 
+  /** Por cada mes: semana con MENOR total > 0 y desglose por categoría. */
+  const weeklyValleyByMonth = React.useMemo(() => {
+    const inferType = (
+      category: CategoryRecord
+    ): 'ninos' | 'jovenes' | 'adultos' | 'nuevos' | 'custom' => {
+      const idn = String(category.id).trim().toLowerCase();
+      if (idn === 'ninos') return 'ninos';
+      if (idn === 'jovenes') return 'jovenes';
+      if (idn === 'adultos') return 'adultos';
+      if (idn === 'nuevos') return 'nuevos';
+      const labelNorm = normalizeString(category.label) || category.id;
+      if (labelNorm === 'ninos') return 'ninos';
+      if (labelNorm === 'jovenes') return 'jovenes';
+      if (labelNorm === 'adultos') return 'adultos';
+      if (labelNorm === 'nuevos') return 'nuevos';
+      return 'custom';
+    };
+
+    const sortKeyForBreakdown = (id: string) => {
+      const idn = id.trim().toLowerCase();
+      const ia = PEAK_BREAKDOWN_ID_ORDER.indexOf(idn as (typeof PEAK_BREAKDOWN_ID_ORDER)[number]);
+      return ia === -1 ? 100 : ia;
+    };
+
+    return monthOrder.map((m) => {
+      const monthRec = currentYearRecords[m];
+      let bestW = -1;
+      let bestTotal = Infinity;
+      for (let w = 0; w < 5; w += 1) {
+        const t = monthRec.categories.reduce(
+          (sum, category) =>
+            sum + (category.weeks[w]?.reduce((weekSum, day) => weekSum + day, 0) ?? 0),
+          0
+        );
+        if (t > 0 && t < bestTotal) {
+          bestTotal = t;
+          bestW = w;
+        }
+      }
+
+      const hasData = bestW >= 0;
+      const min = hasData ? bestTotal : 0;
+
+      const breakdown = hasData
+        ? monthRec.categories
+            .map((category) => {
+              const total =
+                category.weeks[bestW]?.reduce((weekSum, day) => weekSum + day, 0) ?? 0;
+              return {
+                id: category.id,
+                label: category.label,
+                total,
+                type: inferType(category),
+              };
+            })
+            .filter((row) => row.total > 0)
+            .sort((a, b) => {
+              const ra = sortKeyForBreakdown(a.id);
+              const rb = sortKeyForBreakdown(b.id);
+              if (ra !== rb) return ra - rb;
+              return a.label.localeCompare(b.label, 'es');
+            })
+        : [];
+
+      return {
+        key: m,
+        label: MONTH_SHORT_LABEL[m],
+        min,
+        weekIndex: hasData ? bestW + 1 : null,
+        breakdown,
+      };
+    });
+  }, [currentYearRecords]);
+
   const handleAddCategory = (month: MonthKey) => {
     const nextLabel = newCategoryByMonth[month].trim();
     if (!nextLabel) return;
@@ -1729,58 +1803,116 @@ export default function AttendanceRegistroPage() {
               <div className="border-t border-slate-700/50 pt-6">
                 <p className="inline-flex items-center gap-2 text-xl font-bold text-slate-100">
                   <CalendarDays className="h-5 w-5 text-emerald-300" aria-hidden />
-                  Máximo registro semanal por mes
+                  Máximo y mínimo de asistencia mensual
                 </p>
                 <p className="mt-1 text-sm text-slate-400">
-                  En cada mes se toma la semana con mayor asistencia total; debajo verás cómo aportó cada categoría
-                  (nombres tal como están en ese mes, incluidas columnas personalizadas).
+                  Por cada mes se muestra la semana con <span className="font-semibold text-emerald-300">mayor</span> y la semana con <span className="font-semibold text-rose-300">menor</span> asistencia total, con el desglose de categorías de esa semana.
                 </p>
-                <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">
-                  {weeklyPeakByMonth.map((row) => (
-                    <div
-                      key={row.key}
-                      className="rounded-xl border border-slate-700/60 bg-slate-900/50 px-3 py-3 text-left"
-                    >
-                      <div className="flex items-start justify-between gap-2 border-b border-slate-700/50 pb-2">
-                        <div>
-                          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                            {row.label}
-                          </p>
-                          {row.weekIndex != null ? (
-                            <p className="mt-0.5 text-[10px] text-slate-500">Semana {row.weekIndex}</p>
-                          ) : null}
-                        </div>
-                        <p className="text-xl font-extrabold tabular-nums text-emerald-100">{row.max}</p>
-                      </div>
-                      {row.max === 0 ? (
-                        <p className="mt-2 text-center text-xs text-slate-500">Sin datos</p>
-                      ) : (
-                        <ul className="mt-2 space-y-1.5">
-                          {row.breakdown.map((b) => (
-                            <li
-                              key={b.id}
-                              className="flex items-center justify-between gap-2 text-[11px] leading-tight"
-                            >
-                              <span
-                                className={cn(
-                                  'min-w-0 truncate',
-                                  b.type === 'ninos' && 'text-blue-200',
-                                  b.type === 'jovenes' && 'text-violet-200',
-                                  b.type === 'adultos' && 'text-amber-200',
-                                  b.type === 'nuevos' && 'text-emerald-200',
-                                  b.type === 'custom' && 'text-cyan-200'
-                                )}
-                                title={b.label}
-                              >
-                                {b.label}
+                <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {weeklyPeakByMonth.map((peakRow, idx) => {
+                    const valleyRow = weeklyValleyByMonth[idx];
+                    return (
+                      <div
+                        key={peakRow.key}
+                        className="rounded-2xl border border-slate-700/60 bg-slate-900/50 overflow-hidden"
+                      >
+                        {/* Header del mes */}
+                        <div className="flex items-center justify-between px-4 py-2 bg-slate-800/60 border-b border-slate-700/50">
+                          <p className="text-xs font-bold uppercase tracking-widest text-slate-300">{peakRow.label}</p>
+                          {peakRow.max === 0 ? (
+                            <span className="text-xs text-slate-500">Sin datos</span>
+                          ) : (
+                            <span className="text-xs font-semibold text-slate-400">
+                              Δ{' '}
+                              <span className={cn(
+                                peakRow.max - (valleyRow?.min ?? 0) > 0 ? 'text-emerald-300' : 'text-slate-300'
+                              )}>
+                                {peakRow.max - (valleyRow?.min ?? 0)}
                               </span>
-                              <span className="shrink-0 font-semibold tabular-nums text-slate-100">{b.total}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
-                  ))}
+                            </span>
+                          )}
+                        </div>
+
+                        <div className="grid grid-cols-2 divide-x divide-slate-700/50">
+                          {/* Columna MÁXIMO */}
+                          <div className="px-3 py-3">
+                            <div className="flex items-center gap-1 mb-1">
+                              <span className="inline-block h-2 w-2 rounded-full bg-emerald-400" />
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">Máx</p>
+                              {peakRow.weekIndex != null && (
+                                <p className="ml-auto text-[9px] text-slate-500">S{peakRow.weekIndex}</p>
+                              )}
+                            </div>
+                            <p className="text-2xl font-extrabold tabular-nums text-emerald-100 leading-none mb-2">
+                              {peakRow.max > 0 ? peakRow.max : <span className="text-slate-500 text-base">—</span>}
+                            </p>
+                            {peakRow.max > 0 ? (
+                              <ul className="space-y-1">
+                                {peakRow.breakdown.map((b) => (
+                                  <li key={b.id} className="flex items-center justify-between gap-1 text-[10px] leading-tight">
+                                    <span
+                                      className={cn(
+                                        'min-w-0 truncate',
+                                        b.type === 'ninos' && 'text-blue-300',
+                                        b.type === 'jovenes' && 'text-violet-300',
+                                        b.type === 'adultos' && 'text-amber-300',
+                                        b.type === 'nuevos' && 'text-emerald-300',
+                                        b.type === 'custom' && 'text-cyan-300'
+                                      )}
+                                      title={b.label}
+                                    >
+                                      {b.label}
+                                    </span>
+                                    <span className="shrink-0 font-semibold tabular-nums text-slate-200">{b.total}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <p className="text-[10px] text-slate-500">Sin datos</p>
+                            )}
+                          </div>
+
+                          {/* Columna MÍNIMO */}
+                          <div className="px-3 py-3">
+                            <div className="flex items-center gap-1 mb-1">
+                              <span className="inline-block h-2 w-2 rounded-full bg-rose-400" />
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-rose-400">Mín</p>
+                              {valleyRow?.weekIndex != null && (
+                                <p className="ml-auto text-[9px] text-slate-500">S{valleyRow.weekIndex}</p>
+                              )}
+                            </div>
+                            <p className="text-2xl font-extrabold tabular-nums text-rose-100 leading-none mb-2">
+                              {valleyRow && valleyRow.min > 0 ? valleyRow.min : <span className="text-slate-500 text-base">—</span>}
+                            </p>
+                            {valleyRow && valleyRow.min > 0 ? (
+                              <ul className="space-y-1">
+                                {valleyRow.breakdown.map((b) => (
+                                  <li key={b.id} className="flex items-center justify-between gap-1 text-[10px] leading-tight">
+                                    <span
+                                      className={cn(
+                                        'min-w-0 truncate',
+                                        b.type === 'ninos' && 'text-blue-300',
+                                        b.type === 'jovenes' && 'text-violet-300',
+                                        b.type === 'adultos' && 'text-amber-300',
+                                        b.type === 'nuevos' && 'text-emerald-300',
+                                        b.type === 'custom' && 'text-cyan-300'
+                                      )}
+                                      title={b.label}
+                                    >
+                                      {b.label}
+                                    </span>
+                                    <span className="shrink-0 font-semibold tabular-nums text-slate-200">{b.total}</span>
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : (
+                              <p className="text-[10px] text-slate-500">Sin datos</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </CardContent>

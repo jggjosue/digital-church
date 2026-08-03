@@ -50,24 +50,16 @@ export async function GET(request: Request) {
         if (!email) {
           return NextResponse.json({ ministries: [] });
         }
-        const member = await db.collection<Record<string, unknown>>('members').findOne(
+        const member = await db.collection<{ id: string }>('members').findOne(
           { email },
-          { projection: { _id: 0, staffRole: 1, churchIds: 1, templeIds: 1 } }
+          { projection: { _id: 0, id: 1 } }
         );
-        if (isFullAccessStaffRole(member?.staffRole as string | null | undefined)) {
-          mongoFilter = {};
-        } else {
-          const churchIds = normalizeMemberChurchIds(member ?? {});
-          if (churchIds.length === 0) {
-            return NextResponse.json({ ministries: [] });
-          }
-          mongoFilter = {
-            $or: [
-              { churchId: { $in: churchIds } },
-              { creatorChurchIds: { $in: churchIds } },
-            ],
-          };
+
+        if (!member?.id) {
+          return NextResponse.json({ ministries: [] });
         }
+
+        mongoFilter = { createdByMemberId: member.id };
       }
     }
 
