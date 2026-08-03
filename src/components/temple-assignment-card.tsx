@@ -117,7 +117,7 @@ export function TempleAssignmentCard({
               placeholder="Buscar templo..."
               className="h-11"
             />
-            <div className="max-h-[58vh] space-y-1 overflow-y-auto overscroll-contain rounded-md border bg-background p-3 pr-2 [-webkit-overflow-scrolling:touch] sm:max-h-60 sm:space-y-3 sm:p-4">
+            <div className="max-h-none space-y-1 overflow-visible rounded-md border bg-background p-3 pr-2 sm:max-h-60 sm:space-y-3 sm:overflow-y-auto sm:overscroll-contain sm:p-4">
             {loadState === 'loading' ? (
               <p className="text-sm text-muted-foreground">Cargando templos desde la base de datos…</p>
             ) : null}

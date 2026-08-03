@@ -431,7 +431,7 @@ export default function NewMemberPage() {
             onSubmit={form.handleSubmit(onSubmit)}
             className="space-y-6 sm:space-y-8"
           >
-            <div className="space-y-6 pb-24 sm:space-y-8 sm:pb-0">
+            <div className="space-y-6 sm:space-y-8">
             <Card>
                 <CardHeader className="pb-3">
                     <CardTitle>Información Personal</CardTitle>
@@ -655,7 +655,7 @@ export default function NewMemberPage() {
                     name="groups"
                     render={({ field }) => (
                         <FormItem>
-                            <div className="mt-2 max-h-[58vh] space-y-1 overflow-y-auto overscroll-contain rounded-md border bg-background p-3 pr-2 [-webkit-overflow-scrolling:touch] sm:max-h-60 sm:space-y-3 sm:p-4">
+                            <div className="mt-2 max-h-none space-y-1 overflow-visible rounded-md border bg-background p-3 pr-2 sm:max-h-60 sm:space-y-3 sm:overflow-y-auto sm:overscroll-contain sm:p-4">
                                 {groupsLoad === 'loading' ? (
                                   <p className="text-sm text-muted-foreground">
                                     Cargando grupos y ministerios desde la base de datos...

@@ -377,7 +377,7 @@ export default function EditMemberPage() {
         {loadState === 'ready' ? (
           <Form {...form} key={`edit-member-${id}`}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6 sm:space-y-8">
-              <div className="space-y-6 pb-24 sm:space-y-8 sm:pb-0">
+              <div className="space-y-6 sm:space-y-8">
           <Card>
               <CardHeader>
                   <CardTitle>Información Personal</CardTitle>
@@ -582,7 +582,7 @@ export default function EditMemberPage() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>Asignar a Grupos</FormLabel>
-                        <div className="mt-2 max-h-60 space-y-3 overflow-y-auto rounded-md border p-4">
+                        <div className="mt-2 max-h-none space-y-3 overflow-visible rounded-md border p-4 sm:max-h-60 sm:overflow-y-auto">
                           {groupsLoadState === 'loading' ? (
                             <p className="text-sm text-muted-foreground">
                               Cargando grupos y ministerios desde la base de datos...
