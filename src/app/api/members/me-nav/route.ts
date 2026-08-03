@@ -15,6 +15,7 @@ const LEADERSHIP_PORTAL_MODULES = {
     'Añadir Donación',
     'Crear Campaña',
     'Donaciones y ofrendas',
+    'Gestión de Promesas',
     'Declaración de Donación',
     'Recaudación de Fondos',
     'Ver ofrendas',
@@ -26,6 +27,22 @@ const LEADERSHIP_PORTAL_MODULES = {
   ],
   Directorio: ['Mis Datos', 'Añadir', 'Miembros', 'Pastoral'],
   Inventario: ['Gestión de inventario', 'Nueva Artículo'],
+  Finanzas: [
+    'Reportes Financieros',
+    'Ingresos y Gastos',
+    'Reporte de Presupuesto',
+    'Saldos de Fondos',
+    'Reportes de Donaciones',
+    'Nueva Transacción',
+  ],
+  Oración: ['Peticiones', 'Nueva petición'],
+  Grupos: ['Directorio de grupos', 'Nuevo grupo', 'Agregar miembros'],
+  Voluntarios: ['Gestión', 'Nuevo voluntario', 'Tareas', 'Planeación'],
+  Eventos: ['Calendario y gestión', 'Nuevo evento', 'Actividades'],
+  Biblioteca: ['Librería', 'Lista de sermones', 'Vídeos', 'Audio', 'Imágenes', 'Nuevo sermón'],
+  Ceremonias: ['Registros', 'Nueva ceremonia', 'Exportar datos'],
+  Instalaciones: ['Gestión de salones', 'Registrar salón'],
+  Reportes: ['Generador de reportes', 'Voluntarios'],
 } as const;
 
 type MemberNavDoc = {

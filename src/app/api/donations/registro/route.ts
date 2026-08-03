@@ -29,6 +29,13 @@ const saveSchema = z.object({
   initializedMonths: z.array(monthKeySchema),
   currency: z.enum(['MXN', 'USD', 'EUR']).default('MXN'),
   bankDeposits: z.array(z.object({ id: z.string().min(1), date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), amount: z.number().min(0), reference: z.string().max(200).default('') })).default([]),
+  deductions: z.array(z.object({
+    id: z.string().min(1),
+    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    concept: z.string().min(1).max(200),
+    amount: z.number().positive().max(1_000_000_000),
+    notes: z.string().max(500).default(''),
+  })).default([]),
 });
 type OfferingRegistryDoc = z.infer<typeof saveSchema> & { createdAt: string; updatedAt: string };
 

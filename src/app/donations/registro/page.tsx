@@ -2,11 +2,12 @@
 
 import * as React from 'react';
 import * as XLSX from 'xlsx';
-import { CalendarDays, ChevronDown, Download, Heart, Landmark, Loader2, Plus, Save, Trash2, UploadCloud, XCircle } from 'lucide-react';
+import { CalendarDays, ChevronDown, Download, Heart, Landmark, Loader2, MinusCircle, Plus, ReceiptText, Save, Trash2, UploadCloud, XCircle } from 'lucide-react';
 import { AppHeader } from '@/components/app-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
@@ -40,6 +41,7 @@ type Church = { id: string; name: string };
 type DonationImportEntry = OfferingImportEntry;
 type DonationImportPreview = RegistryImportPreviewData & { entries: DonationImportEntry[] };
 type BankDeposit = { id: string; date: string; amount: number; reference: string };
+type Deduction = { id: string; date: string; concept: string; amount: number; notes: string };
 
 const MONTHS: MonthKey[] = [...REGISTRY_MONTHS];
 const MONTH_NAMES = REGISTRY_MONTH_NAMES;
@@ -98,6 +100,11 @@ export default function OfferingRegistryPage() {
   const [depositDate, setDepositDate] = React.useState('');
   const [depositAmount, setDepositAmount] = React.useState(0);
   const [depositReference, setDepositReference] = React.useState('');
+  const [deductions, setDeductions] = React.useState<Deduction[]>([]);
+  const [deductionDate, setDeductionDate] = React.useState('');
+  const [deductionConcept, setDeductionConcept] = React.useState('');
+  const [deductionAmount, setDeductionAmount] = React.useState(0);
+  const [deductionNotes, setDeductionNotes] = React.useState('');
   const permissions = usePortalPermissions('Ofrendas');
   const historical = Number(year) < new Date().getFullYear();
   const canEdit = permissions.can(OFFERING_PERMISSIONS.CREATE) && (!historical || permissions.can(OFFERING_PERMISSIONS.EDIT_HISTORY));
@@ -106,8 +113,10 @@ export default function OfferingRegistryPage() {
   const churchName = churches.find((church) => church.id === churchId)?.name ?? '';
   const monthTotal = React.useCallback((key: MonthKey) => registryMonthTotal(records[key]), [records]);
   const annualTotal = React.useMemo(() => registryAnnualTotal(records), [records]);
+  const deductionsTotal = React.useMemo(() => deductions.reduce((sum, deduction) => sum + deduction.amount, 0), [deductions]);
+  const annualNetTotal = annualTotal - deductionsTotal;
   const depositedTotal = React.useMemo(() => bankDeposits.reduce((sum, deposit) => sum + deposit.amount, 0), [bankDeposits]);
-  const reconciliationDifference = annualTotal - depositedTotal;
+  const reconciliationDifference = annualNetTotal - depositedTotal;
   const categoryTotals = React.useMemo(() => registryCategoryTotals(records, initialized), [initialized, records]);
   const monthlyPeakWeeks = React.useMemo(() => MONTHS.map((month, monthIndex) => {
     let weekIndex = 0;
@@ -162,13 +171,14 @@ export default function OfferingRegistryPage() {
     void (async () => {
       try {
         const response = await fetch(`/api/donations/registro?churchId=${encodeURIComponent(churchId)}&year=${year}`, { cache: 'no-store' });
-        const json = await response.json() as { record?: { records: Records; initializedMonths: MonthKey[]; currency?: CurrencyCode; bankDeposits?: BankDeposit[] } | null; error?: string };
+        const json = await response.json() as { record?: { records: Records; initializedMonths: MonthKey[]; currency?: CurrencyCode; bankDeposits?: BankDeposit[]; deductions?: Deduction[] } | null; error?: string };
         if (!response.ok) throw new Error(json.error);
         if (cancelled) return;
         setRecords(json.record?.records ? normalizeRecords(json.record.records) : createRecords());
         setInitialized(json.record?.initializedMonths ?? ['enero']);
         setCurrency(json.record?.currency ?? 'MXN');
         setBankDeposits(json.record?.bankDeposits ?? []);
+        setDeductions(json.record?.deductions ?? []);
         setExpanded(json.record?.initializedMonths?.[0] ?? 'enero');
       } catch (error) {
         if (!cancelled) toast({ variant: 'destructive', title: 'No se pudo cargar el registro', description: error instanceof Error ? error.message : undefined });
@@ -211,7 +221,7 @@ export default function OfferingRegistryPage() {
     setSaving(true);
     try {
       const operations = [importedChanges ? 'import' : '', deletedCategories ? 'delete-category' : ''].filter(Boolean).join(',');
-      const response = await fetch('/api/donations/registro', { method: 'PUT', headers: { 'Content-Type': 'application/json', ...(operations ? { 'x-registry-operation': operations } : {}) }, body: JSON.stringify({ churchId, churchName, year, records, initializedMonths: initialized, currency, bankDeposits }) });
+      const response = await fetch('/api/donations/registro', { method: 'PUT', headers: { 'Content-Type': 'application/json', ...(operations ? { 'x-registry-operation': operations } : {}) }, body: JSON.stringify({ churchId, churchName, year, records, initializedMonths: initialized, currency, bankDeposits, deductions }) });
       const json = await response.json() as { message?: string; error?: string };
       if (!response.ok) throw new Error(json.error);
       if (!silent) toast({ title: 'Ofrendas guardadas', description: json.message });
@@ -300,10 +310,10 @@ export default function OfferingRegistryPage() {
   };
 
   const draft = useRegistryDraftGuard({
-    value: { records, initialized, currency, bankDeposits },
+    value: { records, initialized, currency, bankDeposits, deductions },
     identity: `${churchId}:${year}`,
     loading,
-    onRestore: (value) => { setRecords(value.records); setInitialized(value.initialized); setCurrency(value.currency); setBankDeposits(value.bankDeposits); },
+    onRestore: (value) => { setRecords(value.records); setInitialized(value.initialized); setCurrency(value.currency); setBankDeposits(value.bankDeposits); setDeductions(value.deductions ?? []); },
     onAutoSave: () => save(true),
   });
 
@@ -318,6 +328,21 @@ export default function OfferingRegistryPage() {
     setBankDeposits((current) => [...current, { id: crypto.randomUUID(), date: depositDate, amount: depositAmount, reference: depositReference.trim() }].sort((a, b) => a.date.localeCompare(b.date)));
     setDepositAmount(0);
     setDepositReference('');
+  };
+  const addDeduction = () => {
+    const concept = deductionConcept.trim();
+    if (!canEdit || !deductionDate || !concept || deductionAmount <= 0) {
+      toast({ variant: 'destructive', title: 'Deducción incompleta', description: 'Indica fecha, concepto e importe mayor a cero.' });
+      return;
+    }
+    if (!deductionDate.startsWith(`${year}-`)) {
+      toast({ variant: 'destructive', title: 'Fecha incorrecta', description: `La deducción debe pertenecer al año ${year}.` });
+      return;
+    }
+    setDeductions((current) => [...current, { id: crypto.randomUUID(), date: deductionDate, concept, amount: deductionAmount, notes: deductionNotes.trim() }].sort((a, b) => a.date.localeCompare(b.date)));
+    setDeductionConcept('');
+    setDeductionAmount(0);
+    setDeductionNotes('');
   };
 
   if (!permissions.loading && !permissions.can(OFFERING_PERMISSIONS.VIEW)) {
@@ -372,11 +397,70 @@ export default function OfferingRegistryPage() {
           </Card>;
         }) : null}
 
-        <Card><CardContent className="grid gap-6 p-6 lg:grid-cols-[minmax(240px,0.7fr)_1.3fr]"><div><p className="text-sm font-semibold uppercase text-muted-foreground">Total anual consolidado</p><p className="mt-2 text-4xl font-extrabold text-primary">{money(annualTotal)}</p><p className="mt-1 text-sm text-muted-foreground">{initialized.length} de 12 meses inicializados</p></div><div className="space-y-3"><div className="flex items-center justify-between gap-3"><p className="text-sm font-semibold uppercase text-muted-foreground">Categorías activas</p><span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">{categoryTotals.length}</span></div>{categoryTotals.length > 0 ? <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(180px,1fr))]">{categoryTotals.map((category) => <div key={normalize(category.label)} className="rounded-xl border bg-background p-4"><p className="break-words text-sm text-muted-foreground">{category.label}</p><p className="mt-1 text-xl font-bold">{money(category.total)}</p></div>)}</div> : <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">Agrega o importa una categoría para mostrar su total.</div>}</div></CardContent></Card>
+        <Card><CardContent className="grid gap-6 p-6 lg:grid-cols-[minmax(280px,0.7fr)_1.3fr]"><div><p className="text-sm font-semibold uppercase text-muted-foreground">Total anual neto</p><p className="mt-2 text-4xl font-extrabold text-primary">{money(annualNetTotal)}</p><div className="mt-4 grid grid-cols-2 gap-3 text-sm"><div className="rounded-xl bg-muted/50 p-3"><p className="text-muted-foreground">Ofrendas</p><p className="font-bold">{money(annualTotal)}</p></div><div className="rounded-xl bg-red-50 p-3 dark:bg-red-950/20"><p className="text-muted-foreground">Deducciones</p><p className="font-bold text-red-700 dark:text-red-300">− {money(deductionsTotal)}</p></div></div><p className="mt-3 text-sm text-muted-foreground">{initialized.length} de 12 meses inicializados</p></div><div className="space-y-3"><div className="flex items-center justify-between gap-3"><p className="text-sm font-semibold uppercase text-muted-foreground">Categorías activas</p><span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">{categoryTotals.length}</span></div>{categoryTotals.length > 0 ? <div className="grid gap-3 [grid-template-columns:repeat(auto-fit,minmax(180px,1fr))]">{categoryTotals.map((category) => <div key={normalize(category.label)} className="rounded-xl border bg-background p-4"><p className="break-words text-sm text-muted-foreground">{category.label}</p><p className="mt-1 text-xl font-bold">{money(category.total)}</p></div>)}</div> : <div className="rounded-xl border border-dashed p-6 text-center text-sm text-muted-foreground">Agrega o importa una categoría para mostrar su total.</div>}</div></CardContent></Card>
+
+        <Card className="overflow-hidden">
+          <CardContent className="space-y-5 p-4 min-[380px]:p-5 sm:p-6">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div className="min-w-0">
+                <h2 className="flex items-center gap-2 text-xl font-bold sm:text-2xl"><MinusCircle className="h-5 w-5 shrink-0 text-red-600" />Deducciones</h2>
+                <p className="mt-1 max-w-3xl text-sm leading-relaxed text-muted-foreground sm:text-base">Registra gastos, comisiones u otras cantidades descontadas de las ofrendas.</p>
+              </div>
+              <div className="flex shrink-0 items-baseline justify-between gap-3 rounded-xl bg-red-50 px-4 py-2 text-red-800 dark:bg-red-950/30 dark:text-red-200 sm:block sm:text-right">
+                <span className="text-xs font-semibold uppercase tracking-wide sm:block">Total deducido</span>
+                <span className="font-bold tabular-nums sm:text-lg">{money(deductionsTotal)}</span>
+              </div>
+            </div>
+
+            {canEdit ? (
+              <div className="rounded-2xl border bg-muted/20 p-3 min-[380px]:p-4 sm:p-5">
+                <div className="grid min-w-0 gap-4 sm:grid-cols-2 xl:grid-cols-12 xl:items-end">
+                  <div className="min-w-0 space-y-2 xl:col-span-2">
+                    <Label htmlFor="deduction-date">Fecha</Label>
+                    <Input id="deduction-date" type="date" className="h-12 w-full" value={deductionDate} onChange={(event) => setDeductionDate(event.target.value)} />
+                  </div>
+                  <div className="min-w-0 space-y-2 xl:col-span-3">
+                    <Label htmlFor="deduction-concept">Concepto o motivo</Label>
+                    <Input id="deduction-concept" className="h-12 w-full" placeholder="Ej. Comisión bancaria" value={deductionConcept} onChange={(event) => setDeductionConcept(event.target.value)} />
+                  </div>
+                  <div className="min-w-0 space-y-2 xl:col-span-2">
+                    <Label>Importe</Label>
+                    <CurrencyAmountInput value={deductionAmount} currency={currency} onChange={setDeductionAmount} ariaLabel="Importe de la deducción" />
+                  </div>
+                  <div className="min-w-0 space-y-2 sm:col-span-2 xl:col-span-3">
+                    <Label htmlFor="deduction-detail">Detalle</Label>
+                    <Input id="deduction-detail" className="h-12 w-full" placeholder="Qué se pagó o descontó (opcional)" value={deductionNotes} onChange={(event) => setDeductionNotes(event.target.value)} />
+                  </div>
+                  <Button type="button" className="h-12 w-full sm:col-span-2 xl:col-span-2" onClick={addDeduction}><Plus className="mr-2 h-4 w-4" />Agregar deducción</Button>
+                </div>
+              </div>
+            ) : null}
+
+            {deductions.length ? (
+              <>
+                <div className="grid gap-3 md:hidden">
+                  {deductions.map((deduction) => (
+                    <article key={deduction.id} className="rounded-2xl border bg-card p-4 shadow-sm">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0"><p className="break-words font-semibold">{deduction.concept}</p><p className="mt-1 text-xs text-muted-foreground">{deduction.date}</p></div>
+                        <p className="shrink-0 font-bold tabular-nums text-red-700 dark:text-red-300">− {money(deduction.amount)}</p>
+                      </div>
+                      <p className="mt-3 whitespace-pre-wrap break-words rounded-xl bg-muted/40 p-3 text-sm text-muted-foreground">{deduction.notes || 'Sin detalle'}</p>
+                      {canEdit ? <Button type="button" variant="ghost" className="mt-2 w-full text-destructive hover:text-destructive" onClick={() => setDeductions((current) => current.filter((item) => item.id !== deduction.id))}><Trash2 className="mr-2 h-4 w-4" />Eliminar deducción</Button> : null}
+                    </article>
+                  ))}
+                </div>
+                <div className="hidden overflow-x-auto rounded-xl border md:block">
+                  <table className="w-full min-w-[720px] text-sm"><thead className="bg-muted/50 text-left"><tr><th className="p-3">Fecha</th><th className="p-3">Concepto</th><th className="p-3">Detalle</th><th className="p-3 text-right">Importe</th><th className="w-12 p-3"><span className="sr-only">Acciones</span></th></tr></thead><tbody>{deductions.map((deduction) => <tr key={deduction.id} className="border-t"><td className="whitespace-nowrap p-3">{deduction.date}</td><td className="p-3 font-medium">{deduction.concept}</td><td className="max-w-md whitespace-pre-wrap break-words p-3 text-muted-foreground">{deduction.notes || 'Sin detalle'}</td><td className="whitespace-nowrap p-3 text-right font-semibold text-red-700 dark:text-red-300">− {money(deduction.amount)}</td><td className="p-3">{canEdit ? <Button type="button" size="icon" variant="ghost" aria-label={`Eliminar deducción ${deduction.concept}`} onClick={() => setDeductions((current) => current.filter((item) => item.id !== deduction.id))}><Trash2 className="h-4 w-4" /></Button> : null}</td></tr>)}</tbody></table>
+                </div>
+              </>
+            ) : <div className="flex min-h-40 flex-col items-center justify-center rounded-2xl border border-dashed p-6 text-center text-sm text-muted-foreground"><span className="mb-3 rounded-full bg-muted p-3"><ReceiptText className="h-7 w-7" /></span><p className="font-medium">Todavía no hay deducciones registradas.</p><p className="mt-1 text-xs">Las deducciones agregadas aparecerán aquí.</p></div>}
+          </CardContent>
+        </Card>
 
         <Card><CardContent className="space-y-5 p-5 sm:p-6">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><h2 className="flex items-center gap-2 text-xl font-bold"><Landmark className="h-5 w-5 text-primary" />Conciliación bancaria</h2><p className="mt-1 text-sm text-muted-foreground">Compara las ofrendas capturadas con los depósitos registrados.</p></div><span className={cn('w-fit rounded-full px-3 py-1 text-sm font-bold', Math.abs(reconciliationDifference) < 0.01 ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-900')}>{Math.abs(reconciliationDifference) < 0.01 ? 'Conciliado' : `Diferencia: ${money(reconciliationDifference)}`}</span></div>
-          <div className="grid gap-3 sm:grid-cols-3"><div className="rounded-xl border p-4"><p className="text-xs font-semibold uppercase text-muted-foreground">Ofrendas</p><p className="mt-1 text-xl font-bold">{money(annualTotal)}</p></div><div className="rounded-xl border p-4"><p className="text-xs font-semibold uppercase text-muted-foreground">Depositado</p><p className="mt-1 text-xl font-bold">{money(depositedTotal)}</p></div><div className="rounded-xl border p-4"><p className="text-xs font-semibold uppercase text-muted-foreground">Pendiente</p><p className="mt-1 text-xl font-bold">{money(reconciliationDifference)}</p></div></div>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><h2 className="flex items-center gap-2 text-xl font-bold"><Landmark className="h-5 w-5 text-primary" />Conciliación bancaria</h2><p className="mt-1 text-sm text-muted-foreground">Compara las ofrendas netas, después de deducciones, con los depósitos registrados.</p></div><span className={cn('w-fit rounded-full px-3 py-1 text-sm font-bold', Math.abs(reconciliationDifference) < 0.01 ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-900')}>{Math.abs(reconciliationDifference) < 0.01 ? 'Conciliado' : `Diferencia: ${money(reconciliationDifference)}`}</span></div>
+          <div className="grid gap-3 sm:grid-cols-4"><div className="rounded-xl border p-4"><p className="text-xs font-semibold uppercase text-muted-foreground">Ofrendas</p><p className="mt-1 text-xl font-bold">{money(annualTotal)}</p></div><div className="rounded-xl border p-4"><p className="text-xs font-semibold uppercase text-muted-foreground">Deducciones</p><p className="mt-1 text-xl font-bold text-red-700 dark:text-red-300">− {money(deductionsTotal)}</p></div><div className="rounded-xl border p-4"><p className="text-xs font-semibold uppercase text-muted-foreground">Depositado</p><p className="mt-1 text-xl font-bold">{money(depositedTotal)}</p></div><div className="rounded-xl border p-4"><p className="text-xs font-semibold uppercase text-muted-foreground">Pendiente</p><p className="mt-1 text-xl font-bold">{money(reconciliationDifference)}</p></div></div>
           {canEdit ? <div className="grid gap-3 rounded-xl border bg-muted/20 p-4 md:grid-cols-[170px_minmax(180px,1fr)_minmax(180px,1fr)_auto]"><Input type="date" aria-label="Fecha del depósito" value={depositDate} onChange={(event) => setDepositDate(event.target.value)} /><CurrencyAmountInput value={depositAmount} currency={currency} onChange={setDepositAmount} ariaLabel="Importe del depósito" /><Input aria-label="Referencia bancaria" placeholder="Referencia bancaria" value={depositReference} onChange={(event) => setDepositReference(event.target.value)} /><Button type="button" onClick={addBankDeposit}><Plus className="mr-2 h-4 w-4" />Agregar depósito</Button></div> : null}
           {bankDeposits.length ? <div className="overflow-x-auto rounded-xl border"><table className="w-full min-w-[560px] text-sm"><thead className="bg-muted/50 text-left"><tr><th className="p-3">Fecha</th><th className="p-3">Referencia</th><th className="p-3 text-right">Importe</th><th className="w-12 p-3"><span className="sr-only">Acciones</span></th></tr></thead><tbody>{bankDeposits.map((deposit) => <tr key={deposit.id} className="border-t"><td className="p-3">{deposit.date}</td><td className="p-3">{deposit.reference || 'Sin referencia'}</td><td className="p-3 text-right font-semibold">{money(deposit.amount)}</td><td className="p-3">{canEdit ? <Button type="button" size="icon" variant="ghost" aria-label={`Eliminar depósito ${deposit.date}`} onClick={() => setBankDeposits((current) => current.filter((item) => item.id !== deposit.id))}><Trash2 className="h-4 w-4" /></Button> : null}</td></tr>)}</tbody></table></div> : <p className="rounded-xl border border-dashed p-5 text-center text-sm text-muted-foreground">Todavía no hay depósitos bancarios registrados.</p>}
         </CardContent></Card>

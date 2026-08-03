@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { Menu } from 'lucide-react';
+import { LayoutGrid } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { MobileSidebar } from '@/components/mobile-sidebar';
@@ -27,12 +27,19 @@ export function AppHeader({ title, description, children, stacked = false }: App
       <div className="flex min-w-0 flex-1 items-start gap-3 sm:gap-4">
         <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
           <SheetTrigger asChild>
-            <Button size="icon" variant="outline" className="h-11 w-11 shrink-0 lg:hidden">
-              <Menu className="h-5 w-5" />
-              <span className="sr-only">Abrir menú de navegación</span>
+            <Button
+              variant="outline"
+              className="h-11 shrink-0 gap-2 rounded-xl px-3 lg:hidden"
+            >
+              <LayoutGrid className="h-5 w-5" />
+              <span className="text-sm font-semibold">Menú</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-[min(92vw,28rem)] p-0 sm:max-w-md lg:hidden">
+          <SheetContent
+            side="bottom"
+            srTitle="Menú de opciones"
+            className="h-[min(88dvh,52rem)] overflow-hidden rounded-t-3xl p-0 lg:hidden"
+          >
             <MobileSidebar onNavigate={() => setMobileMenuOpen(false)} />
           </SheetContent>
         </Sheet>
