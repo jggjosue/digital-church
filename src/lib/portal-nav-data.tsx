@@ -144,8 +144,8 @@ export const PORTAL_NAV_ENTRIES: PortalNavEntry[] = [
       { href: '/financial/new-transaction', icon: Plus, label: 'Nueva Transacción' },
     ],
   },
-  {
-    kind: 'group',
+  ...(process.env.NEXT_PUBLIC_ENABLE_PRAYER === 'true' ? [{
+    kind: 'group' as const,
     module: 'Oración',
     label: 'Oración',
     icon: BookHeart,
@@ -153,7 +153,7 @@ export const PORTAL_NAV_ENTRIES: PortalNavEntry[] = [
       { href: '/prayer', icon: List, label: 'Peticiones' },
       { href: '/prayer/new', icon: Plus, label: 'Nueva petición' },
     ],
-  },
+  }] : []),
   /**{
     kind: 'group',
     module: 'Grupos',
@@ -177,8 +177,8 @@ export const PORTAL_NAV_ENTRIES: PortalNavEntry[] = [
       { href: '/volunteers/planning', icon: Calendar, label: 'Planeación' },
     ],
   },**/
-  {
-    kind: 'group',
+  ...(process.env.NEXT_PUBLIC_ENABLE_EVENTS === 'true' ? [{
+    kind: 'group' as const,
     module: 'Eventos',
     label: 'Eventos',
     icon: Calendar,
@@ -187,9 +187,9 @@ export const PORTAL_NAV_ENTRIES: PortalNavEntry[] = [
       { href: '/events/new', icon: Plus, label: 'Nuevo evento' },
       { href: '/events/activities', icon: List, label: 'Actividades' },
     ],
-  },
-  {
-    kind: 'group',
+  }] : []),
+  ...(process.env.NEXT_PUBLIC_ENABLE_LIBRARY === 'true' ? [{
+    kind: 'group' as const,
     module: 'Biblioteca',
     label: 'Biblioteca',
     icon: Library,
@@ -201,9 +201,9 @@ export const PORTAL_NAV_ENTRIES: PortalNavEntry[] = [
       { href: '/sermons/images', icon: ImageIcon, label: 'Imágenes' },
       { href: '/sermons/new', icon: Plus, label: 'Nuevo sermón' },
     ],
-  },
-  {
-    kind: 'group',
+  }] : []),
+  ...(process.env.NEXT_PUBLIC_ENABLE_CEREMONIES === 'true' ? [{
+    kind: 'group' as const,
     module: 'Ceremonias',
     label: 'Ceremonias',
     icon: BookHeart,
@@ -212,7 +212,7 @@ export const PORTAL_NAV_ENTRIES: PortalNavEntry[] = [
       { href: '/ceremonies/new', icon: Plus, label: 'Nueva ceremonia' },
       { href: '/ceremonies/export', icon: FileText, label: 'Exportar datos' },
     ],
-  },
+  }] : []),
   /**{
     kind: 'group',
     module: 'Instalaciones',

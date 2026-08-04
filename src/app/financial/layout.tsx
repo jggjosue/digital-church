@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { getDb } from '@/lib/mongodb';
 import { auth, currentUser } from '@clerk/nextjs/server';
-import { isFullAccessStaffRole } from '@/lib/pastor-church-access';
+import { resolvePortalModules } from '@/lib/portal-permissions';
 
 export default async function FinancialLayout({
   children,
@@ -22,18 +22,12 @@ export default async function FinancialLayout({
   }
 
   const db = await getDb();
-  const member = await db.collection('members').findOne(
-    { email },
-    { projection: { _id: 0, staffRole: 1 } }
-  );
+  const modules = await resolvePortalModules(db);
 
-  const staffRole = member?.staffRole?.trim().toLowerCase();
-
-  // Permitir si tiene acceso total (Admin) o si su rol contiene 'tesorero' o 'finanzas'
+  // Permitir si tiene acceso total (null = Admin/Liderazgo) o si su rol le otorga el módulo Finanzas
   const isAuthorized = 
-    isFullAccessStaffRole(staffRole) || 
-    staffRole?.includes('tesorero') || 
-    staffRole?.includes('finanzas');
+    modules === null || 
+    Object.keys(modules).some((k) => k.trim().toLowerCase() === 'finanzas');
 
   if (!isAuthorized) {
     redirect('/');
