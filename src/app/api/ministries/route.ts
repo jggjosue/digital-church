@@ -70,6 +70,24 @@ export async function GET(request: Request) {
       .find(mongoFilter, { projection })
       .sort({ name: 1 })
       .toArray();
+
+    // Resolve church names for ministries that have a churchId
+    if (!catalog) {
+      const churchIds = [...new Set(docs.map((d) => d.churchId).filter(Boolean))] as string[];
+      if (churchIds.length > 0) {
+        const churches = await db
+          .collection<{ id: string; name: string }>(CHURCHES_COLLECTION)
+          .find({ id: { $in: churchIds } }, { projection: { _id: 0, id: 1, name: 1 } })
+          .toArray();
+        const churchNameMap = new Map(churches.map((c) => [c.id, c.name]));
+        for (const doc of docs) {
+          if (doc.churchId) {
+            doc.churchName = churchNameMap.get(doc.churchId);
+          }
+        }
+      }
+    }
+
     return NextResponse.json({ ministries: docs });
   } catch (e) {
     console.error('[api/ministries GET]', e);

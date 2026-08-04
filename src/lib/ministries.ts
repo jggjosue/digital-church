@@ -50,6 +50,8 @@ export type MinistryDocument = {
   churchId?: string;
   /** Asignaciones de miembros (por templo) registradas desde «Asignar miembros». */
   memberAssignments?: MinistryMemberAssignment[];
+  /** Nombre del templo principal (resuelto en el servidor para la UI de listado). */
+  churchName?: string;
 };
 
 /** Valores permitidos en API y formularios de edición. */

@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { MoreHorizontal, Plus, Search, Users, UserPlus } from 'lucide-react';
+import { Church, MoreHorizontal, Plus, Search, Users, UserPlus } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -225,6 +225,14 @@ export default function MinistriesPage() {
                       {ministryCategoryLabel(ministry.category)}
                     </p>
                     <p className="mt-1 text-muted-foreground">{ministry.description}</p>
+                    {ministry.churchName ? (
+                      <span
+                        className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300"
+                      >
+                        <Church className="h-3 w-3" />
+                        {ministry.churchName}
+                      </span>
+                    ) : null}
                   </div>
                   {canDeleteMinistries ? (
                     <Button
