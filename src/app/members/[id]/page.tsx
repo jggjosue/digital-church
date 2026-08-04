@@ -102,9 +102,9 @@ export default function MemberProfilePage() {
 
   const [member, setMember] = React.useState<ApiMember | null>(null);
   const [viewerMemberId, setViewerMemberId] = React.useState<string | null>(null);
-  const [churchNamesById, setChurchNamesById] = React.useState<Record<string, string>>(
-    {}
-  );
+  const [churchNamesById, setChurchNamesById] = React.useState<Record<string, string>>({});
+  const [ceremonies, setCeremonies] = React.useState<any[]>([]);
+  const [prayers, setPrayers] = React.useState<any[]>([]);
   const [loadState, setLoadState] = React.useState<'loading' | 'error' | 'ready'>('loading');
   const [loadMessage, setLoadMessage] = React.useState<string | null>(null);
 
@@ -121,7 +121,7 @@ export default function MemberProfilePage() {
       setLoadMessage(null);
       setViewerMemberId(null);
       try {
-        const [mRes, cRes, meRes] = await Promise.all([
+        const [mRes, cRes, meRes, ceremRes, prayRes] = await Promise.all([
           fetch(`/api/members/${encodeURIComponent(id)}`, {
             cache: 'no-store',
             headers: { Accept: 'application/json' },
@@ -131,6 +131,8 @@ export default function MemberProfilePage() {
             cache: 'no-store',
             headers: { Accept: 'application/json' },
           }),
+          fetch('/api/data/ceremonies', { cache: 'no-store' }),
+          fetch('/api/prayer', { cache: 'no-store' }),
         ]);
         const data = (await mRes.json().catch(() => ({}))) as {
           member?: ApiMember;
@@ -162,6 +164,17 @@ export default function MemberProfilePage() {
         setMember(data.member);
         setViewerMemberId(myId);
         setChurchNamesById(map);
+
+        const ceremData = await ceremRes.json().catch(() => []);
+        if (Array.isArray(ceremData)) {
+          setCeremonies(ceremData.filter(c => c.memberIds?.includes(id)));
+        }
+
+        const prayData = await prayRes.json().catch(() => []);
+        if (Array.isArray(prayData)) {
+          setPrayers(prayData.filter(p => p.memberId === id));
+        }
+
         setLoadState('ready');
       } catch (e) {
         if (!cancelled) {
@@ -399,7 +412,13 @@ export default function MemberProfilePage() {
                     <TabsTrigger value="activity" className="text-xs sm:text-sm">
                       Actividad
                     </TabsTrigger>
-                    <TabsTrigger value="notes" className="text-xs sm:text-sm">
+                    <TabsTrigger value="ceremonies" className="text-xs sm:text-sm">
+                      Ceremonias
+                    </TabsTrigger>
+                    <TabsTrigger value="prayers" className="text-xs sm:text-sm">
+                      Peticiones de Oración
+                    </TabsTrigger>
+                    <TabsTrigger value="notes" className="text-xs sm:text-sm hidden sm:inline-flex">
                       Notas
                     </TabsTrigger>
                     </TabsList>
@@ -418,7 +437,47 @@ export default function MemberProfilePage() {
                                 </li>
                         </ul>
                     </TabsContent>
-                     <TabsContent value="notes" className="mt-4">
+                    
+                    <TabsContent value="ceremonies" className="mt-4">
+                      {ceremonies.length > 0 ? (
+                        <ul className="space-y-4">
+                          {ceremonies.map(c => (
+                            <li key={c.id || c._id} className="flex justify-between items-center p-3 border rounded-md">
+                              <div>
+                                <p className="font-medium text-sm">{c.type}</p>
+                                <p className="text-xs text-muted-foreground">{c.participants?.join(', ')}</p>
+                              </div>
+                              <p className="text-xs text-muted-foreground">{formatDateIso(c.date)}</p>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">No ha participado en ceremonias registradas.</p>
+                      )}
+                    </TabsContent>
+
+                    <TabsContent value="prayers" className="mt-4">
+                      {prayers.length > 0 ? (
+                        <ul className="space-y-4">
+                          {prayers.map(p => (
+                            <li key={p.id || p._id} className="flex flex-col gap-1 p-3 border rounded-md">
+                              <div className="flex justify-between items-start">
+                                <p className="font-medium text-sm">{p.title}</p>
+                                <Badge variant={p.status === 'Respondido' ? 'default' : 'secondary'} className="text-[10px]">
+                                  {p.status}
+                                </Badge>
+                              </div>
+                              <p className="text-xs text-muted-foreground line-clamp-2">{p.description}</p>
+                              <p className="text-xs text-muted-foreground mt-1">{formatDateIso(p.createdAt)}</p>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">No ha enviado peticiones de oración.</p>
+                      )}
+                    </TabsContent>
+
+                     <TabsContent value="notes" className="mt-4 hidden sm:block">
                     <p className="text-sm text-muted-foreground">No hay notas registradas.</p>
                     </TabsContent>
                 </Tabs>

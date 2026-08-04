@@ -1923,7 +1923,7 @@ export default function AttendanceRegistroPage() {
               type="button"
               className="h-14 w-full text-base sm:w-auto sm:min-w-[280px] sm:text-lg lg:min-w-[320px] lg:text-xl"
               onClick={() => void manualSave()}
-              disabled={isSaving || isLoadingRegistry || isImporting || !selectedChurchId || !draft.dirty}
+              disabled={isSaving || isLoadingRegistry || isImporting || !selectedChurchId}
             >
               <CheckCircle2 className="mr-2 h-5 w-5" />
               {isSaving ? 'Guardando...' : `Guardar Registro ${selectedYear}`}

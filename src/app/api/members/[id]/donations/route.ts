@@ -8,7 +8,6 @@ export type MemberDonationRecord = {
   fund: string;
   type: string;
   amount: number;
-  createdAt: string;
 };
 
 export async function GET(
@@ -23,12 +22,22 @@ export async function GET(
 
     const db = await getDb();
     const docs = await db
-      .collection<MemberDonationRecord>('member_donations')
-      .find({ memberId: id.trim() }, { projection: { _id: 0 } })
-      .sort({ date: -1, createdAt: -1 })
+      .collection('financial_transactions')
+      .find({ memberId: id.trim(), type: 'income' }, { projection: { _id: 0 } })
+      .sort({ date: -1 })
       .toArray();
 
-    return NextResponse.json({ donations: docs });
+    // Map to MemberDonationRecord format
+    const mapped = docs.map((doc: any) => ({
+      id: doc.id || doc._id?.toString(),
+      memberId: doc.memberId,
+      date: doc.date,
+      fund: doc.fundId || doc.category || 'General',
+      type: doc.reference || 'Donación',
+      amount: doc.amount || 0,
+    }));
+
+    return NextResponse.json({ donations: mapped });
   } catch (e) {
     console.error('[api/members/[id]/donations GET]', e);
     const message =

@@ -22,7 +22,7 @@ export async function resolvePortalModules(db: Db): Promise<Record<string, strin
   const member = await db.collection<MemberPermissionDoc>('members').findOne({ email }, { projection: { _id: 0, staffRole: 1, portalRoleId: 1, staffRoleGrants: 1 } });
   if (!member) return {};
   if (isFullAccessStaffRole(member.staffRole) || isLeadershipStaffRole(member.staffRole)) return null;
-  if (normalize(String(member.staffRole ?? '')) === 'congregante') return { Ofrendas: ['Añadir Donación'] };
+  if (normalize(String(member.staffRole ?? '')) === 'congregante') return { Donaciones: ['Añadir Donación'] };
   if (member.staffRoleGrants?.modules) return member.staffRoleGrants.modules;
   const roleId = String(member.portalRoleId ?? '').trim();
   const role = roleId ? await db.collection<StaffRoleDocument>('staff_roles').findOne({ id: roleId }, { projection: { modules: 1 } }) : null;

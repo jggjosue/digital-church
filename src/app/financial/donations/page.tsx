@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -6,8 +5,7 @@ import {
   Search,
   Download,
   FileText,
-  Landmark,
-  ListFilter,
+  Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -33,8 +31,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { donationReportsData, givingData } from '@/lib/data';
-import { cn } from '@/lib/utils';
+import { donationReportsData } from '@/lib/data';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { Line, LineChart, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
@@ -48,28 +45,58 @@ const chartConfig = {
   },
 };
 
+type Transaction = {
+    id: string;
+    type: 'income' | 'expense';
+    amount: number;
+    category: string;
+    fundId: string;
+    reference: string;
+    date: string;
+};
 
 export default function DonationReportsPage() {
-  const { totalDonations, averageDonation, newDonors, recentDonations } = donationReportsData;
   const currentYear = new Date().getFullYear();
-  const [selectedYear, setSelectedYear] = React.useState<string>((currentYear + 1).toString());
+  const [selectedYear, setSelectedYear] = React.useState<string>(currentYear.toString());
   const [currentPage, setCurrentPage] = React.useState(1);
   const itemsPerPage = 20;
 
-  const totalPages = Math.ceil(recentDonations.length / itemsPerPage);
+  const [transactions, setTransactions] = React.useState<Transaction[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [summary, setSummary] = React.useState<any>(null);
+  const [totalPages, setTotalPages] = React.useState(1);
+  const [totalItems, setTotalItems] = React.useState(0);
 
-  const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
+  const fetchSummary = async () => {
+    try {
+        const res = await fetch(`/api/financial/summary?year=${selectedYear}`);
+        setSummary(await res.json());
+    } catch (e) {
+        console.error(e);
     }
   };
 
-  const paginatedData = recentDonations.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
+  const fetchTransactions = async (page: number) => {
+    setLoading(true);
+    try {
+        const res = await fetch(`/api/data/financial-transactions?page=${page}&limit=${itemsPerPage}&year=${selectedYear}&type=income`);
+        const data = await res.json();
+        if (data.items) {
+            setTransactions(data.items);
+            setTotalPages(data.totalPages || 1);
+            setTotalItems(data.total || 0);
+        }
+    } catch (e) {
+        console.error(e);
+    } finally {
+        setLoading(false);
+    }
+  };
 
-  const filteredGivingData = givingData.filter(d => d.year.toString() === selectedYear);
+  React.useEffect(() => {
+      fetchSummary();
+      fetchTransactions(currentPage);
+  }, [selectedYear, currentPage]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-ES', {
@@ -77,12 +104,22 @@ export default function DonationReportsPage() {
       currency: 'USD',
     }).format(amount);
   };
+
+  const totalDonations = summary?.totalDonations || 0;
+  const averageDonation = summary?.averageDonation || 0;
+  const monthlyData = summary?.monthlyData || Array.from({ length: 12 }, (_, i) => ({ month: '', total: 0 }));
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
   
   return (
     <div className="flex flex-col flex-1">
       <AppHeader
         title="Reportes de Donaciones"
-        description="Genere y vea la actividad de donaciones"
+        description="Genere y vea la actividad de donaciones."
       >
         <div/>
       </AppHeader>
@@ -100,9 +137,9 @@ export default function DonationReportsPage() {
                         <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value={(currentYear + 1).toString()}>Este Año</SelectItem>
-                        <SelectItem value={currentYear.toString()}>Año Pasado</SelectItem>
-                        <SelectItem value={(currentYear - 1).toString()}>Hace 2 Años</SelectItem>
+                        <SelectItem value={(currentYear + 1).toString()}>Año Siguiente</SelectItem>
+                        <SelectItem value={currentYear.toString()}>Este Año</SelectItem>
+                        <SelectItem value={(currentYear - 1).toString()}>Año Pasado</SelectItem>
                     </SelectContent>
                 </Select>
                  <Select>
@@ -136,146 +173,160 @@ export default function DonationReportsPage() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Donaciones Totales</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{formatCurrency(totalDonations.amount)}</div>
-            <p className="text-xs text-muted-foreground">{totalDonations.period}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Donación Promedio</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{formatCurrency(averageDonation.amount)}</div>
-            <p className="text-xs text-muted-foreground">{averageDonation.description}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Nuevos Donantes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{formatCurrency(newDonors.amount)}</div>
-            <p className="text-xs text-muted-foreground">{newDonors.description}</p>
-          </CardContent>
-        </Card>
-      </div>
+      {loading ? (
+          <div className="flex justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+      ) : (
+      <>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Donaciones Totales</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{formatCurrency(totalDonations)}</div>
+                <p className="text-xs text-muted-foreground">Año {selectedYear}</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Donación Promedio</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{formatCurrency(averageDonation)}</div>
+                <p className="text-xs text-muted-foreground">Por transacción registrada</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Nuevos Donantes</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{formatCurrency(donationReportsData.newDonors.amount)}</div>
+                <p className="text-xs text-muted-foreground">{donationReportsData.newDonors.description}</p>
+              </CardContent>
+            </Card>
+          </div>
 
-      <div className="grid grid-cols-1 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Tendencias de Donaciones</CardTitle>
-            <CardDescription>Donaciones mensuales para el año {selectedYear}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
-              <LineChart
-                data={filteredGivingData}
-                margin={{
-                  top: 5,
-                  right: 20,
-                  left: 20,
-                  bottom: 5,
-                }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value / 1000}k`} />
-                <Tooltip
-                  content={
-                    <ChartTooltipContent
-                      indicator="dot"
-                      formatter={(value) =>
-                        new Intl.NumberFormat("en-US", {
-                          style: "currency",
-                          currency: "USD",
-                        }).format(value as number)
+          <div className="grid grid-cols-1 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Tendencias de Donaciones</CardTitle>
+                <CardDescription>Donaciones mensuales para el año {selectedYear}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ChartContainer config={chartConfig} className="min-h-[300px] w-full">
+                  <LineChart
+                    data={monthlyData}
+                    margin={{
+                      top: 5,
+                      right: 20,
+                      left: 20,
+                      bottom: 5,
+                    }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
+                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value / 1000}k`} />
+                    <Tooltip
+                      content={
+                        <ChartTooltipContent
+                          indicator="dot"
+                          formatter={(value) =>
+                            new Intl.NumberFormat("en-US", {
+                              style: "currency",
+                              currency: "USD",
+                            }).format(value as number)
+                          }
+                        />
                       }
                     />
-                  }
-                />
-                <Line
-                  dataKey="total"
-                  type="monotone"
-                  stroke="hsl(var(--primary))"
-                  strokeWidth={2}
-                  dot={{
-                    fill: "hsl(var(--primary))",
-                    r: 4,
-                  }}
-                  activeDot={{
-                    r: 6,
-                  }}
-                />
-              </LineChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
+                    <Line
+                      dataKey="total"
+                      type="monotone"
+                      stroke="hsl(var(--primary))"
+                      strokeWidth={2}
+                      dot={{
+                        fill: "hsl(var(--primary))",
+                        r: 4,
+                      }}
+                      activeDot={{
+                        r: 6,
+                      }}
+                    />
+                  </LineChart>
+                </ChartContainer>
+              </CardContent>
+            </Card>
 
-        <Card>
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Donante</TableHead>
-                    <TableHead>Fecha</TableHead>
-                    <TableHead className="hidden sm:table-cell">Fondo</TableHead>
-                    <TableHead className="hidden sm:table-cell"></TableHead>
-                    <TableHead className="text-right">Monto</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {paginatedData.map((donation) => (
-                    <TableRow key={donation.id}>
-                      <TableCell>
-                        <div className="font-medium">{donation.donorName}</div>
-                        <div className="text-sm text-muted-foreground">{donation.donorEmail}</div>
-                        <div className="text-xs text-muted-foreground sm:hidden">
-                          {donation.fund} · {donation.paymentMethod}
-                        </div>
-                      </TableCell>
-                      <TableCell>{donation.date}</TableCell>
-                      <TableCell className="hidden sm:table-cell">{donation.fund}</TableCell>
-                      <TableCell className="hidden sm:table-cell">{donation.paymentMethod}</TableCell>
-                      <TableCell className="text-right font-medium text-green-600">
-                        {formatCurrency(donation.amount)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-             <div className="flex flex-col sm:flex-row items-center justify-between pt-4 px-4 gap-4">
-                <div className="text-sm text-muted-foreground">
-                    Mostrando {paginatedData.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} a {Math.min(currentPage * itemsPerPage, recentDonations.length)} de {recentDonations.length} resultados
+            <Card>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto min-h-[300px]">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Donante / Referencia</TableHead>
+                        <TableHead>Fecha</TableHead>
+                        <TableHead className="hidden sm:table-cell">Fondo</TableHead>
+                        <TableHead className="hidden sm:table-cell">Categoría</TableHead>
+                        <TableHead className="text-right">Monto</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {transactions.map((donation) => (
+                        <TableRow key={donation.id}>
+                          <TableCell>
+                            <div className="font-medium">{donation.reference || 'Anónimo'}</div>
+                            <div className="text-xs text-muted-foreground sm:hidden">
+                              {donation.fundId} · {donation.category}
+                            </div>
+                          </TableCell>
+                          <TableCell>{new Date(donation.date).toLocaleDateString('es-ES')}</TableCell>
+                          <TableCell className="hidden sm:table-cell">{donation.fundId || 'General'}</TableCell>
+                          <TableCell className="hidden sm:table-cell">{donation.category}</TableCell>
+                          <TableCell className="text-right font-medium text-green-600">
+                            {formatCurrency(donation.amount)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {transactions.length === 0 && (
+                          <TableRow>
+                              <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                                  No hay donaciones registradas en {selectedYear}.
+                              </TableCell>
+                          </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
                 </div>
-                <Pagination>
-                    <PaginationContent>
-                    <PaginationItem>
-                        <PaginationPrevious href="#" onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }} />
-                    </PaginationItem>
-                    {[...Array(totalPages)].map((_, i) => (
-                        <PaginationItem key={i} className="hidden sm:block">
-                        <PaginationLink href="#" isActive={i + 1 === currentPage} onClick={(e) => { e.preventDefault(); handlePageChange(i + 1); }}>
-                            {i + 1}
-                        </PaginationLink>
+                 <div className="flex flex-col sm:flex-row items-center justify-between pt-4 px-4 pb-4 gap-4">
+                    <div className="text-sm text-muted-foreground">
+                        Mostrando {transactions.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} a {Math.min(currentPage * itemsPerPage, totalItems)} de {totalItems} resultados
+                    </div>
+                    <Pagination>
+                        <PaginationContent>
+                        <PaginationItem>
+                            <PaginationPrevious href="#" onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }} />
                         </PaginationItem>
-                    ))}
-                    <PaginationItem>
-                        <PaginationNext href="#" onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }}/>
-                    </PaginationItem>
-                    </PaginationContent>
-                </Pagination>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+                        {[...Array(totalPages)].map((_, i) => (
+                            <PaginationItem key={i} className="hidden sm:block">
+                            <PaginationLink href="#" isActive={i + 1 === currentPage} onClick={(e) => { e.preventDefault(); handlePageChange(i + 1); }}>
+                                {i + 1}
+                            </PaginationLink>
+                            </PaginationItem>
+                        ))}
+                        <PaginationItem>
+                            <PaginationNext href="#" onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }}/>
+                        </PaginationItem>
+                        </PaginationContent>
+                    </Pagination>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+      </>
+      )}
     </main>
     </div>
   );

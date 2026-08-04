@@ -1,10 +1,13 @@
 import { redirect } from 'next/navigation';
 import { getDb } from '@/lib/mongodb';
 import { auth, currentUser } from '@clerk/nextjs/server';
-import { isFullAccessStaffRole, isLeadershipStaffRole } from '@/lib/pastor-church-access';
-import PrayerRequestsPageClient from './prayer-client';
+import { isFullAccessStaffRole } from '@/lib/pastor-church-access';
 
-export default async function PrayerRequestsPage() {
+export default async function FinancialLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const { userId } = await auth();
   
   if (!userId) {
@@ -26,13 +29,15 @@ export default async function PrayerRequestsPage() {
 
   const staffRole = member?.staffRole?.trim().toLowerCase();
 
+  // Permitir si tiene acceso total (Admin) o si su rol contiene 'tesorero' o 'finanzas'
   const isAuthorized = 
     isFullAccessStaffRole(staffRole) || 
-    isLeadershipStaffRole(staffRole);
+    staffRole?.includes('tesorero') || 
+    staffRole?.includes('finanzas');
 
   if (!isAuthorized) {
     redirect('/');
   }
 
-  return <PrayerRequestsPageClient />;
+  return <>{children}</>;
 }

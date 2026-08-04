@@ -2,9 +2,12 @@ import { redirect } from 'next/navigation';
 import { getDb } from '@/lib/mongodb';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { isFullAccessStaffRole, isLeadershipStaffRole } from '@/lib/pastor-church-access';
-import PrayerRequestsPageClient from './prayer-client';
 
-export default async function PrayerRequestsPage() {
+export default async function SermonsLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const { userId } = await auth();
   
   if (!userId) {
@@ -34,5 +37,5 @@ export default async function PrayerRequestsPage() {
     redirect('/');
   }
 
-  return <PrayerRequestsPageClient />;
+  return <>{children}</>;
 }

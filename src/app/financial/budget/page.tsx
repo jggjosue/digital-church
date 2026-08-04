@@ -1,10 +1,8 @@
-
 'use client';
 
 import * as React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import {
   Select,
   SelectContent,
@@ -12,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { CalendarIcon, Download, SlidersHorizontal } from 'lucide-react';
+import { CalendarIcon, Download, Loader2 } from 'lucide-react';
 import { budgetReportData } from '@/lib/data';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
@@ -32,8 +30,82 @@ const formatCurrency = (amount: number, showSign = false) => {
     return formatted;
 };
 
+type Transaction = {
+    id: string;
+    type: 'income' | 'expense';
+    amount: number;
+    category: string;
+    date: string;
+};
+
 export default function BudgetReportPage() {
-  const { totalBudget, totalActual, variance, previousPeriodBudget, income, expenses, netTotal } = budgetReportData;
+  const [transactions, setTransactions] = React.useState<Transaction[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+      fetch('/api/data/financial-transactions')
+        .then(res => res.json())
+        .then(data => {
+            if (data.items) {
+                setTransactions(data.items);
+            }
+        })
+        .catch(console.error)
+        .finally(() => setLoading(false));
+  }, []);
+
+  const processData = () => {
+      // Calculate actuals from transactions
+      const actuals: Record<string, number> = {};
+      let totalActualIncome = 0;
+      let totalActualExpenses = 0;
+      
+      transactions.forEach(t => {
+          actuals[t.category] = (actuals[t.category] || 0) + t.amount;
+          if (t.type === 'income') {
+              totalActualIncome += t.amount;
+          } else {
+              totalActualExpenses += t.amount;
+          }
+      });
+
+      // Merge with hardcoded budget data
+      const incomeItems = budgetReportData.income.items.map(item => {
+          const actual = actuals[item.category] || 0; // Use actual or fallback to 0
+          return { ...item, actual };
+      });
+
+      const expenseItems = budgetReportData.expenses.items.map(item => {
+          const actual = actuals[item.category] || 0;
+          return { ...item, actual };
+      });
+
+      const totalBudget = budgetReportData.totalBudget;
+      const previousPeriodBudget = budgetReportData.previousPeriodBudget;
+      
+      const income = {
+          items: incomeItems,
+          totalBudget: budgetReportData.income.totalBudget,
+          totalActual: totalActualIncome
+      };
+
+      const expenses = {
+          items: expenseItems,
+          totalBudget: budgetReportData.expenses.totalBudget,
+          totalActual: totalActualExpenses
+      };
+
+      const totalActual = totalActualIncome - totalActualExpenses;
+      const netTotal = {
+          budget: income.totalBudget - expenses.totalBudget,
+          actual: totalActual
+      };
+      const variance = totalActual - totalBudget;
+
+      return { totalBudget, totalActual, variance, previousPeriodBudget, income, expenses, netTotal };
+  };
+
+  const data = processData();
 
   const getProgressValue = (actual: number, budget: number) => {
     if (budget === 0) return 0;
@@ -44,7 +116,7 @@ export default function BudgetReportPage() {
     <div className="flex flex-col flex-1">
       <AppHeader
         title="Reporte de Presupuesto"
-        description="1 de Enero, 2023 - 31 de Agosto, 2023"
+        description="Presupuesto base con ingresos y gastos reales dinámicos."
       >
         <Button>
           <Download className="mr-2 h-4 w-4" />
@@ -55,7 +127,7 @@ export default function BudgetReportPage() {
       <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2">
         <Button variant="outline" className="flex items-center gap-2 w-full sm:w-auto">
           <CalendarIcon className="h-4 w-4" />
-          <span>1 de Ene, 2023 - 31 de Ago, 2023</span>
+          <span>Filtro de fechas</span>
         </Button>
         <Select>
           <SelectTrigger className="w-full sm:w-[180px]">
@@ -75,101 +147,109 @@ export default function BudgetReportPage() {
         </Select>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Presupuesto Total</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{formatCurrency(totalBudget)}</div>
-            <p className="text-xs text-muted-foreground">vs {formatCurrency(previousPeriodBudget)} Período Anterior</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Real Total</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-3xl font-bold">{formatCurrency(totalActual)}</div>
-            <p className="text-xs text-muted-foreground">Ingresos - Gastos</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Variación</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className={cn("text-3xl font-bold", variance > 0 ? "text-green-600" : "text-red-600")}>{formatCurrency(variance)}</div>
-            <p className="text-xs text-muted-foreground">+1.5% Sobre el Presupuesto</p>
-          </CardContent>
-        </Card>
-      </div>
-      
-      <Card>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b">
-                  <th className="p-4 text-left font-semibold">Categoría</th>
-                  <th className="p-4 text-right font-semibold">Presupuesto</th>
-                  <th className="p-4 text-right font-semibold">Real</th>
-                  <th className="p-4 text-right font-semibold">Variación</th>
-                  <th className="p-4 text-left font-semibold">% del Presupuesto Usado</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="font-bold bg-muted/50">
-                  <td className="p-4">Ingresos</td>
-                  <td className="p-4 text-right">{formatCurrency(income.totalBudget)}</td>
-                  <td className="p-4 text-right">{formatCurrency(income.totalActual)}</td>
-                  <td className={cn("p-4 text-right", (income.totalActual - income.totalBudget) > 0 ? 'text-green-600' : 'text-red-600')}>{formatCurrency(income.totalActual - income.totalBudget)}</td>
-                  <td className="p-4"></td>
-                </tr>
-                {income.items.map((item, index) => {
-                    const variance = item.actual - item.budget;
-                    return (
-                        <tr key={`income-${index}`} className="border-b">
-                            <td className="p-4 pl-8 text-muted-foreground">{item.category}</td>
-                            <td className="p-4 text-right">{formatCurrency(item.budget)}</td>
-                            <td className="p-4 text-right">{formatCurrency(item.actual)}</td>
-                            <td className={cn("p-4 text-right", variance > 0 ? 'text-green-600' : 'text-red-600')}>{formatCurrency(variance, true)}</td>
-                            <td className="p-4"><Progress value={getProgressValue(item.actual, item.budget)} className={cn(getProgressValue(item.actual, item.budget) > 100 ? '[&>div]:bg-green-600' : '')} /></td>
-                        </tr>
-                    )
-                })}
-                 <tr className="font-bold bg-muted/50">
-                  <td className="p-4">Gastos</td>
-                  <td className="p-4 text-right">{formatCurrency(expenses.totalBudget)}</td>
-                  <td className="p-4 text-right">{formatCurrency(expenses.totalActual)}</td>
-                  <td className={cn("p-4 text-right", (expenses.totalBudget - expenses.totalActual) > 0 ? 'text-green-600' : 'text-red-600')}>{formatCurrency(expenses.totalBudget - expenses.totalActual)}</td>
-                  <td className="p-4"></td>
-                </tr>
-                {expenses.items.map((item, index) => {
-                     const variance = item.budget - item.actual;
-                     const progress = getProgressValue(item.actual, item.budget);
-                     return (
-                        <tr key={`expense-${index}`} className="border-b">
-                            <td className="p-4 pl-8 text-muted-foreground">{item.category}</td>
-                            <td className="p-4 text-right">{formatCurrency(item.budget)}</td>
-                            <td className="p-4 text-right">{formatCurrency(item.actual)}</td>
-                            <td className={cn("p-4 text-right", variance < 0 ? 'text-red-600' : 'text-green-600')}>{formatCurrency(variance, true)}</td>
-                            <td className="p-4"><Progress value={progress} className={cn(progress > 100 ? '[&>div]:bg-red-600' : '')} /></td>
-                        </tr>
-                     )
-                })}
-                <tr className="font-bold bg-muted/50 border-t-2">
-                    <td className="p-4">Total Neto</td>
-                    <td className="p-4 text-right">{formatCurrency(netTotal.budget)}</td>
-                    <td className="p-4 text-right">{formatCurrency(netTotal.actual)}</td>
-                    <td className={cn("p-4 text-right", (netTotal.actual - netTotal.budget) > 0 ? 'text-green-600' : 'text-red-600')}>{formatCurrency(netTotal.actual - netTotal.budget)}</td>
-                    <td className="p-4"></td>
-                </tr>
-              </tbody>
-            </table>
+      {loading ? (
+           <div className="flex justify-center p-12">
+               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+           </div>
+      ) : (
+      <>
+          <div className="grid gap-6 md:grid-cols-3">
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Presupuesto Total</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{formatCurrency(data.totalBudget)}</div>
+                <p className="text-xs text-muted-foreground">vs {formatCurrency(data.previousPeriodBudget)} Período Anterior</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Real Total</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{formatCurrency(data.totalActual)}</div>
+                <p className="text-xs text-muted-foreground">Ingresos - Gastos</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-medium">Variación</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className={cn("text-3xl font-bold", data.variance > 0 ? "text-green-600" : "text-red-600")}>{formatCurrency(data.variance)}</div>
+                <p className="text-xs text-muted-foreground">Sobre el Presupuesto</p>
+              </CardContent>
+            </Card>
           </div>
-        </CardContent>
-      </Card>
+          
+          <Card>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b">
+                      <th className="p-4 text-left font-semibold">Categoría</th>
+                      <th className="p-4 text-right font-semibold">Presupuesto</th>
+                      <th className="p-4 text-right font-semibold">Real</th>
+                      <th className="p-4 text-right font-semibold">Variación</th>
+                      <th className="p-4 text-left font-semibold">% del Presupuesto Usado</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="font-bold bg-muted/50">
+                      <td className="p-4">Ingresos</td>
+                      <td className="p-4 text-right">{formatCurrency(data.income.totalBudget)}</td>
+                      <td className="p-4 text-right">{formatCurrency(data.income.totalActual)}</td>
+                      <td className={cn("p-4 text-right", (data.income.totalActual - data.income.totalBudget) > 0 ? 'text-green-600' : 'text-red-600')}>{formatCurrency(data.income.totalActual - data.income.totalBudget)}</td>
+                      <td className="p-4"></td>
+                    </tr>
+                    {data.income.items.map((item, index) => {
+                        const variance = item.actual - item.budget;
+                        return (
+                            <tr key={`income-${index}`} className="border-b">
+                                <td className="p-4 pl-8 text-muted-foreground">{item.category}</td>
+                                <td className="p-4 text-right">{formatCurrency(item.budget)}</td>
+                                <td className="p-4 text-right">{formatCurrency(item.actual)}</td>
+                                <td className={cn("p-4 text-right", variance > 0 ? 'text-green-600' : 'text-red-600')}>{formatCurrency(variance, true)}</td>
+                                <td className="p-4"><Progress value={getProgressValue(item.actual, item.budget)} className={cn(getProgressValue(item.actual, item.budget) > 100 ? '[&>div]:bg-green-600' : '')} /></td>
+                            </tr>
+                        )
+                    })}
+                     <tr className="font-bold bg-muted/50">
+                      <td className="p-4">Gastos</td>
+                      <td className="p-4 text-right">{formatCurrency(data.expenses.totalBudget)}</td>
+                      <td className="p-4 text-right">{formatCurrency(data.expenses.totalActual)}</td>
+                      <td className={cn("p-4 text-right", (data.expenses.totalBudget - data.expenses.totalActual) > 0 ? 'text-green-600' : 'text-red-600')}>{formatCurrency(data.expenses.totalBudget - data.expenses.totalActual)}</td>
+                      <td className="p-4"></td>
+                    </tr>
+                    {data.expenses.items.map((item, index) => {
+                         const variance = item.budget - item.actual;
+                         const progress = getProgressValue(item.actual, item.budget);
+                         return (
+                            <tr key={`expense-${index}`} className="border-b">
+                                <td className="p-4 pl-8 text-muted-foreground">{item.category}</td>
+                                <td className="p-4 text-right">{formatCurrency(item.budget)}</td>
+                                <td className="p-4 text-right">{formatCurrency(item.actual)}</td>
+                                <td className={cn("p-4 text-right", variance < 0 ? 'text-red-600' : 'text-green-600')}>{formatCurrency(variance, true)}</td>
+                                <td className="p-4"><Progress value={progress} className={cn(progress > 100 ? '[&>div]:bg-red-600' : '')} /></td>
+                            </tr>
+                         )
+                    })}
+                    <tr className="font-bold bg-muted/50 border-t-2">
+                        <td className="p-4">Total Neto</td>
+                        <td className="p-4 text-right">{formatCurrency(data.netTotal.budget)}</td>
+                        <td className="p-4 text-right">{formatCurrency(data.netTotal.actual)}</td>
+                        <td className={cn("p-4 text-right", (data.netTotal.actual - data.netTotal.budget) > 0 ? 'text-green-600' : 'text-red-600')}>{formatCurrency(data.netTotal.actual - data.netTotal.budget)}</td>
+                        <td className="p-4"></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+      </>
+      )}
     </main>
     </div>
   );

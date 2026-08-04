@@ -42,6 +42,8 @@ export type DashboardStats = {
   demographics: DashboardDemographicSlice[];
   upcomingEvents: DashboardUpcomingEvent[];
   prayerRequests: DashboardPrayerItem[];
+  sermonsPublished: number;
+  prayersThisWeek: number;
 };
 
 export type TimeRangeParam = 'this-week' | 'this-month' | 'this-quarter' | 'this-year';

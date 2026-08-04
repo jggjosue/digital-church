@@ -1,14 +1,13 @@
-
 'use client';
 
 import * as React from 'react';
 import {
   MoreHorizontal,
-  Plus,
   Search,
   ChevronDown,
-  Trash2,
   Upload,
+  Loader2,
+  Trash2
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -33,77 +32,59 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { sermonsData as initialSermonsData } from '@/lib/data';
 import { AppHeader } from '@/components/app-header';
 import Link from 'next/link';
-import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 
-type Sermon = (typeof initialSermonsData)[0];
-
-const statusColors: { [key: string]: string } = {
-    Publicado: 'bg-green-100 text-green-800 border-green-200',
-    Programado: 'bg-blue-100 text-blue-800 border-blue-200',
-    Borrador: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    Archivado: 'bg-gray-100 text-gray-800 border-gray-200',
+type SermonMedia = {
+    id: string;
+    sermonId: string;
+    type: string;
+    url: string;
+    title?: string;
+    mimeType?: string;
+    size?: number;
 };
 
-const audioLibraryData: Sermon[] = [
-    ...initialSermonsData.slice(0, 3),
-    {
-        id: 100,
-        title: 'Podcast Ep. 12: Community',
-        speaker: 'Host Alice & Bob',
-        series: 'Church Life Podcast',
-        date: 'Nov 01, 2023',
-        status: 'Publicado',
-        duration: '25:30',
-    },
-    initialSermonsData[3],
-];
-
-
 export default function AudioLibraryPage() {
-  const [sermonsData, setSermonsData] = React.useState<Sermon[]>(audioLibraryData);
-  const [selected, setSelected] = React.useState<number[]>([]);
-  const [sermonToDelete, setSermonToDelete] = React.useState<Sermon | null>(null);
-  const [currentPage, setCurrentPage] = React.useState(1);
-  const itemsPerPage = 5;
+  const [audios, setAudios] = React.useState<SermonMedia[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [selected, setSelected] = React.useState<string[]>([]);
 
-  const totalPages = Math.ceil(sermonsData.length / itemsPerPage);
-
-  const handlePageChange = (page: number) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-    }
-  };
-
-  const paginatedData = sermonsData.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
+  React.useEffect(() => {
+      fetch('/api/data/sermon-media')
+        .then(res => res.json())
+        .then(data => {
+            if (data.items) {
+                setAudios(data.items.filter((m: SermonMedia) => m.type === 'audio'));
+            }
+        })
+        .catch(console.error)
+        .finally(() => setLoading(false));
+  }, []);
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
-      setSelected(paginatedData.map((s) => s.id));
+      setSelected(audios.map((s) => s.id));
     } else {
       setSelected([]);
     }
   };
 
-  const handleSelectOne = (id: number, checked: boolean) => {
+  const handleSelectOne = (id: string, checked: boolean) => {
     if (checked) {
       setSelected([...selected, id]);
     } else {
       setSelected(selected.filter((i) => i !== id));
     }
   };
-  
-  const handleDeleteSermon = () => {
-    if (sermonToDelete) {
-      setSermonsData(prev => prev.filter(s => s.id !== sermonToDelete.id));
-      setSermonToDelete(null);
-    }
+
+  const handleDelete = async (id: string) => {
+      try {
+          await fetch(`/api/data/sermon-media/${id}`, { method: 'DELETE' });
+          setAudios(prev => prev.filter(a => a.id !== id));
+      } catch (err) {
+          console.error(err);
+      }
   };
 
   return (
@@ -139,7 +120,12 @@ export default function AudioLibraryPage() {
               <TabsTrigger value="images" asChild><Link href="/sermons/images">Images</Link></TabsTrigger>
             </TabsList>
             <TabsContent value="audio">
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto min-h-[300px]">
+              {loading ? (
+                  <div className="flex justify-center p-12">
+                      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  </div>
+              ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -147,44 +133,31 @@ export default function AudioLibraryPage() {
                       <Checkbox
                         checked={
                           selected.length > 0 &&
-                          selected.length === paginatedData.length
+                          selected.length === audios.length
                         }
                         onCheckedChange={(checked) => handleSelectAll(!!checked)}
                       />
                     </TableHead>
                     <TableHead>TITLE</TableHead>
-                    <TableHead>SPEAKER</TableHead>
-                    <TableHead>SERMON/EVENT</TableHead>
-                    <TableHead>DATE</TableHead>
-                    <TableHead>DURATION</TableHead>
-                    <TableHead>STATUS</TableHead>
+                    <TableHead>SERMON ID</TableHead>
+                    <TableHead>FORMAT</TableHead>
                     <TableHead className="text-right">ACTIONS</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {paginatedData.map((sermon) => (
-                    <TableRow key={sermon.id}>
+                  {audios.map((audio) => (
+                    <TableRow key={audio.id}>
                       <TableCell>
                         <Checkbox
-                          checked={selected.includes(sermon.id)}
+                          checked={selected.includes(audio.id)}
                           onCheckedChange={(checked) =>
-                            handleSelectOne(sermon.id, !!checked)
+                            handleSelectOne(audio.id, !!checked)
                           }
                         />
                       </TableCell>
-                      <TableCell className="font-medium">{sermon.title}</TableCell>
-                      <TableCell>{sermon.speaker}</TableCell>
-                      <TableCell>{sermon.series}</TableCell>
-                      <TableCell>{sermon.date.replace(', 2023', '')}<br/>2023</TableCell>
-                      <TableCell>{sermon.duration}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          className={statusColors[sermon.status as keyof typeof statusColors]}
-                        >
-                          {sermon.status}
-                        </Badge>
-                      </TableCell>
+                      <TableCell className="font-medium">{audio.title || 'Audio sin título'}</TableCell>
+                      <TableCell>{audio.sermonId}</TableCell>
+                      <TableCell>{audio.mimeType || 'audio/mp3'}</TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -193,9 +166,8 @@ export default function AudioLibraryPage() {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent>
-                            <DropdownMenuItem>Edit</DropdownMenuItem>
-                            <DropdownMenuItem>View</DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()} onClick={() => setSermonToDelete(sermon)}>
+                            <DropdownMenuItem asChild><Link href={audio.url} target="_blank">View URL</Link></DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(audio.id)}>
                                 Eliminar
                             </DropdownMenuItem>
                           </DropdownMenuContent>
@@ -203,31 +175,17 @@ export default function AudioLibraryPage() {
                       </TableCell>
                     </TableRow>
                   ))}
+                  {audios.length === 0 && (
+                      <TableRow>
+                          <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                              No hay audios registrados
+                          </TableCell>
+                      </TableRow>
+                  )}
                 </TableBody>
               </Table>
+              )}
               </div>
-               <div className="flex flex-col sm:flex-row items-center justify-between pt-4 gap-4">
-                <div className="text-sm text-muted-foreground">
-                    Mostrando {paginatedData.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} a {Math.min(currentPage * itemsPerPage, sermonsData.length)} de {sermonsData.length} resultados
-                </div>
-                <Pagination>
-                    <PaginationContent>
-                    <PaginationItem>
-                        <PaginationPrevious href="#" onClick={(e) => { e.preventDefault(); handlePageChange(currentPage - 1); }} />
-                    </PaginationItem>
-                    {[...Array(totalPages)].map((_, i) => (
-                        <PaginationItem key={i}>
-                        <PaginationLink href="#" isActive={i + 1 === currentPage} onClick={(e) => { e.preventDefault(); handlePageChange(i + 1); }}>
-                            {i + 1}
-                        </PaginationLink>
-                        </PaginationItem>
-                    ))}
-                    <PaginationItem>
-                        <PaginationNext href="#" onClick={(e) => { e.preventDefault(); handlePageChange(currentPage + 1); }}/>
-                    </PaginationItem>
-                    </PaginationContent>
-                </Pagination>
-            </div>
             </TabsContent>
           </Tabs>
         </CardContent>

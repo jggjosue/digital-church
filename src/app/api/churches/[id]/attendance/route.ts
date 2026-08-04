@@ -31,7 +31,7 @@ const createChurchAttendanceSchema = z.object({
   eventType: z.enum(['service', 'event']),
   eventName: z.string().min(1).max(200),
   attendanceMode: z.enum(['presencial', 'online']),
-  eventWeekday: z.string().max(30).optional().default(''),
+  eventWeekday: z.string().max(100).optional().default(''),
   eventTime: z.string().min(1).max(20),
   eventStartDate: z.string().max(100).optional().default(''),
   eventEndDate: z.string().max(100).optional().default(''),

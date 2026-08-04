@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -9,6 +8,8 @@ import {
   Smile,
   Plus,
   FileText,
+  Loader2,
+  CalendarHeart
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -25,9 +26,42 @@ import {
 } from '@/components/ui/select';
 import { AppHeader } from '@/components/app-header';
 import Link from 'next/link';
-import { ceremonyData } from '@/lib/data';
+
+type Ceremony = {
+    id: string;
+    type: string;
+    date: string;
+    participants: string[];
+    officiant?: string;
+    notes?: string;
+    status: string;
+};
+
+const getIconForType = (type: string) => {
+    switch (type) {
+        case 'Bautismo': return { icon: Droplet, color: 'text-blue-500', bg: 'bg-blue-100' };
+        case 'Matrimonio': return { icon: Heart, color: 'text-red-500', bg: 'bg-red-100' };
+        case 'Dedicación de Niño': return { icon: Smile, color: 'text-green-500', bg: 'bg-green-100' };
+        default: return { icon: CalendarHeart, color: 'text-purple-500', bg: 'bg-purple-100' };
+    }
+};
 
 export default function CeremoniesPage() {
+  const [ceremonies, setCeremonies] = React.useState<Ceremony[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+      fetch('/api/data/ceremonies')
+        .then(res => res.json())
+        .then(data => {
+            if (data.items) {
+                setCeremonies(data.items);
+            }
+        })
+        .catch(console.error)
+        .finally(() => setLoading(false));
+  }, []);
+
   return (
     <div className="flex flex-col flex-1">
       <AppHeader
@@ -80,35 +114,49 @@ export default function CeremoniesPage() {
                 </div>
             </div>
 
-            <div className="space-y-8">
-                {ceremonyData.map((ceremony, index) => (
-                    <div key={index} className="flex items-start gap-4 sm:gap-6">
-                        <div className="flex flex-col items-center">
-                            <div className={`flex items-center justify-center h-10 w-10 rounded-full ${ceremony.iconBgColor}`}>
-                                <ceremony.icon className={`h-5 w-5 ${ceremony.iconColor}`} />
+            {loading ? (
+                <div className="flex justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+            ) : (
+                <div className="space-y-8">
+                    {ceremonies.length === 0 && (
+                        <div className="text-center py-8 text-muted-foreground">
+                            No hay ceremonias registradas.
+                        </div>
+                    )}
+                    {ceremonies.map((ceremony, index) => {
+                        const style = getIconForType(ceremony.type);
+                        const Icon = style.icon;
+                        return (
+                        <div key={ceremony.id} className="flex items-start gap-4 sm:gap-6">
+                            <div className="flex flex-col items-center">
+                                <div className={`flex items-center justify-center h-10 w-10 rounded-full ${style.bg}`}>
+                                    <Icon className={`h-5 w-5 ${style.color}`} />
+                                </div>
+                                {index < ceremonies.length - 1 && (
+                                    <div className="w-px h-full bg-border mt-2 flex-1 min-h-[40px]"></div>
+                                )}
                             </div>
-                            {index < ceremonyData.length - 1 && (
-                                <div className="w-px h-full bg-border mt-2 flex-1"></div>
-                            )}
+                            <div className="flex-1 pb-8">
+                                <Card>
+                                    <CardContent className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                        <div>
+                                            <p className="text-sm text-muted-foreground">{new Date(ceremony.date).toLocaleDateString('es-ES')}</p>
+                                            <h3 className="text-lg font-bold mt-1">{ceremony.type}</h3>
+                                            <p className="text-sm text-muted-foreground mt-1">Participantes: {ceremony.participants.join(', ')}</p>
+                                            {ceremony.officiant && <p className="text-sm text-muted-foreground mt-1">Oficiante: {ceremony.officiant}</p>}
+                                        </div>
+                                        <Button variant="link" className="p-0 h-auto self-start sm:self-center" asChild>
+                                            <Link href={`/ceremonies/${ceremony.id}`}>Ver Detalles</Link>
+                                        </Button>
+                                    </CardContent>
+                                </Card>
+                            </div>
                         </div>
-                        <div className="flex-1 pb-8">
-                            <Card>
-                                <CardContent className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                                    <div>
-                                        <p className="text-sm text-muted-foreground">{ceremony.date}</p>
-                                        <h3 className="text-lg font-bold mt-1">{ceremony.title}</h3>
-                                        <p className="text-sm text-muted-foreground mt-1">{ceremony.details}</p>
-                                    </div>
-                                    <Button variant="link" className="p-0 h-auto self-start sm:self-center" asChild>
-                                        <Link href={`/ceremonies/${ceremony.id}`}>Ver Detalles</Link>
-                                    </Button>
-                                </CardContent>
-                            </Card>
-                        </div>
-                    </div>
-                ))}
-            </div>
-
+                    )})}
+                </div>
+            )}
         </CardContent>
       </Card>
     </main>

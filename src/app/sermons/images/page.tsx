@@ -1,13 +1,12 @@
-
 'use client';
 
 import * as React from 'react';
 import {
-  Plus,
   Search,
   ChevronDown,
   Upload,
   ImageIcon,
+  Loader2,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -20,45 +19,31 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AppHeader } from '@/components/app-header';
 import Link from 'next/link';
 
-const imagesData = [
-    {
-        id: 1,
-        title: 'Sunday Service Highlight',
-        uploaded: 'Nov 12, 2023',
-        tags: ['Sermon', 'Worship'],
-        tagColors: ['bg-blue-100 text-blue-800', 'bg-purple-100 text-purple-800'],
-    },
-    {
-        id: 2,
-        title: 'Faith In Action Group',
-        uploaded: 'Nov 04, 2023',
-        tags: ['Sermon Graphic', 'James'],
-        tagColors: ['bg-indigo-100 text-indigo-800', 'bg-gray-100 text-gray-800'],
-    },
-    {
-        id: 3,
-        title: 'Community Picnic',
-        uploaded: 'Oct 30, 2023',
-        tags: ['Event', 'Fellowship'],
-        tagColors: ['bg-green-100 text-green-800', 'bg-teal-100 text-teal-800'],
-    },
-    {
-        id: 4,
-        title: 'Youth Group Bonfire',
-        uploaded: 'Oct 28, 2023',
-        tags: ['Event', 'Youth'],
-        tagColors: ['bg-green-100 text-green-800', 'bg-pink-100 text-pink-800'],
-    },
-    {
-        id: 5,
-        title: 'The Power of Forgiveness',
-        uploaded: 'Oct 27, 2023',
-        tags: ['Sermon Graphic', 'Gospel of John'],
-        tagColors: ['bg-indigo-100 text-indigo-800', 'bg-gray-100 text-gray-800'],
-    },
-];
+type SermonMedia = {
+    id: string;
+    sermonId: string;
+    type: string;
+    url: string;
+    title?: string;
+    mimeType?: string;
+    size?: number;
+};
 
 export default function ImageLibraryPage() {
+  const [images, setImages] = React.useState<SermonMedia[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+      fetch('/api/data/sermon-media')
+        .then(res => res.json())
+        .then(data => {
+            if (data.items) {
+                setImages(data.items.filter((m: SermonMedia) => m.type === 'image'));
+            }
+        })
+        .catch(console.error)
+        .finally(() => setLoading(false));
+  }, []);
 
   return (
     <div className="flex flex-col flex-1">
@@ -96,26 +81,32 @@ export default function ImageLibraryPage() {
               <TabsTrigger value="images">Images</TabsTrigger>
             </TabsList>
             <TabsContent value="images">
+                {loading ? (
+                    <div className="flex justify-center p-12">
+                        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                    </div>
+                ) : (
                 <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 mt-6">
-                    {imagesData.map((image, index) => (
-                        <Card key={index} className='overflow-hidden'>
+                    {images.length === 0 && (
+                        <div className="col-span-full text-center py-12 text-muted-foreground">
+                            No hay imágenes registradas.
+                        </div>
+                    )}
+                    {images.map((image) => (
+                        <Card key={image.id} className='overflow-hidden'>
                             <CardContent className='p-0'>
-                                <div className='w-full aspect-square bg-muted flex items-center justify-center'>
-                                    <ImageIcon className='h-12 w-12 text-muted-foreground' />
+                                <div className='w-full aspect-square bg-muted flex items-center justify-center overflow-hidden bg-center bg-cover' style={{ backgroundImage: `url(${image.url})`}}>
+                                    {!image.url && <ImageIcon className='h-12 w-12 text-muted-foreground opacity-50' />}
                                 </div>
                                 <div className='p-4'>
-                                    <h3 className='font-semibold truncate'>{image.title}</h3>
-                                    <p className='text-xs text-muted-foreground'>Uploaded: {image.uploaded}</p>
-                                    <div className='flex flex-wrap gap-1 mt-2'>
-                                        {image.tags.map((tag, i) => (
-                                            <Badge key={i} variant="outline" className={`font-normal ${image.tagColors[i]}`}>{tag}</Badge>
-                                        ))}
-                                    </div>
+                                    <h3 className='font-semibold truncate'>{image.title || 'Imagen'}</h3>
+                                    <p className='text-xs text-muted-foreground truncate'>Sermón: {image.sermonId}</p>
                                 </div>
                             </CardContent>
                         </Card>
                     ))}
                 </div>
+                )}
             </TabsContent>
           </Tabs>
         </CardContent>

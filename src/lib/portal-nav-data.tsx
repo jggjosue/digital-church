@@ -1,14 +1,25 @@
 import type { LucideIcon } from 'lucide-react';
 import {
   BarChart,
+  BookHeart,
+  Calendar,
+  CalendarDays,
   Church,
+  Clapperboard,
   ClipboardList,
+  DollarSign,
   FileText,
+  Gift,
   HandHelping,
   Heart,
+  Image as ImageIcon,
+  Landmark,
   LayoutDashboard,
+  LayoutGrid,
+  Library,
   List,
   Megaphone,
+  Mic,
   Package,
   PiggyBank,
   Plus,
@@ -17,6 +28,7 @@ import {
   UserCog,
   UserPlus,
   Users,
+  Wifi,
 } from 'lucide-react';
 
 export type PortalNavSubItem = { href: string; label: string; icon: LucideIcon };
@@ -86,18 +98,141 @@ export const PORTAL_NAV_ENTRIES: PortalNavEntry[] = [
   },
   {
     kind: 'group',
+    module: 'Online',
+    label: 'Online',
+    icon: Wifi,
+    subItems: [
+      { href: '/online/servicio', icon: Search, label: 'Servicio' },
+      { href: '/online/registro', icon: ClipboardList, label: 'Registro' },
+      { href: '/online/reporte', icon: FileText, label: 'Reporte' },
+    ],
+  },
+  {
+    kind: 'group',
     module: 'Ofrendas',
     label: 'Ofrendas',
     icon: Heart,
     subItems: [
       { href: '/donations/registro', icon: ClipboardList, label: 'Registro de Ofrendas' },
+    ],
+  },
+  {
+    kind: 'group',
+    module: 'Donaciones',
+    label: 'Donaciones',
+    icon: Gift,
+    subItems: [
       { href: '/donations/new', icon: Plus, label: 'Añadir Donación' },
       { href: '/donations/fundraising/new', icon: Megaphone, label: 'Crear Campaña' },
       { href: '/donations', icon: Heart, label: 'Donaciones y ofrendas' },
+      { href: '/donations/pledges', icon: List, label: 'Gestión de Promesas' },
       { href: '/donations/giving-statement', icon: FileText, label: 'Declaración de Donación' },
       { href: '/donations/fundraising', icon: PiggyBank, label: 'Recaudación de Fondos' },
     ],
   },
+  {
+    kind: 'group',
+    module: 'Finanzas',
+    label: 'Finanzas',
+    icon: DollarSign,
+    subItems: [
+      { href: '/financial', icon: LayoutGrid, label: 'Reportes Financieros' },
+      { href: '/financial/income-expense', icon: FileText, label: 'Ingresos y Gastos' },
+      { href: '/financial/budget', icon: PiggyBank, label: 'Reporte de Presupuesto' },
+      { href: '/financial/funds', icon: Landmark, label: 'Saldos de Fondos' },
+      { href: '/financial/donations', icon: FileText, label: 'Reportes de Donaciones' },
+      { href: '/financial/new-transaction', icon: Plus, label: 'Nueva Transacción' },
+    ],
+  },
+  {
+    kind: 'group',
+    module: 'Oración',
+    label: 'Oración',
+    icon: BookHeart,
+    subItems: [
+      { href: '/prayer', icon: List, label: 'Peticiones' },
+      { href: '/prayer/new', icon: Plus, label: 'Nueva petición' },
+    ],
+  },
+  /**{
+    kind: 'group',
+    module: 'Grupos',
+    label: 'Grupos',
+    icon: Users,
+    subItems: [
+      { href: '/groups', icon: Users, label: 'Directorio de grupos' },
+      { href: '/groups/new', icon: Plus, label: 'Nuevo grupo' },
+      { href: '/groups/add-members', icon: UserPlus, label: 'Agregar miembros' },
+    ],
+  },
+  {
+    kind: 'group',
+    module: 'Voluntarios',
+    label: 'Voluntarios',
+    icon: HandHeart,
+    subItems: [
+      { href: '/volunteers', icon: List, label: 'Gestión' },
+      { href: '/volunteers/new', icon: Plus, label: 'Nuevo voluntario' },
+      { href: '/volunteers/tasks', icon: List, label: 'Tareas' },
+      { href: '/volunteers/planning', icon: Calendar, label: 'Planeación' },
+    ],
+  },**/
+  {
+    kind: 'group',
+    module: 'Eventos',
+    label: 'Eventos',
+    icon: Calendar,
+    subItems: [
+      { href: '/events', icon: CalendarDays, label: 'Calendario y gestión' },
+      { href: '/events/new', icon: Plus, label: 'Nuevo evento' },
+      { href: '/events/activities', icon: List, label: 'Actividades' },
+    ],
+  },
+  {
+    kind: 'group',
+    module: 'Biblioteca',
+    label: 'Biblioteca',
+    icon: Library,
+    subItems: [
+      { href: '/sermons', icon: Library, label: 'Librería' },
+      { href: '/sermons/list', icon: List, label: 'Lista de sermones' },
+      { href: '/sermons/videos', icon: Clapperboard, label: 'Vídeos' },
+      { href: '/sermons/audio', icon: Mic, label: 'Audio' },
+      { href: '/sermons/images', icon: ImageIcon, label: 'Imágenes' },
+      { href: '/sermons/new', icon: Plus, label: 'Nuevo sermón' },
+    ],
+  },
+  {
+    kind: 'group',
+    module: 'Ceremonias',
+    label: 'Ceremonias',
+    icon: BookHeart,
+    subItems: [
+      { href: '/ceremonies', icon: List, label: 'Registros' },
+      { href: '/ceremonies/new', icon: Plus, label: 'Nueva ceremonia' },
+      { href: '/ceremonies/export', icon: FileText, label: 'Exportar datos' },
+    ],
+  },
+  /**{
+    kind: 'group',
+    module: 'Instalaciones',
+    label: 'Instalaciones',
+    icon: Building,
+    subItems: [
+      { href: '/facilities', icon: List, label: 'Gestión de salones' },
+      { href: '/facilities/new', icon: Plus, label: 'Registrar salón' },
+    ],
+  },
+  {
+    kind: 'group',
+    module: 'Reportes',
+    label: 'Reportes',
+    icon: FileText,
+    subItems: [
+      { href: '/reports', icon: FileText, label: 'Generador de reportes' },
+      { href: '/reports/volunteers', icon: Users, label: 'Voluntarios' },
+    ],
+  },**/
   {
     kind: 'group',
     module: 'Inventario',
@@ -165,7 +300,13 @@ export function filterSidebarNavByModules(
   const normalize = (v: string) => v.trim().toLowerCase();
   const getAllowedForModule = (moduleName: string): string[] | undefined => {
     const target = normalize(moduleName);
-    const key = Object.keys(modules).find((k) => normalize(k) === target);
+    let key = Object.keys(modules).find((k) => normalize(k) === target);
+    
+    // Backwards compatibility for users whose roles still use 'Ofrendas' for both modules
+    if (!key && target === 'donaciones') {
+      key = Object.keys(modules).find((k) => normalize(k) === 'ofrendas');
+    }
+
     return key ? modules[key] : undefined;
   };
 
