@@ -22,11 +22,16 @@ const formatCurrency = (amount: number) => {
 };
 
 type Transaction = {
-    id: string;
-    type: 'income' | 'expense';
-    amount: number;
-    category: string;
-    date: string;
+  id: string;
+  type: 'income' | 'expense';
+  amount: number;
+  category: string;
+  date: string;
+};
+
+type SummaryItem = {
+  label: string;
+  amount: number;
 };
 
 export default function IncomeExpensePage() {
@@ -35,22 +40,22 @@ export default function IncomeExpensePage() {
   const [year, setYear] = React.useState(new Date().getFullYear().toString());
 
   React.useEffect(() => {
-      let mounted = true;
-      setLoading(true);
-      fetch(`/api/financial/summary?year=${year}`)
-        .then(res => res.json())
-        .then(data => {
-            if (mounted && !data.error) setSummary(data);
-        })
-        .catch(console.error)
-        .finally(() => {
-            if (mounted) setLoading(false);
-        });
-      return () => { mounted = false; };
+    let mounted = true;
+    setLoading(true);
+    fetch(`/api/financial/summary?year=${year}`)
+      .then(res => res.json())
+      .then(data => {
+        if (mounted && !data.error) setSummary(data);
+      })
+      .catch(console.error)
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
+    return () => { mounted = false; };
   }, [year]);
 
-  const income = summary?.income || [];
-  const expenses = summary?.expenses || [];
+  const income: SummaryItem[] = summary?.income || [];
+  const expenses: SummaryItem[] = summary?.expenses || [];
   const totalIncome = summary?.totalIncome || 0;
   const totalExpenses = summary?.totalExpenses || 0;
   const netIncome = summary?.netIncome || 0;
@@ -66,91 +71,91 @@ export default function IncomeExpensePage() {
           Exportar PDF
         </Button>
       </AppHeader>
-    <main className="flex-1 space-y-6 p-4 sm:p-8">
-      <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2">
-        <Button variant="outline" className="flex items-center gap-2 w-full sm:w-auto">
-          <CalendarIcon className="h-4 w-4" />
-          <span>Filtro de fechas general</span>
-        </Button>
-        <Select>
-          <SelectTrigger className="w-full sm:w-[180px]">
-            <SelectValue placeholder="Todas las Categorías" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todas las Categorías</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select>
-          <SelectTrigger className="w-full sm:w-[180px]">
-            <SelectValue placeholder="Todos los Fondos" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos los Fondos</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      
-      <Card>
-        <CardContent className="p-6">
+      <main className="flex-1 space-y-6 p-4 sm:p-8">
+        <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-2">
+          <Button variant="outline" className="flex items-center gap-2 w-full sm:w-auto">
+            <CalendarIcon className="h-4 w-4" />
+            <span>Filtro de fechas general</span>
+          </Button>
+          <Select>
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectValue placeholder="Todas las Categorías" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todas las Categorías</SelectItem>
+            </SelectContent>
+          </Select>
+          <Select>
+            <SelectTrigger className="w-full sm:w-[180px]">
+              <SelectValue placeholder="Todos los Fondos" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Todos los Fondos</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        <Card>
+          <CardContent className="p-6">
             {loading ? (
-                <div className="flex justify-center p-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                </div>
+              <div className="flex justify-center p-12">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
             ) : (
-            <div className="space-y-6">
+              <div className="space-y-6">
                 <div>
-                    <h2 className="text-2xl font-semibold mb-4">Ingresos</h2>
-                    {income.length === 0 ? (
-                        <p className="text-muted-foreground text-sm">No hay ingresos registrados</p>
-                    ) : (
-                        <div className="space-y-3">
-                            {income.map((item, index) => (
-                                <div key={index} className="flex justify-between items-center">
-                                    <p className="text-muted-foreground">{item.label}</p>
-                                    <p className="font-medium">{formatCurrency(item.amount)}</p>
-                                </div>
-                            ))}
+                  <h2 className="text-2xl font-semibold mb-4">Ingresos</h2>
+                  {income.length === 0 ? (
+                    <p className="text-muted-foreground text-sm">No hay ingresos registrados</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {income.map((item, index) => (
+                        <div key={index} className="flex justify-between items-center">
+                          <p className="text-muted-foreground">{item.label}</p>
+                          <p className="font-medium">{formatCurrency(item.amount)}</p>
                         </div>
-                    )}
-                    <Separator className="my-4" />
-                    <div className="flex justify-between items-center font-bold">
-                        <p>Ingresos Totales</p>
-                        <p className="text-green-600">{formatCurrency(totalIncome)}</p>
+                      ))}
                     </div>
+                  )}
+                  <Separator className="my-4" />
+                  <div className="flex justify-between items-center font-bold">
+                    <p>Ingresos Totales</p>
+                    <p className="text-green-600">{formatCurrency(totalIncome)}</p>
+                  </div>
                 </div>
 
-                 <div>
-                    <h2 className="text-2xl font-semibold mb-4">Gastos</h2>
-                    {expenses.length === 0 ? (
-                        <p className="text-muted-foreground text-sm">No hay gastos registrados</p>
-                    ) : (
-                        <div className="space-y-3">
-                            {expenses.map((item, index) => (
-                                <div key={index} className="flex justify-between items-center">
-                                    <p className="text-muted-foreground">{item.label}</p>
-                                    <p className="font-medium">{formatCurrency(item.amount)}</p>
-                                </div>
-                            ))}
+                <div>
+                  <h2 className="text-2xl font-semibold mb-4">Gastos</h2>
+                  {expenses.length === 0 ? (
+                    <p className="text-muted-foreground text-sm">No hay gastos registrados</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {expenses.map((item, index) => (
+                        <div key={index} className="flex justify-between items-center">
+                          <p className="text-muted-foreground">{item.label}</p>
+                          <p className="font-medium">{formatCurrency(item.amount)}</p>
                         </div>
-                    )}
-                    <Separator className="my-4" />
-                    <div className="flex justify-between items-center font-bold">
-                        <p>Gastos Totales</p>
-                        <p className="text-red-600">{formatCurrency(totalExpenses)}</p>
+                      ))}
                     </div>
+                  )}
+                  <Separator className="my-4" />
+                  <div className="flex justify-between items-center font-bold">
+                    <p>Gastos Totales</p>
+                    <p className="text-red-600">{formatCurrency(totalExpenses)}</p>
+                  </div>
                 </div>
-                
+
                 <div className="mt-8 bg-muted/50 p-4 rounded-lg">
-                     <div className="flex justify-between items-center font-bold text-xl">
-                        <p>Ingreso Neto</p>
-                        <p className={netIncome >= 0 ? "text-green-600" : "text-red-600"}>{formatCurrency(netIncome)}</p>
-                    </div>
+                  <div className="flex justify-between items-center font-bold text-xl">
+                    <p>Ingreso Neto</p>
+                    <p className={netIncome >= 0 ? "text-green-600" : "text-red-600"}>{formatCurrency(netIncome)}</p>
+                  </div>
                 </div>
-            </div>
+              </div>
             )}
-        </CardContent>
-      </Card>
-    </main>
+          </CardContent>
+        </Card>
+      </main>
     </div>
   );
 }

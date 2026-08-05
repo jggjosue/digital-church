@@ -17,18 +17,16 @@ import { cn } from '@/lib/utils';
 import { AppHeader } from '@/components/app-header';
 
 const formatCurrency = (amount: number, showSign = false) => {
-    const formatted = new Intl.NumberFormat('es-ES', {
+    const formatted = new Intl.NumberFormat('es-MX', {
       style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+      currency: 'MXN',
     }).format(Math.abs(amount));
 
     if (showSign) {
         return amount < 0 ? `(${formatted})` : formatted;
     }
     if (amount < 0) {
-        return `(${formatted})`
+        return `(${formatted})`;
     }
     return formatted;
 };
@@ -190,7 +188,7 @@ export default function FundBalancesPage() {
                             <td className="p-4">{fund.type}</td>
                             <td className="p-4 text-right font-medium">{formatCurrency(fund.balance)}</td>
                             <td className={cn("p-4 text-right", fund.ytdInflows > 0 ? 'text-green-600' : '')}>{formatCurrency(fund.ytdInflows)}</td>
-                            <td className={cn("p-4 text-right", fund.ytdOutflows < 0 ? 'text-red-600' : '')}>{formatCurrency(fund.ytdOutflows, true)}</td>
+                            <td className={cn("p-4 text-right", fund.ytdOutflows > 0 ? 'text-red-600' : '')}>{formatCurrency(fund.ytdOutflows)}</td>
                             <td className="p-4 text-center">
                                 <Badge variant="outline" className={statusColors[fund.status] || ''}>{fund.status}</Badge>
                             </td>

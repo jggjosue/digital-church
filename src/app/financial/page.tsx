@@ -157,7 +157,7 @@ export default function FinancialPage() {
         </Card>
     </div>
 
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+    <div className="w-full">
         <Card>
         <CardHeader>
             <CardTitle>Ingresos a lo largo del Tiempo</CardTitle>

@@ -49,9 +49,9 @@ export function createResourceHandlers(config: ResourceConfig) {
         const page = Math.max(1, Number(url.searchParams.get('page')) || 1);
         const limit = isAll ? 5000 : Math.min(500, Math.max(1, Number(url.searchParams.get('limit')) || 10));
         const skip = (page - 1) * limit;
-        
+
         const db = await getDb();
-        const total = await db.collection(config.collection).countDocuments(filter);
+        const total = await db.collection<ResourceDocument>(config.collection).countDocuments(filter);
         const items = await db.collection<ResourceDocument>(config.collection)
           .find(filter, { projection: { _id: 0 } })
           .sort({ createdAt: -1 })
@@ -59,7 +59,7 @@ export function createResourceHandlers(config: ResourceConfig) {
           .limit(limit)
           .toArray();
         const totalPages = Math.ceil(total / limit) || 1;
-        
+
         return NextResponse.json({ items, total, page, limit, totalPages });
       } catch (error) {
         console.error(`[api/${config.collection} GET]`, error);

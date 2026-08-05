@@ -16,11 +16,9 @@ import { cn } from '@/lib/utils';
 import { AppHeader } from '@/components/app-header';
 
 const formatCurrency = (amount: number, showSign = false) => {
-    const formatted = new Intl.NumberFormat('es-ES', {
+    const formatted = new Intl.NumberFormat('es-MX', {
       style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+      currency: 'MXN',
     }).format(Math.abs(amount));
 
     if (showSign) {
@@ -35,6 +33,12 @@ type Transaction = {
     amount: number;
     category: string;
     date: string;
+};
+
+type BudgetItem = {
+    category: string;
+    budget: number;
+    actual: number;
 };
 
 export default function BudgetReportPage() {
@@ -69,13 +73,13 @@ export default function BudgetReportPage() {
           });
       }
 
-      const incomeItems = summary?.income ? summary.income.map((i: any) => ({
+      const incomeItems: BudgetItem[] = summary?.income ? summary.income.map((i: any) => ({
           category: i.label,
           budget: 0,
           actual: i.amount
       })) : [];
 
-      const expenseItems = summary?.expenses ? summary.expenses.map((e: any) => ({
+      const expenseItems: BudgetItem[] = summary?.expenses ? summary.expenses.map((e: any) => ({
           category: e.label,
           budget: 0,
           actual: e.amount
@@ -224,7 +228,12 @@ export default function BudgetReportPage() {
                       <td className={cn("p-4 text-right", (data.expenses.totalBudget - data.expenses.totalActual) > 0 ? 'text-green-600' : 'text-red-600')}>{formatCurrency(data.expenses.totalBudget - data.expenses.totalActual)}</td>
                       <td className="p-4"></td>
                     </tr>
-                    {data.expenses.items.map((item, index) => {
+                    {data.expenses.items.length === 0 ? (
+                      <tr className="border-b">
+                        <td colSpan={5} className="p-4 text-center text-xs text-muted-foreground">No hay gastos ni deducciones registradas</td>
+                      </tr>
+                    ) : (
+                      data.expenses.items.map((item, index) => {
                          const variance = item.budget - item.actual;
                          const progress = getProgressValue(item.actual, item.budget);
                          return (
@@ -236,7 +245,8 @@ export default function BudgetReportPage() {
                                 <td className="p-4"><Progress value={progress} className={cn(progress > 100 ? '[&>div]:bg-red-600' : '')} /></td>
                             </tr>
                          )
-                    })}
+                      })
+                    )}
                     <tr className="font-bold bg-muted/50 border-t-2">
                         <td className="p-4">Total Neto</td>
                         <td className="p-4 text-right">{formatCurrency(data.netTotal.budget)}</td>

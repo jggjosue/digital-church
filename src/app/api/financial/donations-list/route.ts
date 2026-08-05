@@ -19,21 +19,21 @@ export async function GET(request: Request) {
     }
     const user = await currentUser();
     const email = user?.primaryEmailAddress?.emailAddress?.trim().toLowerCase() ?? '';
-    
+
     const db = await getDb();
-    
+
     const sessionMember = await db.collection<Record<string, unknown>>('members').findOne(
       { email },
       { projection: { _id: 0, staffRole: 1, churchIds: 1, templeIds: 1 } }
     );
-    
+
     let churchIdsScope: string[] | null = null;
     if (sessionMember && !isFullAccessStaffRole(sessionMember.staffRole as string | null | undefined)) {
       let ids = normalizeMemberChurchIds(sessionMember);
       if (isPastorScopedRole(sessionMember.staffRole as string | null | undefined)) {
         const access = await resolvePastorChurchAccess(db, email);
         if (access.mode === 'none') {
-           return NextResponse.json({ error: 'No tienes acceso a los datos' }, { status: 403 });
+          return NextResponse.json({ error: 'No tienes acceso a los datos' }, { status: 403 });
         }
         if (access.mode === 'subset') {
           ids = access.ids;
@@ -53,12 +53,12 @@ export async function GET(request: Request) {
     const filter: Record<string, unknown> = { type: 'income' };
 
     if (yearStr) {
-      filter.date = { 
-        $gte: `${yearStr}-01-01`, 
-        $lte: `${yearStr}-12-31T23:59:59.999Z` 
+      filter.date = {
+        $gte: `${yearStr}-01-01`,
+        $lte: `${yearStr}-12-31T23:59:59.999Z`
       };
     }
-    
+
     if (churchIdsScope && churchIdsScope.length > 0) {
       filter.churchId = { $in: churchIdsScope };
     }
@@ -72,61 +72,38 @@ export async function GET(request: Request) {
     if (churchIdsScope && churchIdsScope.length > 0) {
       offeringFilter.churchId = { $in: churchIdsScope };
     }
-    
-    const offerings = await db.collection('offering_registry').find(offeringFilter).toArray();
 
-    const monthNames = [
-      'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
-      'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
-    ];
+    const donationsDocs = await db.collection('donation')
+      .find(offeringFilter)
+      .toArray();
 
     const unifiedList: any[] = [];
 
-    // Map regular transactions
-    transactions.forEach(t => {
-        unifiedList.push({
-            id: t._id.toString(),
-            type: 'income',
-            amount: Number(t.amount) || 0,
-            category: t.category || 'Sin categoría',
-            fundId: t.fundId || 'Fondo General',
-            reference: t.reference || 'Anónimo',
-            date: t.date
-        });
+    // Map donations from 'donation' collection (Menú Donaciones)
+    donationsDocs.forEach(d => {
+      const donorName = d.donor ? `${d.donor.firstName || ''} ${d.donor.lastName || ''}`.trim() : '';
+      unifiedList.push({
+        id: d.id || d._id?.toString(),
+        type: 'income',
+        amount: Number(d.amount) || 0,
+        category: d.recordCategory || 'Donación',
+        fundId: d.fundCampaign || 'Fondo General',
+        reference: donorName || d.transferReference || 'Donante',
+        date: d.donationDate || d.createdAt || new Date().toISOString()
+      });
     });
 
-    // Map offerings
-    offerings.forEach(offering => {
-        if (!offering.records) return;
-        const year = parseInt(offering.year as string, 10) || new Date().getFullYear();
-
-        Object.entries(offering.records).forEach(([monthKey, monthData]) => {
-            const monthIndex = monthNames.indexOf(monthKey);
-            if (monthIndex === -1) return;
-            
-            const categories = (monthData as any).categories || [];
-            categories.forEach((category: any) => {
-                const catName = category.label || 'Ofrendas';
-                (category.weeks || []).forEach((week: any[], wIdx: number) => {
-                    (week || []).forEach((dayAmt: string, dIdx: number) => {
-                        const amt = Number(dayAmt) || 0;
-                        if (amt > 0) {
-                            const approxDay = Math.min(28, (wIdx * 7) + dIdx + 1);
-                            const dateStr = new Date(year, monthIndex, approxDay).toISOString();
-                            unifiedList.push({
-                                id: `offering-${offering._id}-${monthKey}-${catName}-${wIdx}-${dIdx}`,
-                                type: 'income',
-                                amount: amt,
-                                category: catName,
-                                fundId: 'Fondo General',
-                                reference: 'Ofrenda Colectada',
-                                date: dateStr
-                            });
-                        }
-                    });
-                });
-            });
-        });
+    // Map regular transactions of type income
+    transactions.forEach(t => {
+      unifiedList.push({
+        id: t._id.toString(),
+        type: 'income',
+        amount: Number(t.amount) || 0,
+        category: t.category || 'Donación',
+        fundId: t.fundId || 'Fondo General',
+        reference: t.reference || 'Anónimo',
+        date: t.date
+      });
     });
 
     unifiedList.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -136,11 +113,11 @@ export async function GET(request: Request) {
     const paginatedItems = unifiedList.slice((page - 1) * limit, page * limit);
 
     return NextResponse.json({
-        items: paginatedItems,
-        total,
-        totalPages,
-        page,
-        limit
+      items: paginatedItems,
+      total,
+      totalPages,
+      page,
+      limit
     });
 
   } catch (error) {

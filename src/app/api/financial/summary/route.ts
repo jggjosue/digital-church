@@ -70,6 +70,7 @@ export async function GET(request: Request) {
       offeringFilter.churchId = { $in: churchIdsScope };
     }
     const offerings = await db.collection('offering_registry').find(offeringFilter).toArray();
+    const donationsCollectionDocs = await db.collection('donation').find(offeringFilter).toArray();
 
     let totalDonations = 0;
     let donationsCount = 0;
@@ -121,6 +122,24 @@ export async function GET(request: Request) {
     ];
 
     for (const offering of offerings) {
+      if (Array.isArray(offering.deductions)) {
+        for (const deduction of offering.deductions) {
+          const amount = Number(deduction.amount) || 0;
+          const dDate = deduction.date as string | undefined;
+          if (yearStr && dDate && !dDate.startsWith(yearStr)) {
+            continue;
+          }
+          if (amount > 0) {
+            const concept = (deduction.concept as string) || 'Deducción de Ofrenda';
+            expenseMap[concept] = (expenseMap[concept] || 0) + amount;
+            totalExpenses += amount;
+
+            if (!fundStats['Fondo General']) fundStats['Fondo General'] = { inflows: 0, outflows: 0 };
+            fundStats['Fondo General'].outflows += amount;
+          }
+        }
+      }
+
       if (!offering.records) continue;
       for (const [monthKey, monthData] of Object.entries(offering.records)) {
         const monthIndex = monthNames.indexOf(monthKey);
@@ -151,6 +170,26 @@ export async function GET(request: Request) {
               fundStats['Fondo General'].inflows += categoryTotal;
            }
         }
+      }
+    }
+
+    for (const d of donationsCollectionDocs) {
+      const amount = Number(d.amount) || 0;
+      if (amount > 0) {
+        const catName = (d.recordCategory as string) || 'Donación';
+        incomeMap[catName] = (incomeMap[catName] || 0) + amount;
+        totalIncome += amount;
+        totalDonations += amount;
+        donationsCount++;
+
+        const dDate = new Date((d.donationDate || d.createdAt) as string);
+        if (!isNaN(dDate.getTime())) {
+          monthlyData[dDate.getMonth()].total += amount;
+        }
+
+        const fund = (d.fundCampaign as string) || 'Fondo General';
+        if (!fundStats[fund]) fundStats[fund] = { inflows: 0, outflows: 0 };
+        fundStats[fund].inflows += amount;
       }
     }
 
