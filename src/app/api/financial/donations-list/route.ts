@@ -67,14 +67,19 @@ export async function GET(request: Request) {
       .find(filter)
       .toArray();
 
-    const offeringFilter: Record<string, unknown> = {};
-    if (yearStr) offeringFilter.year = yearStr;
+    const donationFilter: Record<string, unknown> = {};
+    if (yearStr) {
+      donationFilter.$or = [
+        { year: yearStr },
+        { donationDate: { $regex: `^${yearStr}` } }
+      ];
+    }
     if (churchIdsScope && churchIdsScope.length > 0) {
-      offeringFilter.churchId = { $in: churchIdsScope };
+      donationFilter.churchId = { $in: churchIdsScope };
     }
 
     const donationsDocs = await db.collection('donation')
-      .find(offeringFilter)
+      .find(donationFilter)
       .toArray();
 
     const unifiedList: any[] = [];

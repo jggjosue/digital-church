@@ -67,6 +67,8 @@ export async function POST(request: Request) {
       title: data.title,
       description: data.description,
       privacy: data.privacy,
+      targetGroupId: data.targetGroupId,
+      targetGroupName: data.targetGroupName,
       isAnonymous: isAnonymous,
       status: 'Activo',
       submittedBy: isAnonymous ? 'Anónimo' : userName,

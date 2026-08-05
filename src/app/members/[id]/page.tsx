@@ -11,6 +11,7 @@ import {
   Briefcase,
   Building2,
   MapPin,
+  Users,
 } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -172,7 +173,18 @@ export default function MemberProfilePage() {
 
         const prayData = await prayRes.json().catch(() => []);
         if (Array.isArray(prayData)) {
-          setPrayers(prayData.filter(p => p.memberId === id));
+          const memberGroups = data.member?.groups || [];
+          const memberEmail = data.member?.email?.toLowerCase();
+          setPrayers(
+            prayData.filter(
+              (p: any) =>
+                p.memberId === id ||
+                (memberEmail && p.submittedByEmail?.toLowerCase() === memberEmail) ||
+                (p.privacy === 'Grupo Específico' &&
+                  p.targetGroupName &&
+                  memberGroups.some((g: string) => g.toLowerCase() === p.targetGroupName.toLowerCase()))
+            )
+          );
         }
 
         setLoadState('ready');
@@ -460,20 +472,36 @@ export default function MemberProfilePage() {
                       {prayers.length > 0 ? (
                         <ul className="space-y-4">
                           {prayers.map(p => (
-                            <li key={p.id || p._id} className="flex flex-col gap-1 p-3 border rounded-md">
-                              <div className="flex justify-between items-start">
-                                <p className="font-medium text-sm">{p.title}</p>
-                                <Badge variant={p.status === 'Respondido' ? 'default' : 'secondary'} className="text-[10px]">
-                                  {p.status}
-                                </Badge>
+                            <li key={p.id || p._id} className="flex flex-col gap-1.5 p-3 border rounded-md">
+                              <div className="flex justify-between items-start gap-2">
+                                <div>
+                                  <p className="font-medium text-sm">{p.title}</p>
+                                  {p.targetGroupName && (
+                                    <p className="text-xs text-primary font-medium flex items-center gap-1 mt-0.5">
+                                      <Users className="h-3 w-3" />
+                                      {p.targetGroupName}
+                                    </p>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                  <Badge variant="outline" className="text-[10px]">
+                                    {p.privacy}
+                                  </Badge>
+                                  <Badge variant={p.status === 'Respondido' ? 'default' : 'secondary'} className="text-[10px]">
+                                    {p.status}
+                                  </Badge>
+                                </div>
                               </div>
                               <p className="text-xs text-muted-foreground line-clamp-2">{p.description}</p>
-                              <p className="text-xs text-muted-foreground mt-1">{formatDateIso(p.createdAt)}</p>
+                              <div className="flex justify-between items-center text-[11px] text-muted-foreground mt-1">
+                                <span>Por: {p.submittedBy}</span>
+                                <span>{formatDateIso(p.createdAt)}</span>
+                              </div>
                             </li>
                           ))}
                         </ul>
                       ) : (
-                        <p className="text-sm text-muted-foreground">No ha enviado peticiones de oración.</p>
+                        <p className="text-sm text-muted-foreground">No hay peticiones de oración vinculadas a este perfil o sus grupos.</p>
                       )}
                     </TabsContent>
 

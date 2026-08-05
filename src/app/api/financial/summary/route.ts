@@ -70,7 +70,18 @@ export async function GET(request: Request) {
       offeringFilter.churchId = { $in: churchIdsScope };
     }
     const offerings = await db.collection('offering_registry').find(offeringFilter).toArray();
-    const donationsCollectionDocs = await db.collection('donation').find(offeringFilter).toArray();
+
+    const donationFilter: Record<string, unknown> = {};
+    if (yearStr) {
+      donationFilter.$or = [
+        { year: yearStr },
+        { donationDate: { $regex: `^${yearStr}` } }
+      ];
+    }
+    if (churchIdsScope && churchIdsScope.length > 0) {
+      donationFilter.churchId = { $in: churchIdsScope };
+    }
+    const donationsCollectionDocs = await db.collection('donation').find(donationFilter).toArray();
 
     let totalDonations = 0;
     let donationsCount = 0;

@@ -60,13 +60,17 @@ export default function PrayerRequestsPage() {
   const userName = user ? `${user.firstName || ''} ${user.lastName || ''}`.trim() : '';
 
   const [prayers, setPrayers] = React.useState<PrayerDocument[]>([]);
+  const [groups, setGroups] = React.useState<{ id: string; name: string }[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
 
   React.useEffect(() => {
-    fetch('/api/prayer')
-      .then((res) => res.json())
-      .then((data) => {
-        setPrayers(data);
+    Promise.all([
+      fetch('/api/prayer').then((res) => res.json()),
+      fetch('/api/prayer/groups').then((res) => res.json()),
+    ])
+      .then(([prayersData, groupsData]) => {
+        if (Array.isArray(prayersData)) setPrayers(prayersData);
+        if (groupsData && Array.isArray(groupsData.groups)) setGroups(groupsData.groups);
         setIsLoading(false);
       })
       .catch((err) => {
@@ -120,6 +124,9 @@ export default function PrayerRequestsPage() {
     }
     if (activeFilters.privacy.length > 0) {
         data = data.filter((req: PrayerDocument) => activeFilters.privacy.includes(req.privacy));
+    }
+    if (activeFilters.group !== 'all') {
+        data = data.filter((req: PrayerDocument) => req.targetGroupId === activeFilters.group || req.targetGroupName === activeFilters.group);
     }
     if (search.trim()) {
         const q = search.toLowerCase();
@@ -191,7 +198,14 @@ export default function PrayerRequestsPage() {
               <TableCell>
                 <div className="flex items-center gap-2">
                     {privacyIcons[request.privacy as keyof typeof privacyIcons] || <Globe className="h-4 w-4" />}
-                    <span>{request.privacy}</span>
+                    <div>
+                      <span>{request.privacy}</span>
+                      {request.targetGroupName && (
+                        <span className="text-xs text-muted-foreground font-normal block">
+                          ({request.targetGroupName})
+                        </span>
+                      )}
+                    </div>
                 </div>
               </TableCell>
               <TableCell className="text-right">
@@ -242,6 +256,11 @@ export default function PrayerRequestsPage() {
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">Todos los Grupos</SelectItem>
+                        {groups.map((g) => (
+                          <SelectItem key={g.id} value={g.id}>
+                            {g.name}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                 </Select>
             </div>
@@ -260,7 +279,11 @@ export default function PrayerRequestsPage() {
             description="Gestione las peticiones de oración y los informes de alabanza."
         >
             <div className="flex gap-2">
-                <Button variant="outline"><Users className="mr-2 h-4 w-4" /> Gestionar Grupos</Button>
+                <Button variant="outline" asChild>
+                  <Link href="/prayer/groups">
+                    <Users className="mr-2 h-4 w-4" /> Gestionar Grupos
+                  </Link>
+                </Button>
                 <Button asChild><Link href="/prayer/new"><Plus className="mr-2 h-4 w-4" /> Nueva Petición de Oración</Link></Button>
             </div>
         </AppHeader>
