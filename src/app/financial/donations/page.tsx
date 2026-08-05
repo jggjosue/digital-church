@@ -79,7 +79,7 @@ export default function DonationReportsPage() {
   const fetchTransactions = async (page: number) => {
     setLoading(true);
     try {
-        const res = await fetch(`/api/data/financial-transactions?page=${page}&limit=${itemsPerPage}&year=${selectedYear}&type=income`);
+        const res = await fetch(`/api/financial/donations-list?page=${page}&limit=${itemsPerPage}&year=${selectedYear}`);
         const data = await res.json();
         if (data.items) {
             setTransactions(data.items);

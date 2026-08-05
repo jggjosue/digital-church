@@ -60,6 +60,8 @@ export default function NewTransactionPage() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
   const [transactionType, setTransactionType] = React.useState<'income'|'expense'>('income');
+  const [isCustomCategory, setIsCustomCategory] = React.useState(false);
+  const [isCustomFund, setIsCustomFund] = React.useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -193,7 +195,22 @@ export default function NewTransactionPage() {
               <FormField control={form.control} name="category" render={({ field }) => (
                   <FormItem>
                       <FormLabel>Categoría</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      {isCustomCategory ? (
+                         <div className="flex gap-2">
+                             <FormControl>
+                                 <Input placeholder="Nombre de la categoría" {...field} autoFocus />
+                             </FormControl>
+                             <Button type="button" variant="outline" onClick={() => { setIsCustomCategory(false); field.onChange(''); }}>Volver a la lista</Button>
+                         </div>
+                      ) : (
+                      <Select onValueChange={(val) => {
+                          if (val === 'other') {
+                              setIsCustomCategory(true);
+                              field.onChange('');
+                          } else {
+                              field.onChange(val);
+                          }
+                      }} value={field.value || undefined}>
                           <FormControl>
                               <SelectTrigger>
                                   <SelectValue placeholder="Seleccione una categoría" />
@@ -204,8 +221,10 @@ export default function NewTransactionPage() {
                               <SelectItem value="Salarios y Beneficios">Salarios y Beneficios</SelectItem>
                               <SelectItem value="Servicios Públicos">Servicios Públicos</SelectItem>
                               <SelectItem value="Mantenimiento">Mantenimiento de Instalaciones</SelectItem>
+                              <SelectItem value="other">Otra categoría...</SelectItem>
                           </SelectContent>
                       </Select>
+                      )}
                       <FormMessage />
                   </FormItem>
               )} />
@@ -213,7 +232,22 @@ export default function NewTransactionPage() {
               <FormField control={form.control} name="fundId" render={({ field }) => (
                   <FormItem>
                       <FormLabel>Fondo / Ministerio</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      {isCustomFund ? (
+                         <div className="flex gap-2">
+                             <FormControl>
+                                 <Input placeholder="Nombre del fondo o ministerio" {...field} autoFocus />
+                             </FormControl>
+                             <Button type="button" variant="outline" onClick={() => { setIsCustomFund(false); field.onChange(''); }}>Volver a la lista</Button>
+                         </div>
+                      ) : (
+                      <Select onValueChange={(val) => {
+                          if (val === 'other') {
+                              setIsCustomFund(true);
+                              field.onChange('');
+                          } else {
+                              field.onChange(val);
+                          }
+                      }} value={field.value || undefined}>
                           <FormControl>
                               <SelectTrigger>
                                   <SelectValue placeholder="Seleccione un fondo o ministerio" />
@@ -224,8 +258,10 @@ export default function NewTransactionPage() {
                               <SelectItem value="Fondo de Construcción">Fondo de Construcción</SelectItem>
                               <SelectItem value="Fondo de Misiones">Fondo de Misiones</SelectItem>
                               <SelectItem value="Ministerio Juvenil">Ministerio Juvenil</SelectItem>
+                              <SelectItem value="other">Otro fondo...</SelectItem>
                           </SelectContent>
                       </Select>
+                      )}
                       <FormMessage />
                   </FormItem>
               )} />

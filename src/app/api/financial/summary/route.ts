@@ -64,6 +64,13 @@ export async function GET(request: Request) {
       .find(filter)
       .toArray();
 
+    const offeringFilter: Record<string, unknown> = {};
+    if (yearStr) offeringFilter.year = yearStr;
+    if (churchIdsScope && churchIdsScope.length > 0) {
+      offeringFilter.churchId = { $in: churchIdsScope };
+    }
+    const offerings = await db.collection('offering_registry').find(offeringFilter).toArray();
+
     let totalDonations = 0;
     let donationsCount = 0;
     const monthlyData = Array.from({ length: 12 }, (_, i) => {
@@ -75,6 +82,7 @@ export async function GET(request: Request) {
     const expenseMap: Record<string, number> = {};
     let totalIncome = 0;
     let totalExpenses = 0;
+    const fundStats: Record<string, { inflows: number, outflows: number }> = {};
 
     for (const t of transactions) {
       const type = t.type as 'income' | 'expense';
@@ -91,9 +99,58 @@ export async function GET(request: Request) {
         if (!isNaN(date.getTime())) {
           monthlyData[date.getMonth()].total += amount;
         }
+
+        if (t.fundId) {
+            if (!fundStats[t.fundId as string]) fundStats[t.fundId as string] = { inflows: 0, outflows: 0 };
+            fundStats[t.fundId as string].inflows += amount;
+        }
       } else {
         expenseMap[category] = (expenseMap[category] || 0) + amount;
         totalExpenses += amount;
+
+        if (t.fundId) {
+            if (!fundStats[t.fundId as string]) fundStats[t.fundId as string] = { inflows: 0, outflows: 0 };
+            fundStats[t.fundId as string].outflows += amount;
+        }
+      }
+    }
+
+    const monthNames = [
+      'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+      'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+    ];
+
+    for (const offering of offerings) {
+      if (!offering.records) continue;
+      for (const [monthKey, monthData] of Object.entries(offering.records)) {
+        const monthIndex = monthNames.indexOf(monthKey);
+        const categories = (monthData as any).categories || [];
+        for (const category of categories) {
+           let categoryTotal = 0;
+           for (const week of category.weeks || []) {
+              for (const day of week || []) {
+                 const amt = Number(day) || 0;
+                 if (amt > 0) {
+                    categoryTotal += amt;
+                    donationsCount++;
+                 }
+              }
+           }
+           if (categoryTotal > 0) {
+              const catName = category.label || 'Ofrendas';
+              incomeMap[catName] = (incomeMap[catName] || 0) + categoryTotal;
+              totalIncome += categoryTotal;
+              totalDonations += categoryTotal;
+
+              if (monthIndex >= 0 && monthIndex < 12) {
+                 monthlyData[monthIndex].total += categoryTotal;
+              }
+
+              // Assume offerings go to Fondo General by default
+              if (!fundStats['Fondo General']) fundStats['Fondo General'] = { inflows: 0, outflows: 0 };
+              fundStats['Fondo General'].inflows += categoryTotal;
+           }
+        }
       }
     }
 
@@ -110,7 +167,8 @@ export async function GET(request: Request) {
       expenses,
       totalIncome,
       totalExpenses,
-      netIncome
+      netIncome,
+      fundStats
     });
 
   } catch (error) {

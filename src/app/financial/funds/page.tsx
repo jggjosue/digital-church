@@ -47,35 +47,23 @@ type Transaction = {
 };
 
 export default function FundBalancesPage() {
-  const [transactions, setTransactions] = React.useState<Transaction[]>([]);
+  const [summary, setSummary] = React.useState<any>(null);
   const [loading, setLoading] = React.useState(true);
+  const [year, setYear] = React.useState(new Date().getFullYear().toString());
 
   React.useEffect(() => {
-      fetch('/api/data/financial-transactions')
+      setLoading(true);
+      fetch(`/api/financial/summary?year=${year}`)
         .then(res => res.json())
         .then(data => {
-            if (data.items) {
-                setTransactions(data.items);
-            }
+            if (!data.error) setSummary(data);
         })
         .catch(console.error)
         .finally(() => setLoading(false));
-  }, []);
+  }, [year]);
 
   const processData = () => {
-      const fundStats: Record<string, { inflows: number, outflows: number }> = {};
-      
-      transactions.forEach(t => {
-          if (!t.fundId) return;
-          if (!fundStats[t.fundId]) {
-              fundStats[t.fundId] = { inflows: 0, outflows: 0 };
-          }
-          if (t.type === 'income') {
-              fundStats[t.fundId].inflows += t.amount;
-          } else {
-              fundStats[t.fundId].outflows += t.amount;
-          }
-      });
+      const fundStats = summary?.fundStats || {};
 
       const funds = fundBalancesData.funds.map(fund => {
           const stats = fundStats[fund.name] || { inflows: 0, outflows: 0 };

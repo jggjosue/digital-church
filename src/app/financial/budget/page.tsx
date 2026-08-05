@@ -39,35 +39,36 @@ type Transaction = {
 };
 
 export default function BudgetReportPage() {
-  const [transactions, setTransactions] = React.useState<Transaction[]>([]);
+  const [summary, setSummary] = React.useState<any>(null);
   const [loading, setLoading] = React.useState(true);
+  const [year, setYear] = React.useState(new Date().getFullYear().toString());
 
   React.useEffect(() => {
-      fetch('/api/data/financial-transactions')
+      setLoading(true);
+      fetch(`/api/financial/summary?year=${year}`)
         .then(res => res.json())
         .then(data => {
-            if (data.items) {
-                setTransactions(data.items);
-            }
+            if (!data.error) setSummary(data);
         })
         .catch(console.error)
         .finally(() => setLoading(false));
-  }, []);
+  }, [year]);
 
   const processData = () => {
-      // Calculate actuals from transactions
       const actuals: Record<string, number> = {};
       let totalActualIncome = 0;
       let totalActualExpenses = 0;
       
-      transactions.forEach(t => {
-          actuals[t.category] = (actuals[t.category] || 0) + t.amount;
-          if (t.type === 'income') {
-              totalActualIncome += t.amount;
-          } else {
-              totalActualExpenses += t.amount;
-          }
-      });
+      if (summary) {
+          summary.income.forEach((i: any) => {
+              actuals[i.label] = i.amount;
+              totalActualIncome += i.amount;
+          });
+          summary.expenses.forEach((e: any) => {
+              actuals[e.label] = e.amount;
+              totalActualExpenses += e.amount;
+          });
+      }
 
       // Merge with hardcoded budget data
       const incomeItems = budgetReportData.income.items.map(item => {

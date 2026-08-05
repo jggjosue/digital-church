@@ -130,8 +130,8 @@ export const PORTAL_NAV_ENTRIES: PortalNavEntry[] = [
       { href: '/donations/fundraising', icon: PiggyBank, label: 'Recaudación de Fondos' },
     ],
   },
-  {
-    kind: 'group',
+  ...(process.env.NEXT_PUBLIC_ENABLE_FINANCIAL === 'true' ? [{
+    kind: 'group' as const,
     module: 'Finanzas',
     label: 'Finanzas',
     icon: DollarSign,
@@ -143,7 +143,7 @@ export const PORTAL_NAV_ENTRIES: PortalNavEntry[] = [
       { href: '/financial/donations', icon: FileText, label: 'Reportes de Donaciones' },
       { href: '/financial/new-transaction', icon: Plus, label: 'Nueva Transacción' },
     ],
-  },
+  }] : []),
   ...(process.env.NEXT_PUBLIC_ENABLE_PRAYER === 'true' ? [{
     kind: 'group' as const,
     module: 'Oración',

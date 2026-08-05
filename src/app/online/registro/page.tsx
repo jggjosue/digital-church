@@ -114,9 +114,9 @@ const distributeWeeklyTotal = (total: number) => {
 
 /** Categorías base para eventos online */
 const baseOnlineCategories: CategoryRecord[] = [
-  { id: 'youtube', label: 'YouTube', weeks: [] },
-  { id: 'facebook', label: 'Facebook Live', weeks: [] },
-  { id: 'zoom', label: 'Zoom', weeks: [] },
+  { id: 'jovenes', label: 'Jóvenes', weeks: [] },
+  { id: 'femenil', label: 'Femenil', weeks: [] },
+  { id: 'varones', label: 'Varones', weeks: [] },
   { id: 'otros', label: 'Otros', weeks: [] },
 ];
 
@@ -620,9 +620,9 @@ export default function OnlineRegistroPage() {
             {/* Platform legend */}
             <div className="mt-4 flex flex-wrap gap-2">
               {[
-                { label: 'YouTube', color: 'bg-red-500/15 text-red-600 dark:text-red-400 border-red-200/40 dark:border-red-800/40' },
-                { label: 'Facebook Live', color: 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-200/40 dark:border-blue-800/40' },
-                { label: 'Zoom', color: 'bg-sky-500/15 text-sky-600 dark:text-sky-400 border-sky-200/40 dark:border-sky-800/40' },
+                { label: 'Jóvenes', color: 'bg-red-500/15 text-red-600 dark:text-red-400 border-red-200/40 dark:border-red-800/40' },
+                { label: 'Femenil', color: 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-200/40 dark:border-blue-800/40' },
+                { label: 'Varones', color: 'bg-sky-500/15 text-sky-600 dark:text-sky-400 border-sky-200/40 dark:border-sky-800/40' },
                 { label: 'Otros', color: 'bg-slate-500/15 text-slate-600 dark:text-slate-400 border-slate-200/40 dark:border-slate-800/40' },
               ].map((p) => (
                 <span key={p.label} className={cn('inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium', p.color)}>
@@ -723,7 +723,7 @@ export default function OnlineRegistroPage() {
                                       )}
                                     </div>
                                   ))}
-                                  <div className="rounded-lg border bg-muted/40 px-3 py-2 text-center text-xs font-semibold uppercase text-muted-foreground">Nueva plataforma</div>
+                                  <div className="rounded-lg border bg-muted/40 px-3 py-2 text-center text-xs font-semibold uppercase text-muted-foreground">Nueva categoría</div>
 
                                   {/* Data rows */}
                                   {weekDays.map((day, dayIndex) => (
@@ -768,7 +768,7 @@ export default function OnlineRegistroPage() {
                                               className="h-12 w-full text-xs font-semibold"
                                               onClick={() => setInlineCategoryInputByMonth((prev) => ({ ...prev, [monthKey]: true }))}
                                             >
-                                              Nueva Plataforma
+                                              Nueva Categoría
                                             </Button>
                                           )
                                         ) : (

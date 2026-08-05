@@ -15,9 +15,9 @@ import { CalendarIcon, Download, Loader2 } from 'lucide-react';
 import { AppHeader } from '@/components/app-header';
 
 const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('es-ES', {
+  return new Intl.NumberFormat('es-MX', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'MXN',
   }).format(amount);
 };
 
@@ -32,16 +32,22 @@ type Transaction = {
 export default function IncomeExpensePage() {
   const [summary, setSummary] = React.useState<any>(null);
   const [loading, setLoading] = React.useState(true);
+  const [year, setYear] = React.useState(new Date().getFullYear().toString());
 
   React.useEffect(() => {
-      fetch('/api/financial/summary')
+      let mounted = true;
+      setLoading(true);
+      fetch(`/api/financial/summary?year=${year}`)
         .then(res => res.json())
         .then(data => {
-            setSummary(data);
+            if (mounted && !data.error) setSummary(data);
         })
         .catch(console.error)
-        .finally(() => setLoading(false));
-  }, []);
+        .finally(() => {
+            if (mounted) setLoading(false);
+        });
+      return () => { mounted = false; };
+  }, [year]);
 
   const income = summary?.income || [];
   const expenses = summary?.expenses || [];

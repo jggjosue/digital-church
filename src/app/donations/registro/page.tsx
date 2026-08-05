@@ -88,6 +88,11 @@ export default function OfferingRegistryPage() {
     month: MonthKey;
     week: number;
   } | null>(null);
+  const [editingCategoryTarget, setEditingCategoryTarget] = React.useState<{
+    month: MonthKey;
+    id: string;
+  } | null>(null);
+  const [editingCategoryLabel, setEditingCategoryLabel] = React.useState('');
   const [loading, setLoading] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
   const [importing, setImporting] = React.useState(false);
@@ -214,6 +219,25 @@ export default function OfferingRegistryPage() {
     if (!permissions.can(OFFERING_PERMISSIONS.DELETE_CATEGORIES)) return;
     setDeletedCategories(true);
     setRecords((previous) => ({ ...previous, [month]: { ...previous[month], categories: previous[month].categories.filter((category) => category.id !== id) } }));
+  };
+
+  const saveCategoryTitle = (month: MonthKey, id: string) => {
+    if (!canEdit) return;
+    const nextLabel = editingCategoryLabel.trim();
+    if (!nextLabel) {
+      setEditingCategoryTarget(null);
+      return;
+    }
+    setRecords((previous) => ({
+      ...previous,
+      [month]: {
+        ...previous[month],
+        categories: previous[month].categories.map((category) =>
+          category.id === id ? { ...category, label: nextLabel } : category
+        ),
+      },
+    }));
+    setEditingCategoryTarget(null);
   };
 
   const save = async (silent = false): Promise<boolean> => {
@@ -377,16 +401,76 @@ export default function OfferingRegistryPage() {
                 const hasDays = Array.from({ length: 7 }, (_, day) => calendarCell(Number(year), monthIndex, week, day)).some(Boolean);
                 if (!hasDays) return null;
                 const weekTotal = records[month].categories.reduce((sum, category) => sum + category.weeks[week].reduce((a, b) => a + b, 0), 0);
-                return <Card key={week}><CardContent className="space-y-3 p-3 sm:p-4"><div className="flex flex-col gap-1 min-[380px]:flex-row min-[380px]:justify-between"><p className="font-bold">Semana {week + 1}</p><p className="font-semibold text-primary">Total: {money(weekTotal)}</p></div><RegistryCalendarScroller minWidth={800}><div className="grid gap-2" style={{ gridTemplateColumns: `140px repeat(${records[month].categories.length}, minmax(130px, 1fr)) 170px` }}>
+                return <Card key={week}><CardContent className="space-y-3 p-3 sm:p-4"><div className="flex flex-col gap-1 min-[380px]:flex-row min-[380px]:justify-between"><p className="font-bold">Semana {week + 1}</p><p className="font-semibold text-primary">Total: {money(weekTotal)}</p></div><RegistryCalendarScroller minWidth={800}><div className="grid gap-2" style={{ gridTemplateColumns: `140px repeat(${records[month].categories.length}, minmax(130px, 1fr)) 150px 170px` }}>
                   <div className="rounded-lg border bg-muted/40 p-2 text-center text-xs font-semibold uppercase">Día</div>
-                  {records[month].categories.map((category) => <div key={category.id} className="relative rounded-lg border bg-muted/40 p-2 text-center text-xs font-semibold uppercase">{permissions.can(OFFERING_PERMISSIONS.DELETE_CATEGORIES) ? <button type="button" aria-label={`Eliminar ${category.label}`} className="absolute right-1 top-1 text-muted-foreground hover:text-destructive" onClick={() => removeCategory(month, category.id)}><XCircle className="h-4 w-4" /></button> : null}{category.label}</div>)}
-                  <div className="rounded-lg border bg-muted/40 p-2 text-center text-xs font-semibold uppercase text-muted-foreground">Subtotal diario</div>
+                  {records[month].categories.map((category) => (
+                    <div
+                      key={category.id}
+                      className="relative rounded-lg border bg-muted/40 p-2 text-center text-xs font-semibold uppercase flex flex-col justify-center"
+                      onDoubleClick={() => {
+                        if (canEdit) {
+                          setEditingCategoryTarget({ month, id: category.id });
+                          setEditingCategoryLabel(category.label);
+                        }
+                      }}
+                      title={canEdit ? "Doble clic para editar título" : undefined}
+                    >
+                      {permissions.can(OFFERING_PERMISSIONS.DELETE_CATEGORIES) ? (
+                        <button type="button" aria-label={`Eliminar ${category.label}`} className="absolute right-1 top-1 text-muted-foreground hover:text-destructive z-10" onClick={(e) => { e.stopPropagation(); removeCategory(month, category.id); }}><XCircle className="h-4 w-4" /></button>
+                      ) : null}
+                      {editingCategoryTarget?.month === month && editingCategoryTarget?.id === category.id ? (
+                        <Input
+                          autoFocus
+                          value={editingCategoryLabel}
+                          onChange={(e) => setEditingCategoryLabel(e.target.value)}
+                          onBlur={() => saveCategoryTitle(month, category.id)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') { e.preventDefault(); saveCategoryTitle(month, category.id); }
+                            if (e.key === 'Escape') setEditingCategoryTarget(null);
+                          }}
+                          className="h-8 border bg-background text-center text-xs font-semibold uppercase px-1 mt-3"
+                        />
+                      ) : (
+                        <span className={permissions.can(OFFERING_PERMISSIONS.DELETE_CATEGORIES) ? "block mt-3" : "block"}>{category.label}</span>
+                      )}
+                    </div>
+                  ))}
+                  <div className="rounded-lg border bg-muted/40 p-2 text-center text-xs font-semibold uppercase text-muted-foreground flex items-center justify-center">Nueva <br/>categoría</div>
+                  <div className="rounded-lg border bg-muted/40 p-2 text-center text-xs font-semibold uppercase text-muted-foreground flex items-center justify-center">Subtotal diario</div>
                   {Array.from({ length: 7 }, (_, day) => {
                     const date = calendarCell(Number(year), monthIndex, week, day);
                     const dayTotal = records[month].categories.reduce((sum, category) => sum + category.weeks[week][day], 0);
                     return <React.Fragment key={day}>
                       <div className={cn('rounded-lg border p-2 text-center', !date && 'bg-muted/20 text-muted-foreground')}><p className="text-xs font-semibold uppercase">{DAYS[day]}</p><p className="text-lg font-bold">{date ? String(date.getDate()).padStart(2, '0') : '--'}</p></div>
                       {records[month].categories.map((category) => <div key={category.id} className="space-y-1"><CurrencyAmountInput currency={currency} value={category.weeks[week][day]} onChange={(value) => updateValue(month, category.id, week, day, value)} disabled={!date || !canEdit} ariaLabel={`${category.label} ${date ? date.toLocaleDateString('es-MX') : 'sin fecha'}`} /><Select value={(category.paymentMethods ?? emptyPaymentMethods())[week][day]} onValueChange={(value) => updatePaymentMethod(month, category.id, week, day, value as PaymentMethod)} disabled={!date || !canEdit}><SelectTrigger className="h-8 text-[11px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="cash">Efectivo</SelectItem><SelectItem value="transfer">Transferencia</SelectItem><SelectItem value="check">Cheque</SelectItem><SelectItem value="card">Tarjeta</SelectItem></SelectContent></Select></div>)}
+                      <div className="flex flex-1 flex-col justify-center">
+                        {day === 6 && canEdit ? (
+                          inlineCategoryTarget?.month === month && inlineCategoryTarget?.week === week ? (
+                            <Input
+                              autoFocus
+                              value={newCategory}
+                              onChange={(e) => setNewCategory(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') { e.preventDefault(); addCategory(month); }
+                                if (e.key === 'Escape') setInlineCategoryTarget(null);
+                              }}
+                              placeholder="Categoría"
+                              className="h-full min-h-[48px] text-[11px] text-center font-semibold"
+                            />
+                          ) : (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="h-full min-h-[48px] w-full text-[11px] font-semibold whitespace-normal px-1"
+                              onClick={() => setInlineCategoryTarget({ month, week })}
+                            >
+                              + Columna
+                            </Button>
+                          )
+                        ) : (
+                          <div className="h-full min-h-[48px] w-full rounded-lg border bg-muted/20" />
+                        )}
+                      </div>
                       <div className="flex min-h-20 items-center justify-end rounded-lg border bg-primary/5 px-3 text-sm font-bold text-primary">{date ? money(dayTotal) : '—'}</div>
                     </React.Fragment>;
                   })}
