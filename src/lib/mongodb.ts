@@ -6,18 +6,32 @@ const clientOptions = {
   maxIdleTimeMS: 60_000,
 };
 
-/** Nombre de base de datos. Si la URI incluye `/nombre` tras el host, se usa ese; si no, `MONGO_DB_NAME` o `digital-church`. */
-function resolveDatabaseName(connection: string): string {
+/**
+ * Resuelve el nombre de la base de datos según el ambiente (dev vs prod) y el usuario.
+ * - Si `MONGO_DB_NAME` está definido explícitamente en el entorno, se prioriza.
+ * - En Producción (`NODE_ENV === 'production'`), apunta a `digital-church` (o `MONGO_DB_NAME_PROD`).
+ * - En Desarrollo (`NODE_ENV !== 'production'`), para el usuario `joshuesitogonzalez2012@gmail.com` (o en dev), apunta a `test` (o `MONGO_DB_NAME_DEV`).
+ */
+export function resolveDatabaseName(connection: string, userEmail?: string): string {
   if (process.env.MONGO_DB_NAME?.trim()) {
     return process.env.MONGO_DB_NAME.trim();
   }
-  const noQuery = connection.split('?')[0];
-  const segments = noQuery.split('/').filter(Boolean);
-  const last = segments[segments.length - 1];
-  if (last && !last.includes('@') && !last.includes('.')) {
-    return decodeURIComponent(last);
+
+  const isProd = process.env.NODE_ENV === 'production';
+  const devTestUser = process.env.DEV_TEST_USER_EMAIL?.trim() || 'joshuesitogonzalez2012@gmail.com';
+  const devDbName = process.env.MONGO_DB_NAME_DEV?.trim() || 'test';
+  const prodDbName = process.env.MONGO_DB_NAME_PROD?.trim() || 'digital-church';
+
+  if (isProd) {
+    return prodDbName;
   }
-  return 'digital-church';
+
+  // Ambiente desarrollo
+  if (!userEmail || userEmail.toLowerCase() === devTestUser.toLowerCase()) {
+    return devDbName;
+  }
+
+  return devDbName;
 }
 
 declare global {
@@ -66,8 +80,20 @@ export async function getMongoClient(): Promise<MongoClient> {
   return getClientPromise();
 }
 
-export async function getDb(): Promise<Db> {
+export async function getDb(userEmail?: string): Promise<Db> {
   const uri = requireMongoUri();
   const client = await getClientPromise();
-  return client.db(resolveDatabaseName(uri));
+  
+  let email = userEmail;
+  if (!email && typeof window === 'undefined') {
+    try {
+      const { currentUser } = await import('@clerk/nextjs/server');
+      const user = await currentUser();
+      email = user?.primaryEmailAddress?.emailAddress;
+    } catch {
+      // Ignorar si se ejecuta fuera del contexto de una solicitud HTTP de Clerk
+    }
+  }
+
+  return client.db(resolveDatabaseName(uri, email));
 }

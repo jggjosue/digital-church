@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -12,6 +11,7 @@ import {
   Trash2,
   ChevronLeft,
   ChevronRight,
+  Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,14 +19,22 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Image from 'next/image';
 import { PlaceHolderImages } from '@/lib/placeholder-images';
-import { events as allEvents } from '@/lib/data';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { useMediaQuery } from '@/hooks/use-media-query';
 import Link from 'next/link';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { AppHeader } from '@/components/app-header';
+import { useToast } from '@/hooks/use-toast';
 
-type Event = (typeof allEvents)[0];
+type Event = {
+  id: string;
+  title: string;
+  description?: string;
+  location?: string;
+  category: string;
+  startAt: string;
+  endAt?: string;
+};
 
 const eventCategoryColors: { [key: string]: string } = {
   'Estudio Bíblico': 'bg-purple-100 text-purple-800 border-purple-200',
@@ -45,6 +53,9 @@ const getFirstDayOfMonth = (year: number, month: number) => {
 
 function EventDetails({ event, date, onEventDelete }: { event: Event | null, date: Date | null, onEventDelete: (event: Event) => void }) {
     if (!event || !date) return null;
+    
+    const startAt = new Date(event.startAt);
+
     return (
         <div className="mt-6">
             <Image
@@ -55,8 +66,8 @@ function EventDetails({ event, date, onEventDelete }: { event: Event | null, dat
                 className="rounded-lg object-cover w-full"
                 data-ai-hint="people studying"
             />
-            <Badge variant="outline" className={`mt-4 ${eventCategoryColors[event.category]}`}>
-                {event.category}
+            <Badge variant="outline" className={`mt-4 ${eventCategoryColors[event.category] || 'bg-gray-100 text-gray-800 border-gray-200'}`}>
+                {event.category || 'General'}
             </Badge>
             <h3 className="mt-2 text-2xl font-bold">{event.title}</h3>
             <p className="mt-2 text-muted-foreground">
@@ -67,16 +78,15 @@ function EventDetails({ event, date, onEventDelete }: { event: Event | null, dat
                     <CalendarIcon className="h-5 w-5 text-muted-foreground mt-1" />
                     <div>
                         <p className="font-semibold">Fecha y Hora</p>
-                        <p className="text-muted-foreground">{new Date(event.date).toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
-                        <p className="text-muted-foreground">{event.time}</p>
+                        <p className="text-muted-foreground">{startAt.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+                        <p className="text-muted-foreground">{startAt.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</p>
                     </div>
                 </div>
                 <div className="flex items-start gap-4">
                     <MapPin className="h-5 w-5 text-muted-foreground mt-1" />
                     <div>
                         <p className="font-semibold">Ubicación</p>
-                        <p className="text-muted-foreground">{event.location}</p>
-                        <p className="text-muted-foreground">{event.address}</p>
+                        <p className="text-muted-foreground">{event.location || 'Sin ubicación específica'}</p>
                     </div>
                 </div>
             </div>
@@ -91,12 +101,38 @@ function EventDetails({ event, date, onEventDelete }: { event: Event | null, dat
 }
 
 export default function EventsPage() {
-  const [events, setEvents] = React.useState<Event[]>(allEvents);
-  const [currentDate, setCurrentDate] = React.useState(new Date(2024, 9, 11)); // October 11, 2024
-  const [selectedEvent, setSelectedEvent] = React.useState<Event | null>(events.find(e => e.id === 3) as Event);
-  const [selectedDay, setSelectedDay] = React.useState<number>(11);
+  const [events, setEvents] = React.useState<Event[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [currentDate, setCurrentDate] = React.useState(new Date());
+  const [selectedEvent, setSelectedEvent] = React.useState<Event | null>(null);
+  const [selectedDay, setSelectedDay] = React.useState<number>(new Date().getDate());
   const isDesktop = useMediaQuery("(min-width: 1024px)");
   const [eventToDelete, setEventToDelete] = React.useState<Event | null>(null);
+  const [deleting, setDeleting] = React.useState(false);
+  const { toast } = useToast();
+
+  React.useEffect(() => {
+    fetch('/api/data/events')
+      .then(res => res.json())
+      .then(data => {
+        if (data.items) {
+          setEvents(data.items);
+          if (data.items.length > 0) {
+              const now = new Date();
+              const currentMonthEvents = data.items.filter((e: Event) => {
+                const d = new Date(e.startAt);
+                return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+              });
+              if (currentMonthEvents.length > 0) {
+                  setSelectedEvent(currentMonthEvents[0]);
+                  setSelectedDay(new Date(currentMonthEvents[0].startAt).getDate());
+              }
+          }
+        }
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
@@ -139,13 +175,23 @@ export default function EventsPage() {
 
   const selectedDate = new Date(year, month, selectedDay);
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (eventToDelete) {
-      setEvents(events.filter(e => e.id !== eventToDelete.id));
-      if (selectedEvent?.id === eventToDelete.id) {
-        setSelectedEvent(null);
+      setDeleting(true);
+      try {
+        const res = await fetch(`/api/data/events/${eventToDelete.id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error('No se pudo eliminar el evento.');
+        setEvents(events.filter(e => e.id !== eventToDelete.id));
+        if (selectedEvent?.id === eventToDelete.id) {
+          setSelectedEvent(null);
+        }
+        toast({ title: 'Evento eliminado' });
+      } catch (err) {
+        toast({ variant: 'destructive', title: 'Error', description: err instanceof Error ? err.message : 'Error desconocido' });
+      } finally {
+        setDeleting(false);
+        setEventToDelete(null);
       }
-      setEventToDelete(null);
     }
   };
 
@@ -181,7 +227,7 @@ export default function EventsPage() {
                 <Button variant="ghost" size="icon" onClick={handlePrevMonth}>
                   <ChevronLeft className="h-5 w-5" />
                 </Button>
-                <h2 className="text-xl font-semibold">
+                <h2 className="text-xl font-semibold capitalize">
                   {currentDate.toLocaleString('es-ES', { month: 'long', year: 'numeric' })}
                 </h2>
                 <Button variant="ghost" size="icon" onClick={handleNextMonth}>
@@ -190,12 +236,16 @@ export default function EventsPage() {
               </div>
               <div className="flex items-center gap-1 rounded-lg bg-muted p-1">
                 <Button variant="ghost" size="sm" className="bg-background shadow-sm">Mes</Button>
-                <Button variant="ghost" size="sm">Semana</Button>
-                <Button variant="ghost" size="sm">Día</Button>
+                <Button variant="ghost" size="sm" asChild><Link href="/events/activities">Día</Link></Button>
               </div>
             </div>
           </CardHeader>
           <CardContent>
+            {loading ? (
+              <div className="flex justify-center p-12">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
             <div className="grid grid-cols-7 gap-px border-t border-l bg-border">
               {dayNames.map((day) => (
                 <div key={day} className="py-2 text-center text-xs font-medium text-muted-foreground bg-card">
@@ -204,7 +254,7 @@ export default function EventsPage() {
               ))}
               {calendarDays.map((date, index) => {
                  const dayEvents = events.filter(event => {
-                    const eventDate = new Date(event.date);
+                    const eventDate = new Date(event.startAt);
                     return eventDate.getFullYear() === year && eventDate.getMonth() === month && eventDate.getDate() === date.day && date.isCurrentMonth;
                 });
 
@@ -220,7 +270,7 @@ export default function EventsPage() {
                             {eventToDisplay && (
                               <SheetTrigger asChild>
                                 <div 
-                                  className={`p-1 rounded-md text-xs truncate cursor-pointer ${eventCategoryColors[eventToDisplay.category]} ${selectedEvent?.id === eventToDisplay.id ? 'ring-2 ring-primary' : ''}`}
+                                  className={`p-1 rounded-md text-xs truncate cursor-pointer ${eventCategoryColors[eventToDisplay.category] || 'bg-gray-100 text-gray-800'} ${selectedEvent?.id === eventToDisplay.id ? 'ring-2 ring-primary' : ''}`}
                                   onClick={() => handleSelectEvent(eventToDisplay, date.day)}
                                 >
                                     <span className='hidden sm:inline'>{eventToDisplay.title.split(' ').slice(0,2).join(' ')}</span>
@@ -231,7 +281,7 @@ export default function EventsPage() {
                         </div>
                       </div>
                       {!isDesktop && eventToDisplay && (
-                        <SheetContent side="bottom" className="h-[80%]">
+                        <SheetContent side="bottom" className="h-[80%] overflow-y-auto">
                             <EventDetails event={selectedEvent} date={selectedDate} onEventDelete={setEventToDelete} />
                         </SheetContent>
                       )}
@@ -239,11 +289,12 @@ export default function EventsPage() {
                 );
               })}
             </div>
+            )}
           </CardContent>
         </Card>
       </div>
 
-      <aside className="w-full lg:w-96 border-l p-8 bg-background hidden lg:block">
+      <aside className="w-full lg:w-96 border-l p-8 bg-background hidden lg:block overflow-y-auto">
         <h2 className="text-xl font-bold">Detalles del Evento</h2>
         <p className="text-muted-foreground text-sm">
             {selectedDate.toLocaleDateString('es-ES', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
@@ -263,7 +314,9 @@ export default function EventsPage() {
             </AlertDialogHeader>
             <AlertDialogFooter className="sm:justify-center">
                 <AlertDialogCancel onClick={() => setEventToDelete(null)}>Cancelar</AlertDialogCancel>
-                <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">Confirmar Eliminación</AlertDialogAction>
+                <AlertDialogAction onClick={handleDelete} disabled={deleting} className="bg-destructive hover:bg-destructive/90">
+                  {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Confirmar Eliminación'}
+                </AlertDialogAction>
             </AlertDialogFooter>
         </AlertDialogContent>
 

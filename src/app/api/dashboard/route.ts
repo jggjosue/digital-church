@@ -207,6 +207,8 @@ function emptyDashboardStats(
     demographics: ages,
     upcomingEvents: [],
     prayerRequests: [],
+    sermonsPublished: 0,
+    prayersThisWeek: 0,
   };
 }
 
@@ -300,8 +302,19 @@ export async function GET(request: Request) {
       eventType: 'event',
       eventStartDate: { $exists: true, $nin: [null, ''] },
     };
+    const ceremonyQuery: Record<string, unknown> = {
+      date: { $exists: true, $nin: [null, ''] },
+    };
     if (churchIdsScope && churchIdsScope.length > 0) {
       eventQuery.churchId = { $in: churchIdsScope };
+      ceremonyQuery.churchId = { $in: churchIdsScope };
+    }
+
+    const sermonQuery: Record<string, unknown> = {
+      status: 'published'
+    };
+    if (churchIdsScope && churchIdsScope.length > 0) {
+      sermonQuery.churchId = { $in: churchIdsScope };
     }
 
     const ministryMongoFilter: Record<string, unknown> =
@@ -321,6 +334,8 @@ export async function GET(request: Request) {
       donationByMonthAgg,
       membersProj,
       upcomingRaw,
+      sermonsPublished,
+      ceremoniesRaw
     ] = await Promise.all([
       db.collection(MEMBERS_COLLECTION).countDocuments(membersCountFilter),
       countNewMembers(db, curStart, curEnd, memberTempleMatch),
@@ -353,6 +368,16 @@ export async function GET(request: Request) {
           },
         })
         .toArray(),
+      db.collection('sermons').countDocuments(sermonQuery),
+      db.collection('ceremonies').find(ceremonyQuery, {
+        projection: {
+            _id: 0,
+            id: 1,
+            type: 1,
+            date: 1,
+            notes: 1,
+        }
+      }).toArray()
     ]);
 
     const byYm = new Map(donationByMonthAgg.map((x) => [x._id, x.total]));
@@ -459,6 +484,16 @@ export async function GET(request: Request) {
         const location = typeof raw.notes === 'string' ? raw.notes : '';
         return { id, title, start, time, location };
       })
+      .concat(ceremoniesRaw.map((doc) => {
+        const raw = doc as Record<string, unknown>;
+        const id = typeof raw.id === 'string' ? raw.id : '';
+        const title = typeof raw.type === 'string' ? raw.type : 'Ceremonia';
+        const startRaw = typeof raw.date === 'string' ? raw.date : '';
+        const start = startRaw.length >= 10 ? startRaw.substring(0, 10) : '';
+        const time = startRaw.length >= 16 ? startRaw.substring(11, 16) : '';
+        const location = typeof raw.notes === 'string' ? raw.notes : '';
+        return { id, title, start, time, location };
+      }))
       .filter((e) => e.start >= todayYmd)
       .sort((a, b) => a.start.localeCompare(b.start))
       .slice(0, 8)
@@ -487,6 +522,7 @@ export async function GET(request: Request) {
     }
 
     let prayerRequests: DashboardPrayerItem[] = [];
+    let prayersThisWeek = 0;
     for (const col of ['prayer_requests', 'prayer']) {
       try {
         const exists = await db.listCollections({ name: col }, { nameOnly: true }).toArray();
@@ -526,6 +562,12 @@ export async function GET(request: Request) {
           }
           return { id, request, submitted };
         });
+        
+        prayersThisWeek = await db.collection(col).countDocuments({
+           ...prayerFilter,
+           createdAt: { $gte: curStart.toISOString(), $lte: curEnd.toISOString() }
+        });
+
         if (prayerRequests.length > 0) break;
       } catch {
         /* vacío */
@@ -550,6 +592,8 @@ export async function GET(request: Request) {
       demographics,
       upcomingEvents,
       prayerRequests,
+      sermonsPublished,
+      prayersThisWeek,
     };
 
     return NextResponse.json(stats);

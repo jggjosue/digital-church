@@ -1,12 +1,10 @@
-
 'use client';
 
 import * as React from 'react';
 import {
-  ArrowLeft,
   Search,
   Download,
-  FileText,
+  Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -27,23 +25,56 @@ import {
 } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
 import Link from 'next/link';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { AppHeader } from '@/components/app-header';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-const allCeremonies = [
-    { id: 1, person: 'Michael Johnson', type: 'Matrimonio', date: '15 de Sep, 2023', officiant: 'Pastor David Chen', details: 'Michael Johnson & Jessica Lee' },
-    { id: 2, person: 'Michael Johnson', type: 'Dedicación de Niño', date: '05 de Ago, 2023', officiant: 'Pastor David Chen', details: 'Hijo: Michael Johnson Jr.' },
-    { id: 3, person: 'Jessica Lee', type: 'Matrimonio', date: '15 de Sep, 2023', officiant: 'Pastor David Chen', details: 'Michael Johnson & Jessica Lee' },
-    { id: 4, person: 'Emily White', type: 'Bautismo', date: '22 de Oct, 2023', officiant: 'Pastor David Chen', details: 'Bautismo por inmersión' },
-    { id: 5, person: 'Olivia Rodriguez', type: 'Dedicación de Niño', date: '05 de Ago, 2023', officiant: 'Pastor Liam Rodriguez', details: 'Padres: Liam & Maria Rodriguez' },
-];
+type Ceremony = {
+    id: string;
+    type: string;
+    date: string;
+    participants: string[];
+    officiant?: string;
+    notes?: string;
+    status: string;
+};
+
+type FormattedCeremony = {
+    id: string;
+    person: string;
+    type: string;
+    date: string;
+    officiant: string;
+    details: string;
+};
 
 export default function ExportCeremoniesPage() {
+    const [allCeremonies, setAllCeremonies] = React.useState<FormattedCeremony[]>([]);
+    const [loading, setLoading] = React.useState(true);
     const [searchTerm, setSearchTerm] = React.useState('');
-    const [filteredCeremonies, setFilteredCeremonies] = React.useState(allCeremonies);
-    const [selectedCeremonies, setSelectedCeremonies] = React.useState<number[]>([]);
+    const [filteredCeremonies, setFilteredCeremonies] = React.useState<FormattedCeremony[]>([]);
+    const [selectedCeremonies, setSelectedCeremonies] = React.useState<string[]>([]);
+
+    React.useEffect(() => {
+        fetch('/api/data/ceremonies')
+            .then(res => res.json())
+            .then(data => {
+                if (data.items) {
+                    const formatted = data.items.map((c: Ceremony) => ({
+                        id: c.id,
+                        person: c.participants.join(', '),
+                        type: c.type,
+                        date: new Date(c.date).toLocaleDateString('es-ES'),
+                        officiant: c.officiant || 'N/A',
+                        details: c.notes || 'N/A'
+                    }));
+                    setAllCeremonies(formatted);
+                    setFilteredCeremonies(formatted);
+                }
+            })
+            .catch(console.error)
+            .finally(() => setLoading(false));
+    }, []);
 
     React.useEffect(() => {
         const results = allCeremonies.filter(ceremony =>
@@ -52,13 +83,13 @@ export default function ExportCeremoniesPage() {
             ceremony.officiant.toLowerCase().includes(searchTerm.toLowerCase())
         );
         setFilteredCeremonies(results);
-    }, [searchTerm]);
+    }, [searchTerm, allCeremonies]);
 
     const handleSelectAll = (checked: boolean) => {
         setSelectedCeremonies(checked ? filteredCeremonies.map(c => c.id) : []);
     };
 
-    const handleSelectOne = (id: number, checked: boolean) => {
+    const handleSelectOne = (id: string, checked: boolean) => {
         if (checked) {
             setSelectedCeremonies([...selectedCeremonies, id]);
         } else {
@@ -69,8 +100,7 @@ export default function ExportCeremoniesPage() {
     const generatePDF = () => {
         const doc = new jsPDF();
         const selectedData = allCeremonies.filter(c => selectedCeremonies.includes(c.id));
-        const personName = selectedData.length > 0 ? selectedData[0].person : 'Miembros';
-
+        
         // Header
         doc.setFontSize(22);
         doc.setFont('helvetica', 'bold');
@@ -80,7 +110,6 @@ export default function ExportCeremoniesPage() {
         doc.text('Otorgado por Grace Chapel', 105, 30, { align: 'center' });
 
         // Church Logo (Placeholder)
-        // You can add a real logo here if you have one as a base64 string
         doc.rect(15, 15, 20, 20);
         doc.text('Logo', 25, 27, { align: 'center'});
 
@@ -112,7 +141,6 @@ export default function ExportCeremoniesPage() {
         doc.save(`certificado_ceremonias.pdf`);
     };
 
-
   return (
     <div className="flex flex-col flex-1">
       <AppHeader
@@ -121,7 +149,7 @@ export default function ExportCeremoniesPage() {
       >
         <div className="flex justify-end gap-2">
             <Button variant="outline" asChild><Link href="/ceremonies">Cancelar</Link></Button>
-            <Button onClick={generatePDF} disabled={selectedCeremonies.length === 0}>
+            <Button onClick={generatePDF} disabled={selectedCeremonies.length === 0 || loading}>
                 <Download className="mr-2 h-4 w-4" />
                 Exportar PDF ({selectedCeremonies.length})
             </Button>
@@ -159,7 +187,12 @@ export default function ExportCeremoniesPage() {
             </CardDescription>
         </CardHeader>
         <CardContent>
-            <div className="overflow-x-auto">
+            {loading ? (
+                <div className="flex justify-center p-8">
+                    <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                </div>
+            ) : (
+            <div className="overflow-x-auto min-h-[300px]">
                 <Table>
                     <TableHeader>
                     <TableRow>
@@ -190,9 +223,17 @@ export default function ExportCeremoniesPage() {
                         <TableCell>{ceremony.officiant}</TableCell>
                         </TableRow>
                     ))}
+                    {filteredCeremonies.length === 0 && (
+                        <TableRow>
+                            <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                                No se encontraron registros de ceremonias.
+                            </TableCell>
+                        </TableRow>
+                    )}
                     </TableBody>
                 </Table>
             </div>
+            )}
         </CardContent>
       </Card>
 

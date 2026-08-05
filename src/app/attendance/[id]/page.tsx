@@ -20,6 +20,10 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Check, ChevronsUpDown } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import {
   Select,
   SelectContent,
@@ -70,7 +74,7 @@ export default function AttendanceChurchDetailPage() {
   const [attendanceMode, setAttendanceMode] = React.useState<'presencial' | 'online'>(
     'presencial'
   );
-  const [eventWeekday, setEventWeekday] = React.useState('');
+  const [eventWeekdays, setEventWeekdays] = React.useState<string[]>([]);
   const [eventTime, setEventTime] = React.useState('');
   const [eventStartDate, setEventStartDate] = React.useState('');
   const [eventEndDate, setEventEndDate] = React.useState('');
@@ -131,8 +135,8 @@ export default function AttendanceChurchDetailPage() {
     if (!eventTime.trim()) {
       nextErrors.eventTime = 'Seleccione un horario.';
     }
-    if (eventType === 'service' && !eventWeekday.trim()) {
-      nextErrors.eventWeekday = 'Seleccione el día de la semana.';
+    if (eventType === 'service' && eventWeekdays.length === 0) {
+      nextErrors.eventWeekdays = 'Seleccione al menos un día de la semana.';
     }
     if (eventType === 'event' && !eventStartDate.trim()) {
       nextErrors.eventStartDate = 'Seleccione la fecha de inicio.';
@@ -165,7 +169,7 @@ export default function AttendanceChurchDetailPage() {
           eventType,
           eventName: eventName.trim(),
           attendanceMode,
-          eventWeekday: eventType === 'service' ? eventWeekday.trim() : '',
+          eventWeekday: eventType === 'service' ? eventWeekdays.join(', ') : '',
           eventTime: eventTime.trim(),
           eventStartDate: eventType === 'event' ? eventStartDate.trim() : '',
           eventEndDate: eventType === 'event' ? eventEndDate.trim() : '',
@@ -182,7 +186,7 @@ export default function AttendanceChurchDetailPage() {
       });
       setEventName('');
       setAttendanceMode('presencial');
-      setEventWeekday('');
+      setEventWeekdays([]);
       setEventTime('');
       setEventStartDate('');
       setEventEndDate('');
@@ -265,23 +269,46 @@ export default function AttendanceChurchDetailPage() {
             </div>
             {eventType === 'service' ? (
               <div className="space-y-2">
-                <Label>Día de la semana</Label>
-                <Select value={eventWeekday} onValueChange={setEventWeekday}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Seleccione día" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Lunes">Lunes</SelectItem>
-                    <SelectItem value="Martes">Martes</SelectItem>
-                    <SelectItem value="Miércoles">Miércoles</SelectItem>
-                    <SelectItem value="Jueves">Jueves</SelectItem>
-                    <SelectItem value="Viernes">Viernes</SelectItem>
-                    <SelectItem value="Sábado">Sábado</SelectItem>
-                    <SelectItem value="Domingo">Domingo</SelectItem>
-                  </SelectContent>
-                </Select>
-                {fieldErrors.eventWeekday ? (
-                  <p className="text-xs text-destructive">{fieldErrors.eventWeekday}</p>
+                <Label>Días de la semana</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      className={cn('w-full justify-between font-normal', eventWeekdays.length === 0 && 'text-muted-foreground')}
+                    >
+                      {eventWeekdays.length > 0
+                        ? eventWeekdays.join(', ')
+                        : 'Seleccione días'}
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-2" align="start">
+                    <div className="flex flex-col gap-2">
+                      {['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo'].map((day) => {
+                        const checked = eventWeekdays.includes(day);
+                        return (
+                          <label
+                            key={day}
+                            className="flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 hover:bg-muted"
+                          >
+                            <Checkbox
+                              checked={checked}
+                              onCheckedChange={(c) => {
+                                setEventWeekdays((prev) =>
+                                  c ? [...prev, day] : prev.filter((d) => d !== day)
+                                );
+                              }}
+                            />
+                            <span className="text-sm">{day}</span>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+                {fieldErrors.eventWeekdays ? (
+                  <p className="text-xs text-destructive">{fieldErrors.eventWeekdays}</p>
                 ) : null}
               </div>
             ) : (

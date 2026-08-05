@@ -72,6 +72,7 @@ export const createDonationSchema = z
 
 export type DonationDocument = z.infer<typeof createDonationSchema> & {
   id: string;
+  year?: string;
   createdAt: string;
   updatedAt: string;
 };

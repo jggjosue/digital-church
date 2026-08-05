@@ -39,7 +39,61 @@ export async function GET() {
       .sort({ donationDate: -1, createdAt: -1 })
       .toArray();
 
-    return NextResponse.json({ donations });
+    const offeringFilter: Record<string, unknown> = {};
+    if (scope.kind === 'scoped' && scope.filter && scope.filter.churchId) {
+      offeringFilter.churchId = scope.filter.churchId;
+    } else if (scope.kind === 'none') {
+      offeringFilter.churchId = '__no_church_access__';
+    }
+
+    const offeringDocs = await db.collection('offering_registry').find(offeringFilter).toArray();
+    const synthesizedOfferings: DonationDocument[] = [];
+
+    for (const off of offeringDocs) {
+      if (!off.records) continue;
+      const churchName = (off.churchName as string) || 'Templo';
+      for (const [monthKey, monthData] of Object.entries(off.records)) {
+        const categories = (monthData as any)?.categories || [];
+        for (const cat of categories) {
+          let catTotal = 0;
+          for (const week of cat.weeks || []) {
+            for (const day of week || []) {
+              catTotal += Number(day) || 0;
+            }
+          }
+          if (catTotal > 0) {
+            synthesizedOfferings.push({
+              id: `offering-${off.churchId}-${off.year}-${monthKey}-${cat.id || cat.label}`,
+              recordCategory: 'offering',
+              donor: {
+                memberId: 'offering-registry',
+                firstName: 'Registro',
+                lastName: 'Ofrendas',
+                email: '',
+                phone: '',
+              },
+              churchId: off.churchId as string,
+              churchName: churchName,
+              attendanceEvent: { id: 'service', name: `Ofrendas ${monthKey} ${off.year}` },
+              amount: catTotal,
+              donationDate: `${off.year}-01-01T00:00:00.000Z`,
+              fundCampaign: 'general-fund',
+              paymentMethod: 'cash',
+              transferReference: '',
+              donationFrequency: 'monthly',
+              notes: `Ofrenda ${cat.label} - ${monthKey} ${off.year}`,
+              createdAt: `${off.year}-01-01T00:00:00.000Z`,
+              updatedAt: `${off.year}-01-01T00:00:00.000Z`,
+            });
+          }
+        }
+      }
+    }
+
+    const allItems = [...donations, ...synthesizedOfferings];
+    allItems.sort((a, b) => new Date(b.donationDate || b.createdAt).getTime() - new Date(a.donationDate || a.createdAt).getTime());
+
+    return NextResponse.json({ donations: allItems });
   } catch (e) {
     console.error('[api/donations GET]', e);
     const message =
@@ -83,8 +137,14 @@ export async function POST(request: Request) {
     }
 
     const now = new Date().toISOString();
+    const dateObj = new Date(payload.donationDate);
+    const donationYear = !isNaN(dateObj.getTime())
+      ? dateObj.getFullYear().toString()
+      : new Date().getFullYear().toString();
+
     const doc: DonationDocument = {
       id: randomUUID(),
+      year: donationYear,
       ...payload,
       notes: payload.notes.trim(),
       transferReference: payload.transferReference.trim(),

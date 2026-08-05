@@ -88,6 +88,11 @@ export default function OfferingRegistryPage() {
     month: MonthKey;
     week: number;
   } | null>(null);
+  const [editingCategoryTarget, setEditingCategoryTarget] = React.useState<{
+    month: MonthKey;
+    id: string;
+  } | null>(null);
+  const [editingCategoryLabel, setEditingCategoryLabel] = React.useState('');
   const [loading, setLoading] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
   const [importing, setImporting] = React.useState(false);
@@ -136,14 +141,25 @@ export default function OfferingRegistryPage() {
       }))
       .filter((category) => category.total > 0)
       .sort((a, b) => b.total - a.total || a.label.localeCompare(b.label, 'es'));
+
+    const monthIncome = registryMonthTotal(records[month]);
+    const monthPrefix = `${year}-${String(monthIndex + 1).padStart(2, '0')}`;
+    const monthDeductions = deductions
+      .filter((d) => d.date.startsWith(monthPrefix))
+      .reduce((sum, d) => sum + d.amount, 0);
+    const monthNet = monthIncome - monthDeductions;
+
     return {
       month,
       label: MONTH_SHORT_NAMES[monthIndex],
       week: total > 0 ? weekIndex + 1 : null,
       total,
       categories,
+      monthIncome,
+      monthDeductions,
+      monthNet,
     };
-  }), [records]);
+  }), [records, year, deductions]);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -214,6 +230,25 @@ export default function OfferingRegistryPage() {
     if (!permissions.can(OFFERING_PERMISSIONS.DELETE_CATEGORIES)) return;
     setDeletedCategories(true);
     setRecords((previous) => ({ ...previous, [month]: { ...previous[month], categories: previous[month].categories.filter((category) => category.id !== id) } }));
+  };
+
+  const saveCategoryTitle = (month: MonthKey, id: string) => {
+    if (!canEdit) return;
+    const nextLabel = editingCategoryLabel.trim();
+    if (!nextLabel) {
+      setEditingCategoryTarget(null);
+      return;
+    }
+    setRecords((previous) => ({
+      ...previous,
+      [month]: {
+        ...previous[month],
+        categories: previous[month].categories.map((category) =>
+          category.id === id ? { ...category, label: nextLabel } : category
+        ),
+      },
+    }));
+    setEditingCategoryTarget(null);
   };
 
   const save = async (silent = false): Promise<boolean> => {
@@ -377,16 +412,76 @@ export default function OfferingRegistryPage() {
                 const hasDays = Array.from({ length: 7 }, (_, day) => calendarCell(Number(year), monthIndex, week, day)).some(Boolean);
                 if (!hasDays) return null;
                 const weekTotal = records[month].categories.reduce((sum, category) => sum + category.weeks[week].reduce((a, b) => a + b, 0), 0);
-                return <Card key={week}><CardContent className="space-y-3 p-3 sm:p-4"><div className="flex flex-col gap-1 min-[380px]:flex-row min-[380px]:justify-between"><p className="font-bold">Semana {week + 1}</p><p className="font-semibold text-primary">Total: {money(weekTotal)}</p></div><RegistryCalendarScroller minWidth={800}><div className="grid gap-2" style={{ gridTemplateColumns: `140px repeat(${records[month].categories.length}, minmax(130px, 1fr)) 170px` }}>
+                return <Card key={week}><CardContent className="space-y-3 p-3 sm:p-4"><div className="flex flex-col gap-1 min-[380px]:flex-row min-[380px]:justify-between"><p className="font-bold">Semana {week + 1}</p><p className="font-semibold text-primary">Total: {money(weekTotal)}</p></div><RegistryCalendarScroller minWidth={800}><div className="grid gap-2" style={{ gridTemplateColumns: `140px repeat(${records[month].categories.length}, minmax(130px, 1fr)) 150px 170px` }}>
                   <div className="rounded-lg border bg-muted/40 p-2 text-center text-xs font-semibold uppercase">Día</div>
-                  {records[month].categories.map((category) => <div key={category.id} className="relative rounded-lg border bg-muted/40 p-2 text-center text-xs font-semibold uppercase">{permissions.can(OFFERING_PERMISSIONS.DELETE_CATEGORIES) ? <button type="button" aria-label={`Eliminar ${category.label}`} className="absolute right-1 top-1 text-muted-foreground hover:text-destructive" onClick={() => removeCategory(month, category.id)}><XCircle className="h-4 w-4" /></button> : null}{category.label}</div>)}
-                  <div className="rounded-lg border bg-muted/40 p-2 text-center text-xs font-semibold uppercase text-muted-foreground">Subtotal diario</div>
+                  {records[month].categories.map((category) => (
+                    <div
+                      key={category.id}
+                      className="relative rounded-lg border bg-muted/40 p-2 text-center text-xs font-semibold uppercase flex flex-col justify-center"
+                      onDoubleClick={() => {
+                        if (canEdit) {
+                          setEditingCategoryTarget({ month, id: category.id });
+                          setEditingCategoryLabel(category.label);
+                        }
+                      }}
+                      title={canEdit ? "Doble clic para editar título" : undefined}
+                    >
+                      {permissions.can(OFFERING_PERMISSIONS.DELETE_CATEGORIES) ? (
+                        <button type="button" aria-label={`Eliminar ${category.label}`} className="absolute right-1 top-1 text-muted-foreground hover:text-destructive z-10" onClick={(e) => { e.stopPropagation(); removeCategory(month, category.id); }}><XCircle className="h-4 w-4" /></button>
+                      ) : null}
+                      {editingCategoryTarget?.month === month && editingCategoryTarget?.id === category.id ? (
+                        <Input
+                          autoFocus
+                          value={editingCategoryLabel}
+                          onChange={(e) => setEditingCategoryLabel(e.target.value)}
+                          onBlur={() => saveCategoryTitle(month, category.id)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') { e.preventDefault(); saveCategoryTitle(month, category.id); }
+                            if (e.key === 'Escape') setEditingCategoryTarget(null);
+                          }}
+                          className="h-8 border bg-background text-center text-xs font-semibold uppercase px-1 mt-3"
+                        />
+                      ) : (
+                        <span className={permissions.can(OFFERING_PERMISSIONS.DELETE_CATEGORIES) ? "block mt-3" : "block"}>{category.label}</span>
+                      )}
+                    </div>
+                  ))}
+                  <div className="rounded-lg border bg-muted/40 p-2 text-center text-xs font-semibold uppercase text-muted-foreground flex items-center justify-center">Nueva <br/>categoría</div>
+                  <div className="rounded-lg border bg-muted/40 p-2 text-center text-xs font-semibold uppercase text-muted-foreground flex items-center justify-center">Subtotal diario</div>
                   {Array.from({ length: 7 }, (_, day) => {
                     const date = calendarCell(Number(year), monthIndex, week, day);
                     const dayTotal = records[month].categories.reduce((sum, category) => sum + category.weeks[week][day], 0);
                     return <React.Fragment key={day}>
                       <div className={cn('rounded-lg border p-2 text-center', !date && 'bg-muted/20 text-muted-foreground')}><p className="text-xs font-semibold uppercase">{DAYS[day]}</p><p className="text-lg font-bold">{date ? String(date.getDate()).padStart(2, '0') : '--'}</p></div>
                       {records[month].categories.map((category) => <div key={category.id} className="space-y-1"><CurrencyAmountInput currency={currency} value={category.weeks[week][day]} onChange={(value) => updateValue(month, category.id, week, day, value)} disabled={!date || !canEdit} ariaLabel={`${category.label} ${date ? date.toLocaleDateString('es-MX') : 'sin fecha'}`} /><Select value={(category.paymentMethods ?? emptyPaymentMethods())[week][day]} onValueChange={(value) => updatePaymentMethod(month, category.id, week, day, value as PaymentMethod)} disabled={!date || !canEdit}><SelectTrigger className="h-8 text-[11px]"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="cash">Efectivo</SelectItem><SelectItem value="transfer">Transferencia</SelectItem><SelectItem value="check">Cheque</SelectItem><SelectItem value="card">Tarjeta</SelectItem></SelectContent></Select></div>)}
+                      <div className="flex flex-1 flex-col justify-center">
+                        {day === 6 && canEdit ? (
+                          inlineCategoryTarget?.month === month && inlineCategoryTarget?.week === week ? (
+                            <Input
+                              autoFocus
+                              value={newCategory}
+                              onChange={(e) => setNewCategory(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') { e.preventDefault(); addCategory(month); }
+                                if (e.key === 'Escape') setInlineCategoryTarget(null);
+                              }}
+                              placeholder="Categoría"
+                              className="h-full min-h-[48px] text-[11px] text-center font-semibold"
+                            />
+                          ) : (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="h-full min-h-[48px] w-full text-[11px] font-semibold whitespace-normal px-1"
+                              onClick={() => setInlineCategoryTarget({ month, week })}
+                            >
+                              + Columna
+                            </Button>
+                          )
+                        ) : (
+                          <div className="h-full min-h-[48px] w-full rounded-lg border bg-muted/20" />
+                        )}
+                      </div>
                       <div className="flex min-h-20 items-center justify-end rounded-lg border bg-primary/5 px-3 text-sm font-bold text-primary">{date ? money(dayTotal) : '—'}</div>
                     </React.Fragment>;
                   })}
@@ -458,12 +553,7 @@ export default function OfferingRegistryPage() {
           </CardContent>
         </Card>
 
-        <Card><CardContent className="space-y-5 p-5 sm:p-6">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between"><div><h2 className="flex items-center gap-2 text-xl font-bold"><Landmark className="h-5 w-5 text-primary" />Conciliación bancaria</h2><p className="mt-1 text-sm text-muted-foreground">Compara las ofrendas netas, después de deducciones, con los depósitos registrados.</p></div><span className={cn('w-fit rounded-full px-3 py-1 text-sm font-bold', Math.abs(reconciliationDifference) < 0.01 ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-900')}>{Math.abs(reconciliationDifference) < 0.01 ? 'Conciliado' : `Diferencia: ${money(reconciliationDifference)}`}</span></div>
-          <div className="grid gap-3 sm:grid-cols-4"><div className="rounded-xl border p-4"><p className="text-xs font-semibold uppercase text-muted-foreground">Ofrendas</p><p className="mt-1 text-xl font-bold">{money(annualTotal)}</p></div><div className="rounded-xl border p-4"><p className="text-xs font-semibold uppercase text-muted-foreground">Deducciones</p><p className="mt-1 text-xl font-bold text-red-700 dark:text-red-300">− {money(deductionsTotal)}</p></div><div className="rounded-xl border p-4"><p className="text-xs font-semibold uppercase text-muted-foreground">Depositado</p><p className="mt-1 text-xl font-bold">{money(depositedTotal)}</p></div><div className="rounded-xl border p-4"><p className="text-xs font-semibold uppercase text-muted-foreground">Pendiente</p><p className="mt-1 text-xl font-bold">{money(reconciliationDifference)}</p></div></div>
-          {canEdit ? <div className="grid gap-3 rounded-xl border bg-muted/20 p-4 md:grid-cols-[170px_minmax(180px,1fr)_minmax(180px,1fr)_auto]"><Input type="date" aria-label="Fecha del depósito" value={depositDate} onChange={(event) => setDepositDate(event.target.value)} /><CurrencyAmountInput value={depositAmount} currency={currency} onChange={setDepositAmount} ariaLabel="Importe del depósito" /><Input aria-label="Referencia bancaria" placeholder="Referencia bancaria" value={depositReference} onChange={(event) => setDepositReference(event.target.value)} /><Button type="button" onClick={addBankDeposit}><Plus className="mr-2 h-4 w-4" />Agregar depósito</Button></div> : null}
-          {bankDeposits.length ? <div className="overflow-x-auto rounded-xl border"><table className="w-full min-w-[560px] text-sm"><thead className="bg-muted/50 text-left"><tr><th className="p-3">Fecha</th><th className="p-3">Referencia</th><th className="p-3 text-right">Importe</th><th className="w-12 p-3"><span className="sr-only">Acciones</span></th></tr></thead><tbody>{bankDeposits.map((deposit) => <tr key={deposit.id} className="border-t"><td className="p-3">{deposit.date}</td><td className="p-3">{deposit.reference || 'Sin referencia'}</td><td className="p-3 text-right font-semibold">{money(deposit.amount)}</td><td className="p-3">{canEdit ? <Button type="button" size="icon" variant="ghost" aria-label={`Eliminar depósito ${deposit.date}`} onClick={() => setBankDeposits((current) => current.filter((item) => item.id !== deposit.id))}><Trash2 className="h-4 w-4" /></Button> : null}</td></tr>)}</tbody></table></div> : <p className="rounded-xl border border-dashed p-5 text-center text-sm text-muted-foreground">Todavía no hay depósitos bancarios registrados.</p>}
-        </CardContent></Card>
+
 
         <Card className="overflow-hidden border-0 bg-gradient-to-br from-slate-950 via-slate-900 to-blue-950 text-slate-50">
           <CardContent className="space-y-5 p-6 md:p-8">
@@ -478,26 +568,48 @@ export default function OfferingRegistryPage() {
             </div>
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
               {monthlyPeakWeeks.map((row) => (
-                <div key={row.month} className="min-h-44 rounded-2xl border border-slate-700/70 bg-slate-900/50 p-5">
-                  <div className="flex items-start justify-between gap-4 border-b border-slate-700/70 pb-3">
-                    <div>
-                      <p className="text-sm font-bold uppercase tracking-wide text-slate-400">{row.label}</p>
-                      {row.week != null ? <p className="mt-1 text-xs text-slate-500">Semana {row.week}</p> : null}
+                <div key={row.month} className="flex flex-col justify-between rounded-2xl border border-slate-700/70 bg-slate-900/50 p-5 shadow-sm">
+                  <div>
+                    <div className="flex items-start justify-between border-b border-slate-700/70 pb-3">
+                      <div>
+                        <p className="text-sm font-bold uppercase tracking-wide text-slate-300">{row.label}</p>
+                        {row.week != null ? <p className="mt-0.5 text-xs text-slate-400">Semana máx: {row.week}</p> : null}
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 block">Diferencia Neto</span>
+                        <span className={cn("text-xl font-extrabold tabular-nums", row.monthNet < 0 ? "text-red-400" : "text-emerald-300")}>
+                          {money(row.monthNet)}
+                        </span>
+                      </div>
                     </div>
-                    <p className="text-right text-2xl font-extrabold tabular-nums text-emerald-100">{money(row.total)}</p>
+
+                    <div className="mt-3 space-y-1.5 rounded-xl border border-slate-800/80 bg-slate-950/40 p-3 text-xs">
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-400">Ingresos:</span>
+                        <span className="font-semibold text-slate-200 tabular-nums">{money(row.monthIncome)}</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-slate-400">Deducciones:</span>
+                        <span className="font-semibold text-red-400 tabular-nums">− {money(row.monthDeductions)}</span>
+                      </div>
+                    </div>
+
+                    {row.categories.length > 0 ? (
+                      <div className="mt-3">
+                        <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-400">Semana máxima por categoría:</p>
+                        <ul className="space-y-1.5">
+                          {row.categories.map((category) => (
+                            <li key={category.id} className="flex items-start justify-between gap-3 text-xs">
+                              <span className="min-w-0 break-words text-slate-300">{category.label}</span>
+                              <span className="shrink-0 font-medium tabular-nums text-slate-200">{money(category.total)}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    ) : (
+                      <p className="mt-4 text-center text-xs text-slate-500 italic">Sin registros</p>
+                    )}
                   </div>
-                  {row.categories.length > 0 ? (
-                    <ul className="mt-4 space-y-2">
-                      {row.categories.map((category) => (
-                        <li key={category.id} className="flex items-start justify-between gap-3 text-sm">
-                          <span className="min-w-0 break-words text-slate-300">{category.label}</span>
-                          <span className="shrink-0 font-bold tabular-nums text-slate-100">{money(category.total)}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="mt-5 text-center text-sm text-slate-500">Sin datos</p>
-                  )}
                 </div>
               ))}
             </div>

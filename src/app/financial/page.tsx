@@ -30,22 +30,19 @@ import {
   Line,
   XAxis,
   YAxis,
-  BarChart,
-  Bar,
 } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { incomeExpenseData, budgetSpendingData, recentTransactions } from '@/lib/data';
 import { AppHeader } from '@/components/app-header';
 
 
 const chartConfig = {
   net: {
-    label: 'Neto',
+    label: 'Ingresos',
     color: 'hsl(var(--primary))',
   },
   spent: {
-    label: 'Gastado',
-    color: 'hsl(var(--primary))',
+    label: 'Gastos',
+    color: 'hsl(var(--destructive))',
   },
   budget: {
     label: 'Presupuesto',
@@ -53,7 +50,58 @@ const chartConfig = {
   },
 };
 
+type SummaryData = {
+  totalDonations: number;
+  averageDonation: number;
+  monthlyData: { month: string; total: number }[];
+  income: { label: string; amount: number }[];
+  expenses: { label: string; amount: number }[];
+  totalIncome: number;
+  totalExpenses: number;
+  netIncome: number;
+};
+
 export default function FinancialPage() {
+  const [data, setData] = React.useState<SummaryData | null>(null);
+  const [transactions, setTransactions] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [year, setYear] = React.useState(new Date().getFullYear().toString());
+
+  React.useEffect(() => {
+    let mounted = true;
+    setLoading(true);
+    
+    Promise.all([
+        fetch(`/api/financial/summary?year=${year}`).then(res => res.json()),
+        fetch(`/api/data/financial-transactions?page=1&limit=5&year=${year}`).then(res => res.json())
+    ]).then(([summaryData, txData]) => {
+        if (mounted) {
+            if (!summaryData.error) setData(summaryData);
+            if (txData.items) setTransactions(txData.items);
+        }
+    })
+      .catch(console.error)
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
+    return () => { mounted = false; };
+  }, [year]);
+
+  const formatter = new Intl.NumberFormat('es-MX', {
+    style: 'currency',
+    currency: 'MXN',
+  });
+
+  const chartData = React.useMemo(() => {
+    if (!data) return [];
+    return data.monthlyData.map((m) => {
+       return {
+         month: m.month,
+         net: m.total,
+       };
+    });
+  }, [data]);
+
   return (
     <div className="flex flex-col flex-1">
     <AppHeader
@@ -79,12 +127,12 @@ export default function FinancialPage() {
         <Card>
         <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">
-            Total de Diezmos y Ofrendas
+            Total Ingresos
             </CardTitle>
         </CardHeader>
         <CardContent>
-            <div className="text-3xl font-bold">$45,280.50</div>
-            <p className="text-xs text-green-600">+5.2% del año pasado</p>
+            <div className="text-3xl font-bold">{data ? formatter.format(data.totalIncome) : '$0.00'}</div>
+            <p className="text-xs text-muted-foreground">Año {year}</p>
         </CardContent>
         </Card>
         <Card>
@@ -94,8 +142,8 @@ export default function FinancialPage() {
             </CardTitle>
         </CardHeader>
         <CardContent>
-            <div className="text-3xl font-bold">$21,745.00</div>
-            <p className="text-xs text-red-600">+8.1% del año pasado</p>
+            <div className="text-3xl font-bold">{data ? formatter.format(data.totalExpenses) : '$0.00'}</div>
+            <p className="text-xs text-muted-foreground">Año {year}</p>
         </CardContent>
         </Card>
         <Card>
@@ -103,23 +151,23 @@ export default function FinancialPage() {
             <CardTitle className="text-sm font-medium">Posición Neta</CardTitle>
         </CardHeader>
         <CardContent>
-            <div className="text-3xl font-bold">$23,535.50</div>
-            <p className="text-xs text-green-600">+2.3% del año pasado</p>
+            <div className={cn("text-3xl font-bold", data && data.netIncome < 0 ? "text-destructive" : "text-green-600")}>{data ? formatter.format(data.netIncome) : '$0.00'}</div>
+            <p className="text-xs text-muted-foreground">Año {year}</p>
         </CardContent>
         </Card>
     </div>
 
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+    <div className="w-full">
         <Card>
         <CardHeader>
-            <CardTitle>Ingresos vs. Gastos a lo largo del Tiempo</CardTitle>
-            <p className="text-2xl font-bold text-muted-foreground">$23,535.50 <span className='text-lg'>Neto</span></p>
+            <CardTitle>Ingresos a lo largo del Tiempo</CardTitle>
+            <p className="text-2xl font-bold text-muted-foreground">{data ? formatter.format(data.totalIncome) : '$0.00'} <span className='text-lg'>Ingresos</span></p>
         </CardHeader>
         <CardContent>
             <ChartContainer config={chartConfig} className="min-h-[250px] w-full">
             <LineChart
                 accessibilityLayer
-                data={incomeExpenseData}
+                data={chartData}
                 margin={{
                 left: 12,
                 right: 12,
@@ -151,45 +199,6 @@ export default function FinancialPage() {
             </ChartContainer>
         </CardContent>
         </Card>
-        <Card>
-        <CardHeader>
-            <CardTitle>Presupuesto vs. Gasto Real</CardTitle>
-            <p className="text-2xl font-bold text-muted-foreground">$15,800 <span className='text-lg'>Gastado este mes</span></p>
-        </CardHeader>
-        <CardContent>
-            <ChartContainer config={chartConfig} className="min-h-[250px] w-full">
-            <BarChart accessibilityLayer data={budgetSpendingData}>
-                <XAxis
-                dataKey="name"
-                stroke="hsl(var(--muted-foreground))"
-                fontSize={12}
-                tickLine={false}
-                axisLine={false}
-                />
-                <YAxis
-                stroke="hsl(var(--muted-foreground))"
-                fontSize={12}
-                tickLine={false}
-                axisLine={false}
-                tickFormatter={(value) => `$${value / 1000}k`}
-                />
-                <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
-                <Bar
-                dataKey="spent"
-                stackId="a"
-                fill="hsl(var(--primary))"
-                radius={[4, 4, 0, 0]}
-                />
-                <Bar
-                dataKey="budget"
-                stackId="a"
-                fill="hsl(var(--muted))"
-                radius={[4, 4, 0, 0]}
-                />
-            </BarChart>
-            </ChartContainer>
-        </CardContent>
-        </Card>
     </div>
 
     <Card>
@@ -215,25 +224,37 @@ export default function FinancialPage() {
             </TableRow>
             </TableHeader>
             <TableBody>
-            {recentTransactions.map((transaction) => (
-                <TableRow key={transaction.id}>
-                <TableCell>{transaction.date}</TableCell>
-                <TableCell className="font-medium">
-                    {transaction.description}
-                </TableCell>
-                <TableCell>{transaction.category}</TableCell>
-                <TableCell>{transaction.fund}</TableCell>
-                <TableCell
-                    className={cn(
-                    'text-right font-medium',
-                    transaction.amount > 0 ? 'text-green-600' : 'text-red-600'
-                    )}
-                >
-                    {transaction.amount > 0 ? '' : '-'}$
-                    {Math.abs(transaction.amount).toFixed(2)}
-                </TableCell>
+            {transactions.length === 0 ? (
+                <TableRow>
+                    <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                        No hay transacciones registradas.
+                    </TableCell>
                 </TableRow>
-            ))}
+            ) : (
+                transactions.map((transaction) => {
+                    const isIncome = transaction.type === 'income';
+                    const amount = Number(transaction.amount) || 0;
+                    return (
+                        <TableRow key={transaction._id || transaction.id}>
+                            <TableCell>{new Date(transaction.date).toLocaleDateString('es-ES')}</TableCell>
+                            <TableCell className="font-medium">
+                                {transaction.reference || transaction.description || (isIncome ? 'Ingreso' : 'Gasto')}
+                            </TableCell>
+                            <TableCell>{transaction.category}</TableCell>
+                            <TableCell>{transaction.fundId || 'Fondo General'}</TableCell>
+                            <TableCell
+                                className={cn(
+                                'text-right font-medium',
+                                isIncome ? 'text-green-600' : 'text-red-600'
+                                )}
+                            >
+                                {isIncome ? '' : '-'}
+                                {formatter.format(amount)}
+                            </TableCell>
+                        </TableRow>
+                    );
+                })
+            )}
             </TableBody>
         </Table>
         </div>

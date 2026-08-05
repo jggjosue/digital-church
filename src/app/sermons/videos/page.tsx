@@ -1,20 +1,15 @@
-
 'use client';
 
 import * as React from 'react';
 import {
   MoreHorizontal,
-  Plus,
   Search,
   ChevronDown,
-  Trash2,
-  Eye,
-  Edit,
-  Video,
-  Mic,
   Upload,
   Calendar,
   Globe,
+  Loader2,
+  VideoIcon
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -26,18 +21,32 @@ import {
 import { Input } from '@/components/ui/input';
 import { AppHeader } from '@/components/app-header';
 import Link from 'next/link';
-import Image from 'next/image';
 
-const videoData = {
-    id: 1,
-    title: 'The Power of Forgiveness',
-    series: 'Gospel of John',
-    date: 'Oct 29, 2023',
-    duration: '45:12',
-    thumbnail: 'https://picsum.photos/seed/sermon1/600/400',
+type SermonMedia = {
+    id: string;
+    sermonId: string;
+    type: string;
+    url: string;
+    title?: string;
+    mimeType?: string;
+    size?: number;
 };
 
 export default function VideoLibraryPage() {
+  const [videos, setVideos] = React.useState<SermonMedia[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+      fetch('/api/data/sermon-media')
+        .then(res => res.json())
+        .then(data => {
+            if (data.items) {
+                setVideos(data.items.filter((m: SermonMedia) => m.type === 'video'));
+            }
+        })
+        .catch(console.error)
+        .finally(() => setLoading(false));
+  }, []);
 
   return (
     <div className="flex flex-col flex-1">
@@ -62,39 +71,47 @@ export default function VideoLibraryPage() {
             </div>
         </div>
 
-        <Card>
-            <CardContent className='p-4'>
-                <div className='relative'>
-                    <Image
-                        src={videoData.thumbnail}
-                        alt={videoData.title}
-                        width={600}
-                        height={400}
-                        className='w-full rounded-t-lg'
-                        data-ai-hint="abstract texture"
-                    />
-                    <Badge className='absolute bottom-2 right-2' variant="secondary">{videoData.duration}</Badge>
-                </div>
-                <div className='pt-4'>
-                    <h3 className='text-lg font-bold'>{videoData.title}</h3>
-                    <p className='text-sm text-muted-foreground'>Sermon: {videoData.series}</p>
-                    <div className='flex items-center gap-4 text-sm text-muted-foreground mt-2'>
-                        <div className='flex items-center gap-1.5'>
-                            <Calendar className='h-4 w-4' />
-                            <span>{videoData.date}</span>
-                        </div>
+        {loading ? (
+            <div className="flex justify-center p-12">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+        ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                {videos.length === 0 && (
+                    <div className="col-span-full text-center py-12 text-muted-foreground">
+                        No hay videos registrados.
                     </div>
-                     <div className='flex items-center gap-4 mt-2'>
-                        <Badge variant="outline" className='bg-green-100 text-green-800 border-green-200'>Published</Badge>
-                        <Badge variant="outline" className='flex items-center gap-1.5'><Globe className='h-3 w-3'/>Public</Badge>
-                    </div>
-                </div>
-            </CardContent>
-            <CardFooter className='p-4 bg-muted/50 border-t flex flex-col sm:flex-row justify-between gap-2'>
-                <Button variant="ghost" className="w-full sm:w-auto"><Edit className='mr-2 h-4 w-4'/>Edit</Button>
-                <Button variant="ghost" size="icon" className="self-end sm:self-center"><MoreHorizontal className='h-4 w-4'/></Button>
-            </CardFooter>
-        </Card>
+                )}
+                {videos.map(video => (
+                    <Card key={video.id}>
+                        <CardContent className='p-4'>
+                            <div className='relative flex items-center justify-center bg-black/10 rounded-t-lg h-48'>
+                                <VideoIcon className="h-12 w-12 text-muted-foreground opacity-50" />
+                                <Badge className='absolute bottom-2 right-2' variant="secondary">Video</Badge>
+                            </div>
+                            <div className='pt-4'>
+                                <h3 className='text-lg font-bold truncate'>{video.title || 'Video sin título'}</h3>
+                                <p className='text-sm text-muted-foreground truncate'>ID Sermón: {video.sermonId}</p>
+                                <div className='flex items-center gap-4 text-sm text-muted-foreground mt-2'>
+                                    <div className='flex items-center gap-1.5'>
+                                        <Calendar className='h-4 w-4' />
+                                        <span>No Date</span>
+                                    </div>
+                                </div>
+                                <div className='flex items-center gap-4 mt-2'>
+                                    <Badge variant="outline" className='bg-green-100 text-green-800 border-green-200'>Published</Badge>
+                                    <Badge variant="outline" className='flex items-center gap-1.5'><Globe className='h-3 w-3'/>Public</Badge>
+                                </div>
+                            </div>
+                        </CardContent>
+                        <CardFooter className='p-4 bg-muted/50 border-t flex flex-col sm:flex-row justify-between gap-2'>
+                            <Button variant="ghost" className="w-full sm:w-auto" asChild><Link href={video.url} target="_blank">Watch</Link></Button>
+                            <Button variant="ghost" size="icon" className="self-end sm:self-center"><MoreHorizontal className='h-4 w-4'/></Button>
+                        </CardFooter>
+                    </Card>
+                ))}
+            </div>
+        )}
       </main>
     </div>
   );

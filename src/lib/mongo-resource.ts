@@ -35,7 +35,7 @@ export function createResourceHandlers(config: ResourceConfig) {
         if (unauthorized) return unauthorized;
         const url = new URL(request.url);
         const filter: Filter<ResourceDocument> = {};
-        for (const key of ['churchId', 'status', 'year', 'category']) {
+        for (const key of ['churchId', 'status', 'year', 'category', 'type']) {
           const value = url.searchParams.get(key)?.trim();
           if (value) filter[key] = value;
         }
@@ -45,14 +45,22 @@ export function createResourceHandlers(config: ResourceConfig) {
             [field]: { $regex: q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), $options: 'i' },
           }));
         }
-        const limit = Math.min(500, Math.max(1, Number(url.searchParams.get('limit')) || 200));
+        const isAll = url.searchParams.get('all') === 'true';
+        const page = Math.max(1, Number(url.searchParams.get('page')) || 1);
+        const limit = isAll ? 5000 : Math.min(500, Math.max(1, Number(url.searchParams.get('limit')) || 10));
+        const skip = (page - 1) * limit;
+
         const db = await getDb();
+        const total = await db.collection<ResourceDocument>(config.collection).countDocuments(filter);
         const items = await db.collection<ResourceDocument>(config.collection)
           .find(filter, { projection: { _id: 0 } })
           .sort({ createdAt: -1 })
+          .skip(skip)
           .limit(limit)
           .toArray();
-        return NextResponse.json({ items });
+        const totalPages = Math.ceil(total / limit) || 1;
+
+        return NextResponse.json({ items, total, page, limit, totalPages });
       } catch (error) {
         console.error(`[api/${config.collection} GET]`, error);
         return NextResponse.json({ error: message(error, 'No se pudieron leer los registros.') }, { status: 500 });

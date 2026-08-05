@@ -13,6 +13,8 @@ import { TotalGroups } from '@/components/dashboard/total-groups';
 import { TotalMinistries } from '@/components/dashboard/total-ministries';
 import { TotalVolunteers } from '@/components/dashboard/total-volunteers';
 import { UpcomingEventsCard } from '@/components/dashboard/upcoming-events-card';
+import { TotalSermons } from '@/components/dashboard/total-sermons';
+import { NewPrayers } from '@/components/dashboard/new-prayers';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { MemberGrowthChart } from '@/components/dashboard/member-growth-chart';
 import { AppHeader } from '@/components/app-header';
@@ -139,10 +141,12 @@ export default function DashboardPage() {
               <GivingThisMonth stats={stats} loading={loadState === 'loading'} />
               <UpcomingEventsCard stats={stats} loading={loadState === 'loading'} />
             </div>
-            <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 sm:grid-cols-3 sm:gap-4">
+            <div className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 sm:gap-4">
               <TotalGroups stats={stats} loading={loadState === 'loading'} />
               <TotalMinistries stats={stats} loading={loadState === 'loading'} />
               <TotalVolunteers stats={stats} loading={loadState === 'loading'} />
+              <TotalSermons stats={stats} loading={loadState === 'loading'} />
+              <NewPrayers stats={stats} loading={loadState === 'loading'} />
             </div>
           </section>
           <section className="space-y-4">

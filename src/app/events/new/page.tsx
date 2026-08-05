@@ -1,26 +1,18 @@
-
 'use client';
 
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import {
-  ArrowLeft,
   Calendar as CalendarIcon,
-  Clock,
-  MapPin,
-  Users,
-  Image as ImageIcon,
-  Upload,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
@@ -34,15 +26,109 @@ import Link from 'next/link';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
 import { AppHeader } from '@/components/app-header';
-import { ResourceSaveButton } from '@/components/resource-save-button';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { useToast } from '@/hooks/use-toast';
+
+const formSchema = z.object({
+  title: z.string().min(1, { message: 'El título del evento es requerido.' }),
+  startDate: z.date({ required_error: 'La fecha de inicio es requerida.' }),
+  startTime: z.string().min(1, { message: 'La hora de inicio es requerida.' }),
+  endDate: z.date().optional(),
+  endTime: z.string().optional(),
+  location: z.string().optional(),
+  description: z.string().optional(),
+  category: z.string().optional(),
+});
+
+type FormValues = z.infer<typeof formSchema>;
+
+const NEW_EVENT_FORM_ID = 'new-event-form';
 
 export default function NewEventPage() {
-    const [startDate, setStartDate] = React.useState<Date | undefined>();
-    const [endDate, setEndDate] = React.useState<Date | undefined>();
+  const { toast } = useToast();
+  const router = useRouter();
+  const [saving, setSaving] = React.useState(false);
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      title: '',
+      startTime: '',
+      endTime: '',
+      location: '',
+      description: '',
+      category: '',
+    },
+  });
+
+  const onSubmit = async (values: FormValues) => {
+    setSaving(true);
+    try {
+      const startAt = new Date(values.startDate);
+      if (values.startTime) {
+        const [hours, minutes] = values.startTime.split(':');
+        startAt.setHours(Number(hours), Number(minutes));
+      }
+
+      let endAt: Date | undefined = undefined;
+      if (values.endDate) {
+        endAt = new Date(values.endDate);
+        if (values.endTime) {
+          const [hours, minutes] = values.endTime.split(':');
+          endAt.setHours(Number(hours), Number(minutes));
+        } else {
+            endAt.setHours(23, 59);
+        }
+      }
+
+      const res = await fetch('/api/data/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: values.title.trim(),
+          startAt: startAt.toISOString(),
+          endAt: endAt ? endAt.toISOString() : undefined,
+          location: values.location?.trim() || undefined,
+          description: values.description?.trim() || undefined,
+          category: values.category || undefined,
+          status: 'scheduled',
+        }),
+      });
+      
+      const data = await res.json().catch(() => ({}));
+      
+      if (!res.ok) {
+        throw new Error(data.error || 'No se pudo crear el evento.');
+      }
+      
+      toast({
+        title: 'Evento creado',
+        description: 'El evento se ha registrado correctamente.',
+      });
+      router.push('/events');
+      router.refresh();
+    } catch (err) {
+      console.error(err);
+      toast({
+        variant: 'destructive',
+        title: 'Error al guardar',
+        description: err instanceof Error ? err.message : 'Error al guardar el evento.',
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="flex flex-col flex-1">
@@ -51,147 +137,198 @@ export default function NewEventPage() {
         description="Complete el siguiente formulario para agregar un nuevo evento al calendario de la iglesia."
       >
         <div className="flex flex-col sm:flex-row justify-end gap-2 w-full sm:w-auto">
-            <Button variant="outline" asChild><Link href="/events">Cancelar</Link></Button>
-            <ResourceSaveButton resource="events" successHref="/events" fields={{ title: '#event-title', location: '#location', description: '#description', category: '#category' }} extra={{ startAt: startDate?.toISOString(), endAt: endDate?.toISOString(), status: 'scheduled' }}>Crear Evento</ResourceSaveButton>
+          <Button variant="outline" asChild>
+            <Link href="/events">Cancelar</Link>
+          </Button>
+          <Button type="submit" form={NEW_EVENT_FORM_ID} disabled={saving}>
+            {saving ? 'Guardando...' : 'Crear Evento'}
+          </Button>
         </div>
       </AppHeader>
       <main className="flex-1 space-y-6 p-4 sm:p-8 bg-muted/20">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-          <div className="lg:col-span-3">
+        <div className="max-w-3xl mx-auto">
+          <Form {...form}>
+            <form id={NEW_EVENT_FORM_ID} onSubmit={form.handleSubmit(onSubmit)}>
               <Card>
-                  <CardHeader>
-                      <CardTitle>Detalles del Evento</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                      <div className="space-y-2">
-                          <Label htmlFor="event-title">Título del Evento</Label>
-                          <Input id="event-title" placeholder="Ej., Picnic Anual de la Iglesia" />
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          <div className="space-y-2">
-                              <Label>Fecha y Hora de Inicio</Label>
-                              <div className="flex flex-col sm:flex-row gap-2">
-                                  <Popover>
-                                      <PopoverTrigger asChild>
-                                      <Button
-                                          variant={"outline"}
-                                          className={cn(
-                                          "w-full justify-start text-left font-normal",
-                                          !startDate && "text-muted-foreground"
-                                          )}
-                                      >
-                                          <CalendarIcon className="mr-2 h-4 w-4" />
-                                          {startDate ? format(startDate, "PPP") : <span>mm/dd/yyyy</span>}
-                                      </Button>
-                                      </PopoverTrigger>
-                                      <PopoverContent className="w-auto p-0">
-                                      <Calendar
-                                          mode="single"
-                                          selected={startDate}
-                                          onSelect={setStartDate}
-                                          initialFocus
-                                      />
-                                      </PopoverContent>
-                                  </Popover>
-                                  <Input type="time" className="w-full sm:w-[140px]" />
-                              </div>
-                          </div>
-                          <div className="space-y-2">
-                              <Label>Fecha y Hora de Finalización</Label>
-                              <div className="flex flex-col sm:flex-row gap-2">
-                                  <Popover>
-                                      <PopoverTrigger asChild>
-                                      <Button
-                                          variant={"outline"}
-                                          className={cn(
-                                          "w-full justify-start text-left font-normal",
-                                          !endDate && "text-muted-foreground"
-                                          )}
-                                      >
-                                          <CalendarIcon className="mr-2 h-4 w-4" />
-                                          {endDate ? format(endDate, "PPP") : <span>mm/dd/yyyy</span>}
-                                      </Button>
-                                      </PopoverTrigger>
-                                      <PopoverContent className="w-auto p-0">
-                                      <Calendar
-                                          mode="single"
-                                          selected={endDate}
-                                          onSelect={setEndDate}
-                                          initialFocus
-                                      />
-                                      </PopoverContent>
-                                  </Popover>
-                                  <Input type="time" className="w-full sm:w-[140px]" />
-                              </div>
-                          </div>
-                      </div>
-                      <div className="space-y-2">
-                          <Label htmlFor="location">Ubicación</Label>
-                          <Input id="location" placeholder="Ej., Salón de Confraternidad o 123 Church St" />
-                      </div>
-                      <div className="space-y-2">
-                          <Label htmlFor="description">Descripción del Evento</Label>
-                          <Textarea id="description" placeholder="Proporcione una descripción detallada del evento..." rows={5} />
-                      </div>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                          <div className="space-y-2">
-                              <Label htmlFor="category">Categoría del Evento</Label>
-                              <Select>
-                                  <SelectTrigger id="category">
-                                      <SelectValue placeholder="Seleccione una categoría" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                      <SelectItem value="servicio-dominical">Servicio Dominical</SelectItem>
-                                      <SelectItem value="estudio-biblico">Estudio Bíblico</SelectItem>
-                                      <SelectItem value="grupo-jovenes">Grupo de Jóvenes</SelectItem>
-                                      <SelectItem value="alcance-comunitario">Alcance Comunitario</SelectItem>
-                                  </SelectContent>
-                              </Select>
-                          </div>
-                          <div className="space-y-2">
-                              <Label htmlFor="recurrence">Recurrencia</Label>
-                              <Select>
-                                  <SelectTrigger id="recurrence">
-                                      <SelectValue placeholder="No se repite" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                      <SelectItem value="none">No se repite</SelectItem>
-                                      <SelectItem value="daily">Diariamente</SelectItem>
-                                      <SelectItem value="weekly">Semanalmente</SelectItem>
-                                      <SelectItem value="monthly">Mensualmente</SelectItem>
-                                      <SelectItem value="yearly">Anualmente</SelectItem>
-                                  </SelectContent>
-                              </Select>
-                          </div>
-                          <div className="space-y-2">
-                              <Label htmlFor="associate">Asociar con Ministerio/Grupo</Label>
-                              <Select>
-                                  <SelectTrigger id="associate">
-                                      <SelectValue placeholder="Ninguno" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                      <SelectItem value="none">Ninguno</SelectItem>
-                                      <SelectItem value="youth-group">Grupo de Jóvenes</SelectItem>
-                                      <SelectItem value="choir">Coro</SelectItem>
-                                  </SelectContent>
-                              </Select>
-                          </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                          <Checkbox id="all-day" />
-                          <Label htmlFor="all-day">Evento de todo el día</Label>
-                      </div>
+                <CardHeader>
+                  <CardTitle>Detalles del Evento</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="title"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Título del Evento</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Ej., Picnic Anual de la Iglesia" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-                      <Alert variant="destructive">
-                          <AlertCircle className="h-4 w-4" />
-                          <AlertTitle>Por favor corrija los errores</AlertTitle>
-                          <AlertDescription>
-                            El título del evento no puede estar vacío.
-                          </AlertDescription>
-                      </Alert>
-                  </CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-2">
+                      <FormLabel>Fecha y Hora de Inicio</FormLabel>
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <FormField
+                          control={form.control}
+                          name="startDate"
+                          render={({ field }) => (
+                            <FormItem className="flex-1">
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <FormControl>
+                                    <Button
+                                      variant={"outline"}
+                                      className={cn(
+                                        "w-full justify-start text-left font-normal",
+                                        !field.value && "text-muted-foreground"
+                                      )}
+                                    >
+                                      <CalendarIcon className="mr-2 h-4 w-4" />
+                                      {field.value ? format(field.value, "PPP") : <span>Fecha</span>}
+                                    </Button>
+                                  </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0">
+                                  <Calendar
+                                    mode="single"
+                                    selected={field.value}
+                                    onSelect={field.onChange}
+                                    initialFocus
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="startTime"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Input type="time" className="w-full sm:w-[140px]" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <FormLabel>Fecha y Hora de Finalización</FormLabel>
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <FormField
+                          control={form.control}
+                          name="endDate"
+                          render={({ field }) => (
+                            <FormItem className="flex-1">
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <FormControl>
+                                    <Button
+                                      variant={"outline"}
+                                      className={cn(
+                                        "w-full justify-start text-left font-normal",
+                                        !field.value && "text-muted-foreground"
+                                      )}
+                                    >
+                                      <CalendarIcon className="mr-2 h-4 w-4" />
+                                      {field.value ? format(field.value, "PPP") : <span>Fecha</span>}
+                                    </Button>
+                                  </FormControl>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0">
+                                  <Calendar
+                                    mode="single"
+                                    selected={field.value}
+                                    onSelect={field.onChange}
+                                    initialFocus
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="endTime"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <Input type="time" className="w-full sm:w-[140px]" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="location"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Ubicación</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Ej., Salón de Confraternidad o 123 Church St" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Descripción del Evento</FormLabel>
+                        <FormControl>
+                          <Textarea placeholder="Proporcione una descripción detallada del evento..." rows={5} {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <FormField
+                      control={form.control}
+                      name="category"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Categoría del Evento</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Seleccione una categoría" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="Servicio Dominical">Servicio Dominical</SelectItem>
+                              <SelectItem value="Estudio Bíblico">Estudio Bíblico</SelectItem>
+                              <SelectItem value="Grupo de Jóvenes">Grupo de Jóvenes</SelectItem>
+                              <SelectItem value="Alcance Comunitario">Alcance Comunitario</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </CardContent>
               </Card>
-          </div>
+            </form>
+          </Form>
         </div>
       </main>
     </div>

@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -8,6 +7,7 @@ import {
   Search,
   ChevronDown,
   Trash2,
+  Loader2,
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -32,28 +32,63 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { sermonsData as initialSermonsData } from '@/lib/data';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { AppHeader } from '@/components/app-header';
+import Link from 'next/link';
 
-type Sermon = (typeof initialSermonsData)[0];
+type Sermon = {
+  id: string;
+  title: string;
+  speaker: string;
+  date: string;
+  series?: string;
+  scripture?: string;
+  description?: string;
+  status: string;
+};
 
 const statusColors: { [key: string]: string } = {
-    Publicado: 'bg-green-100 text-green-800 border-green-200',
-    Programado: 'bg-blue-100 text-blue-800 border-blue-200',
-    Borrador: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    Archivado: 'bg-gray-100 text-gray-800 border-gray-200',
+    published: 'bg-green-100 text-green-800 border-green-200',
+    scheduled: 'bg-blue-100 text-blue-800 border-blue-200',
+    draft: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+    archived: 'bg-gray-100 text-gray-800 border-gray-200',
+};
+
+const statusMap: { [key: string]: string } = {
+    published: 'Publicado',
+    draft: 'Borrador',
+    archived: 'Archivado'
 };
 
 export default function SermonsPage() {
-  const [sermonsData, setSermonsData] = React.useState<Sermon[]>(initialSermonsData);
-  const [selected, setSelected] = React.useState<number[]>([]);
+  const [sermonsData, setSermonsData] = React.useState<Sermon[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [selected, setSelected] = React.useState<string[]>([]);
   const [currentPage, setCurrentPage] = React.useState(1);
   const itemsPerPage = 10;
   const [sermonToDelete, setSermonToDelete] = React.useState<Sermon | null>(null);
+  const [isDeleting, setIsDeleting] = React.useState(false);
 
-  const totalPages = Math.ceil(sermonsData.length / itemsPerPage);
+  const fetchSermons = async () => {
+    try {
+        const res = await fetch('/api/data/sermons');
+        const data = await res.json();
+        if (data.items) {
+            setSermonsData(data.items);
+        }
+    } catch (err) {
+        console.error(err);
+    } finally {
+        setLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+      fetchSermons();
+  }, []);
+
+  const totalPages = Math.max(1, Math.ceil(sermonsData.length / itemsPerPage));
 
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {
@@ -75,7 +110,7 @@ export default function SermonsPage() {
     }
   };
 
-  const handleSelectOne = (id: number, checked: boolean) => {
+  const handleSelectOne = (id: string, checked: boolean) => {
     if (checked) {
       setSelected([...selected, id]);
     } else {
@@ -83,22 +118,32 @@ export default function SermonsPage() {
     }
   };
   
-  const handleDeleteSermon = () => {
+  const handleDeleteSermon = async () => {
     if (sermonToDelete) {
-      setSermonsData(prev => prev.filter(s => s.id !== sermonToDelete.id));
-      setSermonToDelete(null);
+      setIsDeleting(true);
+      try {
+        await fetch(`/api/data/sermons/${sermonToDelete.id}`, { method: 'DELETE' });
+        setSermonsData(prev => prev.filter(s => s.id !== sermonToDelete.id));
+      } catch (e) {
+          console.error(e);
+      } finally {
+        setIsDeleting(false);
+        setSermonToDelete(null);
+      }
     }
   };
 
   return (
-    <AlertDialog>
+    <AlertDialog open={!!sermonToDelete} onOpenChange={(open) => !open && setSermonToDelete(null)}>
     <div className="flex flex-col flex-1">
       <AppHeader
         title="Biblioteca de Sermones y Medios"
         description="Gestione todos los sermones, videos, audios e imágenes de su iglesia."
       >
-        <Button>
-          <Plus className="mr-2 h-4 w-4" /> Añadir Sermón
+        <Button asChild>
+          <Link href="/sermons/new">
+            <Plus className="mr-2 h-4 w-4" /> Añadir Sermón
+          </Link>
         </Button>
       </AppHeader>
     <main className="flex-1 bg-muted/20 p-4 sm:p-8">
@@ -120,12 +165,17 @@ export default function SermonsPage() {
             <TabsList className="grid grid-cols-3 sm:inline-flex">
               <TabsTrigger value="all-media">Todos los Medios</TabsTrigger>
               <TabsTrigger value="sermons">Sermones</TabsTrigger>
-              <TabsTrigger value="videos">Videos</TabsTrigger>
-              <TabsTrigger value="audio">Audio</TabsTrigger>
-              <TabsTrigger value="images">Imágenes</TabsTrigger>
+              <TabsTrigger value="videos" asChild><Link href="/sermons/videos">Videos</Link></TabsTrigger>
+              <TabsTrigger value="audio" asChild><Link href="/sermons/audio">Audio</Link></TabsTrigger>
+              <TabsTrigger value="images" asChild><Link href="/sermons/images">Imágenes</Link></TabsTrigger>
             </TabsList>
             <TabsContent value="all-media">
-                <div className="overflow-x-auto">
+                <div className="overflow-x-auto min-h-[300px]">
+              {loading ? (
+                  <div className="flex justify-center items-center h-full pt-10">
+                      <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  </div>
+              ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -160,13 +210,13 @@ export default function SermonsPage() {
                       <TableCell className="font-medium">{sermon.title}</TableCell>
                       <TableCell>{sermon.speaker}</TableCell>
                       <TableCell>{sermon.series}</TableCell>
-                      <TableCell>{sermon.date}</TableCell>
+                      <TableCell>{new Date(sermon.date).toLocaleDateString('es-ES')}</TableCell>
                       <TableCell>
                         <Badge
                           variant="outline"
-                          className={statusColors[sermon.status as keyof typeof statusColors]}
+                          className={statusColors[sermon.status] || ''}
                         >
-                          {sermon.status}
+                          {statusMap[sermon.status] || sermon.status}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
@@ -179,18 +229,24 @@ export default function SermonsPage() {
                           <DropdownMenuContent>
                             <DropdownMenuItem>Editar</DropdownMenuItem>
                             <DropdownMenuItem>Ver</DropdownMenuItem>
-                            <AlertDialogTrigger asChild>
-                                <DropdownMenuItem className="text-destructive" onSelect={(e) => e.preventDefault()} onClick={() => setSermonToDelete(sermon)}>
-                                Eliminar
-                                </DropdownMenuItem>
-                            </AlertDialogTrigger>
+                            <DropdownMenuItem className="text-destructive" onClick={() => setSermonToDelete(sermon)}>
+                            Eliminar
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))}
+                  {paginatedData.length === 0 && (
+                      <TableRow>
+                          <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                              No hay sermones registrados
+                          </TableCell>
+                      </TableRow>
+                  )}
                 </TableBody>
               </Table>
+              )}
               </div>
                <div className="flex flex-col sm:flex-row items-center justify-between pt-4 gap-4">
                 <div className="text-sm text-muted-foreground">
@@ -215,6 +271,9 @@ export default function SermonsPage() {
                 </Pagination>
             </div>
             </TabsContent>
+            <TabsContent value="sermons">
+                <p className="py-4 text-muted-foreground">Ver la lista detallada de sermones en <Link href="/sermons/list" className="text-primary underline">vista de lista</Link>.</p>
+            </TabsContent>
           </Tabs>
         </CardContent>
       </Card>
@@ -232,14 +291,12 @@ export default function SermonsPage() {
         </AlertDialogHeader>
         <AlertDialogFooter className="sm:justify-center">
             <AlertDialogCancel onClick={() => setSermonToDelete(null)}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteSermon} className="bg-destructive hover:bg-destructive/90">Confirmar Eliminación</AlertDialogAction>
+            <AlertDialogAction onClick={handleDeleteSermon} disabled={isDeleting} className="bg-destructive hover:bg-destructive/90">
+                {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Confirmar Eliminación'}
+            </AlertDialogAction>
         </AlertDialogFooter>
     </AlertDialogContent>
     </div>
     </AlertDialog>
   );
 }
-
-    
-
-    
