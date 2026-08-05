@@ -31,7 +31,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { donationReportsData } from '@/lib/data';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { Line, LineChart, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
@@ -200,11 +199,11 @@ export default function DonationReportsPage() {
             </Card>
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium">Nuevos Donantes</CardTitle>
+                <CardTitle className="text-sm font-medium">Total de Registros</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="text-3xl font-bold">{formatCurrency(donationReportsData.newDonors.amount)}</div>
-                <p className="text-xs text-muted-foreground">{donationReportsData.newDonors.description}</p>
+                <div className="text-3xl font-bold">{totalItems}</div>
+                <p className="text-xs text-muted-foreground">Transacciones procesadas</p>
               </CardContent>
             </Card>
           </div>

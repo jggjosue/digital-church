@@ -11,7 +11,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { CalendarIcon, Download, Loader2 } from 'lucide-react';
-import { budgetReportData } from '@/lib/data';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { AppHeader } from '@/components/app-header';
@@ -70,29 +69,30 @@ export default function BudgetReportPage() {
           });
       }
 
-      // Merge with hardcoded budget data
-      const incomeItems = budgetReportData.income.items.map(item => {
-          const actual = actuals[item.category] || 0; // Use actual or fallback to 0
-          return { ...item, actual };
-      });
+      const incomeItems = summary?.income ? summary.income.map((i: any) => ({
+          category: i.label,
+          budget: 0,
+          actual: i.amount
+      })) : [];
 
-      const expenseItems = budgetReportData.expenses.items.map(item => {
-          const actual = actuals[item.category] || 0;
-          return { ...item, actual };
-      });
+      const expenseItems = summary?.expenses ? summary.expenses.map((e: any) => ({
+          category: e.label,
+          budget: 0,
+          actual: e.amount
+      })) : [];
 
-      const totalBudget = budgetReportData.totalBudget;
-      const previousPeriodBudget = budgetReportData.previousPeriodBudget;
+      const totalBudget = 0;
+      const previousPeriodBudget = 0;
       
       const income = {
           items: incomeItems,
-          totalBudget: budgetReportData.income.totalBudget,
+          totalBudget: 0,
           totalActual: totalActualIncome
       };
 
       const expenses = {
           items: expenseItems,
-          totalBudget: budgetReportData.expenses.totalBudget,
+          totalBudget: 0,
           totalActual: totalActualExpenses
       };
 

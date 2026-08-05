@@ -13,7 +13,6 @@ import {
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Search, Plus, RefreshCw, Loader2 } from 'lucide-react';
-import { fundBalancesData } from '@/lib/data';
 import { cn } from '@/lib/utils';
 import { AppHeader } from '@/components/app-header';
 
@@ -65,16 +64,21 @@ export default function FundBalancesPage() {
   const processData = () => {
       const fundStats = summary?.fundStats || {};
 
-      const funds = fundBalancesData.funds.map(fund => {
-          const stats = fundStats[fund.name] || { inflows: 0, outflows: 0 };
-          // Calculate new balance based on initial balance in fundBalancesData + new transactions
-          // Assuming fund.balance is the initial balance. For a real app, initial balance would be in DB.
-          // Since we don't have DB for funds, we'll just sum the transactions.
-          const ytdInflows = fund.ytdInflows + stats.inflows;
-          const ytdOutflows = fund.ytdOutflows - stats.outflows; // Outflows in data are negative
-          const balance = fund.balance + stats.inflows - stats.outflows;
+      const funds = Object.keys(fundStats).map(fundName => {
+          const stats = fundStats[fundName];
+          const ytdInflows = stats.inflows;
+          const ytdOutflows = stats.outflows;
+          const balance = ytdInflows - ytdOutflows;
 
-          return { ...fund, ytdInflows, ytdOutflows, balance };
+          return { 
+              name: fundName,
+              description: 'Generado a partir de transacciones',
+              type: 'Fondo de Iglesia',
+              status: 'Activo',
+              ytdInflows, 
+              ytdOutflows, 
+              balance 
+          };
       });
 
       const totalBalance = funds.reduce((acc, fund) => acc + fund.balance, 0);
