@@ -50,23 +50,6 @@ export async function GET(request: Request) {
     const page = parseInt(searchParams.get('page') || '1', 10);
     const limit = parseInt(searchParams.get('limit') || '20', 10);
 
-    const filter: Record<string, unknown> = { type: 'income' };
-
-    if (yearStr) {
-      filter.date = {
-        $gte: `${yearStr}-01-01`,
-        $lte: `${yearStr}-12-31T23:59:59.999Z`
-      };
-    }
-
-    if (churchIdsScope && churchIdsScope.length > 0) {
-      filter.churchId = { $in: churchIdsScope };
-    }
-
-    const transactions = await db.collection('financial_transactions')
-      .find(filter)
-      .toArray();
-
     const donationFilter: Record<string, unknown> = {};
     if (yearStr) {
       donationFilter.$or = [
@@ -84,7 +67,7 @@ export async function GET(request: Request) {
 
     const unifiedList: any[] = [];
 
-    // Map donations from 'donation' collection (Menú Donaciones)
+    // Map items strictly from 'donation' collection
     donationsDocs.forEach(d => {
       const donorName = d.donor ? `${d.donor.firstName || ''} ${d.donor.lastName || ''}`.trim() : '';
       unifiedList.push({
@@ -95,19 +78,6 @@ export async function GET(request: Request) {
         fundId: d.fundCampaign || 'Fondo General',
         reference: donorName || d.transferReference || 'Donante',
         date: d.donationDate || d.createdAt || new Date().toISOString()
-      });
-    });
-
-    // Map regular transactions of type income
-    transactions.forEach(t => {
-      unifiedList.push({
-        id: t._id.toString(),
-        type: 'income',
-        amount: Number(t.amount) || 0,
-        category: t.category || 'Donación',
-        fundId: t.fundId || 'Fondo General',
-        reference: t.reference || 'Anónimo',
-        date: t.date
       });
     });
 

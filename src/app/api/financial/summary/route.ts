@@ -184,19 +184,27 @@ export async function GET(request: Request) {
       }
     }
 
+    let donationsOnlyTotal = 0;
+    let donationsOnlyCount = 0;
+    const donationsOnlyMonthlyData = Array.from({ length: 12 }, (_, i) => {
+      const monthName = new Date(0, i).toLocaleString('es', { month: 'short' });
+      return { month: monthName.charAt(0).toUpperCase() + monthName.slice(1), total: 0 };
+    });
+
     for (const d of donationsCollectionDocs) {
       const amount = Number(d.amount) || 0;
       if (amount > 0) {
-        const catName = (d.recordCategory as string) || 'Donación';
-        incomeMap[catName] = (incomeMap[catName] || 0) + amount;
-        totalIncome += amount;
-        totalDonations += amount;
-        donationsCount++;
+        donationsOnlyTotal += amount;
+        donationsOnlyCount++;
 
         const dDate = new Date((d.donationDate || d.createdAt) as string);
         if (!isNaN(dDate.getTime())) {
-          monthlyData[dDate.getMonth()].total += amount;
+          donationsOnlyMonthlyData[dDate.getMonth()].total += amount;
         }
+
+        const catName = (d.recordCategory as string) || 'Donación';
+        incomeMap[catName] = (incomeMap[catName] || 0) + amount;
+        totalIncome += amount;
 
         const fund = (d.fundCampaign as string) || 'Fondo General';
         if (!fundStats[fund]) fundStats[fund] = { inflows: 0, outflows: 0 };
@@ -208,11 +216,15 @@ export async function GET(request: Request) {
     const expenses = Object.entries(expenseMap).map(([label, amount]) => ({ label, amount }));
     const netIncome = totalIncome - totalExpenses;
     const averageDonation = donationsCount > 0 ? totalDonations / donationsCount : 0;
+    const donationsOnlyAverage = donationsOnlyCount > 0 ? donationsOnlyTotal / donationsOnlyCount : 0;
 
     return NextResponse.json({
       totalDonations,
       averageDonation,
       monthlyData,
+      donationsOnlyTotal,
+      donationsOnlyAverage,
+      donationsOnlyMonthlyData,
       income,
       expenses,
       totalIncome,
