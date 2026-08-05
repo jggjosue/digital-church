@@ -98,15 +98,15 @@ export default function DonationReportsPage() {
   }, [selectedYear, currentPage]);
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-ES', {
+    return new Intl.NumberFormat('es-MX', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'MXN',
     }).format(amount);
   };
 
-  const totalDonations = summary?.totalDonations || 0;
-  const averageDonation = summary?.averageDonation || 0;
-  const monthlyData = summary?.monthlyData || Array.from({ length: 12 }, (_, i) => ({ month: '', total: 0 }));
+  const totalDonations = summary?.donationsOnlyTotal ?? summary?.totalDonations ?? 0;
+  const averageDonation = summary?.donationsOnlyAverage ?? summary?.averageDonation ?? 0;
+  const monthlyData = summary?.donationsOnlyMonthlyData ?? summary?.monthlyData ?? Array.from({ length: 12 }, (_, i) => ({ month: '', total: 0 }));
 
   const handlePageChange = (page: number) => {
     if (page >= 1 && page <= totalPages) {

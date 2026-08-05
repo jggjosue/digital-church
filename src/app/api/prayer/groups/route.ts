@@ -4,33 +4,18 @@ import { auth, currentUser } from '@clerk/nextjs/server';
 import { getDb } from '@/lib/mongodb';
 import { PRAYER_GROUPS_COLLECTION, type PrayerGroupDocument } from '@/lib/prayers';
 
-const DEFAULT_PRAYER_GROUPS = [
-  { name: 'Grupo de Intercesión', description: 'Grupo general de intercesión por la iglesia y necesidades comunitarias.' },
-  { name: 'Jóvenes en Oración', description: 'Cadena de oración del ministerio juvenil.' },
-  { name: 'Ministerio de Damas', description: 'Grupo de oración y apoyo para mujeres.' },
-  { name: 'Varones de Fe', description: 'Grupo de oración para varones.' },
-  { name: 'Matrimonios y Familias', description: 'Oración enfocada en la vida familiar y parejas.' },
-];
-
-async function ensureDefaultGroups(db: any) {
-  const count = await db.collection(PRAYER_GROUPS_COLLECTION).countDocuments();
-  if (count === 0) {
-    const now = new Date();
-    const seedDocs: PrayerGroupDocument[] = DEFAULT_PRAYER_GROUPS.map((g) => ({
-      id: randomUUID(),
-      name: g.name,
-      description: g.description,
-      createdAt: now,
-      updatedAt: now,
-    }));
-    await db.collection(PRAYER_GROUPS_COLLECTION).insertMany(seedDocs);
-  }
-}
-
 export async function GET() {
   try {
     const db = await getDb();
-    await ensureDefaultGroups(db);
+
+    // Clean up initial mock/example seed groups that have no creator email
+    await db.collection(PRAYER_GROUPS_COLLECTION).deleteMany({
+      $or: [
+        { createdBy: { $exists: false } },
+        { createdBy: '' },
+        { createdBy: null },
+      ],
+    });
 
     const groups = await db
       .collection<PrayerGroupDocument>(PRAYER_GROUPS_COLLECTION)
@@ -63,7 +48,6 @@ export async function POST(request: Request) {
     }
 
     const db = await getDb();
-    await ensureDefaultGroups(db);
 
     // Check if group already exists
     const existing = await db
@@ -79,7 +63,7 @@ export async function POST(request: Request) {
       id: randomUUID(),
       name,
       description,
-      createdBy: creatorEmail,
+      createdBy: creatorEmail || 'Usuario',
       createdAt: now,
       updatedAt: now,
     };
