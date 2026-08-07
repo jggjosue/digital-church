@@ -14,6 +14,7 @@ import {
 } from '@/lib/pastor-church-access';
 import { STAFF_CARGO_DIRECTORY_EXCLUDED_PATTERN } from '@/lib/staff-directory-roles';
 import { createMemberSchema } from '@/lib/member-schema';
+import { isSuperAdminEmail } from '@/lib/super-admin';
 
 export type MemberDocument = {
   id: string;
@@ -401,10 +402,17 @@ export async function POST(request: Request) {
       body.department !== undefined && String(body.department).trim() !== ''
         ? String(body.department).trim()
         : null;
-    const staffRole =
+    let staffRole =
       body.staffRole !== undefined && String(body.staffRole).trim() !== ''
         ? String(body.staffRole).trim()
         : null;
+
+    const normalizedEmail = body.email.trim().toLowerCase();
+    if (isSuperAdminEmail(normalizedEmail)) {
+      staffRole = 'Super Administrador';
+    } else if (staffRole === 'Super Administrador') {
+      staffRole = null;
+    }
 
     const portalRoleId =
       body.portalRoleId !== undefined && body.portalRoleId !== null
@@ -413,8 +421,8 @@ export async function POST(request: Request) {
           ? null
           : undefined;
 
-    const normalizedEmail = body.email.trim().toLowerCase();
     const members = db.collection<MemberDocument>('members');
+
     const existing = await findMemberByEmail(
       members,
       normalizedEmail,

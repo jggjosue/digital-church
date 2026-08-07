@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { getDb } from '@/lib/mongodb';
+import { isSuperAdminEmail } from '@/lib/super-admin';
 
 export async function GET() {
   try {
@@ -37,6 +38,10 @@ export async function GET() {
       }
     );
 
+    if (member && isSuperAdminEmail(email)) {
+      member.staffRole = 'Super Administrador';
+    }
+
     return NextResponse.json({ member: member ?? null }, { status: 200 });
   } catch (e) {
     console.error('[api/members/me GET]', e);
@@ -46,3 +51,4 @@ export async function GET() {
     );
   }
 }
+

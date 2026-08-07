@@ -3,6 +3,7 @@
 
 import * as React from 'react';
 import { useUser } from '@clerk/nextjs';
+import { isSuperAdminEmail, getStaffRoleOptions } from '@/lib/super-admin';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -87,10 +88,13 @@ function staffRoleToApi(kind: string): string | undefined {
   return kind;
 }
 
-function staffRoleKindFromApi(stored: string | null | undefined): StaffRoleOption {
+function staffRoleKindFromApi(stored: string | null | undefined, email?: string): StaffRoleOption {
+  if (isSuperAdminEmail(email)) return 'Super Administrador' as StaffRoleOption;
   const r = String(stored ?? '').trim();
+  if (r === 'Super Administrador') return 'Super Administrador' as StaffRoleOption;
   const valid = new Set<StaffRoleOption>([
     STAFF_ROLE_NONE,
+    'Super Administrador' as StaffRoleOption,
     'Pastor',
     'Congregante',
     'Directiva',
@@ -128,7 +132,11 @@ export default function NewMemberPage() {
     const pathname = usePathname();
     const isAddMode = pathname?.startsWith('/members/add') ?? false;
     const { user, isLoaded: clerkLoaded } = useUser();
+    const sessionEmail = user?.primaryEmailAddress?.emailAddress;
+    const isSessionSuperAdmin = isSuperAdminEmail(sessionEmail);
+    const [initialRoleLoaded, setInitialRoleLoaded] = React.useState<string | null>(null);
     const [ministriesFromDb, setMinistriesFromDb] = React.useState<MinistryCatalogRow[]>([]);
+
     const [isNewPortalUser, setIsNewPortalUser] = React.useState(false);
     const [isUnregisteredPortalUser, setIsUnregisteredPortalUser] = React.useState(false);
     const [isCongregantePortalUser, setIsCongregantePortalUser] = React.useState(false);
@@ -260,6 +268,9 @@ export default function NewMemberPage() {
           const spiritualOk =
             spiritual && !Number.isNaN(spiritual.getTime()) ? spiritual : undefined;
 
+          const roleKind = staffRoleKindFromApi(m.staffRole, m.email);
+          setInitialRoleLoaded(roleKind);
+
           form.reset({
             firstName: String(m.firstName ?? firstName),
             lastName: String(m.lastName ?? lastName),
@@ -270,8 +281,9 @@ export default function NewMemberPage() {
             spiritualBirthday: spiritualOk,
             groups: Array.isArray(m.groups) ? m.groups : [],
             churchIds: Array.isArray(m.churchIds) ? m.churchIds : [],
-            staffRoleKind: staffRoleKindFromApi(m.staffRole),
+            staffRoleKind: roleKind,
           });
+
         } catch {
           // Si falla, dejamos los datos de Clerk como base.
         }
@@ -615,32 +627,48 @@ export default function NewMemberPage() {
                     </Select>
                   </div>
                 </div>
-                <FormField
-                  control={form.control}
-                  name="staffRoleKind"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Cargo o rol (obligatorio)</FormLabel>
-                      <Select value={field.value ?? STAFF_ROLE_NONE} onValueChange={field.onChange}>
-                        <FormControl>
-                          <SelectTrigger className="h-11">
-                            <SelectValue placeholder="Seleccione un cargo" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {STAFF_ROLE_OPTIONS.map((opt) => (
-                            <SelectItem key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {(() => {
+                  const hasAlreadySelectedRole = !isAddMode && Boolean(
+                    initialRoleLoaded && initialRoleLoaded !== STAFF_ROLE_NONE && initialRoleLoaded.trim() !== ''
+                  );
+                  const isRoleDisabled = !isSessionSuperAdmin && hasAlreadySelectedRole;
+                  const currentEmail = form.watch('email') || sessionEmail;
+                  const staffRoleOptions = getStaffRoleOptions(currentEmail);
+
+                  return (
+                    <FormField
+                      control={form.control}
+                      name="staffRoleKind"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Cargo o rol (obligatorio)</FormLabel>
+                          <Select
+                            value={field.value ?? STAFF_ROLE_NONE}
+                            onValueChange={field.onChange}
+                            disabled={isRoleDisabled}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="h-11">
+                                <SelectValue placeholder="Seleccione un cargo" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {staffRoleOptions.map((opt) => (
+                                <SelectItem key={opt.value} value={opt.value}>
+                                  {opt.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  );
+                })()}
               </CardContent>
             </Card>
+
 
             <Card>
               <CardHeader className="pb-3">
