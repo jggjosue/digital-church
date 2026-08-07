@@ -558,7 +558,7 @@ export default function EditMemberPage() {
                 <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
                   <div className="space-y-2">
                     <Label htmlFor="organization-iciar">Organización</Label>
-                    <Input id="organization-iciar" value="Gestión ministerial" disabled readOnly className="h-11" />
+                    <Input id="organization-iciar" value="ICIAR" disabled readOnly className="h-11" />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="presbytery">Presbiterio</Label>

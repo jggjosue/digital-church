@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { randomUUID } from 'crypto';
 import { getDb } from '@/lib/mongodb';
 
-export const ONLINE_EVENTS_COLLECTION = 'online_events';
+const ONLINE_EVENTS_COLLECTION = 'online_events';
 
 const createEventSchema = z.object({
   name: z.string().min(1, 'El nombre es requerido').max(200),
