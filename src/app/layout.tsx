@@ -10,10 +10,10 @@ import type { Metadata, Viewport } from 'next';
 import { PT_Sans } from 'next/font/google';
 import './globals.css';
 
-const ptSans = PT_Sans({ 
-  subsets: ['latin'], 
+const ptSans = PT_Sans({
+  subsets: ['latin'],
   weight: ['400', '700'],
-  variable: '--font-sans' 
+  variable: '--font-sans'
 });
 
 export const metadata: Metadata = {
