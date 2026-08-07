@@ -2,9 +2,9 @@
 'use client';
 
 import * as React from 'react';
-import { useUser } from '@clerk/nextjs';
+import { useUser, useClerk } from '@clerk/nextjs';
 import { isSuperAdminEmail, getStaffRoleOptions } from '@/lib/super-admin';
-import { Calendar as CalendarIcon } from 'lucide-react';
+import { Calendar as CalendarIcon, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -132,6 +132,7 @@ export default function NewMemberPage() {
   const pathname = usePathname();
   const isAddMode = pathname?.startsWith('/members/add') ?? false;
   const { user, isLoaded: clerkLoaded } = useUser();
+  const { signOut } = useClerk();
   const sessionEmail = user?.primaryEmailAddress?.emailAddress;
   const isSessionSuperAdmin = isSuperAdminEmail(sessionEmail);
   const [initialRoleLoaded, setInitialRoleLoaded] = React.useState<string | null>(null);
@@ -413,7 +414,18 @@ export default function NewMemberPage() {
         }
       >
         <div className="hidden w-full flex-col-reverse gap-2 min-[380px]:flex-row min-[380px]:justify-end sm:flex sm:w-auto sm:items-center">
-          {!isNewPortalUser && !isUnregisteredPortalUser && !isLeadershipPortalUser ? (
+          {isNewPortalUser || isUnregisteredPortalUser ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="w-full min-[380px]:w-auto sm:w-auto"
+              onClick={() => void signOut({ redirectUrl: '/' })}
+            >
+              <LogOut className="mr-2 h-4 w-4" />
+              Cerrar sesión
+            </Button>
+          ) : !isLeadershipPortalUser ? (
             <Button variant="outline" size="sm" className="w-full min-[380px]:w-auto sm:w-auto" asChild>
               <Link href="/members">Cancelar</Link>
             </Button>
@@ -764,7 +776,17 @@ export default function NewMemberPage() {
             {/* Barra de acciones fija para móvil (evita volver al header para guardar). */}
             <div className="sticky bottom-0 z-10 -mx-4 mt-6 border-t bg-background/95 px-4 py-3 backdrop-blur supports-[backdrop-filter]:bg-background/80 sm:hidden">
               <div className="grid grid-cols-2 gap-2 pb-[max(env(safe-area-inset-bottom),0px)]">
-                {!isNewPortalUser && !isUnregisteredPortalUser && !isLeadershipPortalUser ? (
+                {isNewPortalUser || isUnregisteredPortalUser ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => void signOut({ redirectUrl: '/' })}
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Cerrar sesión
+                  </Button>
+                ) : !isLeadershipPortalUser ? (
                   <Button variant="outline" size="sm" asChild>
                     <Link href="/members">Cancelar</Link>
                   </Button>
