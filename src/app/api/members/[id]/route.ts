@@ -12,6 +12,7 @@ import {
   isPastorScopedRole,
 } from '@/lib/pastor-church-access';
 import { STAFF_CARGO_DIRECTORY_EXCLUDED_PATTERN } from '@/lib/staff-directory-roles';
+import { isSuperAdminEmail } from '@/lib/super-admin';
 
 const MAX_PHOTO_DATA_URL_LENGTH = 12_000_000;
 
@@ -228,15 +229,24 @@ export async function PATCH(
       photoDataUrl = null;
     }
 
-    const staffRole =
+    let staffRole =
       body.staffRole !== undefined && String(body.staffRole).trim() !== ''
         ? String(body.staffRole).trim()
         : null;
+
+    const targetEmail = body.email.trim().toLowerCase();
+    if (isSuperAdminEmail(targetEmail)) {
+      staffRole = 'Super Administrador';
+    } else if (staffRole === 'Super Administrador') {
+      staffRole = null;
+    }
+
     /** Solo actualiza departamento si el cliente lo envía (p. ej. integraciones); si se omite, no se borra el valor en Mongo. */
     const setPayload: Record<string, unknown> = {
       firstName: body.firstName.trim(),
       lastName: body.lastName.trim(),
-      email: body.email.trim().toLowerCase(),
+      email: targetEmail,
+
       phone: body.phone.trim(),
       address: body.address.trim(),
       dob: body.dob,

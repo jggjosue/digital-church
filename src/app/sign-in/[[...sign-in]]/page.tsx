@@ -12,7 +12,7 @@ export default function SignInPage() {
     <div className="min-h-dvh bg-gradient-to-b from-slate-50 to-white px-4 pb-6 pt-[max(env(safe-area-inset-top),1rem)] sm:grid sm:min-h-screen sm:place-items-center sm:p-6">
       <div className="mx-auto w-full max-w-[26rem]">
         <div className="mb-4 text-center sm:mb-5">
-          <p className="text-lg font-bold tracking-tight text-slate-900">ICIAR</p>
+          <p className="text-lg font-bold tracking-tight text-slate-900">Gestión Ministerial</p>
           <p className="mt-1 text-sm text-slate-600">Inicie sesión para acceder al portal ministerial.</p>
         </div>
 

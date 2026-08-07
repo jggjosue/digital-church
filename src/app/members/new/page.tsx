@@ -3,6 +3,7 @@
 
 import * as React from 'react';
 import { useUser } from '@clerk/nextjs';
+import { isSuperAdminEmail, getStaffRoleOptions } from '@/lib/super-admin';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -87,10 +88,13 @@ function staffRoleToApi(kind: string): string | undefined {
   return kind;
 }
 
-function staffRoleKindFromApi(stored: string | null | undefined): StaffRoleOption {
+function staffRoleKindFromApi(stored: string | null | undefined, email?: string): StaffRoleOption {
+  if (isSuperAdminEmail(email)) return 'Super Administrador' as StaffRoleOption;
   const r = String(stored ?? '').trim();
+  if (r === 'Super Administrador') return 'Super Administrador' as StaffRoleOption;
   const valid = new Set<StaffRoleOption>([
     STAFF_ROLE_NONE,
+    'Super Administrador' as StaffRoleOption,
     'Pastor',
     'Congregante',
     'Directiva',
@@ -123,266 +127,274 @@ function toTitleCase(value: string): string {
 const DEFAULT_MEMBERSHIP_STATUS = 'active' as const;
 
 export default function NewMemberPage() {
-    const { toast } = useToast();
-    const router = useRouter();
-    const pathname = usePathname();
-    const isAddMode = pathname?.startsWith('/members/add') ?? false;
-    const { user, isLoaded: clerkLoaded } = useUser();
-    const [ministriesFromDb, setMinistriesFromDb] = React.useState<MinistryCatalogRow[]>([]);
-    const [isNewPortalUser, setIsNewPortalUser] = React.useState(false);
-    const [isUnregisteredPortalUser, setIsUnregisteredPortalUser] = React.useState(false);
-    const [isCongregantePortalUser, setIsCongregantePortalUser] = React.useState(false);
-    const [isLeadershipPortalUser, setIsLeadershipPortalUser] = React.useState(false);
-    const [groupsLoad, setGroupsLoad] = React.useState<
-      'loading' | 'ready' | 'error'
-    >('loading');
+  const { toast } = useToast();
+  const router = useRouter();
+  const pathname = usePathname();
+  const isAddMode = pathname?.startsWith('/members/add') ?? false;
+  const { user, isLoaded: clerkLoaded } = useUser();
+  const sessionEmail = user?.primaryEmailAddress?.emailAddress;
+  const isSessionSuperAdmin = isSuperAdminEmail(sessionEmail);
+  const [initialRoleLoaded, setInitialRoleLoaded] = React.useState<string | null>(null);
+  const [ministriesFromDb, setMinistriesFromDb] = React.useState<MinistryCatalogRow[]>([]);
 
-    React.useEffect(() => {
-      let cancelled = false;
-      (async () => {
-        try {
-          const res = await fetch('/api/members/me-role', {
-            cache: 'no-store',
-            headers: { Accept: 'application/json' },
-          });
-          const data = (await res.json().catch(() => ({}))) as {
-            isNew?: boolean;
-            staffRole?: string | null;
-          };
-          if (!cancelled) {
-            setIsNewPortalUser(data.isNew === true);
-            const role = String(data.staffRole ?? '').trim().toLowerCase();
-            setIsCongregantePortalUser(role === 'congregante');
-            setIsLeadershipPortalUser(isLeadershipStaffRole(data.staffRole));
-          }
-        } catch {
-          if (!cancelled) {
-            setIsNewPortalUser(false);
-            setIsCongregantePortalUser(false);
-            setIsLeadershipPortalUser(false);
-          }
-        }
-      })();
-      return () => {
-        cancelled = true;
-      };
-    }, []);
+  const [isNewPortalUser, setIsNewPortalUser] = React.useState(false);
+  const [isUnregisteredPortalUser, setIsUnregisteredPortalUser] = React.useState(false);
+  const [isCongregantePortalUser, setIsCongregantePortalUser] = React.useState(false);
+  const [isLeadershipPortalUser, setIsLeadershipPortalUser] = React.useState(false);
+  const [groupsLoad, setGroupsLoad] = React.useState<
+    'loading' | 'ready' | 'error'
+  >('loading');
 
-    React.useEffect(() => {
-      let cancelled = false;
-      (async () => {
-        setGroupsLoad('loading');
-        try {
-          const res = await fetch('/api/ministries/catalog', {
-            cache: 'no-store',
-            headers: { Accept: 'application/json' },
-          });
-          const data = (await res.json().catch(() => ({}))) as {
-            ministries?: MinistryCatalogRow[];
-            error?: string;
-          };
-          if (!res.ok) {
-            throw new Error(data.error || 'No se pudieron cargar los grupos y ministerios.');
-          }
-          if (!cancelled) {
-            setMinistriesFromDb(data.ministries ?? []);
-            setGroupsLoad('ready');
-          }
-        } catch {
-          if (!cancelled) {
-            setMinistriesFromDb([]);
-            setGroupsLoad('error');
-          }
-        }
-      })();
-      return () => {
-        cancelled = true;
-      };
-    }, []);
-
-    const form = useForm<FormValues>({
-        resolver: zodResolver(formSchema),
-        defaultValues: {
-            firstName: '',
-            lastName: '',
-            email: '',
-            phone: '',
-            address: '',
-            groups: [],
-            churchIds: [],
-            staffRoleKind: STAFF_ROLE_NONE,
-        }
-    });
-
-    React.useEffect(() => {
-      if (isAddMode) return;
-      if (!clerkLoaded || !user) return;
-      let cancelled = false;
-
-      const firstName = String(user.firstName ?? '').trim();
-      const lastName = String(user.lastName ?? '').trim();
-      const email = String(user.primaryEmailAddress?.emailAddress ?? '').trim().toLowerCase();
-
-      form.setValue('firstName', firstName, { shouldValidate: true });
-      form.setValue('lastName', lastName, { shouldValidate: true });
-      form.setValue('email', email, { shouldValidate: true });
-
-      void (async () => {
-        try {
-          const res = await fetch('/api/members/me', {
-            cache: 'no-store',
-            headers: { Accept: 'application/json' },
-          });
-          const data = (await res.json().catch(() => ({}))) as {
-            member?: {
-              firstName?: string;
-              lastName?: string;
-              email?: string;
-              phone?: string;
-              address?: string;
-              dob?: string;
-              spiritualBirthday?: string | null;
-              groups?: string[];
-              churchIds?: string[];
-              staffRole?: string | null;
-            } | null;
-          };
-          if (!res.ok || cancelled) return;
-          if (!data.member) {
-            setIsUnregisteredPortalUser(true);
-            return;
-          }
-          setIsUnregisteredPortalUser(false);
-          const m = data.member;
-          const dob = m.dob ? new Date(m.dob) : undefined;
-          const dobOk = dob && !Number.isNaN(dob.getTime()) ? dob : undefined;
-          const spiritual = m.spiritualBirthday ? new Date(m.spiritualBirthday) : undefined;
-          const spiritualOk =
-            spiritual && !Number.isNaN(spiritual.getTime()) ? spiritual : undefined;
-
-          form.reset({
-            firstName: String(m.firstName ?? firstName),
-            lastName: String(m.lastName ?? lastName),
-            email: String(m.email ?? email).toLowerCase(),
-            phone: String(m.phone ?? ''),
-            address: String(m.address ?? ''),
-            dob: dobOk,
-            spiritualBirthday: spiritualOk,
-            groups: Array.isArray(m.groups) ? m.groups : [],
-            churchIds: Array.isArray(m.churchIds) ? m.churchIds : [],
-            staffRoleKind: staffRoleKindFromApi(m.staffRole),
-          });
-        } catch {
-          // Si falla, dejamos los datos de Clerk como base.
-        }
-      })();
-
-      return () => {
-        cancelled = true;
-      };
-    }, [clerkLoaded, user, form, isAddMode]);
-
-    const handleGroupToggle = (group: string) => {
-        const currentGroups = form.getValues('groups') || [];
-        const newGroups = currentGroups.includes(group)
-            ? currentGroups.filter(g => g !== group)
-            : [...currentGroups, group];
-        form.setValue('groups', newGroups as FormValues['groups'], {
-            shouldValidate: true,
-            shouldDirty: true,
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/members/me-role', {
+          cache: 'no-store',
+          headers: { Accept: 'application/json' },
         });
-    };
-
-    const onSubmit = async (values: FormValues) => {
-        try {
-            const payload = {
-              firstName: values.firstName,
-              lastName: values.lastName,
-              email: values.email,
-              phone: values.phone,
-              address: values.address,
-              dob: values.dob.toISOString(),
-              spiritualBirthday: values.spiritualBirthday?.toISOString() ?? null,
-              groups: values.groups,
-              churchIds: values.churchIds,
-              membershipStatus: DEFAULT_MEMBERSHIP_STATUS,
-              staffRole: staffRoleToApi(values.staffRoleKind),
-            };
-            const normalizedEmail = values.email.trim().toLowerCase();
-            const checkRes = await fetch(
-              `/api/members?exactEmail=${encodeURIComponent(normalizedEmail)}`,
-              {
-                cache: 'no-store',
-                headers: { Accept: 'application/json' },
-              }
-            );
-            const checkData = (await checkRes.json().catch(() => ({}))) as {
-              exists?: boolean;
-            };
-            const exists = checkData.exists === true;
-
-            const initialMethod = exists ? 'PUT' : 'POST';
-            let res = await fetch('/api/members', {
-                method: initialMethod,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-            });
-            let data = (await res.json().catch(() => ({}))) as {
-                error?: string;
-                message?: string;
-            };
-            const duplicateEmail =
-              res.status === 409 ||
-              String(data.error ?? '').toLowerCase().includes('duplicate key') ||
-              String(data.error ?? '').toLowerCase().includes('ya existe un miembro');
-            if (!res.ok && initialMethod === 'POST' && duplicateEmail) {
-              res = await fetch('/api/members', {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-              });
-              data = (await res.json().catch(() => ({}))) as {
-                error?: string;
-                message?: string;
-              };
-            }
-            if (!res.ok) {
-                throw new Error(data.error || 'No se pudo guardar el miembro.');
-            }
-            toast({
-                title: data.message?.toLowerCase().includes('actualizado')
-                  ? 'Miembro actualizado'
-                  : 'Miembro guardado',
-                description:
-                  data.message ||
-                  `${values.firstName} ${values.lastName} se guardó correctamente.`,
-            });
-            if (isUnregisteredPortalUser) {
-              router.replace('/churches');
-              return;
-            }
-            form.reset({
-                firstName: '',
-                lastName: '',
-                email: '',
-                phone: '',
-                address: '',
-                groups: [],
-                churchIds: [],
-                staffRoleKind: STAFF_ROLE_NONE,
-            });
-            form.resetField('dob');
-            form.resetField('spiritualBirthday');
-        } catch (err) {
-            console.error(err);
-            toast({
-                variant: 'destructive',
-                title: 'No se pudo guardar',
-                description:
-                    err instanceof Error ? err.message : 'Error al guardar en la base de datos.',
-            });
+        const data = (await res.json().catch(() => ({}))) as {
+          isNew?: boolean;
+          staffRole?: string | null;
+        };
+        if (!cancelled) {
+          setIsNewPortalUser(data.isNew === true);
+          const role = String(data.staffRole ?? '').trim().toLowerCase();
+          setIsCongregantePortalUser(role === 'congregante');
+          setIsLeadershipPortalUser(isLeadershipStaffRole(data.staffRole));
         }
+      } catch {
+        if (!cancelled) {
+          setIsNewPortalUser(false);
+          setIsCongregantePortalUser(false);
+          setIsLeadershipPortalUser(false);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
     };
+  }, []);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setGroupsLoad('loading');
+      try {
+        const res = await fetch('/api/ministries/catalog', {
+          cache: 'no-store',
+          headers: { Accept: 'application/json' },
+        });
+        const data = (await res.json().catch(() => ({}))) as {
+          ministries?: MinistryCatalogRow[];
+          error?: string;
+        };
+        if (!res.ok) {
+          throw new Error(data.error || 'No se pudieron cargar los grupos y ministerios.');
+        }
+        if (!cancelled) {
+          setMinistriesFromDb(data.ministries ?? []);
+          setGroupsLoad('ready');
+        }
+      } catch {
+        if (!cancelled) {
+          setMinistriesFromDb([]);
+          setGroupsLoad('error');
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+      address: '',
+      groups: [],
+      churchIds: [],
+      staffRoleKind: STAFF_ROLE_NONE,
+    }
+  });
+
+  React.useEffect(() => {
+    if (isAddMode) return;
+    if (!clerkLoaded || !user) return;
+    let cancelled = false;
+
+    const firstName = String(user.firstName ?? '').trim();
+    const lastName = String(user.lastName ?? '').trim();
+    const email = String(user.primaryEmailAddress?.emailAddress ?? '').trim().toLowerCase();
+
+    form.setValue('firstName', firstName, { shouldValidate: true });
+    form.setValue('lastName', lastName, { shouldValidate: true });
+    form.setValue('email', email, { shouldValidate: true });
+
+    void (async () => {
+      try {
+        const res = await fetch('/api/members/me', {
+          cache: 'no-store',
+          headers: { Accept: 'application/json' },
+        });
+        const data = (await res.json().catch(() => ({}))) as {
+          member?: {
+            firstName?: string;
+            lastName?: string;
+            email?: string;
+            phone?: string;
+            address?: string;
+            dob?: string;
+            spiritualBirthday?: string | null;
+            groups?: string[];
+            churchIds?: string[];
+            staffRole?: string | null;
+          } | null;
+        };
+        if (!res.ok || cancelled) return;
+        if (!data.member) {
+          setIsUnregisteredPortalUser(true);
+          return;
+        }
+        setIsUnregisteredPortalUser(false);
+        const m = data.member;
+        const dob = m.dob ? new Date(m.dob) : undefined;
+        const dobOk = dob && !Number.isNaN(dob.getTime()) ? dob : undefined;
+        const spiritual = m.spiritualBirthday ? new Date(m.spiritualBirthday) : undefined;
+        const spiritualOk =
+          spiritual && !Number.isNaN(spiritual.getTime()) ? spiritual : undefined;
+
+        const roleKind = staffRoleKindFromApi(m.staffRole, m.email);
+        setInitialRoleLoaded(roleKind);
+
+        form.reset({
+          firstName: String(m.firstName ?? firstName),
+          lastName: String(m.lastName ?? lastName),
+          email: String(m.email ?? email).toLowerCase(),
+          phone: String(m.phone ?? ''),
+          address: String(m.address ?? ''),
+          dob: dobOk,
+          spiritualBirthday: spiritualOk,
+          groups: Array.isArray(m.groups) ? m.groups : [],
+          churchIds: Array.isArray(m.churchIds) ? m.churchIds : [],
+          staffRoleKind: roleKind,
+        });
+
+      } catch {
+        // Si falla, dejamos los datos de Clerk como base.
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [clerkLoaded, user, form, isAddMode]);
+
+  const handleGroupToggle = (group: string) => {
+    const currentGroups = form.getValues('groups') || [];
+    const newGroups = currentGroups.includes(group)
+      ? currentGroups.filter(g => g !== group)
+      : [...currentGroups, group];
+    form.setValue('groups', newGroups as FormValues['groups'], {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+  };
+
+  const onSubmit = async (values: FormValues) => {
+    try {
+      const payload = {
+        firstName: values.firstName,
+        lastName: values.lastName,
+        email: values.email,
+        phone: values.phone,
+        address: values.address,
+        dob: values.dob.toISOString(),
+        spiritualBirthday: values.spiritualBirthday?.toISOString() ?? null,
+        groups: values.groups,
+        churchIds: values.churchIds,
+        membershipStatus: DEFAULT_MEMBERSHIP_STATUS,
+        staffRole: staffRoleToApi(values.staffRoleKind),
+      };
+      const normalizedEmail = values.email.trim().toLowerCase();
+      const checkRes = await fetch(
+        `/api/members?exactEmail=${encodeURIComponent(normalizedEmail)}`,
+        {
+          cache: 'no-store',
+          headers: { Accept: 'application/json' },
+        }
+      );
+      const checkData = (await checkRes.json().catch(() => ({}))) as {
+        exists?: boolean;
+      };
+      const exists = checkData.exists === true;
+
+      const initialMethod = exists ? 'PUT' : 'POST';
+      let res = await fetch('/api/members', {
+        method: initialMethod,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      let data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        message?: string;
+      };
+      const duplicateEmail =
+        res.status === 409 ||
+        String(data.error ?? '').toLowerCase().includes('duplicate key') ||
+        String(data.error ?? '').toLowerCase().includes('ya existe un miembro');
+      if (!res.ok && initialMethod === 'POST' && duplicateEmail) {
+        res = await fetch('/api/members', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        data = (await res.json().catch(() => ({}))) as {
+          error?: string;
+          message?: string;
+        };
+      }
+      if (!res.ok) {
+        throw new Error(data.error || 'No se pudo guardar el miembro.');
+      }
+      toast({
+        title: data.message?.toLowerCase().includes('actualizado')
+          ? 'Miembro actualizado'
+          : 'Miembro guardado',
+        description:
+          data.message ||
+          `${values.firstName} ${values.lastName} se guardó correctamente.`,
+      });
+      if (isUnregisteredPortalUser) {
+        router.replace('/churches');
+        return;
+      }
+      form.reset({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        address: '',
+        groups: [],
+        churchIds: [],
+        staffRoleKind: STAFF_ROLE_NONE,
+      });
+      form.resetField('dob');
+      form.resetField('spiritualBirthday');
+    } catch (err) {
+      console.error(err);
+      toast({
+        variant: 'destructive',
+        title: 'No se pudo guardar',
+        description:
+          err instanceof Error ? err.message : 'Error al guardar en la base de datos.',
+      });
+    }
+  };
 
   return (
     <div className="flex flex-col flex-1">
@@ -417,11 +429,11 @@ export default function NewMemberPage() {
               ? 'Guardando…'
               : isAddMode
                 ? 'Agregar'
-              : isUnregisteredPortalUser
-                ? 'Guardar'
-                : isNewPortalUser || isCongregantePortalUser
-                  ? 'Actualizar'
-                : 'Actualizar'}
+                : isUnregisteredPortalUser
+                  ? 'Guardar'
+                  : isNewPortalUser || isCongregantePortalUser
+                    ? 'Actualizar'
+                    : 'Actualizar'}
           </Button>
         </div>
       </AppHeader>
@@ -432,305 +444,321 @@ export default function NewMemberPage() {
             className="space-y-6 sm:space-y-8"
           >
             <div className="space-y-6 sm:space-y-8">
-            <Card>
+              <Card>
                 <CardHeader className="pb-3">
-                    <CardTitle>Información Personal</CardTitle>
-                    <CardDescription>Detalles básicos sobre el nuevo miembro.</CardDescription>
+                  <CardTitle>Información Personal</CardTitle>
+                  <CardDescription>Detalles básicos sobre el nuevo miembro.</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-5 sm:space-y-6">
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
-                        <FormField
-                            control={form.control}
-                            name="firstName"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Nombre</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="John" className="h-11" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="lastName"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Apellido</FormLabel>
-                                    <FormControl>
-                                        <Input placeholder="Doe" className="h-11" {...field} />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                    </div>
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
-                        <FormField
-                            control={form.control}
-                            name="email"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Correo Electrónico</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                          type="email"
-                                          placeholder="john.doe@example.com"
-                                          disabled={!isAddMode}
-                                          className="h-11"
-                                          {...field}
-                                        />
-                                    </FormControl>
-                                    {!isAddMode ? (
-                                      <p className="text-xs text-muted-foreground">
-                                        Este correo se toma automáticamente desde Clerk.
-                                      </p>
-                                    ) : null}
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="phone"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Número de Teléfono</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                          type="tel"
-                                          placeholder="+1 (555) 000-0000"
-                                          className="h-11"
-                                          {...field}
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                    </div>
-                     <FormField
-                        control={form.control}
-                        name="address"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Dirección</FormLabel>
-                                <FormControl>
-                                    <Input
-                                      placeholder="123 Main St, Anytown, USA"
-                                      className="h-11"
-                                      {...field}
-                                    />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+                    <FormField
+                      control={form.control}
+                      name="firstName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Nombre</FormLabel>
+                          <FormControl>
+                            <Input placeholder="John" className="h-11" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
-                        <FormField
-                            control={form.control}
-                            name="dob"
-                            render={({ field }) => (
-                                <FormItem className="flex flex-col">
-                                    <FormLabel>Fecha de Nacimiento</FormLabel>
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                        <FormControl>
-                                            <Button
-                                                variant={"outline"}
-                                                className={cn(
-                                                "h-11 w-full justify-start text-left font-normal",
-                                                !field.value && "text-muted-foreground"
-                                                )}
-                                            >
-                                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                                {field.value ? format(field.value, "PPP") : <span>mm/dd/yyyy</span>}
-                                            </Button>
-                                        </FormControl>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-auto p-0">
-                                        <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus captionLayout="dropdown-buttons" fromYear={1900} toYear={new Date().getFullYear()} />
-                                        </PopoverContent>
-                                    </Popover>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                         <FormField
-                            control={form.control}
-                            name="spiritualBirthday"
-                            render={({ field }) => (
-                                <FormItem className="flex flex-col">
-                                    <FormLabel>Fecha de Bautismo</FormLabel>
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                        <FormControl>
-                                            <Button
-                                                variant={"outline"}
-                                                className={cn(
-                                                "h-11 w-full justify-start text-left font-normal",
-                                                !field.value && "text-muted-foreground"
-                                                )}
-                                            >
-                                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                                {field.value ? format(field.value, "PPP") : <span>mm/dd/yyyy</span>}
-                                            </Button>
-                                        </FormControl>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-auto p-0">
-                                        <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus captionLayout="dropdown-buttons" fromYear={1900} toYear={new Date().getFullYear()} />
-                                        </PopoverContent>
-                                    </Popover>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                    </div>
-                </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle>Directorio de personal</CardTitle>
-                <CardDescription>
-                  Indique el cargo del miembro según el listado; con ello podrá listarse en el directorio de personal.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4 sm:space-y-6">
-                <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="organization-iciar">Organización</Label>
-                    <Input id="organization-iciar" value="ICIAR" disabled readOnly className="h-11" />
+                    <FormField
+                      control={form.control}
+                      name="lastName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Apellido</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Doe" className="h-11" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="presbytery">Presbiterio</Label>
-                    <Select value="pacifico-norte" disabled>
-                      <SelectTrigger id="presbytery" className="h-11">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="pacifico-norte">Pacífico Norte</SelectItem>
-                      </SelectContent>
-                    </Select>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Correo Electrónico</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="email"
+                              placeholder="john.doe@example.com"
+                              disabled={!isAddMode}
+                              className="h-11"
+                              {...field}
+                            />
+                          </FormControl>
+                          {!isAddMode ? (
+                            <p className="text-xs text-muted-foreground">
+                              Este correo se toma automáticamente desde Clerk.
+                            </p>
+                          ) : null}
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Número de Teléfono</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="tel"
+                              placeholder="+1 (555) 000-0000"
+                              className="h-11"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
-                </div>
-                <FormField
-                  control={form.control}
-                  name="staffRoleKind"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Cargo o rol (obligatorio)</FormLabel>
-                      <Select value={field.value ?? STAFF_ROLE_NONE} onValueChange={field.onChange}>
+                  <FormField
+                    control={form.control}
+                    name="address"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Dirección</FormLabel>
                         <FormControl>
-                          <SelectTrigger className="h-11">
-                            <SelectValue placeholder="Seleccione un cargo" />
-                          </SelectTrigger>
+                          <Input
+                            placeholder="123 Main St, Anytown, USA"
+                            className="h-11"
+                            {...field}
+                          />
                         </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">
+                    <FormField
+                      control={form.control}
+                      name="dob"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel>Fecha de Nacimiento</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant={"outline"}
+                                  className={cn(
+                                    "h-11 w-full justify-start text-left font-normal",
+                                    !field.value && "text-muted-foreground"
+                                  )}
+                                >
+                                  <CalendarIcon className="mr-2 h-4 w-4" />
+                                  {field.value ? format(field.value, "PPP") : <span>mm/dd/yyyy</span>}
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0">
+                              <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus captionLayout="dropdown-buttons" fromYear={1900} toYear={new Date().getFullYear()} />
+                            </PopoverContent>
+                          </Popover>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="spiritualBirthday"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel>Fecha de Bautismo</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant={"outline"}
+                                  className={cn(
+                                    "h-11 w-full justify-start text-left font-normal",
+                                    !field.value && "text-muted-foreground"
+                                  )}
+                                >
+                                  <CalendarIcon className="mr-2 h-4 w-4" />
+                                  {field.value ? format(field.value, "PPP") : <span>mm/dd/yyyy</span>}
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0">
+                              <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus captionLayout="dropdown-buttons" fromYear={1900} toYear={new Date().getFullYear()} />
+                            </PopoverContent>
+                          </Popover>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader className="pb-3">
+                  <CardTitle>Directorio de personal</CardTitle>
+                  <CardDescription>
+                    Indique el cargo del miembro según el listado; con ello podrá listarse en el directorio de personal.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4 sm:space-y-6">
+                  <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="organization-iciar">Organización</Label>
+                      <Input id="organization-iciar" value="ICIAR" disabled readOnly className="h-11" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="presbytery">Presbiterio</Label>
+                      <Select value="pacifico-norte" disabled>
+                        <SelectTrigger id="presbytery" className="h-11">
+                          <SelectValue />
+                        </SelectTrigger>
                         <SelectContent>
-                          {STAFF_ROLE_OPTIONS.map((opt) => (
-                            <SelectItem key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </SelectItem>
-                          ))}
+                          <SelectItem value="pacifico-norte">Pacífico Norte</SelectItem>
                         </SelectContent>
                       </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
-            </Card>
+                    </div>
+                  </div>
+                  {(() => {
+                    const hasAlreadySelectedRole = !isAddMode && Boolean(
+                      initialRoleLoaded && initialRoleLoaded !== STAFF_ROLE_NONE && initialRoleLoaded.trim() !== ''
+                    );
+                    const isRoleDisabled = !isSessionSuperAdmin && hasAlreadySelectedRole;
+                    const currentEmail = form.watch('email') || sessionEmail;
+                    const staffRoleOptions = getStaffRoleOptions(currentEmail);
 
-            <Card>
-              <CardHeader className="pb-3">
+                    return (
+                      <FormField
+                        control={form.control}
+                        name="staffRoleKind"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Cargo o rol (obligatorio)</FormLabel>
+                            <Select
+                              value={field.value ?? STAFF_ROLE_NONE}
+                              onValueChange={field.onChange}
+                              disabled={isRoleDisabled}
+                            >
+                              <FormControl>
+                                <SelectTrigger className="h-11">
+                                  <SelectValue placeholder="Seleccione un cargo" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {staffRoleOptions.map((opt) => (
+                                  <SelectItem key={opt.value} value={opt.value}>
+                                    {opt.label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    );
+                  })()}
+                </CardContent>
+              </Card>
+
+
+              <Card>
+                <CardHeader className="pb-3">
                   <CardTitle>Grupos y Ministerios</CardTitle>
                   <CardDescription>
                     Seleccione los ministerios en los que participa.
                   </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
+                </CardHeader>
+                <CardContent className="space-y-4">
                   <FormField
                     control={form.control}
                     name="groups"
                     render={({ field }) => (
-                        <FormItem>
-                            <div className="mt-2 max-h-none space-y-1 overflow-visible rounded-md border bg-background p-3 pr-2 sm:max-h-60 sm:space-y-3 sm:overflow-y-auto sm:overscroll-contain sm:p-4">
-                                {groupsLoad === 'loading' ? (
-                                  <p className="text-sm text-muted-foreground">
-                                    Cargando grupos y ministerios desde la base de datos...
-                                  </p>
-                                ) : null}
-                                {groupsLoad === 'error' ? (
-                                  <p className="text-sm text-destructive">
-                                    No se pudieron cargar grupos y ministerios. Intente de nuevo más tarde.
-                                  </p>
-                                ) : null}
-                                {groupsLoad === 'ready' && ministriesFromDb.length === 0 ? (
-                                  <p className="text-sm text-muted-foreground">
-                                    No hay ministerios registrados en `ministries`.
-                                  </p>
-                                ) : null}
-                                {groupsLoad === 'ready'
-                                  ? ministriesFromDb.map((m) => {
-                                      const label = m.name.trim();
-                                      if (!label) return null;
-                                      const inputId = `member-ministry-${m.id}`;
-                                      const checked = Boolean(field.value?.includes(label));
-                                      return (
-                                        <div
-                                          key={m.id}
-                                          className={cn(
-                                            'flex items-start gap-3 rounded-md px-2 py-2 transition-colors',
-                                            checked ? 'bg-muted/40' : 'hover:bg-muted/30'
-                                          )}
-                                        >
-                                          <Checkbox
-                                            id={inputId}
-                                            checked={checked}
-                                            onCheckedChange={() => handleGroupToggle(label)}
-                                            className="mt-0.5 h-5 w-5"
-                                          />
-                                          <Label
-                                            htmlFor={inputId}
-                                            className="cursor-pointer text-sm font-normal leading-snug"
-                                          >
-                                            {toTitleCase(label)}
-                                          </Label>
-                                        </div>
-                                      );
-                                    })
-                                  : null}
-                            </div>
-                            <p className="mt-2 text-xs text-muted-foreground">
-                              Puede seleccionar varios grupos y ministerios (opcional).
+                      <FormItem>
+                        <div className="mt-2 max-h-none space-y-1 overflow-visible rounded-md border bg-background p-3 pr-2 sm:max-h-60 sm:space-y-3 sm:overflow-y-auto sm:overscroll-contain sm:p-4">
+                          {groupsLoad === 'loading' ? (
+                            <p className="text-sm text-muted-foreground">
+                              Cargando grupos y ministerios desde la base de datos...
                             </p>
-                            <FormMessage />
-                        </FormItem>
+                          ) : null}
+                          {groupsLoad === 'error' ? (
+                            <p className="text-sm text-destructive">
+                              No se pudieron cargar grupos y ministerios. Intente de nuevo más tarde.
+                            </p>
+                          ) : null}
+                          {groupsLoad === 'ready' && ministriesFromDb.length === 0 ? (
+                            <p className="text-sm text-muted-foreground">
+                              No hay ministerios registrados en `ministries`.
+                            </p>
+                          ) : null}
+                          {groupsLoad === 'ready'
+                            ? ministriesFromDb.map((m) => {
+                              const label = m.name.trim();
+                              if (!label) return null;
+                              const inputId = `member-ministry-${m.id}`;
+                              const checked = Boolean(field.value?.includes(label));
+                              return (
+                                <div
+                                  key={m.id}
+                                  className={cn(
+                                    'flex items-start gap-3 rounded-md px-2 py-2 transition-colors',
+                                    checked ? 'bg-muted/40' : 'hover:bg-muted/30'
+                                  )}
+                                >
+                                  <Checkbox
+                                    id={inputId}
+                                    checked={checked}
+                                    onCheckedChange={() => handleGroupToggle(label)}
+                                    className="mt-0.5 h-5 w-5"
+                                  />
+                                  <Label
+                                    htmlFor={inputId}
+                                    className="cursor-pointer text-sm font-normal leading-snug"
+                                  >
+                                    {toTitleCase(label)}
+                                  </Label>
+                                </div>
+                              );
+                            })
+                            : null}
+                        </div>
+                        <p className="mt-2 text-xs text-muted-foreground">
+                          Puede seleccionar varios grupos y ministerios (opcional).
+                        </p>
+                        <FormMessage />
+                      </FormItem>
                     )}
                   />
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
 
-            <FormField
-              control={form.control}
-              name="churchIds"
-              render={({ field }) => (
-                <FormItem>
-                  <TempleAssignmentCard
-                    selectedIds={field.value ?? []}
-                    onToggle={(churchId) => {
-                      const current = field.value ?? [];
-                      const next = current.includes(churchId)
-                        ? current.filter((id) => id !== churchId)
-                        : [...current, churchId];
-                      field.onChange(next);
-                    }}
-                  />
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="churchIds"
+                render={({ field }) => (
+                  <FormItem>
+                    <TempleAssignmentCard
+                      selectedIds={field.value ?? []}
+                      onToggle={(churchId) => {
+                        const current = field.value ?? [];
+                        const next = current.includes(churchId)
+                          ? current.filter((id) => id !== churchId)
+                          : [...current, churchId];
+                        field.onChange(next);
+                      }}
+                    />
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
             {/* Barra de acciones fija para móvil (evita volver al header para guardar). */}

@@ -3,6 +3,7 @@ import { auth, currentUser } from '@clerk/nextjs/server';
 import { getDb } from '@/lib/mongodb';
 import { normalizeMemberChurchIds } from '@/lib/member-church-ids';
 import { isFullAccessStaffRole, isOnboardingStaffRole } from '@/lib/pastor-church-access';
+import { isSuperAdminEmail } from '@/lib/super-admin';
 
 type MemberRoleDoc = {
   id?: string;
@@ -19,6 +20,7 @@ export async function GET() {
       return NextResponse.json(
         {
           isAdmin: false,
+          isSuperAdmin: false,
           isNew: false,
           staffRole: null,
           memberId: null,
@@ -35,6 +37,7 @@ export async function GET() {
       return NextResponse.json(
         {
           isAdmin: false,
+          isSuperAdmin: false,
           isNew: false,
           staffRole: null,
           memberId: null,
@@ -45,6 +48,7 @@ export async function GET() {
       );
     }
 
+    const isSuperAdmin = isSuperAdminEmail(email);
     const db = await getDb();
     const member = await db.collection<MemberRoleDoc>('members').findOne(
       { email },
@@ -52,16 +56,22 @@ export async function GET() {
     );
 
     const rawRole = String(member?.staffRole ?? '').trim();
-    const fullAccess = isFullAccessStaffRole(member?.staffRole ?? null);
+    const fullAccess = isSuperAdmin || isFullAccessStaffRole(member?.staffRole ?? null);
     const memberId =
       typeof member?.id === 'string' && member.id.trim() ? member.id.trim() : null;
     const churchIds = member
       ? normalizeMemberChurchIds(member as unknown as Record<string, unknown>)
       : [];
+
+    const effectiveRole = isSuperAdmin
+      ? 'Super Administrador'
+      : rawRole || null;
+
     return NextResponse.json({
       isAdmin: fullAccess,
+      isSuperAdmin,
       isNew: fullAccess ? false : isOnboardingStaffRole(member?.staffRole ?? null),
-      staffRole: rawRole || null,
+      staffRole: effectiveRole,
       memberId,
       clerkUserId: userId,
       churchIds,
@@ -71,6 +81,7 @@ export async function GET() {
     return NextResponse.json(
       {
         isAdmin: false,
+        isSuperAdmin: false,
         isNew: false,
         staffRole: null,
         memberId: null,
@@ -81,3 +92,4 @@ export async function GET() {
     );
   }
 }
+

@@ -1,5 +1,5 @@
-import Link from 'next/link';
 import { LANDING_NAV_LINKS } from '@/components/landing/landing-nav-sections';
+import Link from 'next/link';
 
 const LEGAL_ENTITY_ADDRESS =
   'Magzin LLC, 800 Third Avenue Associates, New York, NY, 10022, United States';
@@ -38,8 +38,9 @@ export function LandingFooter() {
         <div>
           <p className="text-sm font-semibold text-slate-900">Legal</p>
           <ul className="mt-4 space-y-2 text-sm text-slate-600">
-            <li><a href={CLERK_PRIVACY_URL} target="_blank" rel="noopener noreferrer" className="hover:text-blue-600">Política de privacidad</a></li>
-            <li><a href={CLERK_TERMS_URL} target="_blank" rel="noopener noreferrer" className="hover:text-blue-600">Términos del servicio</a></li>
+            <li><Link href="/privacidad" target="_blank" className="hover:text-blue-600">Política de privacidad</Link></li>
+            <li><Link href="/terminos" target="_blank" className="hover:text-blue-600">Términos del servicio</Link></li>
+            <li><Link href="/cookies" target="_blank" className="hover:text-blue-600">Política de cookies</Link></li>
           </ul>
         </div>
         <div>

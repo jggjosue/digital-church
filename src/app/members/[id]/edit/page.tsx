@@ -2,6 +2,8 @@
 'use client';
 
 import * as React from 'react';
+import { useUser } from '@clerk/nextjs';
+import { isSuperAdminEmail, getStaffRoleOptions } from '@/lib/super-admin';
 import { Calendar as CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -100,13 +102,15 @@ const STAFF_ROLE_VALID = new Set(
 );
 
 /** Valores guardados fuera del catálogo actual se muestran como «Sin especificar». */
-function staffRoleKindFromApi(stored: string | null | undefined): string {
+function staffRoleKindFromApi(stored: string | null | undefined, email?: string): string {
+  if (isSuperAdminEmail(email)) return 'Super Administrador';
   const r = (stored ?? '').trim();
   if (!r) return STAFF_ROLE_NONE;
-  /** Variante antigua del formulario; mismo rol que «Responsable de una Comisión». */
+  if (r === 'Super Administrador') return 'Super Administrador';
   if (r === 'Responsable de Comisión') return 'Responsable de una Comisión';
   return (STAFF_ROLE_VALID as ReadonlySet<string>).has(r) ? r : STAFF_ROLE_NONE;
 }
+
 
 const MEMBERSHIP_STATUS_OPTIONS = [
   {
@@ -166,6 +170,11 @@ const EMPTY_FORM_DEFAULTS = {
 } as unknown as FormValues;
 
 export default function EditMemberPage() {
+  const { user } = useUser();
+  const sessionEmail = user?.primaryEmailAddress?.emailAddress;
+  const isSessionSuperAdmin = isSuperAdminEmail(sessionEmail);
+  const [initialRoleLoaded, setInitialRoleLoaded] = React.useState<string | null>(null);
+  const [memberEmail, setMemberEmail] = React.useState<string>('');
   const params = useParams();
   const router = useRouter();
   const id = memberIdFromParams(params);
@@ -183,6 +192,7 @@ export default function EditMemberPage() {
     resolver: zodResolver(formSchema),
     defaultValues: EMPTY_FORM_DEFAULTS,
   });
+
 
   React.useEffect(() => {
     if (!id) {
@@ -228,6 +238,10 @@ export default function EditMemberPage() {
           ? m.membershipStatus
           : 'active';
 
+        const roleKind = staffRoleKindFromApi(m.staffRole, m.email);
+        setMemberEmail(m.email ?? '');
+        setInitialRoleLoaded(roleKind);
+
         form.reset({
           firstName: m.firstName ?? '',
           lastName: m.lastName ?? '',
@@ -239,8 +253,9 @@ export default function EditMemberPage() {
           groups: m.groups.length > 0 ? m.groups : [],
           churchIds: m.churchIds.length > 0 ? m.churchIds : [],
           membershipStatus,
-          staffRoleKind: staffRoleKindFromApi(m.staffRole),
+          staffRoleKind: roleKind,
         });
+
         setPhotoDataUrl(m.photoDataUrl);
         setLoadState('ready');
       } catch (e) {
@@ -533,40 +548,72 @@ export default function EditMemberPage() {
           </Card>
 
           <Card>
-              <CardHeader>
+              <CardHeader className="pb-3">
                   <CardTitle>Directorio de personal</CardTitle>
                   <CardDescription>
-                    Indique el cargo del miembro (Pastor, Congregante, Directiva o Presidente); con ello
-                    podrá listarse en el directorio de personal.
+                    Indique el cargo del miembro según el listado; con ello podrá listarse en el directorio de personal.
                   </CardDescription>
               </CardHeader>
-                <CardContent className="space-y-6">
-                  <FormField
-                    control={form.control}
-                    name="staffRoleKind"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Cargo o rol (obligatorio)</FormLabel>
-                        <Select value={field.value ?? STAFF_ROLE_NONE} onValueChange={field.onChange}>
-                          <FormControl>
-                            <SelectTrigger className="h-11">
-                              <SelectValue placeholder="Seleccione un cargo" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            {STAFF_ROLE_OPTIONS.map((opt) => (
-                              <SelectItem key={opt.value} value={opt.value}>
-                                {opt.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+              <CardContent className="space-y-4 sm:space-y-6">
+                <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="organization-iciar">Organización</Label>
+                    <Input id="organization-iciar" value="ICIAR" disabled readOnly className="h-11" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="presbytery">Presbiterio</Label>
+                    <Select value="pacifico-norte" disabled>
+                      <SelectTrigger id="presbytery" className="h-11">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pacifico-norte">Pacífico Norte</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                {(() => {
+                  const hasAlreadySelectedRole = Boolean(
+                    initialRoleLoaded && initialRoleLoaded !== STAFF_ROLE_NONE && initialRoleLoaded.trim() !== ''
+                  );
+                  const isRoleDisabled = !isSessionSuperAdmin && hasAlreadySelectedRole;
+                  const currentEmail = form.watch('email') || memberEmail;
+                  const staffRoleOptions = getStaffRoleOptions(currentEmail);
+
+                  return (
+                    <FormField
+                      control={form.control}
+                      name="staffRoleKind"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Cargo o rol (obligatorio)</FormLabel>
+                          <Select
+                            value={field.value ?? STAFF_ROLE_NONE}
+                            onValueChange={field.onChange}
+                            disabled={isRoleDisabled}
+                          >
+                            <FormControl>
+                              <SelectTrigger className="h-11">
+                                <SelectValue placeholder="Seleccione un cargo" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {staffRoleOptions.map((opt) => (
+                                <SelectItem key={opt.value} value={opt.value}>
+                                  {opt.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  );
+                })()}
               </CardContent>
           </Card>
+
 
           <Card>
               <CardHeader>
