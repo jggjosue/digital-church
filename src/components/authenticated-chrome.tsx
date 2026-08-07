@@ -8,7 +8,15 @@ import { PortalFooter } from '@/components/portal-footer';
 import { PortalNavProvider } from '@/contexts/portal-nav-context';
 
 const AUTH_ROUTE = /^\/(sign-in|sign-up)(\/|$)/;
-const PUBLIC_CHROME_BYPASS_ROUTES = new Set<string>(['/documentacion']);
+const PUBLIC_CHROME_BYPASS_ROUTES = new Set<string>([
+  '/documentacion',
+  '/privacidad',
+  '/terminos',
+  '/cookies',
+  '/privacy',
+  '/terms',
+  '/legal',
+]);
 const FOOTER_ROUTES = new Set([
   '/dashboard',
   '/churches/new',
@@ -43,7 +51,15 @@ export function AuthenticatedChrome({ children }: { children: React.ReactNode })
   const isAuthPage = pathname ? AUTH_ROUTE.test(pathname) : false;
   const isLandingHome = pathname === '/' || pathname === '';
   const normalizedPath = pathname?.replace(/\/+$/, '') || '/';
-  const isPublicBypassRoute = PUBLIC_CHROME_BYPASS_ROUTES.has(normalizedPath);
+  const isPublicBypassRoute =
+    PUBLIC_CHROME_BYPASS_ROUTES.has(normalizedPath) ||
+    normalizedPath.startsWith('/privacidad/') ||
+    normalizedPath.startsWith('/terminos/') ||
+    normalizedPath.startsWith('/cookies/') ||
+    normalizedPath.startsWith('/privacy/') ||
+    normalizedPath.startsWith('/terms/') ||
+    normalizedPath.startsWith('/legal/') ||
+    normalizedPath.startsWith('/documentacion/');
   const showFooter = FOOTER_ROUTES.has(normalizedPath);
   const isMembersNewRoute = normalizedPath === '/members/new';
 

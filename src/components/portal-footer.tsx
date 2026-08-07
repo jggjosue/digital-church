@@ -20,11 +20,29 @@ export function PortalFooter() {
         <section className="space-y-3">
           <h3 className="text-base font-semibold text-foreground">Legal</h3>
           <div className="flex flex-col gap-2">
-            <Link href="/privacy" className="text-muted-foreground transition-colors hover:text-foreground">
-              Politica de privacidad
+            <Link
+              href="/privacidad"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Política de privacidad
             </Link>
-            <Link href="/terms" className="text-muted-foreground transition-colors hover:text-foreground">
-              Terminos del servicio
+            <Link
+              href="/terminos"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Términos del servicio
+            </Link>
+            <Link
+              href="/cookies"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Política de cookies
             </Link>
           </div>
         </section>
