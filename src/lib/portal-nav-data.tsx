@@ -35,19 +35,19 @@ export type PortalNavSubItem = { href: string; label: string; icon: LucideIcon }
 
 export type PortalNavEntry =
   | {
-      kind: 'link';
-      module: string;
-      href: string;
-      label: string;
-      icon: LucideIcon;
-    }
+    kind: 'link';
+    module: string;
+    href: string;
+    label: string;
+    icon: LucideIcon;
+  }
   | {
-      kind: 'group';
-      module: string;
-      label: string;
-      icon: LucideIcon;
-      subItems: PortalNavSubItem[];
-    };
+    kind: 'group';
+    module: string;
+    label: string;
+    icon: LucideIcon;
+    subItems: PortalNavSubItem[];
+  };
 
 /** Árbol del menú lateral y matriz de permisos (etiquetas deben coincidir con la UI de roles). */
 export const PORTAL_NAV_ENTRIES: PortalNavEntry[] = [
@@ -144,6 +144,16 @@ export const PORTAL_NAV_ENTRIES: PortalNavEntry[] = [
       { href: '/financial/new-transaction', icon: Plus, label: 'Nueva Transacción' },
     ],
   }] : []),
+  {
+    kind: 'group',
+    module: 'Inventario',
+    label: 'Inventario',
+    icon: Package,
+    subItems: [
+      { href: '/inventario', icon: List, label: 'Gestión de inventario' },
+      { href: '/inventario/nuevo', icon: Plus, label: 'Nueva Artículo' },
+    ],
+  },
   ...(process.env.NEXT_PUBLIC_ENABLE_PRAYER === 'true' ? [{
     kind: 'group' as const,
     module: 'Oración',
@@ -235,16 +245,6 @@ export const PORTAL_NAV_ENTRIES: PortalNavEntry[] = [
   },**/
   {
     kind: 'group',
-    module: 'Inventario',
-    label: 'Inventario',
-    icon: Package,
-    subItems: [
-      { href: '/inventario', icon: List, label: 'Gestión de inventario' },
-      { href: '/inventario/nuevo', icon: Plus, label: 'Nueva Artículo' },
-    ],
-  },
-  {
-    kind: 'group',
     module: 'Configuración',
     label: 'Configuración',
     icon: Settings,
@@ -301,7 +301,7 @@ export function filterSidebarNavByModules(
   const getAllowedForModule = (moduleName: string): string[] | undefined => {
     const target = normalize(moduleName);
     let key = Object.keys(modules).find((k) => normalize(k) === target);
-    
+
     // Backwards compatibility for users whose roles still use 'Ofrendas' for both modules
     if (!key && target === 'donaciones') {
       key = Object.keys(modules).find((k) => normalize(k) === 'ofrendas');
