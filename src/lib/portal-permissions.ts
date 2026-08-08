@@ -27,6 +27,7 @@ export async function resolvePortalModules(db: Db): Promise<Record<string, strin
       Iglesias: ['Buscar'],
       Donaciones: ['Añadir Donación'],
       Directorio: ['Pastoral'],
+      Oración: ['Peticiones', 'Nueva petición'],
     };
   }
   if (member.staffRoleGrants?.modules) return member.staffRoleGrants.modules;

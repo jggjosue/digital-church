@@ -42,6 +42,9 @@ const FOOTER_ROUTES = new Set([
   '/settings/roles',
   '/settings/users',
   '/tutorial',
+  '/prayer',
+  '/prayer/new',
+  '/prayer/groups',
 ]);
 
 export function AuthenticatedChrome({ children }: { children: React.ReactNode }) {
@@ -112,7 +115,9 @@ export function AuthenticatedChrome({ children }: { children: React.ReactNode })
           pathname === '/donations/new' ||
           pathname === '/donations' ||
           pathname === '/donations/giving-statement' ||
-          pathname === '/donations/fundraising';
+          pathname === '/donations/fundraising' ||
+          pathname === '/prayer' ||
+          Boolean(pathname?.startsWith('/prayer/'));
         const allowTutorial = pathname === '/tutorial';
         if (!cancelled && !adminBypass && role === 'congregante' && !allowCongreganteRoute && !allowTutorial) {
           router.replace('/churches');

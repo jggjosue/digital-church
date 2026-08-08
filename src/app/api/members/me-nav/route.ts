@@ -97,6 +97,7 @@ export async function GET() {
           Iglesias: ['Buscar'],
           Donaciones: ['Añadir Donación'],
           Directorio: ['Pastoral'],
+          Oración: ['Peticiones', 'Nueva petición'],
         },
         staffRole,
       });

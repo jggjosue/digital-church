@@ -107,29 +107,31 @@ export const PORTAL_NAV_ENTRIES: PortalNavEntry[] = [
       { href: '/online/reporte', icon: FileText, label: 'Reporte' },
     ],
   },
-  {
-    kind: 'group',
-    module: 'Ofrendas',
-    label: 'Ofrendas',
-    icon: Heart,
-    subItems: [
-      { href: '/donations/registro', icon: ClipboardList, label: 'Registro de Ofrendas' },
-    ],
-  },
-  {
-    kind: 'group',
-    module: 'Donaciones',
-    label: 'Donaciones',
-    icon: Gift,
-    subItems: [
-      { href: '/donations/new', icon: Plus, label: 'Añadir Donación' },
-      { href: '/donations/fundraising/new', icon: Megaphone, label: 'Crear Campaña' },
-      { href: '/donations', icon: Heart, label: 'Donaciones y ofrendas' },
-      { href: '/donations/pledges', icon: List, label: 'Gestión de Promesas' },
-      { href: '/donations/giving-statement', icon: FileText, label: 'Declaración de Donación' },
-      { href: '/donations/fundraising', icon: PiggyBank, label: 'Recaudación de Fondos' },
-    ],
-  },
+  ...(process.env.NEXT_PUBLIC_ENABLE_DONATIONS === 'true' ? [
+    {
+      kind: 'group' as const,
+      module: 'Ofrendas',
+      label: 'Ofrendas',
+      icon: Heart,
+      subItems: [
+        { href: '/donations/registro', icon: ClipboardList, label: 'Registro de Ofrendas' },
+      ],
+    },
+    {
+      kind: 'group' as const,
+      module: 'Donaciones',
+      label: 'Donaciones',
+      icon: Gift,
+      subItems: [
+        { href: '/donations/new', icon: Plus, label: 'Añadir Donación' },
+        { href: '/donations/fundraising/new', icon: Megaphone, label: 'Crear Campaña' },
+        { href: '/donations', icon: Heart, label: 'Donaciones y ofrendas' },
+        { href: '/donations/pledges', icon: List, label: 'Gestión de Promesas' },
+        { href: '/donations/giving-statement', icon: FileText, label: 'Declaración de Donación' },
+        { href: '/donations/fundraising', icon: PiggyBank, label: 'Recaudación de Fondos' },
+      ],
+    },
+  ] : []),
   ...(process.env.NEXT_PUBLIC_ENABLE_FINANCIAL === 'true' ? [{
     kind: 'group' as const,
     module: 'Finanzas',
@@ -154,8 +156,8 @@ export const PORTAL_NAV_ENTRIES: PortalNavEntry[] = [
       { href: '/inventario/nuevo', icon: Plus, label: 'Nueva Artículo' },
     ],
   },
-  ...(process.env.NEXT_PUBLIC_ENABLE_PRAYER === 'true' ? [{
-    kind: 'group' as const,
+  {
+    kind: 'group',
     module: 'Oración',
     label: 'Oración',
     icon: BookHeart,
@@ -163,7 +165,7 @@ export const PORTAL_NAV_ENTRIES: PortalNavEntry[] = [
       { href: '/prayer', icon: List, label: 'Peticiones' },
       { href: '/prayer/new', icon: Plus, label: 'Nueva petición' },
     ],
-  }] : []),
+  },
   /**{
     kind: 'group',
     module: 'Grupos',
