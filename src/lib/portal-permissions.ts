@@ -2,6 +2,7 @@ import { auth, currentUser } from '@clerk/nextjs/server';
 import type { Db } from 'mongodb';
 import { isFullAccessStaffRole, isLeadershipStaffRole } from '@/lib/pastor-church-access';
 import type { StaffRoleDocument } from '@/lib/staff-roles';
+import { isCongreganteAccessRole } from '@/lib/congregante-access';
 
 export { OFFERING_PERMISSIONS } from '@/lib/permission-constants';
 
@@ -22,7 +23,7 @@ export async function resolvePortalModules(db: Db): Promise<Record<string, strin
   const member = await db.collection<MemberPermissionDoc>('members').findOne({ email }, { projection: { _id: 0, staffRole: 1, portalRoleId: 1, staffRoleGrants: 1 } });
   if (!member) return {};
   if (isFullAccessStaffRole(member.staffRole) || isLeadershipStaffRole(member.staffRole)) return null;
-  if (normalize(String(member.staffRole ?? '')) === 'congregante') {
+  if (isCongreganteAccessRole(member.staffRole)) {
     return {
       Iglesias: ['Buscar'],
       Ofrendas: ['Añadir Donación', 'Recaudación de Fondos', 'Certificados de Donación'],

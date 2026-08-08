@@ -11,9 +11,12 @@ import {
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Plus } from 'lucide-react';
 import {
   dedupeChurchesById,
   formatChurchLocationLine,
+  normalizeChurchName,
   type ChurchLocation,
   type ChurchSelectOption,
 } from '@/lib/church-locations';
@@ -48,6 +51,10 @@ export function TempleAssignmentCard({
   const [query, setQuery] = React.useState('');
   /** Templos reales en BD (sin contar la opción «Otro»). */
   const [churchCount, setChurchCount] = React.useState(0);
+  const [showCustomChurch, setShowCustomChurch] = React.useState(false);
+  const [customChurchName, setCustomChurchName] = React.useState('');
+  const [customChurchError, setCustomChurchError] = React.useState<string | null>(null);
+  const [savingCustomChurch, setSavingCustomChurch] = React.useState(false);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -99,6 +106,47 @@ export function TempleAssignmentCard({
       return hay.includes(q);
     });
   }, [options, query, loadState]);
+
+  const saveCustomChurch = async () => {
+    const name = customChurchName.trim().replace(/\s+/g, ' ');
+    if (!name) {
+      setCustomChurchError('Escriba el nombre del templo.');
+      return;
+    }
+    const normalized = normalizeChurchName(name);
+    const duplicate = options.find((church) => normalizeChurchName(church.name) === normalized);
+    if (duplicate) {
+      setCustomChurchError(`“${duplicate.name}” ya existe. Escriba un nombre diferente.`);
+      return;
+    }
+
+    setSavingCustomChurch(true);
+    setCustomChurchError(null);
+    try {
+      const response = await fetch('/api/churches/catalog', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({ name }),
+      });
+      const json = (await response.json().catch(() => ({}))) as {
+        church?: TempleOption;
+        error?: string;
+      };
+      if (!response.ok || !json.church) {
+        throw new Error(json.error || 'No se pudo guardar el templo.');
+      }
+      setOptions((current) => [...current, json.church!].sort((a, b) => a.name.localeCompare(b.name, 'es')));
+      setChurchCount((count) => count + 1);
+      onToggle(json.church.id);
+      setCustomChurchName('');
+      setShowCustomChurch(false);
+      setQuery('');
+    } catch (error) {
+      setCustomChurchError(error instanceof Error ? error.message : 'No se pudo guardar el templo.');
+    } finally {
+      setSavingCustomChurch(false);
+    }
+  };
 
   return (
     <Card>
@@ -165,6 +213,57 @@ export function TempleAssignmentCard({
                   );
                 })
               : null}
+            </div>
+            <div className="rounded-md border border-dashed p-3">
+              <div className="flex items-center gap-3">
+                <Checkbox
+                  id={`${fieldIdPrefix}-other`}
+                  checked={showCustomChurch}
+                  onCheckedChange={(checked) => {
+                    setShowCustomChurch(checked === true);
+                    setCustomChurchError(null);
+                  }}
+                />
+                <Label htmlFor={`${fieldIdPrefix}-other`} className="cursor-pointer font-normal">
+                  Otro
+                </Label>
+              </div>
+              {showCustomChurch ? (
+                <div className="mt-3 space-y-2 pl-8">
+                  <Label htmlFor={`${fieldIdPrefix}-other-name`}>Nombre del templo</Label>
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <Input
+                      id={`${fieldIdPrefix}-other-name`}
+                      value={customChurchName}
+                      maxLength={200}
+                      placeholder="Escriba el nombre del templo"
+                      onChange={(event) => {
+                        setCustomChurchName(event.target.value);
+                        setCustomChurchError(null);
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter') {
+                          event.preventDefault();
+                          void saveCustomChurch();
+                        }
+                      }}
+                      disabled={savingCustomChurch}
+                      autoFocus
+                    />
+                    <Button
+                      type="button"
+                      onClick={() => void saveCustomChurch()}
+                      disabled={savingCustomChurch}
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      {savingCustomChurch ? 'Guardando...' : 'Agregar'}
+                    </Button>
+                  </div>
+                  {customChurchError ? (
+                    <p className="text-sm text-destructive" role="alert">{customChurchError}</p>
+                  ) : null}
+                </div>
+              ) : null}
             </div>
           </div>
           <p className="text-xs text-muted-foreground">

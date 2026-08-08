@@ -15,6 +15,7 @@ import {
 import { STAFF_CARGO_DIRECTORY_EXCLUDED_PATTERN } from '@/lib/staff-directory-roles';
 import { createMemberSchema } from '@/lib/member-schema';
 import { isSuperAdminEmail } from '@/lib/super-admin';
+import { CONGREGANTE_ACCESS_ROLE_REGEX } from '@/lib/congregante-access';
 
 export type MemberDocument = {
   id: string;
@@ -215,7 +216,7 @@ export async function GET(request: Request) {
         /** Directorio en `/members`: solo congregantes; el templo ya viene del bloque `sessionChurchScope` (salvo acceso completo). */
         conditions.push({
           staffRole: {
-            $regex: '^congregante$',
+            $regex: CONGREGANTE_ACCESS_ROLE_REGEX,
             $options: 'i',
           },
         });

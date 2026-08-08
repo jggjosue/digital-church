@@ -16,8 +16,10 @@ import {
   MINISTRIES_COLLECTION,
   MINISTRY_CATEGORY_VALUES,
   ensureMinistriesCollection,
+  normalizeMinistryName,
   type MinistryDocument,
 } from '@/lib/ministries';
+import { BASIC_MEMBER_GROUP_OPTIONS } from '@/lib/congregante-access';
 
 const leaderSchema = z.object({
   id: z.union([z.number(), z.string()]),
@@ -116,6 +118,37 @@ export async function POST(request: Request) {
 
     const db = await getDb();
     await ensureMinistriesCollection(db);
+    const normalizedName = normalizeMinistryName(body.name);
+    const builtInDuplicate = BASIC_MEMBER_GROUP_OPTIONS.find(
+      (option) => normalizeMinistryName(option) === normalizedName
+    );
+    if (builtInDuplicate) {
+      return NextResponse.json(
+        { error: `“${builtInDuplicate}” ya existe. Escriba un nombre diferente.` },
+        { status: 409 }
+      );
+    }
+    const ministriesCollection = db.collection<MinistryDocument>(MINISTRIES_COLLECTION);
+    await ministriesCollection.createIndex(
+      { normalizedName: 1 },
+      {
+        unique: true,
+        partialFilterExpression: { normalizedName: { $type: 'string' } },
+        name: 'unique_normalized_ministry_name',
+      }
+    );
+    const existingNames = await ministriesCollection
+      .find({}, { projection: { _id: 0, name: 1 } })
+      .toArray();
+    const duplicate = existingNames.find(
+      (ministry) => normalizeMinistryName(ministry.name) === normalizedName
+    );
+    if (duplicate) {
+      return NextResponse.json(
+        { error: `“${duplicate.name}” ya existe. Escriba un nombre diferente.` },
+        { status: 409 }
+      );
+    }
 
     const churchIdRaw = body.churchId?.trim() ?? '';
 
@@ -216,6 +249,7 @@ export async function POST(request: Request) {
     const doc: MinistryDocument = {
       id: randomUUID(),
       name: body.name.trim(),
+      normalizedName,
       description: body.description.trim(),
       category: body.category,
       leaders,
@@ -225,7 +259,17 @@ export async function POST(request: Request) {
       ...(creatorChurchIds ? { creatorChurchIds } : {}),
       ...(churchIdSaved ? { churchId: churchIdSaved } : {}),
     };
-    await db.collection<MinistryDocument>(MINISTRIES_COLLECTION).insertOne(doc);
+    try {
+      await ministriesCollection.insertOne(doc);
+    } catch (error) {
+      if (error && typeof error === 'object' && 'code' in error && Number((error as { code?: unknown }).code) === 11000) {
+        return NextResponse.json(
+          { error: 'Ese grupo o ministerio ya existe. Escriba un nombre diferente.' },
+          { status: 409 }
+        );
+      }
+      throw error;
+    }
     return NextResponse.json(
       { ok: true, id: doc.id, message: 'Ministerio creado correctamente.' },
       { status: 201 }

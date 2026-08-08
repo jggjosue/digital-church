@@ -1,6 +1,7 @@
 'use client';
 
-import { Calendar } from 'lucide-react';
+import { Calendar, HandCoins } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -13,6 +14,7 @@ import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import type { FundraisingCampaignDoc, FundraisingStatus } from '@/lib/fundraising-seed';
+import { CampaignShareButton } from '@/components/fundraising-campaign-actions';
 
 const statusColors: Record<FundraisingStatus, string> = {
   Active: 'bg-green-100 text-green-800 border-green-200',
@@ -54,18 +56,18 @@ type FundraisingCampaignDetailDialogProps = {
   campaign: FundraisingCampaignDoc | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onDonate: (campaign: FundraisingCampaignDoc) => void;
 };
 
 export function FundraisingCampaignDetailDialog({
   campaign,
   open,
   onOpenChange,
+  onDonate,
 }: FundraisingCampaignDetailDialogProps) {
   const showProgress =
     campaign != null &&
-    campaign.status !== 'Draft' &&
-    campaign.goal != null &&
-    campaign.goal > 0;
+    campaign.status !== 'Draft';
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -96,7 +98,7 @@ export function FundraisingCampaignDetailDialog({
                       {formatCurrency(campaign.raised)}
                     </span>
                     <span className="text-muted-foreground">
-                      / {formatCurrency(campaign.goal!)}
+                      / {formatCurrency(campaign.goal ?? 0)}
                     </span>
                   </dd>
                 </div>
@@ -113,6 +115,13 @@ export function FundraisingCampaignDetailDialog({
                 >
                   {campaign.progress}% recaudado
                   {campaign.progress > 100 ? ' — Meta superada' : ''}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {campaign.goal != null && campaign.goal > campaign.raised
+                    ? `Falta por reunir: ${formatCurrency(campaign.goal - campaign.raised)}`
+                    : campaign.goal != null && campaign.goal > 0
+                      ? 'La meta económica ha sido alcanzada.'
+                      : 'Meta económica pendiente de definir.'}
                 </p>
               </div>
             ) : (
@@ -141,6 +150,15 @@ export function FundraisingCampaignDetailDialog({
               <dd className="mt-1 font-mono text-xs text-foreground">{campaign.id}</dd>
             </div>
           </dl>
+
+          <div className="flex flex-wrap justify-end gap-2 pt-2">
+            <CampaignShareButton campaign={campaign} />
+            {campaign.status === 'Active' ? (
+              <Button type="button" size="sm" onClick={() => onDonate(campaign)}>
+                <HandCoins className="mr-2 h-4 w-4" /> Donar
+              </Button>
+            ) : null}
+          </div>
         </DialogContent>
       ) : null}
     </Dialog>

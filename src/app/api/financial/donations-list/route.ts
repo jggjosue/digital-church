@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { isCongreganteAccessRole } from '@/lib/congregante-access';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { getDb } from '@/lib/mongodb';
 import {
@@ -29,7 +30,7 @@ export async function GET(request: Request) {
 
     if (sessionMember) {
       const sr = String(sessionMember.staffRole ?? '').trim().toLowerCase();
-      if (sr === 'congregante') {
+      if (isCongreganteAccessRole(sr)) {
         return NextResponse.json({ error: 'No tienes acceso a los datos financieros.' }, { status: 403 });
       }
     }
@@ -54,19 +55,36 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url);
     const yearStr = searchParams.get('year');
+    const fund = searchParams.get('fund')?.trim();
+    const campaign = searchParams.get('campaign')?.trim();
+    const search = searchParams.get('q')?.trim();
     const page = parseInt(searchParams.get('page') || '1', 10);
     const limit = parseInt(searchParams.get('limit') || '20', 10);
 
-    const donationFilter: Record<string, unknown> = {};
+    const clauses: Record<string, unknown>[] = [];
     if (yearStr) {
-      donationFilter.$or = [
+      clauses.push({ $or: [
         { year: yearStr },
         { donationDate: { $regex: `^${yearStr}` } }
-      ];
+      ] });
     }
     if (churchIdsScope && churchIdsScope.length > 0) {
-      donationFilter.churchId = { $in: churchIdsScope };
+      clauses.push({ churchId: { $in: churchIdsScope } });
     }
+    if (fund && fund !== 'all') clauses.push({ fundCampaign: fund });
+    if (campaign && campaign !== 'all') clauses.push({ fundraisingCampaignId: campaign });
+    if (search) {
+      const escaped = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      clauses.push({
+        $or: [
+          { 'donor.firstName': { $regex: escaped, $options: 'i' } },
+          { 'donor.lastName': { $regex: escaped, $options: 'i' } },
+          { transferReference: { $regex: escaped, $options: 'i' } },
+          { fundraisingCampaignName: { $regex: escaped, $options: 'i' } },
+        ],
+      });
+    }
+    const donationFilter: Record<string, unknown> = clauses.length > 0 ? { $and: clauses } : {};
 
     const donationsDocs = await db.collection('donation')
       .find(donationFilter)
@@ -84,6 +102,8 @@ export async function GET(request: Request) {
         category: d.recordCategory || 'Donación',
         fundId: d.fundCampaign || 'Fondo General',
         reference: donorName || d.transferReference || 'Donante',
+        campaignId: d.fundraisingCampaignId || '',
+        campaignName: d.fundraisingCampaignName || '',
         date: d.donationDate || d.createdAt || new Date().toISOString()
       });
     });

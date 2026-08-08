@@ -1,13 +1,17 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/lib/mongodb';
 
-const ATTENDANCE_REGISTRY_COLLECTION = 'attendance_registry';
+const ATTENDANCE_EVENTS_COLLECTION = 'attendance_events';
 
-type Row = { eventName?: string; year?: string };
+type AttendanceEventRow = {
+  eventName?: string;
+  eventType?: 'service' | 'event';
+  createdAt?: string;
+};
 
 /**
- * Nombres de evento ya usados en registros de asistencia anual del templo.
- * Prioriza el año solicitado; incluye otros años del mismo templo para reutilizar nombres.
+ * Servicios y eventos configurados en `/attendance/[id]` para el templo seleccionado.
+ * La consulta queda aislada por `churchId`, igual que `/attendance/[id]`.
  */
 export async function GET(request: Request) {
   try {
@@ -22,27 +26,31 @@ export async function GET(request: Request) {
     }
 
     const db = await getDb();
-    const docs = await db
-      .collection<Row>(ATTENDANCE_REGISTRY_COLLECTION)
-      .find({ churchId }, { projection: { _id: 0, eventName: 1, year: 1 } })
+    const attendanceEvents = await db
+      .collection<AttendanceEventRow>(ATTENDANCE_EVENTS_COLLECTION)
+      .find(
+        {
+          churchId,
+          eventType: { $in: ['service', 'event'] },
+        },
+        { projection: { _id: 0, eventName: 1, eventType: 1, createdAt: 1 } }
+      )
+      .sort({ createdAt: -1 })
       .toArray();
 
-    const meta = new Map<string, { sameYear: boolean }>();
-    for (const d of docs) {
-      const n = String(d.eventName ?? '').trim();
-      if (!n) continue;
-      const sameYear = String(d.year ?? '').trim() === year;
-      const prev = meta.get(n);
-      if (!prev) meta.set(n, { sameYear });
-      else if (sameYear) meta.set(n, { sameYear: true });
-    }
+    const names: string[] = [];
+    const normalizedNames = new Set<string>();
+    const addName = (raw: unknown) => {
+      const name = String(raw ?? '').trim();
+      if (!name) return;
+      const key = name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+      if (normalizedNames.has(key)) return;
+      normalizedNames.add(key);
+      names.push(name);
+    };
 
-    const names = [...meta.entries()]
-      .sort((a, b) => {
-        if (a[1].sameYear !== b[1].sameYear) return a[1].sameYear ? -1 : 1;
-        return a[0].localeCompare(b[0], 'es', { sensitivity: 'base' });
-      })
-      .map(([n]) => n);
+    // Mismo conjunto y orden reciente que se muestra en `/attendance/[id]`.
+    for (const event of attendanceEvents) addName(event.eventName);
 
     return NextResponse.json({ names });
   } catch (e) {

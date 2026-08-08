@@ -12,6 +12,7 @@ import {
 import {
   INVENTORY_DEFAULT_CATEGORY_LABEL,
   INVENTORY_DEFAULT_CATEGORY_VALUE,
+  INVENTORY_CHURCH_AREAS_COLLECTION,
   INVENTORY_DOC_TYPE_CHURCH_AREAS,
   INVENTORY_DOC_TYPE_TAXONOMY,
   INVENTORY_TAXONOMY_DOC_ID,
@@ -248,11 +249,22 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Templo no encontrado.' }, { status: 404 });
     }
 
-    const invCollection = db.collection<ChurchInventoryAreasDoc | InventoryDoc>(COLLECTION);
-    const areasBundle = (await invCollection.findOne(
+    const invCollection = db.collection<InventoryDoc>(COLLECTION);
+    const areasCollection = db.collection<ChurchInventoryAreasDoc>(
+      INVENTORY_CHURCH_AREAS_COLLECTION
+    );
+    let areasBundle: Pick<ChurchInventoryAreasDoc, 'areas'> | null = await areasCollection.findOne(
       { docType: INVENTORY_DOC_TYPE_CHURCH_AREAS, churchId },
       { projection: { _id: 0, areas: 1 } }
-    )) as ChurchInventoryAreasDoc | null;
+    );
+
+    // Compatibilidad con documentos creados por versiones anteriores en inventory_items.
+    if (!areasBundle) {
+      areasBundle = (await db.collection<ChurchInventoryAreasDoc>(COLLECTION).findOne(
+        { docType: INVENTORY_DOC_TYPE_CHURCH_AREAS, churchId },
+        { projection: { _id: 0, areas: 1 } }
+      )) as Pick<ChurchInventoryAreasDoc, 'areas'> | null;
+    }
 
     let areas = areasBundle?.areas ?? [];
     if (areas.length === 0) {

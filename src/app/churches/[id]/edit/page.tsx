@@ -35,6 +35,9 @@ function EditTempleForm({
     embedUrl: string;
     shareMapUrl: string;
     campusPastor?: string;
+    pastoralStartDate?: string;
+    registrationNumber?: string;
+    pastoralAssignment?: string;
     contactEmail?: string;
     description?: string;
     phone?: string;
@@ -51,6 +54,9 @@ function EditTempleForm({
   const [embedUrl, setEmbedUrl] = React.useState(initial.embedUrl);
   const [shareMapUrl, setShareMapUrl] = React.useState(initial.shareMapUrl);
   const [campusPastor, setCampusPastor] = React.useState(initial.campusPastor ?? '');
+  const [pastoralStartDate, setPastoralStartDate] = React.useState(initial.pastoralStartDate ?? '');
+  const [registrationNumber, setRegistrationNumber] = React.useState(initial.registrationNumber ?? '');
+  const [pastoralAssignment, setPastoralAssignment] = React.useState(initial.pastoralAssignment ?? '');
   const [contactEmail, setContactEmail] = React.useState(initial.contactEmail ?? '');
   const [description, setDescription] = React.useState(initial.description ?? '');
   const [phone, setPhone] = React.useState(initial.phone ?? '');
@@ -124,6 +130,9 @@ function EditTempleForm({
           embedUrl,
           shareMapUrl,
           campusPastor: campusPastor.trim(),
+          pastoralStartDate,
+          registrationNumber: registrationNumber.trim(),
+          pastoralAssignment: pastoralAssignment.trim(),
           contactEmail: contactEmail.trim(),
           description: description.trim(),
           phone: phone.trim(),
@@ -148,6 +157,9 @@ function EditTempleForm({
         setEmbedUrl(c.embedUrl);
         setShareMapUrl(c.shareMapUrl);
         setCampusPastor(c.campusPastor ?? '');
+        setPastoralStartDate(c.pastoralStartDate ?? '');
+        setRegistrationNumber(c.registrationNumber ?? '');
+        setPastoralAssignment(c.pastoralAssignment ?? '');
         setContactEmail(c.contactEmail ?? '');
         setDescription(c.description ?? '');
         setPhone(c.phone ?? '');
@@ -233,6 +245,39 @@ function EditTempleForm({
                   onChange={(e) => setContactEmail(e.target.value)}
                   placeholder="correo@ejemplo.com"
                 />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="pastoral-start-date">Pastor desde</Label>
+              <Input
+                id="pastoral-start-date"
+                type="date"
+                value={pastoralStartDate}
+                onChange={(e) => setPastoralStartDate(e.target.value)}
+                className="sm:max-w-xs"
+              />
+              <p className="text-xs text-muted-foreground">Fecha desde la que sirve como pastor en esta iglesia.</p>
+            </div>
+            <div className="grid grid-cols-1 gap-6 rounded-lg border bg-muted/30 p-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="registration-number">Matrícula de la iglesia</Label>
+                <Input
+                  id="registration-number"
+                  value={registrationNumber}
+                  onChange={(e) => setRegistrationNumber(e.target.value)}
+                  placeholder={`ICIAR-${templeId.replace(/[^a-z0-9]/gi, '').slice(0, 10).toUpperCase()}`}
+                />
+                <p className="text-xs text-muted-foreground">Si queda vacía, se genera automáticamente a partir del registro.</p>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="pastoral-assignment">Asignación pastoral</Label>
+                <Input
+                  id="pastoral-assignment"
+                  value={pastoralAssignment}
+                  onChange={(e) => setPastoralAssignment(e.target.value)}
+                  placeholder={`Pastor titular de ${name}`}
+                />
+                <p className="text-xs text-muted-foreground">Cargo o encomienda que aparecerá en el certificado.</p>
               </div>
             </div>
             <div className="space-y-2">
@@ -491,6 +536,9 @@ export default function EditChurchPage() {
         embedUrl: church.embedUrl,
         shareMapUrl: church.shareMapUrl,
         campusPastor: church.campusPastor,
+        pastoralStartDate: church.pastoralStartDate,
+        registrationNumber: church.registrationNumber,
+        pastoralAssignment: church.pastoralAssignment,
         contactEmail: church.contactEmail,
         description: church.description,
         phone: church.phone,

@@ -7,6 +7,7 @@ import { AppHeader } from '@/components/app-header';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { isCongreganteAccessRole } from '@/lib/congregante-access';
 
 type DonationDetail = {
   id: string;
@@ -103,7 +104,7 @@ export default function DonationDetailPage() {
         const data = (await res.json().catch(() => ({}))) as { staffRole?: string | null };
         if (cancelled) return;
         const role = String(data.staffRole ?? '').trim().toLowerCase();
-        setCanEditDonation(role !== 'congregante');
+        setCanEditDonation(!isCongreganteAccessRole(role));
       } catch {
         if (!cancelled) setCanEditDonation(true);
       }

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { isCongreganteAccessRole } from '@/lib/congregante-access';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { getDb } from '@/lib/mongodb';
 import {
@@ -29,7 +30,7 @@ export async function GET(request: Request) {
     
     if (sessionMember) {
       const sr = String(sessionMember.staffRole ?? '').trim().toLowerCase();
-      if (sr === 'congregante') {
+      if (isCongreganteAccessRole(sr)) {
         return NextResponse.json({ error: 'No tienes acceso a los datos financieros.' }, { status: 403 });
       }
     }

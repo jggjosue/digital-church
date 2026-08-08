@@ -138,15 +138,11 @@ export async function PATCH(
     }
 
     if (body.goal !== undefined) {
-      if (body.goal === null) {
-        next.goal = null;
-      } else {
-        const goal = Number(body.goal);
-        if (!Number.isFinite(goal) || goal < 0) {
-          return NextResponse.json({ error: 'Meta inválida.' }, { status: 400 });
-        }
-        next.goal = goal;
+      const goal = Number(body.goal);
+      if (!Number.isFinite(goal) || goal <= 0) {
+        return NextResponse.json({ error: 'La meta económica debe ser mayor a cero.' }, { status: 400 });
       }
+      next.goal = goal;
     }
 
     if (typeof body.date === 'string') {

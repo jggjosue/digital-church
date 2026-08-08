@@ -27,4 +27,4 @@ export const MEMBERS_DIRECTORY_EXCLUDED_STAFF_ROLES_PATTERN =
  * Incluye cargos equivalentes a «Administrador general» (`isAdministradorGeneralEquivalentStaffRole`).
  */
 export const STAFF_CARGO_DIRECTORY_EXCLUDED_PATTERN =
-  '^(super administrador|administrador general|consejo de pastores|director general|nuevo|congregante)$';
+  '^(super administrador|administrador general|consejo de pastores|director general|nuevo|congregante|invitado|visitante|asistente|principiante en la fe|oyente)$';

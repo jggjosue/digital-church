@@ -14,6 +14,7 @@ import { CalendarIcon, Download, Loader2 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 import { AppHeader } from '@/components/app-header';
+import { exportExcelReport } from '@/lib/export-excel';
 
 const formatCurrency = (amount: number, showSign = false) => {
     const formatted = new Intl.NumberFormat('es-MX', {
@@ -117,15 +118,54 @@ export default function BudgetReportPage() {
     return (actual / budget) * 100;
   };
 
+  const handleExport = async () => {
+    const rows = [
+      ...data.income.items.map((item) => [
+        'Ingreso', item.category, item.budget, item.actual,
+        item.actual - item.budget,
+        item.budget > 0 ? item.actual / item.budget : 0,
+      ]),
+      ...data.expenses.items.map((item) => [
+        'Gasto', item.category, item.budget, item.actual,
+        item.budget - item.actual,
+        item.budget > 0 ? item.actual / item.budget : 0,
+      ]),
+    ];
+    await exportExcelReport({
+      fileName: `presupuesto-${year}`,
+      title: 'Reporte de Presupuesto',
+      metadata: [['Año', year]],
+      sections: [
+        {
+          name: 'Presupuesto',
+          columns: ['Tipo', 'Categoría', 'Presupuesto', 'Real', 'Variación', '% utilizado'],
+          rows,
+          currencyColumns: [2, 3, 4],
+          percentageColumns: [5],
+        },
+        {
+          name: 'Totales',
+          columns: ['Indicador', 'Presupuesto', 'Real', 'Variación'],
+          rows: [
+            ['Ingresos', data.income.totalBudget, data.income.totalActual, data.income.totalActual - data.income.totalBudget],
+            ['Gastos', data.expenses.totalBudget, data.expenses.totalActual, data.expenses.totalBudget - data.expenses.totalActual],
+            ['Total neto', data.netTotal.budget, data.netTotal.actual, data.netTotal.actual - data.netTotal.budget],
+          ],
+          currencyColumns: [1, 2, 3],
+        },
+      ],
+    });
+  };
+
   return (
     <div className="flex flex-col flex-1">
       <AppHeader
         title="Reporte de Presupuesto"
         description="Presupuesto base con ingresos y gastos reales dinámicos."
       >
-        <Button>
+        <Button type="button" onClick={() => void handleExport()} disabled={loading}>
           <Download className="mr-2 h-4 w-4" />
-          Exportar PDF
+          Exportar Excel
         </Button>
       </AppHeader>
     <main className="flex-1 space-y-6 p-4 sm:p-8">

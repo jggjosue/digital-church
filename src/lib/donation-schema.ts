@@ -43,6 +43,21 @@ export const createDonationSchema = z
     notes: z.string().max(5000).optional().default(''),
     fundraisingCampaignId: z.string().min(1).max(200).optional(),
     fundraisingCampaignName: z.string().min(1).max(300).optional(),
+    fundraisingCampaignSnapshot: z.object({
+      id: z.string().min(1).max(200),
+      slug: z.string().max(200),
+      name: z.string().min(1).max(300),
+      description: z.string().max(5000),
+      status: z.enum(['Active', 'Completed', 'Upcoming', 'Draft']),
+      raisedBeforeDonation: z.number().nonnegative(),
+      goal: z.number().positive().nullable(),
+      progressBeforeDonation: z.number().nonnegative(),
+      date: z.string().max(200),
+      sortOrder: z.number(),
+      churchId: z.string().max(200).optional(),
+      createdByMemberId: z.string().max(200).nullable().optional(),
+      createdByClerkUserId: z.string().max(200).nullable().optional(),
+    }).optional(),
   })
   .superRefine((data, ctx) => {
     if (data.paymentMethod === 'online' && !data.transferReference.trim()) {
@@ -76,4 +91,3 @@ export type DonationDocument = z.infer<typeof createDonationSchema> & {
   createdAt: string;
   updatedAt: string;
 };
-

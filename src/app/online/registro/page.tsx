@@ -33,7 +33,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { RegistrySelector } from '@/components/annual-registry/registry-selector';
 import { RegistryImportCard } from '@/components/annual-registry/registry-import-card';
 import { RegistryCalendarScroller } from '@/components/annual-registry/registry-calendar-scroller';
 import { RegistryDraftStatus } from '@/components/annual-registry/registry-draft-status';
@@ -79,6 +78,15 @@ type MinistryItem = {
   churchId?: string;
 };
 
+type OnlineEventItem = {
+  id: string;
+  name: string;
+  category: string;
+  platform: string;
+  scheduledAt: string;
+  participatingChurches: Array<{ id: string; name: string }>;
+};
+
 type OnlineRegistryApiRecord = {
   churchId: string;
   churchName: string;
@@ -86,6 +94,7 @@ type OnlineRegistryApiRecord = {
   ministryName: string;
   year: string;
   eventName?: string;
+  onlineEventId?: string;
   records: Record<MonthKey, MonthRecord>;
   initializedMonths: MonthKey[];
 };
@@ -164,9 +173,7 @@ export default function OnlineRegistroPage() {
   const [recordsByYear, setRecordsByYear] = React.useState<Record<string, Record<MonthKey, MonthRecord>>>(
     () => Object.fromEntries(YEAR_OPTIONS.map((year) => [year, cloneMonthData(initialData)])) as Record<string, Record<MonthKey, MonthRecord>>
   );
-  const [selectedYear, setSelectedYear] = React.useState<string>(
-    YEAR_OPTIONS.includes(currentYear) ? currentYear : YEAR_OPTIONS[0]
-  );
+  const selectedYear = YEAR_OPTIONS.includes(currentYear) ? currentYear : YEAR_OPTIONS[0];
   const [initializedMonthsByYear, setInitializedMonthsByYear] = React.useState<Record<string, MonthKey[]>>(
     () => Object.fromEntries(YEAR_OPTIONS.map((year) => [year, [...MONTH_ORDER] as MonthKey[]])) as Record<string, MonthKey[]>
   );
@@ -176,6 +183,9 @@ export default function OnlineRegistroPage() {
   const [ministries, setMinistries] = React.useState<MinistryItem[]>([]);
   const [selectedMinistryId, setSelectedMinistryId] = React.useState<string>('');
   const [ministriesState, setMinistriesState] = React.useState<'loading' | 'ready' | 'error'>('loading');
+  const [onlineEvents, setOnlineEvents] = React.useState<OnlineEventItem[]>([]);
+  const [selectedOnlineEventId, setSelectedOnlineEventId] = React.useState('');
+  const [eventsState, setEventsState] = React.useState<'loading' | 'ready' | 'error'>('loading');
   const [newCategoryByMonth, setNewCategoryByMonth] = React.useState<Record<MonthKey, string>>(
     Object.fromEntries(REGISTRY_MONTHS.map((m) => [m, ''])) as Record<MonthKey, string>
   );
@@ -194,11 +204,28 @@ export default function OnlineRegistroPage() {
   const initializedMonths = initializedMonthsByYear[selectedYear] ?? (['enero'] as MonthKey[]);
   const selectedChurchName = churches.find((c) => c.id === selectedChurchId)?.name ?? 'Templo no seleccionado';
   const selectedMinistryName = ministries.find((m) => m.id === selectedMinistryId)?.name ?? 'Ministerio no seleccionado';
-  const saveKey = `${selectedChurchId || 'none'}:${selectedMinistryId || 'none'}:${selectedYear}`;
+  const selectedOnlineEvent = onlineEvents.find((event) => event.id === selectedOnlineEventId) ?? null;
+  const saveKey = `${selectedChurchId || 'none'}:${selectedMinistryId || 'none'}:${selectedOnlineEventId || 'none'}:${selectedYear}`;
 
   const filteredMinistries = React.useMemo(() => {
     return ministries.filter((m) => !m.churchId || m.churchId === selectedChurchId);
   }, [ministries, selectedChurchId]);
+
+  const filteredOnlineEvents = React.useMemo(
+    () =>
+      onlineEvents.filter(
+        (event) =>
+          event.participatingChurches.length === 0 ||
+          event.participatingChurches.some((church) => church.id === selectedChurchId)
+      ),
+    [onlineEvents, selectedChurchId]
+  );
+
+  React.useEffect(() => {
+    if (!filteredOnlineEvents.some((event) => event.id === selectedOnlineEventId)) {
+      setSelectedOnlineEventId(filteredOnlineEvents[0]?.id ?? '');
+    }
+  }, [filteredOnlineEvents, selectedOnlineEventId]);
 
   React.useEffect(() => {
     if (filteredMinistries.length > 0) {
@@ -404,6 +431,10 @@ export default function OnlineRegistroPage() {
       toast({ variant: 'destructive', title: 'Selecciona un ministerio', description: 'Debes seleccionar un ministerio para guardar la asistencia online.' });
       return false;
     }
+    if (!selectedOnlineEvent) {
+      toast({ variant: 'destructive', title: 'Selecciona un evento', description: 'Debes seleccionar un evento creado en Eventos Online.' });
+      return false;
+    }
     setIsSaving(true);
     try {
       const payload = {
@@ -411,8 +442,9 @@ export default function OnlineRegistroPage() {
         churchName: selectedChurchName,
         ministryId: selectedMinistryId,
         ministryName: selectedMinistryName,
+        onlineEventId: selectedOnlineEvent.id,
         year: selectedYear,
-        eventName: eventName.trim(),
+        eventName: selectedOnlineEvent.name,
         records: currentYearRecords,
         initializedMonths,
       };
@@ -423,7 +455,7 @@ export default function OnlineRegistroPage() {
       });
       const json = (await response.json().catch(() => ({}))) as { error?: string; message?: string };
       if (!response.ok) throw new Error(json.error || 'No se pudo guardar la asistencia online.');
-      const storedEventName = eventName.trim().length > 0 ? eventName.trim() : `Asistencia online ${selectedYear}`;
+      const storedEventName = selectedOnlineEvent.name;
       setLastSavedByYearAndMinistry((prev) => ({ ...prev, [saveKey]: { ...payload, eventName: storedEventName } }));
       if (!silent) toast({ title: 'Asistencia online guardada', description: json.message || 'Los cambios fueron guardados correctamente.' });
       return true;
@@ -458,6 +490,27 @@ export default function OnlineRegistroPage() {
     void loadChurches();
   }, [toast]);
 
+  // Load events created in /online/servicio
+  React.useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      setEventsState('loading');
+      try {
+        const response = await fetch('/api/online/eventos', { cache: 'no-store', headers: { Accept: 'application/json' } });
+        const json = (await response.json().catch(() => ({}))) as { events?: OnlineEventItem[]; error?: string };
+        if (!response.ok) throw new Error(json.error || 'No se pudieron cargar los eventos online.');
+        if (cancelled) return;
+        setOnlineEvents(Array.isArray(json.events) ? json.events : []);
+        setEventsState('ready');
+      } catch (error) {
+        if (cancelled) return;
+        setEventsState('error');
+        toast({ variant: 'destructive', title: 'Error al cargar eventos', description: error instanceof Error ? error.message : 'Inténtalo nuevamente.' });
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [toast]);
+
   // Load ministries
   React.useEffect(() => {
     const loadMinistries = async () => {
@@ -483,14 +536,14 @@ export default function OnlineRegistroPage() {
 
   // Load registry on church/ministry/year change
   React.useEffect(() => {
-    if (!selectedChurchId || !selectedMinistryId) { setEventName(''); return; }
+    if (!selectedChurchId || !selectedMinistryId || !selectedOnlineEventId) { setEventName(''); return; }
     let cancelled = false;
     const loadRegistry = async () => {
       setIsLoadingRegistry(true);
       setEventName('');
       try {
         const response = await fetch(
-          `/api/online/registro?churchId=${encodeURIComponent(selectedChurchId)}&ministryId=${encodeURIComponent(selectedMinistryId)}&year=${encodeURIComponent(selectedYear)}`,
+          `/api/online/registro?churchId=${encodeURIComponent(selectedChurchId)}&ministryId=${encodeURIComponent(selectedMinistryId)}&onlineEventId=${encodeURIComponent(selectedOnlineEventId)}&year=${encodeURIComponent(selectedYear)}`,
           { cache: 'no-store', headers: { Accept: 'application/json' } }
         );
         const json = (await response.json().catch(() => ({}))) as { record?: OnlineRegistryApiRecord | null; error?: string };
@@ -517,11 +570,11 @@ export default function OnlineRegistroPage() {
     };
     void loadRegistry();
     return () => { cancelled = true; };
-  }, [selectedChurchId, selectedMinistryId, selectedYear, toast, saveKey]);
+  }, [selectedChurchId, selectedMinistryId, selectedOnlineEventId, selectedYear, toast, saveKey]);
 
   const draft = useRegistryDraftGuard({
     value: { records: currentYearRecords, initializedMonths, eventName },
-    identity: `${selectedChurchId}:${selectedMinistryId}:${selectedYear}:online`,
+    identity: `${selectedChurchId}:${selectedMinistryId}:${selectedOnlineEventId}:${selectedYear}:online`,
     loading: isLoadingRegistry,
     onRestore: (value) => {
       setRecordsByYear((prev) => ({ ...prev, [selectedYear]: value.records }));
@@ -530,9 +583,8 @@ export default function OnlineRegistroPage() {
     },
     onAutoSave: () => handleSaveRegistry(true),
   });
-  const changeChurch = (value: string) => { if (draft.confirmDiscard()) setSelectedChurchId(value); };
   const changeMinistry = (value: string) => { if (draft.confirmDiscard()) setSelectedMinistryId(value); };
-  const changeYear = (value: string) => { if (draft.confirmDiscard()) setSelectedYear(value); };
+  const changeOnlineEvent = (value: string) => { if (draft.confirmDiscard()) setSelectedOnlineEventId(value); };
   const manualSave = async () => { if (await handleSaveRegistry()) draft.markSaved(); };
 
   return (
@@ -554,7 +606,7 @@ export default function OnlineRegistroPage() {
             <div>
               <h1 className="text-2xl font-bold tracking-tight">Asistencia Online {selectedYear}</h1>
               <CardContent className="pt-6">
-                Registro de eventos transmitidos · Templo: <span className="font-medium text-foreground">{selectedChurchName}</span> · Ministerio: <span className="font-medium text-foreground">{selectedMinistryName}</span>
+                Registro de eventos transmitidos · Ministerio: <span className="font-medium text-foreground">{selectedMinistryName}</span>{selectedOnlineEvent ? <> · Evento: <span className="font-medium text-foreground">{selectedOnlineEvent.name}</span></> : null}
               </CardContent>
             </div>
           </div>
@@ -563,59 +615,68 @@ export default function OnlineRegistroPage() {
 
       <main className="min-w-0 flex-1 space-y-5 bg-muted/20 p-3 pb-28 min-[380px]:p-4 min-[380px]:pb-28 sm:p-8 sm:pb-28">
 
-        {/* Selector cards */}
+        {/* El templo asignado y el año actual se resuelven internamente. */}
         <div className="grid gap-4 lg:grid-cols-2">
-          <Card className="border-border">
-            <CardContent className="p-4">
-              <RegistrySelector
-                churches={churches}
-                churchId={selectedChurchId}
-                onChurchChange={changeChurch}
-                churchState={churchesState}
-                year={selectedYear}
-                years={YEAR_OPTIONS}
-                onYearChange={changeYear}
-                churchLabel="Templo"
-                placeholder="Selecciona un templo"
-                loadingPlaceholder="Cargando templos..."
-                yearLabel="Año"
-              />
-            </CardContent>
-          </Card>
-          <Card className="border-border">
-            <CardContent className="p-4">
-              <RegistrySelector
-                churches={filteredMinistries}
-                churchId={selectedMinistryId}
-                onChurchChange={changeMinistry}
-                churchState={ministriesState}
-                year={selectedYear}
-                years={YEAR_OPTIONS}
-                onYearChange={changeYear}
-                churchLabel="Fraternidad / Ministerio"
-                placeholder="Selecciona un ministerio"
-                loadingPlaceholder="Cargando ministerios..."
-                yearLabel="Año"
-              />
-            </CardContent>
-          </Card>
+        <Card className="border-border">
+          <CardContent className="p-4">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-muted-foreground">
+                Fraternidad / Ministerio
+              </Label>
+              <Select
+                value={selectedMinistryId}
+                onValueChange={changeMinistry}
+                disabled={ministriesState !== 'ready' || filteredMinistries.length === 0}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue
+                    placeholder={
+                      ministriesState === 'loading'
+                        ? 'Cargando ministerios...'
+                        : 'Selecciona un ministerio'
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {filteredMinistries.map((ministry) => (
+                    <SelectItem key={ministry.id} value={ministry.id}>
+                      {ministry.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-border">
+          <CardContent className="p-4">
+            <div className="space-y-2">
+              <Label className="text-sm font-medium text-muted-foreground">Evento online</Label>
+              <Select
+                value={selectedOnlineEventId}
+                onValueChange={changeOnlineEvent}
+                disabled={eventsState !== 'ready' || filteredOnlineEvents.length === 0}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={eventsState === 'loading' ? 'Cargando eventos...' : 'Selecciona un evento'} />
+                </SelectTrigger>
+                <SelectContent>
+                  {filteredOnlineEvents.map((event) => (
+                    <SelectItem key={event.id} value={event.id}>
+                      {event.name} · {event.platform}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {eventsState === 'ready' && filteredOnlineEvents.length === 0 ? (
+                <p className="text-xs text-muted-foreground">No hay eventos online asignados a este templo.</p>
+              ) : null}
+            </div>
+          </CardContent>
+        </Card>
         </div>
         
         <div className="mt-4"><RegistryDraftStatus dirty={draft.dirty} lastSavedAt={draft.lastSavedAt} autoSave={draft.autoSave} onAutoSaveChange={draft.setAutoSave} autoSaving={draft.autoSaving} onUndo={draft.undo} /></div>
-
-            <div className="mt-4 space-y-2">
-              <Label className="text-sm font-medium text-muted-foreground">Nombre del evento o transmisión (opcional)</Label>
-              <Input
-                id="online-event-name"
-                value={eventName}
-                onChange={(e) => setEventName(e.target.value)}
-                placeholder={`Ej. Servicio dominical online ${selectedYear}, campaña verano…`}
-                maxLength={200}
-                autoComplete="off"
-                disabled={isLoadingRegistry}
-                aria-label="Nombre del evento online"
-              />
-            </div>
 
             {/* Platform legend */}
             <div className="mt-4 flex flex-wrap gap-2">
@@ -920,7 +981,7 @@ export default function OnlineRegistroPage() {
           <Button
             type="button"
             variant="default"
-            disabled={isSaving || isLoadingRegistry || isImporting || !selectedChurchId || !selectedMinistryId}
+            disabled={isSaving || isLoadingRegistry || isImporting || !selectedChurchId || !selectedMinistryId || !selectedOnlineEventId}
             onClick={manualSave}
             className="flex-1 h-14 bg-primary text-base hover:bg-primary/90 text-primary-foreground sm:flex-none sm:w-auto sm:min-w-[280px] sm:text-lg lg:min-w-[320px] lg:text-xl"
           >

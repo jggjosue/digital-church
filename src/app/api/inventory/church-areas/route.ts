@@ -8,11 +8,12 @@ import {
 } from '@/lib/church-locations';
 import {
   INVENTORY_DOC_TYPE_CHURCH_AREAS,
+  INVENTORY_CHURCH_AREAS_COLLECTION,
   type ChurchInventoryAreasDoc,
   churchInventoryAreasDocumentId,
 } from '@/lib/inventory';
 
-const COLLECTION = 'inventory_church_areas';
+const COLLECTION = INVENTORY_CHURCH_AREAS_COLLECTION;
 
 export async function GET(request: Request) {
   try {

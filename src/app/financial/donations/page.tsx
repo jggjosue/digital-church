@@ -35,6 +35,8 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/
 import { Line, LineChart, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from '@/components/ui/pagination';
 import { AppHeader } from '@/components/app-header';
+import { exportExcelReport } from '@/lib/export-excel';
+import type { FundraisingCampaignDoc } from '@/lib/fundraising-seed';
 
 
 const chartConfig = {
@@ -52,6 +54,8 @@ type Transaction = {
     fundId: string;
     reference: string;
     date: string;
+    campaignId?: string;
+    campaignName?: string;
 };
 
 export default function DonationReportsPage() {
@@ -65,6 +69,23 @@ export default function DonationReportsPage() {
   const [summary, setSummary] = React.useState<any>(null);
   const [totalPages, setTotalPages] = React.useState(1);
   const [totalItems, setTotalItems] = React.useState(0);
+  const [search, setSearch] = React.useState('');
+  const [selectedFund, setSelectedFund] = React.useState('all');
+  const [selectedCampaign, setSelectedCampaign] = React.useState('all');
+  const [campaigns, setCampaigns] = React.useState<FundraisingCampaignDoc[]>([]);
+  const [exporting, setExporting] = React.useState(false);
+
+  const reportParams = (page: number, limit: number) => {
+    const params = new URLSearchParams({
+      page: String(page),
+      limit: String(limit),
+      year: selectedYear,
+      fund: selectedFund,
+      campaign: selectedCampaign,
+    });
+    if (search.trim()) params.set('q', search.trim());
+    return params;
+  };
 
   const fetchSummary = async () => {
     try {
@@ -78,7 +99,7 @@ export default function DonationReportsPage() {
   const fetchTransactions = async (page: number) => {
     setLoading(true);
     try {
-        const res = await fetch(`/api/financial/donations-list?page=${page}&limit=${itemsPerPage}&year=${selectedYear}`);
+        const res = await fetch(`/api/financial/donations-list?${reportParams(page, itemsPerPage).toString()}`);
         const data = await res.json();
         if (data.items) {
             setTransactions(data.items);
@@ -95,7 +116,18 @@ export default function DonationReportsPage() {
   React.useEffect(() => {
       fetchSummary();
       fetchTransactions(currentPage);
-  }, [selectedYear, currentPage]);
+  }, [selectedYear, selectedFund, selectedCampaign, search, currentPage]);
+
+  React.useEffect(() => {
+    fetch('/api/fundraising', { cache: 'no-store' })
+      .then((response) => response.json())
+      .then((data) => setCampaigns(data.campaigns ?? []))
+      .catch(() => setCampaigns([]));
+  }, []);
+
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedYear, selectedFund, selectedCampaign, search]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-MX', {
@@ -113,6 +145,45 @@ export default function DonationReportsPage() {
       setCurrentPage(page);
     }
   };
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const response = await fetch(`/api/financial/donations-list?${reportParams(1, 100000).toString()}`);
+      const json = (await response.json()) as { items?: Transaction[]; error?: string };
+      if (!response.ok) throw new Error(json.error || 'No se pudo preparar el reporte.');
+      const rows = json.items ?? [];
+      await exportExcelReport({
+        fileName: `donaciones-${selectedYear}`,
+        title: 'Reporte de Donaciones',
+        metadata: [
+          ['Año', selectedYear],
+          ['Fondo', selectedFund === 'all' ? 'Todos' : selectedFund],
+          ['Campaña', selectedCampaign === 'all' ? 'Todas' : campaigns.find((campaign) => campaign.id === selectedCampaign)?.name ?? selectedCampaign],
+          ['Búsqueda', search || 'Todos los donantes'],
+          ['Registros exportados', rows.length],
+        ],
+        sections: [
+          {
+            name: 'Donaciones',
+            columns: ['Donante / Referencia', 'Fecha', 'Fondo', 'Categoría', 'Campaña', 'Monto'],
+            rows: rows.map((donation) => [
+              donation.reference || 'Anónimo',
+              new Date(donation.date),
+              donation.fundId || 'General',
+              donation.category,
+              donation.campaignName || '',
+              donation.amount,
+            ]),
+            dateColumns: [1],
+            currencyColumns: [5],
+          },
+        ],
+      });
+    } finally {
+      setExporting(false);
+    }
+  };
   
   return (
     <div className="flex flex-col flex-1">
@@ -128,7 +199,12 @@ export default function DonationReportsPage() {
           <div className="flex flex-col items-start gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="relative w-full max-w-sm">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input placeholder="Buscar por donante..." className="pl-9" />
+              <Input
+                placeholder="Buscar por donante..."
+                className="pl-9"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+              />
             </div>
             <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-3 sm:w-auto">
                 <Select value={selectedYear} onValueChange={setSelectedYear}>
@@ -141,22 +217,25 @@ export default function DonationReportsPage() {
                         <SelectItem value={(currentYear - 1).toString()}>Año Pasado</SelectItem>
                     </SelectContent>
                 </Select>
-                 <Select>
+                 <Select value={selectedFund} onValueChange={setSelectedFund}>
                     <SelectTrigger>
                         <SelectValue placeholder="Todos los Fondos" />
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">Todos los Fondos</SelectItem>
-                        <SelectItem value="general">Fondo General</SelectItem>
-                        <SelectItem value="building">Fondo de Construcción</SelectItem>
+                        <SelectItem value="general-fund">Fondo General</SelectItem>
+                        <SelectItem value="building-fund">Fondo de Construcción</SelectItem>
                     </SelectContent>
                 </Select>
-                 <Select>
+                 <Select value={selectedCampaign} onValueChange={setSelectedCampaign}>
                     <SelectTrigger>
                         <SelectValue placeholder="Todas las Campañas" />
                     </SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">Todas las Campañas</SelectItem>
+                        {campaigns.map((campaign) => (
+                          <SelectItem key={campaign.id} value={campaign.id}>{campaign.name}</SelectItem>
+                        ))}
                     </SelectContent>
                 </Select>
             </div>
@@ -164,8 +243,8 @@ export default function DonationReportsPage() {
               <Button variant="outline" className='w-full'>
                 <FileText className="mr-2 h-4 w-4" /> Estados de Cuenta
               </Button>
-              <Button className='w-full'>
-                <Download className="mr-2 h-4 w-4" /> Exportar
+              <Button className='w-full' type="button" onClick={() => void handleExport()} disabled={loading || exporting}>
+                <Download className="mr-2 h-4 w-4" /> {exporting ? 'Exportando...' : 'Exportar Excel'}
               </Button>
             </div>
           </div>

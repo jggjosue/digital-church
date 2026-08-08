@@ -36,7 +36,9 @@ import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { TempleAssignmentCard } from '@/components/temple-assignment-card';
+import { MemberCustomMinistry } from '@/components/member-custom-ministry';
 import { isLeadershipStaffRole } from '@/lib/pastor-church-access';
+import { BASIC_MEMBER_GROUP_OPTIONS, isCongreganteAccessRole } from '@/lib/congregante-access';
 
 type MinistryCatalogRow = { id: string; name: string };
 
@@ -67,6 +69,11 @@ const STAFF_ROLE_OPTIONS = [
   { value: STAFF_ROLE_NONE, label: 'Sin especificar' },
   { value: 'Pastor', label: 'Pastor' },
   { value: 'Congregante', label: 'Congregante' },
+  { value: 'Invitado', label: 'Invitado' },
+  { value: 'Visitante', label: 'Visitante' },
+  { value: 'Asistente', label: 'Asistente' },
+  { value: 'Principiante en la fe', label: 'Principiante en la fe' },
+  { value: 'Oyente', label: 'Oyente' },
   { value: 'Directiva', label: 'Directiva' },
   { value: 'Presidente', label: 'Presidente' },
   { value: 'Responsable de una Comisión', label: 'Responsable de una Comisión' },
@@ -97,6 +104,11 @@ function staffRoleKindFromApi(stored: string | null | undefined, email?: string)
     'Super Administrador' as StaffRoleOption,
     'Pastor',
     'Congregante',
+    'Invitado',
+    'Visitante',
+    'Asistente',
+    'Principiante en la fe',
+    'Oyente',
     'Directiva',
     'Presidente',
     'Responsable de una Comisión',
@@ -137,6 +149,13 @@ export default function NewMemberPage() {
   const isSessionSuperAdmin = isSuperAdminEmail(sessionEmail);
   const [initialRoleLoaded, setInitialRoleLoaded] = React.useState<string | null>(null);
   const [ministriesFromDb, setMinistriesFromDb] = React.useState<MinistryCatalogRow[]>([]);
+  const memberGroupOptions = React.useMemo(() => {
+    const labels = [
+      ...BASIC_MEMBER_GROUP_OPTIONS,
+      ...ministriesFromDb.map((ministry) => ministry.name.trim()),
+    ].filter(Boolean);
+    return Array.from(new Map(labels.map((label) => [label.toLocaleLowerCase('es'), label])).values());
+  }, [ministriesFromDb]);
 
   const [isNewPortalUser, setIsNewPortalUser] = React.useState(false);
   const [isUnregisteredPortalUser, setIsUnregisteredPortalUser] = React.useState(false);
@@ -161,7 +180,7 @@ export default function NewMemberPage() {
         if (!cancelled) {
           setIsNewPortalUser(data.isNew === true);
           const role = String(data.staffRole ?? '').trim().toLowerCase();
-          setIsCongregantePortalUser(role === 'congregante');
+          setIsCongregantePortalUser(isCongreganteAccessRole(role));
           setIsLeadershipPortalUser(isLeadershipStaffRole(data.staffRole));
         }
       } catch {
@@ -706,20 +725,14 @@ export default function NewMemberPage() {
                               No se pudieron cargar grupos y ministerios. Intente de nuevo más tarde.
                             </p>
                           ) : null}
-                          {groupsLoad === 'ready' && ministriesFromDb.length === 0 ? (
-                            <p className="text-sm text-muted-foreground">
-                              No hay ministerios registrados en `ministries`.
-                            </p>
-                          ) : null}
-                          {groupsLoad === 'ready'
-                            ? ministriesFromDb.map((m) => {
-                              const label = m.name.trim();
+                          {groupsLoad !== 'loading'
+                            ? memberGroupOptions.map((label) => {
                               if (!label) return null;
-                              const inputId = `member-ministry-${m.id}`;
+                              const inputId = `member-ministry-${label.toLocaleLowerCase('es').replace(/[^a-z0-9]+/g, '-')}`;
                               const checked = Boolean(field.value?.includes(label));
                               return (
                                 <div
-                                  key={m.id}
+                                  key={label}
                                   className={cn(
                                     'flex items-start gap-3 rounded-md px-2 py-2 transition-colors',
                                     checked ? 'bg-muted/40' : 'hover:bg-muted/30'
@@ -742,6 +755,18 @@ export default function NewMemberPage() {
                             })
                             : null}
                         </div>
+                        <MemberCustomMinistry
+                          existingOptions={memberGroupOptions}
+                          onCreated={(ministry) => {
+                            setMinistriesFromDb((current) => [
+                              ...current,
+                              { id: ministry.id, name: ministry.name },
+                            ]);
+                            if (!field.value?.includes(ministry.name)) {
+                              field.onChange([...(field.value ?? []), ministry.name]);
+                            }
+                          }}
+                        />
                         <p className="mt-2 text-xs text-muted-foreground">
                           Puede seleccionar varios grupos y ministerios (opcional).
                         </p>

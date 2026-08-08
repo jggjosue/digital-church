@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/select';
 import { CalendarIcon, Download, Loader2 } from 'lucide-react';
 import { AppHeader } from '@/components/app-header';
+import { exportExcelReport } from '@/lib/export-excel';
 
 const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('es-MX', {
@@ -60,15 +61,43 @@ export default function IncomeExpensePage() {
   const totalExpenses = summary?.totalExpenses || 0;
   const netIncome = summary?.netIncome || 0;
 
+  const handleExport = async () => {
+    await exportExcelReport({
+      fileName: `ingresos-y-gastos-${year}`,
+      title: 'Estado de Ingresos y Gastos',
+      metadata: [['Año', year]],
+      sections: [
+        {
+          name: 'Ingresos',
+          columns: ['Categoría', 'Monto'],
+          rows: [...income.map((item) => [item.label, item.amount]), ['Ingresos totales', totalIncome]],
+          currencyColumns: [1],
+        },
+        {
+          name: 'Gastos',
+          columns: ['Categoría', 'Monto'],
+          rows: [...expenses.map((item) => [item.label, item.amount]), ['Gastos totales', totalExpenses]],
+          currencyColumns: [1],
+        },
+        {
+          name: 'Resultado',
+          columns: ['Indicador', 'Monto'],
+          rows: [['Ingreso neto', netIncome]],
+          currencyColumns: [1],
+        },
+      ],
+    });
+  };
+
   return (
     <div className="flex flex-col flex-1">
       <AppHeader
         title="Estado de Ingresos y Gastos"
         description="Resumen financiero actualizado según las transacciones registradas."
       >
-        <Button>
+        <Button type="button" onClick={() => void handleExport()} disabled={loading}>
           <Download className="mr-2 h-4 w-4" />
-          Exportar PDF
+          Exportar Excel
         </Button>
       </AppHeader>
       <main className="flex-1 space-y-6 p-4 sm:p-8">

@@ -74,7 +74,7 @@ function downloadInventoryTableCsv(rows: ResourceRow[]) {
     'Ubicación (área)',
     'Cantidad',
     'Condición',
-    'Estado',
+    'Procedencia del recurso',
   ];
   const lines = [
     headers.join(','),
@@ -677,7 +677,7 @@ export default function InventarioPage() {
                           Condición
                         </TableHead>
                         <TableHead className="font-semibold uppercase tracking-wide text-muted-foreground">
-                          Estado
+                          Procedencia del recurso
                         </TableHead>
                       </TableRow>
                     </TableHeader>

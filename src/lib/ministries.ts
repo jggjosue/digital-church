@@ -3,6 +3,15 @@ import type { Db } from 'mongodb';
 /** Nombre de la colección en MongoDB donde se persisten los ministerios. */
 export const MINISTRIES_COLLECTION = 'ministries';
 
+export function normalizeMinistryName(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLocaleLowerCase('es');
+}
+
 /** Crea la colección `ministries` si aún no existe (idempotente). */
 export async function ensureMinistriesCollection(db: Db): Promise<void> {
   const existing = await db
@@ -33,6 +42,7 @@ export type MinistryMemberAssignment = {
 export type MinistryDocument = {
   id: string;
   name: string;
+  normalizedName?: string;
   description: string;
   category: string;
   leaders: MinistryLeader[];

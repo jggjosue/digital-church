@@ -1,11 +1,10 @@
 import { AuthenticatedChrome } from '@/components/authenticated-chrome';
+import { CookieConsent } from '@/components/cookie-consent';
 import { ThemeProvider } from '@/components/theme-provider';
 import { Toaster } from "@/components/ui/toaster";
 import { cn } from '@/lib/utils';
 import { esMX } from '@clerk/localizations';
 import { ClerkProvider } from '@clerk/nextjs';
-import { Analytics } from "@vercel/analytics/next";
-import { SpeedInsights } from "@vercel/speed-insights/next";
 import type { Metadata, Viewport } from 'next';
 import { PT_Sans } from 'next/font/google';
 import './globals.css';
@@ -72,8 +71,7 @@ export default function RootLayout({
           >
             <AuthenticatedChrome>{children}</AuthenticatedChrome>
             <Toaster />
-            <Analytics />
-            <SpeedInsights />
+            <CookieConsent />
           </ThemeProvider>
         </ClerkProvider>
       </body>

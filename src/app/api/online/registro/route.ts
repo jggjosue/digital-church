@@ -12,6 +12,7 @@ const normalizeComparable = (value: string) =>
     .trim();
 
 const ONLINE_REGISTRY_COLLECTION = 'online_attendance_registry';
+const ONLINE_EVENTS_COLLECTION = 'online_events';
 
 const monthKeySchema = z.enum([
   'enero',
@@ -48,6 +49,7 @@ const saveSchema = z.object({
   churchName: z.string().min(1),
   ministryId: z.string().min(1),
   ministryName: z.string().min(1),
+  onlineEventId: z.string().min(1),
   year: z.string().regex(/^\d{4}$/),
   eventName: z
     .string()
@@ -68,10 +70,11 @@ export async function GET(request: Request) {
     const url = new URL(request.url);
     const churchId = url.searchParams.get('churchId')?.trim() ?? '';
     const ministryId = url.searchParams.get('ministryId')?.trim() ?? '';
+    const onlineEventId = url.searchParams.get('onlineEventId')?.trim() ?? '';
     const year = url.searchParams.get('year')?.trim() ?? '';
-    if (!churchId || !ministryId || !year) {
+    if (!churchId || !ministryId || !onlineEventId || !year) {
       return NextResponse.json(
-        { error: 'churchId, ministryId y year son requeridos.' },
+        { error: 'churchId, ministryId, onlineEventId y year son requeridos.' },
         { status: 400 }
       );
     }
@@ -79,7 +82,7 @@ export async function GET(request: Request) {
     const doc = await db
       .collection<OnlineRegistryDoc>(ONLINE_REGISTRY_COLLECTION)
       .findOne(
-        { churchId, ministryId, year },
+        { churchId, ministryId, onlineEventId, year },
         {
           projection: {
             _id: 0,
@@ -87,6 +90,7 @@ export async function GET(request: Request) {
             churchName: 1,
             ministryId: 1,
             ministryName: 1,
+            onlineEventId: 1,
             year: 1,
             eventName: 1,
             records: 1,
@@ -158,14 +162,32 @@ export async function PUT(request: Request) {
       );
     }
 
+    const onlineEvent = await db
+      .collection<{ id: string; name: string; participatingChurches?: Array<{ id: string }> }>(ONLINE_EVENTS_COLLECTION)
+      .findOne(
+        { id: payload.onlineEventId },
+        { projection: { _id: 0, id: 1, name: 1, participatingChurches: 1 } }
+      );
+    if (!onlineEvent) {
+      return NextResponse.json({ error: 'El evento online seleccionado no existe.' }, { status: 400 });
+    }
+    if (
+      Array.isArray(onlineEvent.participatingChurches) &&
+      onlineEvent.participatingChurches.length > 0 &&
+      !onlineEvent.participatingChurches.some((item) => item.id === payload.churchId)
+    ) {
+      return NextResponse.json(
+        { error: 'El templo seleccionado no participa en este evento online.' },
+        { status: 400 }
+      );
+    }
+
     const eventNameStored =
-      payload.eventName.length > 0
-        ? payload.eventName
-        : `Asistencia online ${payload.year}`;
+      onlineEvent.name.trim() || payload.eventName || `Asistencia online ${payload.year}`;
 
     const collection = db.collection<OnlineRegistryDoc>(ONLINE_REGISTRY_COLLECTION);
     await collection.updateOne(
-      { churchId: payload.churchId, ministryId: payload.ministryId, year: payload.year },
+      { churchId: payload.churchId, ministryId: payload.ministryId, onlineEventId: payload.onlineEventId, year: payload.year },
       {
         $set: {
           churchName: church.name,
@@ -178,6 +200,7 @@ export async function PUT(request: Request) {
         $setOnInsert: {
           churchId: payload.churchId,
           ministryId: payload.ministryId,
+          onlineEventId: payload.onlineEventId,
           year: payload.year,
           createdAt: now,
         },

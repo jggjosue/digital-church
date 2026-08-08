@@ -21,6 +21,7 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
 import type { FundraisingCampaignDoc } from '@/lib/fundraising-seed';
+import { isCongreganteAccessRole } from '@/lib/congregante-access';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import {
@@ -53,6 +54,7 @@ type MemberItem = {
 
 type RecordCategory = 'donations' | 'offering' | 'pledges' | 'campaigns';
 type DonationEntryMode = 'offering' | 'fundraising';
+const CUSTOM_CHURCH_EVENT_ID = 'otro';
 
 export default function NewDonationPage() {
     const { toast } = useToast();
@@ -64,6 +66,7 @@ export default function NewDonationPage() {
     const [churchesState, setChurchesState] = React.useState<'loading' | 'ready' | 'error'>('loading');
     const [churchEvents, setChurchEvents] = React.useState<ChurchAttendanceEventItem[]>([]);
     const [selectedChurchEventId, setSelectedChurchEventId] = React.useState('');
+    const [customChurchEventName, setCustomChurchEventName] = React.useState('');
     const [churchEventsState, setChurchEventsState] = React.useState<'idle' | 'loading' | 'ready' | 'error'>(
         'idle'
     );
@@ -122,7 +125,7 @@ export default function NewDonationPage() {
                 const m = data.member;
                 if (!m?.id) return;
                 const role = String(m.staffRole ?? '').trim().toLowerCase();
-                if (role !== 'congregante') return;
+                if (!isCongreganteAccessRole(role)) return;
                 const donor: MemberItem = {
                     id: String(m.id),
                     firstName: String(m.firstName ?? '').trim(),
@@ -347,6 +350,7 @@ export default function NewDonationPage() {
         if (!selectedChurchId) {
             setChurchEvents([]);
             setSelectedChurchEventId('');
+            setCustomChurchEventName('');
             setChurchEventsState('idle');
             return;
         }
@@ -355,6 +359,7 @@ export default function NewDonationPage() {
         const loadChurchEvents = async () => {
             setChurchEventsState('loading');
             setSelectedChurchEventId('');
+            setCustomChurchEventName('');
             try {
                 const response = await fetch(`/api/churches/${encodeURIComponent(selectedChurchId)}/attendance`, {
                     cache: 'no-store',
@@ -464,6 +469,11 @@ export default function NewDonationPage() {
             } else if (churchEventsState === 'ready') {
                 if (effectiveChurchEvents.length === 0 || !selectedChurchEventId) {
                     errors.event = 'Seleccione el evento del templo.';
+                } else if (
+                    selectedChurchEventId === CUSTOM_CHURCH_EVENT_ID &&
+                    !customChurchEventName.trim()
+                ) {
+                    errors.event = 'Escriba el nombre del evento.';
                 }
             }
         }
@@ -523,7 +533,12 @@ export default function NewDonationPage() {
 
         const church = churches.find((c) => c.id === selectedChurchId);
         const selectedEvent = effectiveChurchEvents.find((e) => e.id === selectedChurchEventId);
-        if (!church || !selectedEvent || !date || (!isOffering && !selectedDonor)) {
+        const customEventName = customChurchEventName.trim();
+        const selectedEventName =
+            selectedChurchEventId === CUSTOM_CHURCH_EVENT_ID
+                ? customEventName
+                : selectedEvent?.eventName;
+        if (!church || !selectedEventName || !date || (!isOffering && !selectedDonor)) {
             toast({
                 variant: 'destructive',
                 title: 'No se pudo guardar',
@@ -559,7 +574,7 @@ export default function NewDonationPage() {
             churchName: church.name,
             attendanceEvent: {
                 id: selectedChurchEventId,
-                name: selectedEvent.eventName,
+                name: selectedEventName,
             },
             amount: amountValue,
             donationDate: date.toISOString(),
@@ -900,6 +915,9 @@ export default function NewDonationPage() {
                                     value={selectedChurchEventId}
                                     onValueChange={(v) => {
                                         setSelectedChurchEventId(v);
+                                        if (v !== CUSTOM_CHURCH_EVENT_ID) {
+                                            setCustomChurchEventName('');
+                                        }
                                         if (fieldErrors.event) {
                                             setFieldErrors((prev) => {
                                                 const next = { ...prev };
@@ -929,8 +947,31 @@ export default function NewDonationPage() {
                                                 {event.eventName}
                                             </SelectItem>
                                         ))}
+                                        <SelectItem value={CUSTOM_CHURCH_EVENT_ID}>Otro</SelectItem>
                                     </SelectContent>
                                 </Select>
+                                {selectedChurchEventId === CUSTOM_CHURCH_EVENT_ID ? (
+                                    <div className="space-y-2 pt-2">
+                                        <Label htmlFor="custom-church-event">Nombre del evento</Label>
+                                        <Input
+                                            id="custom-church-event"
+                                            value={customChurchEventName}
+                                            maxLength={200}
+                                            placeholder="Escribe el nombre del evento"
+                                            autoFocus
+                                            onChange={(event) => {
+                                                setCustomChurchEventName(event.target.value);
+                                                if (fieldErrors.event) {
+                                                    setFieldErrors((prev) => {
+                                                        const next = { ...prev };
+                                                        delete next.event;
+                                                        return next;
+                                                    });
+                                                }
+                                            }}
+                                        />
+                                    </div>
+                                ) : null}
                                 {fieldErrors.event ? (
                                     <p className="text-xs text-destructive" role="alert">
                                         {fieldErrors.event}

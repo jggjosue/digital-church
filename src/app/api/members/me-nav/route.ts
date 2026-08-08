@@ -3,6 +3,7 @@ import { isFullAccessStaffRole, isLeadershipStaffRole } from '@/lib/pastor-churc
 import type { StaffRoleDocument } from '@/lib/staff-roles';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
+import { isCongreganteAccessRole } from '@/lib/congregante-access';
 
 /** Misma matriz de módulos que antes tenía solo el rol «Pastor». */
 const LEADERSHIP_PORTAL_MODULES = {
@@ -13,6 +14,7 @@ const LEADERSHIP_PORTAL_MODULES = {
   Online: ['Servicio', 'Registro', 'Reporte'],
   Ofrendas: [
     'Registro de Ofrendas',
+    'Eventos Especiales',
     'Ver ofrendas',
     'Registrar ofrendas',
     'Editar registros históricos',
@@ -90,7 +92,7 @@ export async function GET() {
     }
 
     // Regla fija solicitada para Congregante.
-    if (sr === 'congregante') {
+    if (isCongreganteAccessRole(sr)) {
       return NextResponse.json({
         access: 'partial' as const,
         modules: {

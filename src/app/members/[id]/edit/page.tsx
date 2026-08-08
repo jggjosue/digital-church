@@ -36,6 +36,8 @@ import { z } from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from '@/hooks/use-toast';
 import { TempleAssignmentCard } from '@/components/temple-assignment-card';
+import { MemberCustomMinistry } from '@/components/member-custom-ministry';
+import { BASIC_MEMBER_GROUP_OPTIONS } from '@/lib/congregante-access';
 
 const STAFF_ROLE_NONE = '__none__';
 
@@ -69,6 +71,11 @@ const STAFF_ROLE_OPTIONS = [
   { value: STAFF_ROLE_NONE, label: 'Sin especificar' },
   { value: 'Pastor', label: 'Pastor' },
   { value: 'Congregante', label: 'Congregante' },
+  { value: 'Invitado', label: 'Invitado' },
+  { value: 'Visitante', label: 'Visitante' },
+  { value: 'Asistente', label: 'Asistente' },
+  { value: 'Principiante en la fe', label: 'Principiante en la fe' },
+  { value: 'Oyente', label: 'Oyente' },
   { value: 'Directiva', label: 'Directiva' },
   { value: 'Presidente', label: 'Presidente' },
   { value: 'Responsable de una Comisión', label: 'Responsable de una Comisión' },
@@ -293,11 +300,15 @@ export default function EditMemberPage() {
             .map((m) => String(m.name ?? '').trim())
             .filter(Boolean)
         )].sort((a, b) => a.localeCompare(b, 'es'));
-        setGroupOptions(groups);
+        setGroupOptions(Array.from(new Map(
+          [...BASIC_MEMBER_GROUP_OPTIONS, ...groups]
+            .filter(Boolean)
+            .map((group) => [group.toLocaleLowerCase('es'), group])
+        ).values()));
         setGroupsLoadState('ready');
       } catch {
         if (!cancelled) {
-          setGroupOptions([]);
+          setGroupOptions([...BASIC_MEMBER_GROUP_OPTIONS]);
           setGroupsLoadState('error');
         }
       }
@@ -645,7 +656,7 @@ export default function EditMemberPage() {
                               No hay ministerios registrados en `ministries`.
                             </p>
                           ) : null}
-                          {groupsLoadState === 'ready'
+                          {groupsLoadState !== 'loading'
                             ? groupOptions.map((group) => (
                               <div key={group} className="flex items-center gap-3">
                                   <Checkbox 
@@ -660,6 +671,15 @@ export default function EditMemberPage() {
                             ))
                             : null}
                       </div>
+                        <MemberCustomMinistry
+                          existingOptions={groupOptions}
+                          onCreated={(ministry) => {
+                            setGroupOptions((current) => [...current, ministry.name]);
+                            if (!field.value?.includes(ministry.name)) {
+                              field.onChange([...(field.value ?? []), ministry.name]);
+                            }
+                          }}
+                        />
                         <p className="mt-2 text-xs text-muted-foreground">Puede seleccionar múltiples grupos.</p>
                         <FormMessage />
                       </FormItem>

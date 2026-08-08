@@ -46,12 +46,21 @@ type OnlineRegistryRecord = {
   churchName: string;
   year: string;
   eventName?: string;
+  onlineEventId?: string;
   records: Record<MonthKey, MonthRecord>;
   initializedMonths: MonthKey[];
 };
 
 type ChurchItem = { id: string; name: string };
 type MinistryItem = { id: string; name: string; churchId?: string };
+type OnlineEventItem = {
+  id: string;
+  name: string;
+  category: string;
+  platform: string;
+  scheduledAt: string;
+  participatingChurches: Array<{ id: string; name: string }>;
+};
 
 const YEAR_OPTIONS = REGISTRY_YEAR_OPTIONS;
 const MONTH_ORDER: MonthKey[] = [...REGISTRY_MONTHS];
@@ -172,15 +181,35 @@ export default function OnlineReportePage() {
   const [ministries, setMinistries] = React.useState<MinistryItem[]>([]);
   const [selectedMinistryId, setSelectedMinistryId] = React.useState('');
   const [ministriesState, setMinistriesState] = React.useState<'loading' | 'ready' | 'error'>('loading');
+  const [onlineEvents, setOnlineEvents] = React.useState<OnlineEventItem[]>([]);
+  const [selectedOnlineEventId, setSelectedOnlineEventId] = React.useState('');
+  const [eventsState, setEventsState] = React.useState<'loading' | 'ready' | 'error'>('loading');
   const [registry, setRegistry] = React.useState<OnlineRegistryRecord | null>(null);
   const [registryState, setRegistryState] = React.useState<'idle' | 'loading' | 'ready' | 'empty' | 'error'>('idle');
 
   const selectedChurchName = churches.find((c) => c.id === selectedChurchId)?.name ?? '';
   const selectedMinistryName = ministries.find((m) => m.id === selectedMinistryId)?.name ?? '';
+  const selectedOnlineEvent = onlineEvents.find((event) => event.id === selectedOnlineEventId) ?? null;
 
   const filteredMinistries = React.useMemo(() => {
     return ministries.filter((m) => !m.churchId || m.churchId === selectedChurchId);
   }, [ministries, selectedChurchId]);
+
+  const filteredOnlineEvents = React.useMemo(
+    () =>
+      onlineEvents.filter(
+        (event) =>
+          event.participatingChurches.length === 0 ||
+          event.participatingChurches.some((church) => church.id === selectedChurchId)
+      ),
+    [onlineEvents, selectedChurchId]
+  );
+
+  React.useEffect(() => {
+    if (!filteredOnlineEvents.some((event) => event.id === selectedOnlineEventId)) {
+      setSelectedOnlineEventId(filteredOnlineEvents[0]?.id ?? '');
+    }
+  }, [filteredOnlineEvents, selectedOnlineEventId]);
 
   React.useEffect(() => {
     if (filteredMinistries.length > 0) {
@@ -212,6 +241,27 @@ export default function OnlineReportePage() {
     void load();
   }, [toast]);
 
+  // Load the same events shown in /online/servicio
+  React.useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      setEventsState('loading');
+      try {
+        const res = await fetch('/api/online/eventos', { cache: 'no-store', headers: { Accept: 'application/json' } });
+        const json = (await res.json().catch(() => ({}))) as { events?: OnlineEventItem[]; error?: string };
+        if (!res.ok) throw new Error(json.error || 'Error al cargar eventos online.');
+        if (cancelled) return;
+        setOnlineEvents(Array.isArray(json.events) ? json.events : []);
+        setEventsState('ready');
+      } catch (e) {
+        if (cancelled) return;
+        setEventsState('error');
+        toast({ variant: 'destructive', title: 'Error al cargar eventos', description: e instanceof Error ? e.message : 'Inténtalo de nuevo.' });
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [toast]);
+
   // Load ministries
   React.useEffect(() => {
     const load = async () => {
@@ -234,14 +284,14 @@ export default function OnlineReportePage() {
 
   // Load registry
   React.useEffect(() => {
-    if (!selectedChurchId || !selectedMinistryId) { setRegistry(null); setRegistryState('idle'); return; }
+    if (!selectedChurchId || !selectedMinistryId || !selectedOnlineEventId) { setRegistry(null); setRegistryState('idle'); return; }
     let cancelled = false;
     setRegistryState('loading');
     setRegistry(null);
     void (async () => {
       try {
         const res = await fetch(
-          `/api/online/registro?churchId=${encodeURIComponent(selectedChurchId)}&ministryId=${encodeURIComponent(selectedMinistryId)}&year=${encodeURIComponent(selectedYear)}`,
+          `/api/online/registro?churchId=${encodeURIComponent(selectedChurchId)}&ministryId=${encodeURIComponent(selectedMinistryId)}&onlineEventId=${encodeURIComponent(selectedOnlineEventId)}&year=${encodeURIComponent(selectedYear)}`,
           { cache: 'no-store', headers: { Accept: 'application/json' } }
         );
         const json = (await res.json().catch(() => ({}))) as { record?: OnlineRegistryRecord | null; error?: string };
@@ -258,7 +308,7 @@ export default function OnlineReportePage() {
       }
     })();
     return () => { cancelled = true; };
-  }, [selectedChurchId, selectedMinistryId, selectedYear, toast]);
+  }, [selectedChurchId, selectedMinistryId, selectedOnlineEventId, selectedYear, toast]);
 
   const rec = registry;
   const categories = rec ? getUniqueCategories(rec.records) : [];
@@ -313,8 +363,9 @@ export default function OnlineReportePage() {
     doc.setFontSize(11);
     doc.text(`Templo: ${selectedChurchName}`, 14, 26);
     if (selectedMinistryName) doc.text(`Ministerio: ${selectedMinistryName}`, 14, 32);
-    doc.text(`Año: ${selectedYear}`, 14, selectedMinistryName ? 38 : 32);
-    doc.text(`Generado: ${generatedAt}`, 14, selectedMinistryName ? 44 : 38);
+    if (selectedOnlineEvent) doc.text(`Evento: ${selectedOnlineEvent.name}`, 14, 38);
+    doc.text(`Año: ${selectedYear}`, 14, selectedOnlineEvent ? 44 : selectedMinistryName ? 38 : 32);
+    doc.text(`Generado: ${generatedAt}`, 14, selectedOnlineEvent ? 50 : selectedMinistryName ? 44 : 38);
 
     doc.autoTable({
       head: [['Resumen general', 'Cantidad']],
@@ -324,7 +375,7 @@ export default function OnlineReportePage() {
         ['Meses con datos', monthlyTotals.filter((t) => t > 0).length],
         ['Crecimiento Q1→Q2', `${growth >= 0 ? '+' : ''}${growth}%`],
       ],
-      startY: 50,
+      startY: selectedOnlineEvent ? 56 : 50,
       theme: 'striped',
       headStyles: { fillColor: [14, 165, 233] },
       styles: { fontSize: 10 },
@@ -367,7 +418,14 @@ export default function OnlineReportePage() {
       .replace(/-+/g, '-')
       .replace(/^-|-$/g, '')
       .toLowerCase();
-    doc.save(`reporte-online-${selectedYear}-${churchFileName || 'templo'}.pdf`);
+    const eventFileName = (selectedOnlineEvent?.name ?? 'evento')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-zA-Z0-9-_]+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '')
+      .toLowerCase();
+    doc.save(`reporte-online-${selectedYear}-${churchFileName || 'templo'}-${eventFileName || 'evento'}.pdf`);
   };
 
   return (
@@ -377,11 +435,11 @@ export default function OnlineReportePage() {
         stacked
         description={
           selectedChurchId && selectedMinistryId
-            ? `${selectedChurchName} - ${selectedMinistryName}`
+            ? `${selectedChurchName} - ${selectedMinistryName}${selectedOnlineEvent ? ` - ${selectedOnlineEvent.name}` : ''}`
             : 'Análisis de asistencia en eventos transmitidos'
         }
       >
-        <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-[minmax(220px,1fr)_minmax(220px,1fr)_140px_auto]">
+        <div className="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-[minmax(190px,1fr)_minmax(190px,1fr)_minmax(220px,1fr)_120px_auto]">
           <Select
             value={selectedChurchId}
             onValueChange={setSelectedChurchId}
@@ -393,6 +451,22 @@ export default function OnlineReportePage() {
             <SelectContent>
               {churches.map((c) => (
                 <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={selectedOnlineEventId}
+            onValueChange={setSelectedOnlineEventId}
+            disabled={eventsState !== 'ready' || filteredOnlineEvents.length === 0}
+          >
+            <SelectTrigger className="w-full bg-background">
+              <SelectValue placeholder={eventsState === 'loading' ? 'Cargando eventos…' : 'Evento online'} />
+            </SelectTrigger>
+            <SelectContent>
+              {filteredOnlineEvents.map((event) => (
+                <SelectItem key={event.id} value={event.id}>
+                  {event.name} · {event.platform}
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
@@ -424,7 +498,7 @@ export default function OnlineReportePage() {
               ))}
             </SelectContent>
           </Select>
-          <Button className="w-full xl:w-auto" disabled={!selectedChurchId || !selectedMinistryId || !rec} onClick={handleDownloadPdf}>
+          <Button className="w-full xl:w-auto" disabled={!selectedChurchId || !selectedMinistryId || !selectedOnlineEventId || !rec} onClick={handleDownloadPdf}>
             <Download className="mr-2 h-4 w-4" />
             Descargar PDF
           </Button>
@@ -444,7 +518,7 @@ export default function OnlineReportePage() {
           <Card className="border-dashed">
             <CardContent className="flex min-h-[200px] flex-col items-center justify-center gap-3 text-center text-muted-foreground">
               <Wifi className="h-12 w-12 opacity-30" />
-              <p className="text-lg font-medium">Selecciona un templo para ver el reporte online</p>
+              <p className="text-lg font-medium">Selecciona un evento para ver el reporte online</p>
             </CardContent>
           </Card>
         )}
@@ -457,7 +531,7 @@ export default function OnlineReportePage() {
               </div>
               <p className="text-xl font-semibold">Sin registros online para {selectedYear}</p>
               <p className="max-w-sm text-sm text-muted-foreground">
-                Aún no hay asistencia online guardada para <strong>{selectedChurchName}</strong> en {selectedYear}.
+                Aún no hay asistencia guardada para <strong>{selectedOnlineEvent?.name ?? 'el evento seleccionado'}</strong> en {selectedYear}.
                 Ve a <strong>Online › Registro</strong> para capturar datos.
               </p>
             </CardContent>

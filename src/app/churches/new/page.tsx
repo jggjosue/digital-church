@@ -48,6 +48,7 @@ const formSchema = z.object({
   campusPastor: z
     .string()
     .min(1, { message: 'El pastor del campus es requerido.' }),
+  pastoralStartDate: z.string().min(1, { message: 'La fecha de inicio pastoral es requerida.' }),
   contactEmail: z.union([z.literal(''), z.string().email({ message: 'Correo no válido.' })]),
   description: z
     .string()
@@ -80,6 +81,7 @@ export default function NewChurchPage() {
       country: '',
       phone: '',
       campusPastor: '',
+      pastoralStartDate: '',
       contactEmail: '',
       description: '',
       driveFolderUrl: '',
@@ -101,6 +103,7 @@ export default function NewChurchPage() {
           country: values.country,
           phone: values.phone.trim(),
           campusPastor: values.campusPastor.trim(),
+          pastoralStartDate: values.pastoralStartDate,
           contactEmail: values.contactEmail.trim(),
           description: values.description.trim(),
           driveFolderUrl: values.driveFolderUrl.trim(),
@@ -297,6 +300,22 @@ export default function NewChurchPage() {
                           {...field}
                         />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="pastoralStartDate"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Pastor desde</FormLabel>
+                      <FormControl>
+                        <Input type="date" className="h-11" {...field} />
+                      </FormControl>
+                      <p className="text-sm text-muted-foreground">
+                        Fecha desde la que sirve como pastor en esta iglesia.
+                      </p>
                       <FormMessage />
                     </FormItem>
                   )}

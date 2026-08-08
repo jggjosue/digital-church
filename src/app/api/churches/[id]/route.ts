@@ -7,6 +7,7 @@ import type { IciarTempleSchedule } from '@/lib/iciar-temples';
 import {
   CHURCHES_COLLECTION,
   buildDefaultChurchDocuments,
+  normalizeChurchName,
   type ChurchInventoryArea,
   type ChurchLocation,
 } from '@/lib/church-locations';
@@ -136,6 +137,17 @@ export async function PATCH(
     if (!name) {
       return NextResponse.json({ error: 'El nombre del templo es obligatorio.' }, { status: 400 });
     }
+    const normalizedName = normalizeChurchName(name);
+    const duplicate = await db.collection<ChurchLocation>(CHURCHES_COLLECTION).findOne(
+      { id: { $ne: trimmed }, normalizedName },
+      { projection: { _id: 0, name: 1 } }
+    );
+    if (duplicate) {
+      return NextResponse.json(
+        { error: `“${duplicate.name}” ya existe. Escriba un nombre diferente.` },
+        { status: 409 }
+      );
+    }
 
     const address = typeof body.address === 'string' ? body.address.trim() : '';
     const municipality = typeof body.municipality === 'string' ? body.municipality.trim() : '';
@@ -143,6 +155,12 @@ export async function PATCH(
     const shareMapUrl = typeof body.shareMapUrl === 'string' ? body.shareMapUrl : '';
     const driveFolderUrl = typeof body.driveFolderUrl === 'string' ? body.driveFolderUrl.trim() : undefined;
     const campusPastor = typeof body.campusPastor === 'string' ? body.campusPastor.trim() : undefined;
+    const pastoralStartDate = typeof body.pastoralStartDate === 'string' ? body.pastoralStartDate.trim() : undefined;
+    if (pastoralStartDate && !/^\d{4}-\d{2}-\d{2}$/.test(pastoralStartDate)) {
+      return NextResponse.json({ error: 'La fecha de inicio pastoral no es válida.' }, { status: 400 });
+    }
+    const registrationNumber = typeof body.registrationNumber === 'string' ? body.registrationNumber.trim() : undefined;
+    const pastoralAssignment = typeof body.pastoralAssignment === 'string' ? body.pastoralAssignment.trim() : undefined;
     const contactEmail = typeof body.contactEmail === 'string' ? body.contactEmail.trim() : undefined;
     const description = typeof body.description === 'string' ? body.description.trim() : undefined;
     const phone = typeof body.phone === 'string' ? body.phone.trim() : undefined;
@@ -163,6 +181,8 @@ export async function PATCH(
 
     const updateFields: Record<string, unknown> = {
       name,
+      normalizedName,
+      profileCreated: false,
       address,
       municipality,
       lat,
@@ -173,6 +193,9 @@ export async function PATCH(
     };
     if (driveFolderUrl !== undefined) updateFields.driveFolderUrl = driveFolderUrl;
     if (campusPastor !== undefined) updateFields.campusPastor = campusPastor;
+    if (pastoralStartDate !== undefined) updateFields.pastoralStartDate = pastoralStartDate;
+    if (registrationNumber !== undefined) updateFields.registrationNumber = registrationNumber;
+    if (pastoralAssignment !== undefined) updateFields.pastoralAssignment = pastoralAssignment;
     if (contactEmail !== undefined) updateFields.contactEmail = contactEmail;
     if (description !== undefined) updateFields.description = description;
     if (phone !== undefined) updateFields.phone = phone;
