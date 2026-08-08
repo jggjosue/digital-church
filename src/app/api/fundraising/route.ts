@@ -82,11 +82,11 @@ export async function GET() {
           );
         if (member && !isFullAccessStaffRole(member.staffRole as string | null | undefined)) {
           const churchIds = normalizeMemberChurchIds(member);
-          const mid =
-            typeof member.id === 'string' ? member.id.trim() : String(member.id ?? '').trim();
-          filter = filterScopedFundraising(churchIds, mid || null);
-        } else if (!member) {
-          filter = { churchId: '__no_church_access__' };
+          if (churchIds.length > 0) {
+            const mid =
+              typeof member.id === 'string' ? member.id.trim() : String(member.id ?? '').trim();
+            filter = filterScopedFundraising(churchIds, mid || null);
+          }
         }
       }
     }
