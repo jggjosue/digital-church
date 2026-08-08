@@ -127,7 +127,7 @@ export const PORTAL_NAV_ENTRIES: PortalNavEntry[] = [
         { href: '/donations/fundraising/new', icon: Megaphone, label: 'Crear Campaña' },
         { href: '/donations', icon: Heart, label: 'Donaciones y ofrendas' },
         { href: '/donations/pledges', icon: List, label: 'Gestión de Promesas' },
-        { href: '/donations/giving-statement', icon: FileText, label: 'Declaración de Donación' },
+        { href: '/donations/giving-statement', icon: FileText, label: 'Certificados de Donación' },
         { href: '/donations/fundraising', icon: PiggyBank, label: 'Recaudación de Fondos' },
       ],
     },

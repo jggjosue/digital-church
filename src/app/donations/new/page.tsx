@@ -594,7 +594,15 @@ export default function NewDonationPage() {
                 title: 'Donación guardada',
                 description: json.message || 'El registro se guardó en la base de datos.',
             });
-            router.push('/donations');
+            if (lockedDonor) {
+                setAmount('');
+                setNotes('');
+                setTransferNumber('');
+                setDate(new Date());
+                router.push('/donations/new');
+            } else {
+                router.push('/donations');
+            }
         } catch (e) {
             toast({
                 variant: 'destructive',

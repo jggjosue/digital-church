@@ -123,6 +123,9 @@ function buildGivingStatementPdf(params: {
   const fl = (key: string) => FUND_LABELS[key] ?? key;
   const pl = (key: string) => PAYMENT_LABELS[key] ?? key;
   const donorFromData = statementRows[0]?.donor;
+  const churchName =
+    statementRows.find((r) => r.churchName?.trim())?.churchName?.trim() ||
+    'IGLESIA CRISTIANA INTERAMERICANA';
 
   const tableRows = statementRows.map((d) => [
     formatRowDate(d.donationDate),
@@ -131,77 +134,289 @@ function buildGivingStatementPdf(params: {
     pl(d.paymentMethod),
     d.churchName,
     d.attendanceEvent?.name ?? '—',
-    d.id,
+    d.id.slice(0, 16) + (d.id.length > 16 ? '...' : ''),
   ]);
 
-  const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' }) as AutoTableDoc;
-  const pageW = doc.internal.pageSize.getWidth();
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' }) as AutoTableDoc;
+  const pageW = doc.internal.pageSize.getWidth(); // 210
+  const pageH = doc.internal.pageSize.getHeight(); // 297
 
+  // Helper for drawing certificate borders & page header
+  const drawPageBorderAndHeader = (pageNumber: number, totalPages: number) => {
+    // Elegant Outer Border
+    doc.setLineWidth(0.7);
+    doc.setDrawColor(15, 76, 92); // Deep Teal #0F4C5C
+    doc.rect(8, 8, pageW - 16, pageH - 16);
+
+    // Inner Gold Border Line
+    doc.setLineWidth(0.3);
+    doc.setDrawColor(197, 155, 39); // Gold #C59B27
+    doc.rect(10.5, 10.5, pageW - 21, pageH - 21);
+
+    // Corner Flourishes (Small decorative accents in corners)
+    const corners = [
+      [10.5, 10.5],
+      [pageW - 10.5, 10.5],
+      [10.5, pageH - 10.5],
+      [pageW - 10.5, pageH - 10.5],
+    ];
+    doc.setFillColor(15, 76, 92);
+    corners.forEach(([cx, cy]) => {
+      doc.rect(cx - 1.5, cy - 1.5, 3, 3, 'F');
+    });
+
+    if (pageNumber > 1) {
+      // Continuation Header for page 2+
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor(15, 76, 92);
+      doc.text('CERTIFICADO DE DONACIÓN - CONTINUACIÓN', pageW / 2, 16, { align: 'center' });
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(100, 116, 139);
+      doc.text(`Donante: ${donorDisplayName(selectedDonor)} | Período: ${previewYear}`, pageW / 2, 21, { align: 'center' });
+      doc.setLineWidth(0.3);
+      doc.setDrawColor(226, 232, 240);
+      doc.line(14, 24, pageW - 14, 24);
+    }
+  };
+
+  // --- PAGE 1 DESIGN ---
+  drawPageBorderAndHeader(1, 1);
+
+  // Top Decorative Accent Bar
+  doc.setFillColor(15, 76, 92);
+  doc.rect(pageW / 2 - 25, 14, 50, 1.5, 'F');
+  doc.setFillColor(197, 155, 39);
+  doc.rect(pageW / 2 - 12, 16, 24, 0.8, 'F');
+
+  // Institution / Church Header Name
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(11);
+  doc.setTextColor(100, 116, 139);
+  doc.text(churchName.toUpperCase(), pageW / 2, 23, { align: 'center' });
+
+  // Certificate Title
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(21);
+  doc.setTextColor(15, 76, 92);
+  doc.text('CERTIFICADO DE DONACIÓN', pageW / 2, 32, { align: 'center' });
+
+  // Subtitle
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  doc.setTextColor(197, 155, 39); // Gold
+  doc.text('DECLARACIÓN OFICIAL DE CONTRIBUCIONES Y APORTACIONES', pageW / 2, 37.5, { align: 'center' });
+
+  // Divider Line
+  doc.setLineWidth(0.4);
+  doc.setDrawColor(15, 76, 92);
+  doc.line(35, 41, pageW - 35, 41);
+
+  // Certification Statement Intro
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9.5);
+  doc.setTextColor(51, 65, 85);
+  doc.text('La administración de la iglesia hace constar y certifica que:', pageW / 2, 47, { align: 'center' });
+
+  // Recipient Name Highlight
+  const donorNameStr = donorDisplayName(selectedDonor).toUpperCase();
+  doc.setFont('helvetica', 'bold');
   doc.setFontSize(15);
-  doc.setTextColor(30, 30, 30);
-  doc.text('Declaración de donación / Estado de cuenta', 14, 16);
+  doc.setTextColor(27, 58, 93); // Navy tone
+  doc.text(donorNameStr, pageW / 2, 55, { align: 'center' });
 
+  // Recipient Meta Info
+  const emailStr = donorFromData?.email?.trim() ? ` • Correo: ${donorFromData.email.trim()}` : '';
+  const phoneStr = donorFromData?.phone?.trim() ? ` • Tel: ${donorFromData.phone.trim()}` : '';
+  const donorDetailsStr = `ID de Miembro: ${selectedDonor.memberId}${emailStr}${phoneStr}`;
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(100, 116, 139);
+  doc.text(donorDetailsStr, pageW / 2, 60.5, { align: 'center' });
+
+  // Body text certification clause
+  const bodyText = `Ha realizado donaciones y aportes diezmales/ofrendas con fidelidad durante el año fiscal ${previewYear} (1 de enero – 31 de diciembre de ${previewYear}), destinados al sostén del ministerio, obras sociales y proyectos congregacionales.`;
+  const splitBody = doc.splitTextToSize(bodyText, 160);
   doc.setFontSize(9);
-  doc.setTextColor(90, 90, 90);
-  let lineY = 24;
-  doc.text(`Donante: ${donorDisplayName(selectedDonor)}`, 14, lineY);
-  lineY += 5;
-  doc.text(`ID miembro: ${selectedDonor.memberId}`, 14, lineY);
-  lineY += 5;
-  if (donorFromData?.email?.trim()) {
-    doc.text(`Correo: ${donorFromData.email.trim()}`, 14, lineY);
-    lineY += 5;
-  }
-  if (donorFromData?.phone?.trim()) {
-    doc.text(`Teléfono: ${donorFromData.phone.trim()}`, 14, lineY);
-    lineY += 5;
-  }
-  doc.text(`Período: 1 de enero – 31 de diciembre de ${previewYear}`, 14, lineY);
-  lineY += 5;
-  doc.text(
-    `Generado: ${new Intl.DateTimeFormat('es-MX', {
-      dateStyle: 'long',
-      timeStyle: 'short',
-    }).format(new Date())}`,
-    14,
-    lineY
-  );
-  doc.setTextColor(0, 0, 0);
+  doc.setTextColor(51, 65, 85);
+  doc.text(splitBody, pageW / 2, 67, { align: 'center' });
 
+  // Hero Total Contribution Card Box
+  const heroY = 77;
+  const heroW = 160;
+  const heroH = 19;
+  const heroX = (pageW - heroW) / 2;
+
+  // Box background
+  doc.setFillColor(241, 248, 249);
+  doc.roundedRect(heroX, heroY, heroW, heroH, 3, 3, 'F');
+  doc.setLineWidth(0.5);
+  doc.setDrawColor(15, 76, 92);
+  doc.roundedRect(heroX, heroY, heroW, heroH, 3, 3, 'S');
+
+  // Total Card Content
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  doc.setTextColor(100, 116, 139);
+  doc.text(`TOTAL ACUMULADO DE CONTRIBUCIONES EN ${previewYear}`, pageW / 2, heroY + 6, { align: 'center' });
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(16);
+  doc.setTextColor(15, 76, 92);
+  doc.text(`${formatMoney(statementTotal)} MXN`, pageW / 2, heroY + 14, { align: 'center' });
+
+  // Table Section Header
+  const tableTitleY = heroY + heroH + 8;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9.5);
+  doc.setTextColor(27, 58, 93);
+  doc.text('DESGLOSE DETALLADO DE APORTACIONES REGISTRADAS', 14, tableTitleY);
+
+  // AutoTable
   doc.autoTable({
-    startY: lineY + 6,
+    startY: tableTitleY + 3,
     head: [
       [
         'Fecha',
         'Monto',
-        'Fondo / campaña',
-        'Método de pago',
-        'Templo',
+        'Fondo / Campaña',
+        'Método',
+        'Templo / Sede',
         'Evento',
-        'ID registro',
+        'ID Registro',
       ],
     ],
     body: tableRows,
-    theme: 'striped',
-    headStyles: { fillColor: [41, 98, 120], fontStyle: 'bold' },
-    styles: { fontSize: 8, cellPadding: 2 },
+    theme: 'grid',
+    headStyles: {
+      fillColor: [15, 76, 92],
+      textColor: [255, 255, 255],
+      fontStyle: 'bold',
+      fontSize: 8,
+      halign: 'left',
+    },
+    styles: {
+      fontSize: 7.5,
+      cellPadding: 2.2,
+      textColor: [30, 41, 59],
+      lineColor: [226, 232, 240],
+      lineWidth: 0.2,
+    },
     columnStyles: {
-      0: { cellWidth: 28 },
-      1: { cellWidth: 28 },
-      2: { cellWidth: 42 },
-      3: { cellWidth: 32 },
-      4: { cellWidth: 40 },
-      5: { cellWidth: 38 },
-      6: { cellWidth: 52 },
+      0: { cellWidth: 22, halign: 'center' },
+      1: { cellWidth: 24, halign: 'right', fontStyle: 'bold' },
+      2: { cellWidth: 34 },
+      3: { cellWidth: 22 },
+      4: { cellWidth: 28 },
+      5: { cellWidth: 26 },
+      6: { cellWidth: 28, fontSize: 7, textColor: [100, 116, 139] },
+    },
+    margin: { left: 14, right: 14, top: 26, bottom: 20 },
+    didDrawPage: (data) => {
+      if (data.pageNumber > 1) {
+        drawPageBorderAndHeader(data.pageNumber, doc.getNumberOfPages());
+      }
     },
   });
 
-  const afterTable = doc.lastAutoTable?.finalY ?? lineY + 40;
-  doc.setFontSize(11);
+  const finalY = doc.lastAutoTable?.finalY ?? tableTitleY + 40;
+
+  // Signatures & Stamp section
+  let sigY = finalY + 12;
+  if (sigY + 35 > pageH - 18) {
+    doc.addPage();
+    const newPageNum = doc.getNumberOfPages();
+    drawPageBorderAndHeader(newPageNum, newPageNum);
+    sigY = 40;
+  }
+
+  // Left Signature Line (Tesorería)
+  doc.setLineWidth(0.4);
+  doc.setDrawColor(100, 116, 139);
+  doc.line(22, sigY + 14, 75, sigY + 14);
+
   doc.setFont('helvetica', 'bold');
-  doc.text(`Contribuciones totales para ${previewYear}:`, 14, afterTable + 12);
-  doc.text(formatMoney(statementTotal), pageW - 14, afterTable + 12, { align: 'right' });
+  doc.setFontSize(8.5);
+  doc.setTextColor(27, 58, 93);
+  doc.text('Departamento de Tesorería', 48.5, sigY + 18, { align: 'center' });
+
   doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  doc.setTextColor(100, 116, 139);
+  doc.text('Firma y Verificación Financiera', 48.5, sigY + 22, { align: 'center' });
+
+  // Center Seal Stamp Badge (Digital verification badge)
+  const sealX = pageW / 2;
+  const sealY = sigY + 14;
+
+  doc.setLineWidth(0.6);
+  doc.setDrawColor(197, 155, 39); // Gold
+  doc.setFillColor(254, 252, 232);
+  doc.circle(sealX, sealY, 11, 'FD');
+
+  doc.setLineWidth(0.3);
+  doc.setDrawColor(15, 76, 92);
+  doc.circle(sealX, sealY, 9.2, 'S');
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(6);
+  doc.setTextColor(15, 76, 92);
+  doc.text('SELLO DIGITAL', sealX, sealY - 3, { align: 'center' });
+  doc.setFontSize(7);
+  doc.setTextColor(197, 155, 39);
+  doc.text('★ VALIDO ★', sealX, sealY + 1, { align: 'center' });
+  doc.setFontSize(5.5);
+  doc.setTextColor(100, 116, 139);
+  doc.text('ICIAR OFICIAL', sealX, sealY + 4.5, { align: 'center' });
+
+  // Right Signature Line (Pastor / Administración)
+  doc.setLineWidth(0.4);
+  doc.setDrawColor(100, 116, 139);
+  doc.line(pageW - 75, sigY + 14, pageW - 22, sigY + 14);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8.5);
+  doc.setTextColor(27, 58, 93);
+  doc.text('Pastor / Administración', pageW - 48.5, sigY + 18, { align: 'center' });
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  doc.setTextColor(100, 116, 139);
+  doc.text('Representación Congregacional', pageW - 48.5, sigY + 22, { align: 'center' });
+
+  // Footer text and metadata
+  const totalPages = doc.getNumberOfPages();
+  for (let p = 1; p <= totalPages; p++) {
+    doc.setPage(p);
+
+    const generatedDate = new Intl.DateTimeFormat('es-MX', {
+      dateStyle: 'long',
+      timeStyle: 'short',
+    }).format(new Date());
+
+    const memberShortId = selectedDonor.memberId.slice(0, 8).toUpperCase();
+    const folioStr = `Folio: CERT-${previewYear}-${memberShortId}`;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(148, 163, 184);
+
+    // Left metadata
+    doc.text(`Emisión: ${generatedDate} | ${folioStr}`, 14, pageH - 12);
+
+    // Right page numbering
+    doc.text(`Página ${p} de ${totalPages}`, pageW - 14, pageH - 12, { align: 'right' });
+
+    // Legal notice (centered bottom)
+    doc.text(
+      'Este certificado digital acredita las donaciones recibidas voluntariamente para fines religiosos y sociales sin fines de lucro.',
+      pageW / 2,
+      pageH - 9,
+      { align: 'center' }
+    );
+  }
 
   const slug = donorDisplayName(selectedDonor)
     .normalize('NFD')
@@ -211,7 +426,7 @@ function buildGivingStatementPdf(params: {
     .replace(/\s+/g, '-')
     .slice(0, 48);
 
-  const filename = `estado-cuenta-${previewYear}-${slug || 'donante'}.pdf`;
+  const filename = `certificado-donacion-${previewYear}-${slug || 'donante'}.pdf`;
   return { doc, filename };
 }
 
@@ -510,8 +725,8 @@ export default function GivingStatementPage() {
   return (
     <div className="flex flex-col flex-1">
       <AppHeader
-        title="Generar Estados de Cuenta de Donaciones"
-        description="Cree y distribuya estados de cuenta de donaciones para sus miembros."
+        title="Certificados de Donación"
+        description="Genere y distribuya los certificados oficiales de aportaciones para sus miembros."
       >
         <div/>
       </AppHeader>
@@ -521,11 +736,11 @@ export default function GivingStatementPage() {
           <div className="lg:col-span-1">
             <Card>
               <CardHeader>
-                <CardTitle>Opciones</CardTitle>
+                <CardTitle>Opciones del Certificado</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="space-y-2">
-                  <Label htmlFor="statement-year">Año del estado de cuenta</Label>
+                  <Label htmlFor="statement-year">Año del certificado</Label>
                   <Select value={selectedYear} onValueChange={setSelectedYear}>
                     <SelectTrigger id="statement-year">
                       <SelectValue placeholder="Seleccione año" />
@@ -630,7 +845,7 @@ export default function GivingStatementPage() {
           <div className="lg:col-span-2">
             <Card className="h-full">
               <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3">
-                <CardTitle>Vista previa del estado de cuenta</CardTitle>
+                <CardTitle>Vista previa del certificado</CardTitle>
                 <div className="flex flex-wrap items-center gap-3">
                   {selectedDonor && statementState === 'ready' && statementCount > 0 ? (
                     <div className="flex items-center gap-1 rounded-md border bg-background p-0.5 shadow-sm">
@@ -682,7 +897,7 @@ export default function GivingStatementPage() {
                         <div className="flex justify-between items-start mb-8">
                             <div>
                                 <h2 className="text-2xl font-bold">{headerChurchName}</h2>
-                                <p className="text-muted-foreground">Declaración de donación oficial</p>
+                                <p className="text-muted-foreground">Certificado de donación oficial</p>
                             </div>
                             <Avatar className="h-12 w-12">
                                 <AvatarFallback className="text-sm">
@@ -710,7 +925,7 @@ export default function GivingStatementPage() {
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm mb-8">
                             <div>
-                                <p className="text-muted-foreground">Fecha del estado de cuenta:</p>
+                                <p className="text-muted-foreground">Fecha de expedición:</p>
                                 <p className="font-medium">
                                   {new Intl.DateTimeFormat('es-MX', {
                                     dateStyle: 'long',
@@ -748,7 +963,7 @@ export default function GivingStatementPage() {
                           <div className="mb-6 space-y-4 rounded-md border bg-muted/20 p-4 sm:p-5">
                             <div className="flex flex-col gap-1 border-b pb-3 sm:flex-row sm:items-center sm:justify-between">
                               <p className="text-sm font-semibold">
-                                Estado de cuenta del aporte {safeStatementIndex + 1} de{' '}
+                                Constancia del aporte {safeStatementIndex + 1} de{' '}
                                 {statementCount}
                               </p>
                               <p className="font-mono text-xs text-muted-foreground">
@@ -853,7 +1068,7 @@ export default function GivingStatementPage() {
       <Dialog open={emailDialogOpen} onOpenChange={setEmailDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Enviar estado de cuenta por correo</DialogTitle>
+            <DialogTitle>Enviar certificado por correo</DialogTitle>
             <DialogDescription>
               Se adjuntará el mismo PDF de la vista previa. El envío se realiza con la cuenta Gmail
               configurada en el servidor (Google).

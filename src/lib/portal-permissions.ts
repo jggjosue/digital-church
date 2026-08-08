@@ -25,8 +25,8 @@ export async function resolvePortalModules(db: Db): Promise<Record<string, strin
   if (normalize(String(member.staffRole ?? '')) === 'congregante') {
     return {
       Iglesias: ['Buscar'],
-      Ofrendas: ['Añadir Donación', 'Recaudación de Fondos', 'Declaración de Donación'],
-      Donaciones: ['Añadir Donación', 'Recaudación de Fondos', 'Declaración de Donación'],
+      Ofrendas: ['Añadir Donación', 'Recaudación de Fondos', 'Certificados de Donación'],
+      Donaciones: ['Añadir Donación', 'Recaudación de Fondos', 'Certificados de Donación'],
       Directorio: ['Pastoral'],
       Oración: ['Peticiones', 'Nueva petición'],
     };
