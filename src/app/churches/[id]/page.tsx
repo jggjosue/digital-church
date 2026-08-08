@@ -85,6 +85,28 @@ export default function ChurchDetailsPage() {
     return accessCtx.churchIds.includes(id.trim());
   }, [id, accessCtx]);
 
+  const canSeeExpedienteDigital = React.useMemo(() => {
+    if (!accessCtx?.ready) return false;
+    if (accessCtx.isAdmin) return true;
+    const role = accessCtx.staffRoleNorm;
+    if (!role) return false;
+
+    const ALLOWED_ROLES = new Set([
+      'pastor',
+      'pastor regional',
+      'pastor presbiterial',
+      'director general',
+      'administrador',
+      'administrador general',
+      'admin',
+      'super administrador',
+    ]);
+
+    if (ALLOWED_ROLES.has(role)) return true;
+    if (role.startsWith('pastor ')) return true;
+    return false;
+  }, [accessCtx]);
+
   React.useEffect(() => {
     if (!id?.trim()) {
       setLoadState('error');
@@ -242,41 +264,43 @@ export default function ChurchDetailsPage() {
                       </Button>
                     ) : null}
 
-                    <div className="mt-6 rounded-lg border bg-muted/40 p-4">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2 font-semibold text-sm">
-                            <Folder className="h-4 w-4 text-sky-600 shrink-0" />
-                            Expediente Digital y Papeles del Templo
+                    {canSeeExpedienteDigital ? (
+                      <div className="mt-6 rounded-lg border bg-muted/40 p-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2 font-semibold text-sm">
+                              <Folder className="h-4 w-4 text-sky-600 shrink-0" />
+                              Expediente Digital y Papeles del Templo
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              Carpeta en la nube con escrituras, permisos municipales, recibos de luz/agua y trámites de construcción.
+                            </p>
                           </div>
-                          <p className="text-xs text-muted-foreground">
-                            Carpeta en la nube con escrituras, permisos municipales, recibos de luz/agua y trámites de construcción.
-                          </p>
+                          {church.driveFolderUrl ? (
+                            <Button asChild size="sm" className="bg-sky-600 hover:bg-sky-700 text-white shrink-0">
+                              <a
+                                href={church.driveFolderUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1.5"
+                              >
+                                Ver en Google Drive
+                                <ExternalLink className="h-3.5 w-3.5" />
+                              </a>
+                            </Button>
+                          ) : canEditOrDeleteThisTemple ? (
+                            <Button asChild size="sm" variant="outline" className="shrink-0">
+                              <Link href={`/churches/${church.id}/edit`} className="inline-flex items-center gap-1">
+                                <Plus className="h-3.5 w-3.5" />
+                                Agregar enlace de Drive
+                              </Link>
+                            </Button>
+                          ) : (
+                            <span className="text-xs text-muted-foreground italic shrink-0">Sin carpeta vinculada</span>
+                          )}
                         </div>
-                        {church.driveFolderUrl ? (
-                          <Button asChild size="sm" className="bg-sky-600 hover:bg-sky-700 text-white shrink-0">
-                            <a
-                              href={church.driveFolderUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1.5"
-                            >
-                              Ver en Google Drive
-                              <ExternalLink className="h-3.5 w-3.5" />
-                            </a>
-                          </Button>
-                        ) : canEditOrDeleteThisTemple ? (
-                          <Button asChild size="sm" variant="outline" className="shrink-0">
-                            <Link href={`/churches/${church.id}/edit`} className="inline-flex items-center gap-1">
-                              <Plus className="h-3.5 w-3.5" />
-                              Agregar enlace de Drive
-                            </Link>
-                          </Button>
-                        ) : (
-                          <span className="text-xs text-muted-foreground italic shrink-0">Sin carpeta vinculada</span>
-                        )}
                       </div>
-                    </div>
+                    ) : null}
                   </div>
                   <div>
                     <h3 className="mb-4 text-lg font-semibold">Información</h3>
@@ -320,33 +344,35 @@ export default function ChurchDetailsPage() {
                           <p className="font-medium">{church.municipality}</p>
                         </div>
                       </div>
-                      <div className="flex items-start gap-3">
-                        <Folder className="mt-0.5 h-4 w-4 shrink-0 text-sky-600" />
-                        <div>
-                          <p className="text-muted-foreground">Expediente Digital (Drive)</p>
-                          {church.driveFolderUrl ? (
-                            <a
-                              href={church.driveFolderUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
-                            >
-                              Ver papeles del templo
-                              <ExternalLink className="h-3.5 w-3.5" />
-                            </a>
-                          ) : canEditOrDeleteThisTemple ? (
-                            <Link
-                              href={`/churches/${church.id}/edit`}
-                              className="inline-flex items-center gap-1 font-medium text-xs text-primary hover:underline mt-0.5"
-                            >
-                              <Plus className="h-3 w-3" />
-                              Agregar enlace de Drive
-                            </Link>
-                          ) : (
-                            <p className="font-medium text-muted-foreground text-xs">Sin enlace asignado</p>
-                          )}
+                      {canSeeExpedienteDigital ? (
+                        <div className="flex items-start gap-3">
+                          <Folder className="mt-0.5 h-4 w-4 shrink-0 text-sky-600" />
+                          <div>
+                            <p className="text-muted-foreground">Expediente Digital (Drive)</p>
+                            {church.driveFolderUrl ? (
+                              <a
+                                href={church.driveFolderUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+                              >
+                                Ver papeles del templo
+                                <ExternalLink className="h-3.5 w-3.5" />
+                              </a>
+                            ) : canEditOrDeleteThisTemple ? (
+                              <Link
+                                href={`/churches/${church.id}/edit`}
+                                className="inline-flex items-center gap-1 font-medium text-xs text-primary hover:underline mt-0.5"
+                              >
+                                <Plus className="h-3 w-3" />
+                                Agregar enlace de Drive
+                              </Link>
+                            ) : (
+                              <p className="font-medium text-muted-foreground text-xs">Sin enlace asignado</p>
+                            )}
+                          </div>
                         </div>
-                      </div>
+                      ) : null}
                       <div className="flex items-start gap-3">
                         <Clock className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                         <div>

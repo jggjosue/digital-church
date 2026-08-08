@@ -107,6 +107,7 @@ export function AuthenticatedChrome({ children }: { children: React.ReactNode })
           .toLowerCase();
         const allowCongreganteRoute =
           pathname === '/churches' ||
+          (Boolean(pathname?.startsWith('/churches/')) && pathname !== '/churches/new' && !pathname?.endsWith('/edit')) ||
           pathname === '/members/staff' ||
           pathname === '/donations/new' ||
           pathname === '/donations' ||
