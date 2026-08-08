@@ -7,6 +7,7 @@ import {
   type SidebarNavItem,
 } from '@/lib/portal-nav-data';
 import { isInventoryGlobalStaffRole, isOnboardingStaffRole } from '@/lib/pastor-church-access';
+import { isCongreganteAccessRole } from '@/lib/congregante-access';
 
 type PortalNavContextValue = {
   navItems: SidebarNavItem[];
@@ -67,7 +68,7 @@ export function PortalNavProvider({ children }: { children: React.ReactNode }) {
         const withoutSettings = stripConfigurationNavUnlessGlobal(filtered, data.staffRole);
         const role = String(data.staffRole ?? '').trim().toLowerCase();
         const shouldShowMyData =
-          isOnboardingStaffRole(data.staffRole) || role === 'congregante';
+          isOnboardingStaffRole(data.staffRole) || isCongreganteAccessRole(role);
         setNavItems(
           shouldShowMyData ? relabelMembersNew(withoutSettings, 'Mis datos') : withoutSettings
         );

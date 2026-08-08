@@ -21,6 +21,7 @@ import { LandingHeader } from '@/components/landing/landing-header';
 import { LandingFooter } from '@/components/landing/landing-footer';
 import { ICIAR_TEMPLES } from '@/lib/iciar-temples';
 import { cn } from '@/lib/utils';
+import { Scroll3DScene } from '@/components/scroll-3d-scene';
 
 /** Vista de ejemplo en la tarjeta «Templo y directorio» (Templo La Nueva Jerusalén, Tepic). */
 const LANDING_MAP_EMBED = ICIAR_TEMPLES[0]!;
@@ -29,7 +30,7 @@ const ICIAR_TEMPLE_COUNT = ICIAR_TEMPLES.length;
 
 export function LandingPage() {
   return (
-    <div className="min-h-dvh bg-white text-slate-900 antialiased">
+    <Scroll3DScene className="min-h-dvh bg-white text-slate-900 antialiased">
       <LandingHeader />
 
       <main>
@@ -577,6 +578,6 @@ export function LandingPage() {
 
         <LandingFooter />
       </main>
-    </div>
+    </Scroll3DScene>
   );
 }

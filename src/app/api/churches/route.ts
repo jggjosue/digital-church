@@ -9,6 +9,7 @@ import {
   buildMapsUrlsFromAddress,
   CHURCHES_COLLECTION,
   dedupeChurchesById,
+  normalizeChurchName,
   type ChurchLocation,
 } from '@/lib/church-locations';
 
@@ -75,6 +76,10 @@ const createChurchFromFormSchema = z.object({
   country: z.enum(['usa', 'canada', 'mexico']),
   phone: z.string().max(120).optional().default(''),
   campusPastor: z.string().min(1).max(200),
+  pastoralStartDate: z
+    .union([z.literal(''), z.string().regex(/^\d{4}-\d{2}-\d{2}$/)])
+    .optional()
+    .default(''),
   contactEmail: z.union([z.literal(''), z.string().email()]).default(''),
   description: z.string().min(1).max(8000),
   driveFolderUrl: z.union([z.literal(''), z.string().url()]).optional().default(''),
@@ -99,6 +104,28 @@ export async function POST(request: Request) {
       country: body.country,
     });
     const db = await getDb();
+    const normalizedName = normalizeChurchName(body.name);
+    const churchesCollection = db.collection<ChurchLocation>(CHURCHES_COLLECTION);
+    await churchesCollection.createIndex(
+      { normalizedName: 1 },
+      {
+        unique: true,
+        partialFilterExpression: { normalizedName: { $type: 'string' } },
+        name: 'unique_normalized_church_name',
+      }
+    );
+    const existingNames = await churchesCollection
+      .find({}, { projection: { _id: 0, name: 1 } })
+      .toArray();
+    const duplicate = existingNames.find(
+      (church) => normalizeChurchName(church.name) === normalizedName
+    );
+    if (duplicate) {
+      return NextResponse.json(
+        { error: `“${duplicate.name}” ya existe. Escriba un nombre diferente.` },
+        { status: 409 }
+      );
+    }
 
     type MemberCreatorDoc = { id?: string; staffRole?: string | null };
     const { userId } = await auth();
@@ -121,9 +148,11 @@ export async function POST(request: Request) {
       }
     }
 
+    const churchId = randomUUID();
     const doc: ChurchLocation = {
-      id: randomUUID(),
+      id: churchId,
       name: body.name.trim(),
+      normalizedName,
       address: body.address.trim(),
       municipality: body.city.trim(),
       country: body.country,
@@ -138,12 +167,25 @@ export async function POST(request: Request) {
       state: body.state.trim(),
       zip: body.zip.trim(),
       campusPastor: body.campusPastor.trim(),
+      pastoralStartDate: body.pastoralStartDate,
+      registrationNumber: `ICIAR-${churchId.replace(/-/g, '').slice(0, 10).toUpperCase()}`,
+      pastoralAssignment: `Pastor titular de ${body.name.trim()}`,
       contactEmail: body.contactEmail.trim(),
       description: body.description.trim(),
       driveFolderUrl: (body.driveFolderUrl ?? '').trim(),
       ...(createdByMemberId ? { createdByMemberId } : {}),
     };
-    await db.collection<ChurchLocation>(CHURCHES_COLLECTION).insertOne(doc);
+    try {
+      await churchesCollection.insertOne(doc);
+    } catch (error) {
+      if (error && typeof error === 'object' && 'code' in error && Number((error as { code?: unknown }).code) === 11000) {
+        return NextResponse.json(
+          { error: 'Ese templo ya existe. Escriba un nombre diferente.' },
+          { status: 409 }
+        );
+      }
+      throw error;
+    }
 
     if (createdByMemberId) {
       await db.collection('members').updateOne(

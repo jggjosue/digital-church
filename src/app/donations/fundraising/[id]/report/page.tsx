@@ -20,6 +20,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import type { FundraisingCampaignDoc, FundraisingStatus } from '@/lib/fundraising-seed';
+import { isCongreganteAccessRole } from '@/lib/congregante-access';
 
 const statusColors: Record<FundraisingStatus, string> = {
   Active: 'bg-green-100 text-green-800 border-green-200',
@@ -78,7 +79,7 @@ export default function FundraisingCampaignReportPage() {
         const data = (await res.json().catch(() => ({}))) as { staffRole?: string | null };
         if (cancelled) return;
         const role = String(data.staffRole ?? '').trim().toLowerCase();
-        setCanEditCampaign(role !== 'congregante');
+        setCanEditCampaign(!isCongreganteAccessRole(role));
       } catch {
         if (!cancelled) setCanEditCampaign(true);
       }

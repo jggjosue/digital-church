@@ -4,6 +4,15 @@ import { ICIAR_TEMPLES } from '@/lib/iciar-temples';
 /** Colección en MongoDB para templos / ubicaciones (sustituye a `church_locations`). */
 export const CHURCHES_COLLECTION = 'churches';
 
+export function normalizeChurchName(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toLocaleLowerCase('es');
+}
+
 /** @deprecated Usar `CHURCHES_COLLECTION`. */
 export const CHURCH_LOCATIONS_COLLECTION = CHURCHES_COLLECTION;
 
@@ -16,6 +25,9 @@ export type ChurchInventoryArea = {
 export type ChurchLocation = {
   id: string;
   name: string;
+  normalizedName?: string;
+  /** Alta rápida desde el selector de templos de un perfil; datos administrativos pendientes. */
+  profileCreated?: boolean;
   /** Áreas internas opcionales para inventario por templo. */
   inventoryAreas?: ChurchInventoryArea[];
   /** Dirección en una sola línea (compatibilidad UI). */
@@ -35,6 +47,12 @@ export type ChurchLocation = {
   state?: string;
   zip?: string;
   campusPastor?: string;
+  /** Fecha ISO (AAAA-MM-DD) desde la que el pastor sirve en este templo. */
+  pastoralStartDate?: string;
+  /** Matrícula institucional que aparece en el certificado del templo. */
+  registrationNumber?: string;
+  /** Descripción de la asignación pastoral que aparece en el certificado. */
+  pastoralAssignment?: string;
   contactEmail?: string;
   description?: string;
   /** Enlace opcional a carpeta de Google Drive o repositorio digital de documentos del templo (permisos, luz, agua, construcción, etc.). */
@@ -171,6 +189,18 @@ const DEFAULT_SEED_IDS = [
   'mision-el-saucito',
   'mision-rancho-viejo',
   'mision-el-pintadeno',
+  'iglesia-cristiana-rios-de-agua-viva-iciar',
+  'templo-puerta-del-rey-iciar',
+  'llamados-a-crecer-iciar',
+  'torre-fuerte-iciar',
+  'iciar-maranatha-ixtapaluca',
+  'templo-sayula-rios-de-agua-viva-iciar',
+  'iglesia-interdenominacional-la-hermosa-zapopan',
+  'templo-divino-alfarero-tonala',
+  'iglesia-cristiana-torre-fuerte-san-sebastian',
+  'iciar-chapala',
+  'iciar-pacana',
+  'monte-sion-gomez-farias',
 ] as const;
 
 /** Campos postales explícitos alineados con la lista oficial ICIAR (todos los templos en `ICIAR_TEMPLES`). */
@@ -178,6 +208,90 @@ const STRUCTURED_SEED: Record<
   string,
   { streetAddress: string; neighborhood: string; zip: string; city: string; state: string }
 > = {
+  'iglesia-cristiana-rios-de-agua-viva-iciar': {
+    streetAddress: 'Prol. Av. Tepeyac 975',
+    neighborhood: 'Paraísos del Colli',
+    zip: '45069',
+    city: 'Zapopan',
+    state: 'Jalisco',
+  },
+  'templo-puerta-del-rey-iciar': {
+    streetAddress: 'Biblia 328',
+    neighborhood: 'La Duraznera',
+    zip: '45580',
+    city: 'San Pedro Tlaquepaque',
+    state: 'Jalisco',
+  },
+  'llamados-a-crecer-iciar': {
+    streetAddress: 'C. Río Blanco',
+    neighborhood: 'La Venta del Astillero',
+    zip: '45221',
+    city: 'Zapopan',
+    state: 'Jalisco',
+  },
+  'torre-fuerte-iciar': {
+    streetAddress: 'C. María Ciudadano Bancalari 3222 / C. Adolfo Cisneros 1216',
+    neighborhood: 'Echeverría',
+    zip: '44970',
+    city: 'Guadalajara',
+    state: 'Jalisco',
+  },
+  'iciar-maranatha-ixtapaluca': {
+    streetAddress: 'Alfonso Reyes 2',
+    neighborhood: 'La Venta',
+    zip: '56530',
+    city: 'Ixtapaluca',
+    state: 'Estado de México',
+  },
+  'templo-sayula-rios-de-agua-viva-iciar': {
+    streetAddress: 'C. Benito Juárez 267',
+    neighborhood: 'Aguacatera',
+    zip: '49314',
+    city: 'Sayula',
+    state: 'Jalisco',
+  },
+  'iglesia-interdenominacional-la-hermosa-zapopan': {
+    streetAddress: 'Fray Toribio de Motolinía 1363',
+    neighborhood: 'San Francisco',
+    zip: '45140',
+    city: 'Zapopan',
+    state: 'Jalisco',
+  },
+  'templo-divino-alfarero-tonala': {
+    streetAddress: 'Galeana 151',
+    neighborhood: 'Centro',
+    zip: '45400',
+    city: 'Tonalá',
+    state: 'Jalisco',
+  },
+  'iglesia-cristiana-torre-fuerte-san-sebastian': {
+    streetAddress: 'Del Valle 15',
+    neighborhood: 'Santa Cecilia',
+    zip: '49120',
+    city: 'San Sebastián del Sur',
+    state: 'Jalisco',
+  },
+  'iciar-chapala': {
+    streetAddress: 'Emiliano Zapata 47',
+    neighborhood: 'Centro',
+    zip: '45900',
+    city: 'Chapala',
+    state: 'Jalisco',
+  },
+  'iciar-pacana': {
+    streetAddress: '',
+    neighborhood: 'Castro Urdiales (Pacana)',
+    zip: '45325',
+    city: 'Pacana',
+    state: 'Jalisco',
+  },
+  'monte-sion-gomez-farias': {
+    streetAddress: 'C. Cedro Blanco 100',
+    neighborhood: 'Fraccionamiento San Pedro, Col. Iprovipe',
+    zip: '49120',
+    city: 'San Sebastián del Sur',
+    state: 'Jalisco',
+  },
   'templo-la-nueva-jerusalen': {
     streetAddress: 'Hierro 233',
     neighborhood: 'Valle de Matatipac',

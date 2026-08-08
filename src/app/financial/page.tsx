@@ -33,6 +33,7 @@ import {
 } from 'recharts';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { AppHeader } from '@/components/app-header';
+import { exportExcelReport } from '@/lib/export-excel';
 
 
 const chartConfig = {
@@ -61,19 +62,49 @@ type SummaryData = {
   netIncome: number;
 };
 
+type FinancialTransaction = {
+  id: string;
+  type: 'income' | 'expense';
+  amount: number;
+  date: string;
+  category: string;
+  fundId?: string;
+  description?: string;
+  reference?: string;
+};
+
+function currentWeekRange() {
+  const now = new Date();
+  const start = new Date(now);
+  const day = start.getDay();
+  start.setDate(start.getDate() - (day === 0 ? 6 : day - 1));
+  start.setHours(0, 0, 0, 0);
+  const end = new Date(start);
+  end.setDate(end.getDate() + 7);
+  return { start, end };
+}
+
 export default function FinancialPage() {
   const [data, setData] = React.useState<SummaryData | null>(null);
-  const [transactions, setTransactions] = React.useState<any[]>([]);
+  const [transactions, setTransactions] = React.useState<FinancialTransaction[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [year, setYear] = React.useState(new Date().getFullYear().toString());
+  const [transactionSearch, setTransactionSearch] = React.useState('');
+  const weekRange = React.useMemo(() => currentWeekRange(), []);
 
   React.useEffect(() => {
     let mounted = true;
     setLoading(true);
     
+    const transactionParams = new URLSearchParams({
+      page: '1',
+      limit: '100',
+      dateFrom: weekRange.start.toISOString(),
+      dateTo: weekRange.end.toISOString(),
+    });
     Promise.all([
         fetch(`/api/financial/summary?year=${year}`).then(res => res.json()),
-        fetch(`/api/data/financial-transactions?page=1&limit=5&year=${year}`).then(res => res.json())
+        fetch(`/api/data/financial-transactions?${transactionParams.toString()}`).then(res => res.json())
     ]).then(([summaryData, txData]) => {
         if (mounted) {
             if (!summaryData.error) setData(summaryData);
@@ -85,7 +116,7 @@ export default function FinancialPage() {
         if (mounted) setLoading(false);
       });
     return () => { mounted = false; };
-  }, [year]);
+  }, [weekRange, year]);
 
   const formatter = new Intl.NumberFormat('es-MX', {
     style: 'currency',
@@ -102,13 +133,73 @@ export default function FinancialPage() {
     });
   }, [data]);
 
+  const filteredTransactions = React.useMemo(() => {
+    const query = transactionSearch.trim().toLowerCase();
+    if (!query) return transactions;
+    return transactions.filter((transaction) =>
+      [
+        transaction.reference,
+        transaction.description,
+        transaction.category,
+        transaction.fundId,
+      ]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(query))
+    );
+  }, [transactionSearch, transactions]);
+
+  const handleExport = async () => {
+    await exportExcelReport({
+      fileName: `reporte-financiero-${year}`,
+      title: 'Reporte Financiero',
+      metadata: [
+        ['Año', year],
+        ['Búsqueda de transacciones', transactionSearch || 'Todas'],
+        ['Inicio de semana', weekRange.start],
+        ['Fin de semana', new Date(weekRange.end.getTime() - 1)],
+      ],
+      sections: [
+        {
+          name: 'Resumen',
+          columns: ['Indicador', 'Monto'],
+          rows: [
+            ['Total ingresos', data?.totalIncome ?? 0],
+            ['Gastos totales', data?.totalExpenses ?? 0],
+            ['Posición neta', data?.netIncome ?? 0],
+          ],
+          currencyColumns: [1],
+        },
+        {
+          name: 'Transacciones semana',
+          columns: ['Fecha', 'Descripción', 'Categoría', 'Fondo', 'Tipo', 'Monto'],
+          rows: filteredTransactions.map((transaction) => [
+            new Date(transaction.date),
+            transaction.reference || transaction.description || (transaction.type === 'income' ? 'Ingreso' : 'Gasto'),
+            transaction.category,
+            transaction.fundId || 'Fondo General',
+            transaction.type === 'income' ? 'Ingreso' : 'Gasto',
+            transaction.type === 'income' ? transaction.amount : -transaction.amount,
+          ]),
+          dateColumns: [0],
+          currencyColumns: [5],
+        },
+        {
+          name: 'Ingresos por mes',
+          columns: ['Mes', 'Monto'],
+          rows: data?.monthlyData.map((month) => [month.month, month.total]) ?? [],
+          currencyColumns: [1],
+        },
+      ],
+    });
+  };
+
   return (
     <div className="flex flex-col flex-1">
     <AppHeader
         title="Reportes Financieros"
         description="Resumen del rendimiento financiero y las transacciones."
     >
-        <Button variant="outline">
+        <Button variant="outline" type="button" onClick={() => void handleExport()} disabled={loading}>
             <Download className="mr-2 h-4 w-4" />
             Exportar Reporte
         </Button>
@@ -204,10 +295,21 @@ export default function FinancialPage() {
     <Card>
         <CardHeader>
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <CardTitle>Transacciones Recientes</CardTitle>
+            <div>
+              <CardTitle>Transacciones Recientes</CardTitle>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Semana del {weekRange.start.toLocaleDateString('es-MX')} al{' '}
+                {new Date(weekRange.end.getTime() - 1).toLocaleDateString('es-MX')}
+              </p>
+            </div>
             <div className="relative w-full sm:max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Buscar transacciones..." className="pl-9" />
+            <Input
+              placeholder="Buscar transacciones..."
+              className="pl-9"
+              value={transactionSearch}
+              onChange={(event) => setTransactionSearch(event.target.value)}
+            />
             </div>
         </div>
         </CardHeader>
@@ -224,18 +326,20 @@ export default function FinancialPage() {
             </TableRow>
             </TableHeader>
             <TableBody>
-            {transactions.length === 0 ? (
+            {filteredTransactions.length === 0 ? (
                 <TableRow>
                     <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                        No hay transacciones registradas.
+                        {transactions.length === 0
+                          ? 'No hay transacciones registradas esta semana.'
+                          : 'No hay transacciones que coincidan con la búsqueda.'}
                     </TableCell>
                 </TableRow>
             ) : (
-                transactions.map((transaction) => {
+                filteredTransactions.map((transaction) => {
                     const isIncome = transaction.type === 'income';
                     const amount = Number(transaction.amount) || 0;
                     return (
-                        <TableRow key={transaction._id || transaction.id}>
+                        <TableRow key={transaction.id}>
                             <TableCell>{new Date(transaction.date).toLocaleDateString('es-ES')}</TableCell>
                             <TableCell className="font-medium">
                                 {transaction.reference || transaction.description || (isIncome ? 'Ingreso' : 'Gasto')}

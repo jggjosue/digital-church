@@ -12,7 +12,19 @@
     "typecheck": "tsc --noEmit",
     "test": "tsx --test tests/*.test.ts",
     "test:watch": "tsx --test --watch tests/*.test.ts",
-    "db:migrate": "node scripts/migrate-mongo-collections.mjs"
+    "db:migrate": "node scripts/migrate-mongo-collections.mjs",
+    "db:upsert-rios-de-agua-viva": "node scripts/upsert-rios-de-agua-viva.mjs",
+    "db:upsert-puerta-del-rey": "node scripts/upsert-puerta-del-rey.mjs",
+    "db:upsert-llamados-a-crecer": "node scripts/upsert-llamados-a-crecer.mjs",
+    "db:upsert-torre-fuerte": "node scripts/upsert-torre-fuerte.mjs",
+    "db:upsert-maranatha-ixtapaluca": "node scripts/upsert-maranatha-ixtapaluca.mjs",
+    "db:upsert-sayula-rios-de-agua-viva": "node scripts/upsert-sayula-rios-de-agua-viva.mjs",
+    "db:upsert-la-hermosa-zapopan": "node scripts/upsert-la-hermosa-zapopan.mjs",
+    "db:upsert-divino-alfarero-tonala": "node scripts/upsert-divino-alfarero-tonala.mjs",
+    "db:upsert-torre-fuerte-san-sebastian": "node scripts/upsert-torre-fuerte-san-sebastian.mjs",
+    "db:upsert-iciar-chapala": "node scripts/upsert-iciar-chapala.mjs",
+    "db:upsert-iciar-pacana": "node scripts/upsert-iciar-pacana.mjs",
+    "db:upsert-monte-sion-gomez-farias": "node scripts/upsert-monte-sion-gomez-farias.mjs"
   },
   "dependencies": {
     "@clerk/localizations": "^4.3.0",

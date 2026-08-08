@@ -5,6 +5,7 @@ export type ConditionKey = 'excellent' | 'good' | 'repair';
 
 /** Documento en la colección `inventory` que agrupa áreas por templo. */
 export const INVENTORY_DOC_TYPE_CHURCH_AREAS = 'church_inventory_areas' as const;
+export const INVENTORY_CHURCH_AREAS_COLLECTION = 'inventory_church_areas' as const;
 
 /** Catálogo extendido de condiciones y estados (un solo documento en `inventory`). */
 export const INVENTORY_DOC_TYPE_TAXONOMY = 'inventory_taxonomy' as const;

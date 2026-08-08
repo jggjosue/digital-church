@@ -2,6 +2,7 @@ import { auth, currentUser } from '@clerk/nextjs/server';
 import type { Db } from 'mongodb';
 import { normalizeMemberChurchIds } from '@/lib/member-church-ids';
 import { isFullAccessStaffRole } from '@/lib/pastor-church-access';
+import { isCongreganteAccessRole } from '@/lib/congregante-access';
 
 type MemberScopeDoc = Record<string, unknown> & {
   id?: string;
@@ -20,7 +21,7 @@ export function buildDonationsReadScope(member: MemberScopeDoc | null, authentic
   if (isFullAccessStaffRole(member.staffRole)) return { kind: 'open' };
   const churchIds = normalizeMemberChurchIds(member);
   const clauses: Record<string, unknown>[] = [churchIds.length > 0 ? { churchId: { $in: churchIds } } : { churchId: '__no_church_access__' }];
-  if (String(member.staffRole ?? '').trim().toLowerCase() === 'congregante') {
+  if (isCongreganteAccessRole(member.staffRole)) {
     const donorId = String(member.id ?? '').trim();
     const donorEmail = String(member.email ?? fallbackEmail).trim().toLowerCase();
     const donorOr: Record<string, unknown>[] = [...(donorId ? [{ 'donor.memberId': donorId }] : []), ...(donorEmail ? [{ 'donor.email': donorEmail }] : [])];

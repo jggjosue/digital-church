@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { AppSidebar } from '@/components/app-sidebar';
 import { PortalFooter } from '@/components/portal-footer';
 import { PortalNavProvider } from '@/contexts/portal-nav-context';
+import { isCongreganteAccessRole } from '@/lib/congregante-access';
 
 const AUTH_ROUTE = /^\/(sign-in|sign-up)(\/|$)/;
 const PUBLIC_CHROME_BYPASS_ROUTES = new Set<string>([
@@ -135,7 +136,7 @@ export function AuthenticatedChrome({ children }: { children: React.ReactNode })
           setRoleChecked(true);
         }
 
-        if (!cancelled && !adminBypass && role === 'congregante' && !isAllowedForCongregante) {
+        if (!cancelled && !adminBypass && isCongreganteAccessRole(role) && !isAllowedForCongregante) {
           router.replace('/churches');
         }
       } catch {
@@ -159,7 +160,7 @@ export function AuthenticatedChrome({ children }: { children: React.ReactNode })
   }
 
   // Prevent UI flash or rendering of unauthorized pages for congregantes
-  if (userRole === 'congregante' && !isAllowedForCongregante) {
+  if (isCongreganteAccessRole(userRole) && !isAllowedForCongregante) {
     return null;
   }
 

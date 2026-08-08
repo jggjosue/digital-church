@@ -12,6 +12,7 @@ Sistema web de gestión ministerial para ICIAR. Centraliza miembros, templos, mi
 - [Arquitectura](#arquitectura)
 - [Autenticación, roles y alcance](#autenticación-roles-y-alcance)
 - [Páginas](#páginas)
+  - [Lista de páginas privadas](#lista-de-páginas-privadas)
 - [API](#api)
 - [Datos y colecciones](#datos-y-colecciones)
 - [Importaciones Excel](#importaciones-excel)
@@ -217,6 +218,34 @@ El módulo `Ofrendas` distingue además las acciones sensibles `Ver ofrendas`, `
 Super administrador, Administrador general, roles equivalentes y roles personalizados con permisos explícitos pueden ver Configuración. Las APIs validan por separado `Roles y Permisos`, `Lista de Roles` y `Usuarios`; el menú visible no sustituye la autorización del servidor. Los nombres de rol no pueden repetirse ignorando mayúsculas, las asignaciones comprueban que el miembro exista y las modificaciones de un rol compartido sincronizan a todos sus usuarios.
 
 ## Páginas
+
+### Lista de páginas privadas
+
+Las siguientes rutas forman el portal posterior al inicio de sesión. Todas requieren una sesión válida de Clerk; además, la navegación y los Route Handlers pueden limitar cada pantalla según el rol, los permisos y los templos asignados al usuario. Los segmentos `[id]` y `[churchId]` representan identificadores dinámicos.
+
+| Área | Páginas privadas |
+| --- | --- |
+| Panel y ayuda | `/dashboard`, `/tutorial` |
+| Miembros y directorio | `/members`, `/members/new`, `/members/add`, `/members/staff`, `/members/bulk-actions`, `/members/send-email`, `/members/[id]`, `/members/[id]/edit`, `/members/[id]/attendance`, `/members/[id]/donations` |
+| Iglesias | `/churches`, `/churches/new`, `/churches/[id]`, `/churches/[id]/edit` |
+| Ministerios | `/ministries`, `/ministries/new`, `/ministries/assign-members`, `/ministries/[id]`, `/ministries/[id]/edit` |
+| Asistencia | `/attendance`, `/attendance/registro`, `/attendance/report`, `/attendance/[id]` |
+| Ofrendas y donaciones | `/donations`, `/donations/new`, `/donations/registro`, `/donations/eventos-especiales`, `/donations/giving-statement`, `/donations/pledges`, `/donations/[id]`, `/donations/[id]/edit` |
+| Campañas de recaudación | `/donations/fundraising`, `/donations/fundraising/new`, `/donations/fundraising/[id]/edit`, `/donations/fundraising/[id]/report` |
+| Servicios online | `/online/registro`, `/online/reporte`, `/online/servicio`, `/online/servicio/nuevo`, `/online/servicio/[id]` |
+| Inventario | `/inventario`, `/inventario/nuevo`, `/inventario/categorias/nueva`, `/inventario/condiciones/nueva`, `/inventario/estados/nueva`, `/inventario/areas/[churchId]` |
+| Finanzas | `/financial`, `/financial/income-expense`, `/financial/budget`, `/financial/funds`, `/financial/donations`, `/financial/new-transaction` |
+| Configuración | `/settings`, `/settings/new`, `/settings/roles`, `/settings/users`, `/settings/users/[id]/edit` |
+| Eventos | `/events`, `/events/new`, `/events/activities`, `/events/[id]`, `/events/[id]/edit` |
+| Ceremonias | `/ceremonies`, `/ceremonies/new`, `/ceremonies/export`, `/ceremonies/[id]`, `/ceremonies/[id]/edit` |
+| Grupos | `/groups`, `/groups/new`, `/groups/add-members`, `/groups/[id]/edit` |
+| Voluntarios | `/volunteers`, `/volunteers/new`, `/volunteers/planning`, `/volunteers/tasks`, `/volunteers/[id]/edit` |
+| Reportes | `/reports`, `/reports/volunteers` |
+| Instalaciones | `/facilities`, `/facilities/new` |
+| Oración | `/prayer`, `/prayer/new`, `/prayer/groups` |
+| Sermones | `/sermons`, `/sermons/new`, `/sermons/list`, `/sermons/audio`, `/sermons/images`, `/sermons/videos` |
+
+Esta lista documenta las páginas protegidas existentes en `src/app`; no implica que todos los perfiles puedan abrirlas. El middleware exige autenticación y las validaciones de permisos determinan el acceso efectivo de cada usuario.
 
 ### Tutorial visual
 

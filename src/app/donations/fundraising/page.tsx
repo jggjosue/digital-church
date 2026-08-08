@@ -20,13 +20,18 @@ import {
 } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { Megaphone, Search, Calendar, Pencil, Eye, FileBarChart } from 'lucide-react';
+import { Megaphone, Search, Calendar, Pencil, Eye, FileBarChart, HandCoins } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Link from 'next/link';
 import { AppHeader } from '@/components/app-header';
 import { FundraisingCampaignDetailDialog } from '@/components/fundraising-campaign-detail-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { FundraisingCampaignDoc, FundraisingStatus } from '@/lib/fundraising-seed';
+import { isCongreganteAccessRole } from '@/lib/congregante-access';
+import {
+  CampaignShareButton,
+  FundraisingDonationDialog,
+} from '@/components/fundraising-campaign-actions';
 
 const statusColors: Record<FundraisingStatus, string> = {
   Active: 'bg-green-100 text-green-800 border-green-200',
@@ -74,6 +79,8 @@ export default function FundraisingPage() {
   const [statusFilter, setStatusFilter] = React.useState(DEFAULT_STATUS_FILTER);
   const [detailCampaign, setDetailCampaign] = React.useState<FundraisingCampaignDoc | null>(null);
   const [detailOpen, setDetailOpen] = React.useState(false);
+  const [donationCampaign, setDonationCampaign] = React.useState<FundraisingCampaignDoc | null>(null);
+  const [donationOpen, setDonationOpen] = React.useState(false);
   const [canCreateCampaign, setCanCreateCampaign] = React.useState(true);
   const [viewerMemberId, setViewerMemberId] = React.useState<string | null>(null);
   const [viewerClerkUserId, setViewerClerkUserId] = React.useState<string | null>(null);
@@ -93,7 +100,7 @@ export default function FundraisingPage() {
         };
         if (cancelled) return;
         const role = String(data.staffRole ?? '').trim().toLowerCase();
-        setCanCreateCampaign(role !== 'congregante');
+        setCanCreateCampaign(!isCongreganteAccessRole(role));
         setViewerMemberId(
           typeof data.memberId === 'string' && data.memberId.trim() ? data.memberId.trim() : null
         );
@@ -114,6 +121,33 @@ export default function FundraisingPage() {
       cancelled = true;
     };
   }, []);
+
+  React.useEffect(() => {
+    if (loadState !== 'ready' || typeof window === 'undefined') return;
+    const campaignId = new URLSearchParams(window.location.search).get('campaign');
+    if (!campaignId) return;
+    const sharedCampaign = campaigns.find((campaign) => campaign.id === campaignId);
+    if (sharedCampaign) {
+      setDetailCampaign(sharedCampaign);
+      setDetailOpen(true);
+    }
+  }, [campaigns, loadState]);
+
+  const handleDonationSaved = (updatedCampaign: FundraisingCampaignDoc) => {
+    setCampaigns((current) =>
+      current.map((campaign) => campaign.id === updatedCampaign.id ? updatedCampaign : campaign)
+    );
+    setDetailCampaign((current) =>
+      current?.id === updatedCampaign.id ? updatedCampaign : current
+    );
+    setDonationCampaign(updatedCampaign);
+  };
+
+  const openDonation = (campaign: FundraisingCampaignDoc) => {
+    setDetailOpen(false);
+    setDonationCampaign(campaign);
+    setDonationOpen(true);
+  };
 
   React.useEffect(() => {
     let cancelled = false;
@@ -253,13 +287,17 @@ export default function FundraisingPage() {
                     <CardDescription>{campaign.description}</CardDescription>
                   </CardHeader>
                   <CardContent className="flex-1">
-                    {campaign.status !== 'Draft' && campaign.goal != null && (
+                    {campaign.status !== 'Draft' && (
                       <>
-                        <div className="mb-1 flex items-end justify-between">
-                          <span className="text-xl font-bold">{formatCurrency(campaign.raised)}</span>
-                          <span className="text-sm text-muted-foreground">
-                            / {formatCurrency(campaign.goal)}
-                          </span>
+                        <div className="mb-3 grid grid-cols-2 gap-3 rounded-lg bg-muted/40 p-3">
+                          <div>
+                            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Recaudado</p>
+                            <p className="mt-1 text-lg font-bold text-emerald-700 dark:text-emerald-400">{formatCurrency(campaign.raised)}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Meta necesaria</p>
+                            <p className="mt-1 text-lg font-bold">{formatCurrency(campaign.goal ?? 0)}</p>
+                          </div>
                         </div>
                         <Progress
                           value={Math.min(100, campaign.progress)}
@@ -274,6 +312,13 @@ export default function FundraisingPage() {
                         >
                           {campaign.progress}% Recaudado{' '}
                           {campaign.progress > 100 ? '— ¡Meta superada!' : ''}
+                        </p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {campaign.goal != null && campaign.goal > campaign.raised
+                            ? `Falta por reunir: ${formatCurrency(campaign.goal - campaign.raised)}`
+                            : campaign.goal != null && campaign.goal > 0
+                              ? 'La meta económica ha sido alcanzada.'
+                              : 'Define la meta económica desde Editar campaña.'}
                         </p>
                       </>
                     )}
@@ -367,6 +412,14 @@ export default function FundraisingPage() {
                         </Link>
                       </Button>
                     ) : null}
+                    <div className="flex flex-wrap items-center gap-2 self-end sm:self-center">
+                      <CampaignShareButton campaign={campaign} />
+                      {campaign.status === 'Active' ? (
+                        <Button type="button" size="sm" onClick={() => openDonation(campaign)}>
+                          <HandCoins className="mr-2 h-4 w-4" /> Donar
+                        </Button>
+                      ) : null}
+                    </div>
                   </CardFooter>
                 </Card>
               ))}
@@ -375,7 +428,7 @@ export default function FundraisingPage() {
         {loadState === 'ready' && filtered.length === 0 ? (
           <p className="py-8 text-center text-sm text-muted-foreground">
             {campaigns.length === 0
-              ? 'No hay campañas registradas para su templo.'
+              ? 'No hay campañas registradas.'
               : statusFilter === DEFAULT_STATUS_FILTER
                 ? 'No hay campañas activas ni próximas. Pruebe «Todos los estados» o ajuste la búsqueda.'
                 : 'No hay campañas que coincidan con la búsqueda o el filtro.'}
@@ -386,6 +439,13 @@ export default function FundraisingPage() {
           campaign={detailCampaign}
           open={detailOpen}
           onOpenChange={setDetailOpen}
+          onDonate={openDonation}
+        />
+        <FundraisingDonationDialog
+          campaign={donationCampaign}
+          open={donationOpen}
+          onOpenChange={setDonationOpen}
+          onSaved={handleDonationSaved}
         />
       </main>
     </div>

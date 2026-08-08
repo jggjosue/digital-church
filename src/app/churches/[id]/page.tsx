@@ -30,6 +30,23 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import type { ChurchLocation } from '@/lib/church-locations';
+import { isCongreganteAccessRole } from '@/lib/congregante-access';
+import { ChurchCertificate } from '@/components/church-certificate';
+
+function canViewChurchCertificate(role: string) {
+  const normalized = role.normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase();
+  return new Set([
+    'pastor',
+    'pastores',
+    'pastor de zona',
+    'pastor regional',
+    'pastor de region',
+    'pastor presbiterial',
+    'consejo',
+    'consejo de pastores',
+    'director general',
+  ]).has(normalized);
+}
 
 export default function ChurchDetailsPage() {
   const params = useParams();
@@ -80,7 +97,7 @@ export default function ChurchDetailsPage() {
 
   const canEditOrDeleteThisTemple = React.useMemo(() => {
     if (!id?.trim() || !accessCtx?.ready) return false;
-    if (accessCtx.staffRoleNorm === 'congregante') return false;
+    if (isCongreganteAccessRole(accessCtx.staffRoleNorm)) return false;
     if (accessCtx.isAdmin) return true;
     return accessCtx.churchIds.includes(id.trim());
   }, [id, accessCtx]);
@@ -106,6 +123,11 @@ export default function ChurchDetailsPage() {
     if (role.startsWith('pastor ')) return true;
     return false;
   }, [accessCtx]);
+
+  const canSeeChurchCertificate = React.useMemo(
+    () => Boolean(accessCtx?.ready && canViewChurchCertificate(accessCtx.staffRoleNorm)),
+    [accessCtx]
+  );
 
   React.useEffect(() => {
     if (!id?.trim()) {
@@ -219,6 +241,7 @@ export default function ChurchDetailsPage() {
         </AppHeader>
         <main className="flex-1 bg-muted/20 p-4 sm:p-8">
           <div className="mx-auto max-w-6xl space-y-6">
+            {canSeeChurchCertificate ? <ChurchCertificate church={church} /> : null}
             <Card className="overflow-hidden">
               <div className="relative h-64 w-full md:h-80">
                 <iframe
@@ -320,6 +343,22 @@ export default function ChurchDetailsPage() {
                           <div>
                             <p className="text-muted-foreground">Pastor del campus</p>
                             <p className="font-medium">{church.campusPastor}</p>
+                          </div>
+                        </div>
+                      ) : null}
+                      {church.pastoralStartDate ? (
+                        <div className="flex items-start gap-3">
+                          <Clock className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                          <div>
+                            <p className="text-muted-foreground">Pastor desde</p>
+                            <p className="font-medium">
+                              {(() => {
+                                const [year, month, day] = church.pastoralStartDate.split('-').map(Number);
+                                return new Intl.DateTimeFormat('es-MX', { dateStyle: 'long' }).format(
+                                  new Date(year, month - 1, day)
+                                );
+                              })()}
+                            </p>
                           </div>
                         </div>
                       ) : null}

@@ -39,6 +39,14 @@ export function createResourceHandlers(config: ResourceConfig) {
           const value = url.searchParams.get(key)?.trim();
           if (value) filter[key] = value;
         }
+        const dateFrom = url.searchParams.get('dateFrom')?.trim();
+        const dateTo = url.searchParams.get('dateTo')?.trim();
+        if (dateFrom || dateTo) {
+          const dateRange: Record<string, string> = {};
+          if (dateFrom && !Number.isNaN(Date.parse(dateFrom))) dateRange.$gte = dateFrom;
+          if (dateTo && !Number.isNaN(Date.parse(dateTo))) dateRange.$lt = dateTo;
+          if (Object.keys(dateRange).length > 0) filter.date = dateRange;
+        }
         const q = url.searchParams.get('q')?.trim();
         if (q && config.searchFields?.length) {
           filter.$or = config.searchFields.map((field) => ({
@@ -54,7 +62,7 @@ export function createResourceHandlers(config: ResourceConfig) {
         const total = await db.collection<ResourceDocument>(config.collection).countDocuments(filter);
         const items = await db.collection<ResourceDocument>(config.collection)
           .find(filter, { projection: { _id: 0 } })
-          .sort({ createdAt: -1 })
+          .sort(dateFrom || dateTo ? { date: -1, createdAt: -1 } : { createdAt: -1 })
           .skip(skip)
           .limit(limit)
           .toArray();

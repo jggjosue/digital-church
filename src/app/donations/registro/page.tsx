@@ -1,6 +1,7 @@
 'use client';
 
 import * as React from 'react';
+import { usePathname } from 'next/navigation';
 import * as XLSX from 'xlsx';
 import { CalendarDays, ChevronDown, Download, Heart, Landmark, Loader2, MinusCircle, Plus, ReceiptText, Save, Trash2, UploadCloud, XCircle } from 'lucide-react';
 import { AppHeader } from '@/components/app-header';
@@ -54,12 +55,18 @@ const BASE_CATEGORIES = [
   { id: 'misiones', label: 'Misiones' },
   { id: 'proyectos', label: 'Proyectos' },
 ];
+const SPECIAL_EVENT_CATEGORIES = [
+  { id: 'congresos', label: 'Congresos' },
+  { id: 'campanas', label: 'Campañas' },
+  { id: 'retiros', label: 'Retiros' },
+  { id: 'celebraciones', label: 'Celebraciones Especiales' },
+];
 
 const emptyWeeks = createEmptyRegistryWeeks;
 const emptyPaymentMethods = createOfferingPaymentMethods;
-const createRecords = (): Records => Object.fromEntries(MONTHS.map((key, index) => [
+const createRecords = (categories = BASE_CATEGORIES): Records => Object.fromEntries(MONTHS.map((key, index) => [
   key,
-  { month: MONTH_NAMES[index], categories: BASE_CATEGORIES.map((category) => ({ ...category, weeks: emptyWeeks(), paymentMethods: emptyPaymentMethods() })) },
+  { month: MONTH_NAMES[index], categories: categories.map((category) => ({ ...category, weeks: emptyWeeks(), paymentMethods: emptyPaymentMethods() })) },
 ])) as Records;
 const cloneRecords = (records: Records) => JSON.parse(JSON.stringify(records)) as Records;
 const normalizeRecords = (records: Records) => normalizeOfferingRecords(records) as Records;
@@ -74,13 +81,15 @@ const parseDate = (value: string) => {
 };
 
 export default function OfferingRegistryPage() {
+  const pathname = usePathname();
+  const specialEvents = pathname === '/donations/eventos-especiales';
   const { toast } = useToast();
   const fileRef = React.useRef<HTMLInputElement>(null);
   const [churches, setChurches] = React.useState<Church[]>([]);
   const [churchState, setChurchState] = React.useState<'loading' | 'ready' | 'error'>('loading');
   const [churchId, setChurchId] = React.useState('');
   const [year, setYear] = React.useState(String(new Date().getFullYear()));
-  const [records, setRecords] = React.useState<Records>(createRecords);
+  const [records, setRecords] = React.useState<Records>(() => createRecords(specialEvents ? SPECIAL_EVENT_CATEGORIES : BASE_CATEGORIES));
   const [initialized, setInitialized] = React.useState<MonthKey[]>(['enero']);
   const [expanded, setExpanded] = React.useState<MonthKey>('enero');
   const [newCategory, setNewCategory] = React.useState('');
@@ -106,6 +115,7 @@ export default function OfferingRegistryPage() {
   const [depositAmount, setDepositAmount] = React.useState(0);
   const [depositReference, setDepositReference] = React.useState('');
   const [deductions, setDeductions] = React.useState<Deduction[]>([]);
+  const [regularOfferingDeductions, setRegularOfferingDeductions] = React.useState<Deduction[]>([]);
   const [deductionDate, setDeductionDate] = React.useState('');
   const [deductionConcept, setDeductionConcept] = React.useState('');
   const [deductionAmount, setDeductionAmount] = React.useState(0);
@@ -114,11 +124,14 @@ export default function OfferingRegistryPage() {
   const historical = Number(year) < new Date().getFullYear();
   const canEdit = permissions.can(OFFERING_PERMISSIONS.CREATE) && (!historical || permissions.can(OFFERING_PERMISSIONS.EDIT_HISTORY));
   const money = React.useCallback((value: number) => new Intl.NumberFormat('es-MX', { style: 'currency', currency }).format(value), [currency]);
+  const apiPath = specialEvents ? '/api/donations/eventos-especiales' : '/api/donations/registro';
+  const registryTitle = specialEvents ? 'Eventos Especiales' : 'Registro de Ofrendas';
 
   const churchName = churches.find((church) => church.id === churchId)?.name ?? '';
   const monthTotal = React.useCallback((key: MonthKey) => registryMonthTotal(records[key]), [records]);
   const annualTotal = React.useMemo(() => registryAnnualTotal(records), [records]);
   const deductionsTotal = React.useMemo(() => deductions.reduce((sum, deduction) => sum + deduction.amount, 0), [deductions]);
+  const summaryDeductions = specialEvents ? regularOfferingDeductions : deductions;
   const annualNetTotal = annualTotal - deductionsTotal;
   const depositedTotal = React.useMemo(() => bankDeposits.reduce((sum, deposit) => sum + deposit.amount, 0), [bankDeposits]);
   const reconciliationDifference = annualNetTotal - depositedTotal;
@@ -144,7 +157,7 @@ export default function OfferingRegistryPage() {
 
     const monthIncome = registryMonthTotal(records[month]);
     const monthPrefix = `${year}-${String(monthIndex + 1).padStart(2, '0')}`;
-    const monthDeductions = deductions
+    const monthDeductions = summaryDeductions
       .filter((d) => d.date.startsWith(monthPrefix))
       .reduce((sum, d) => sum + d.amount, 0);
     const monthNet = monthIncome - monthDeductions;
@@ -159,7 +172,7 @@ export default function OfferingRegistryPage() {
       monthDeductions,
       monthNet,
     };
-  }), [records, year, deductions]);
+  }), [records, year, summaryDeductions]);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -186,11 +199,11 @@ export default function OfferingRegistryPage() {
     setLoading(true);
     void (async () => {
       try {
-        const response = await fetch(`/api/donations/registro?churchId=${encodeURIComponent(churchId)}&year=${year}`, { cache: 'no-store' });
+        const response = await fetch(`${apiPath}?churchId=${encodeURIComponent(churchId)}&year=${year}`, { cache: 'no-store' });
         const json = await response.json() as { record?: { records: Records; initializedMonths: MonthKey[]; currency?: CurrencyCode; bankDeposits?: BankDeposit[]; deductions?: Deduction[] } | null; error?: string };
         if (!response.ok) throw new Error(json.error);
         if (cancelled) return;
-        setRecords(json.record?.records ? normalizeRecords(json.record.records) : createRecords());
+        setRecords(json.record?.records ? normalizeRecords(json.record.records) : createRecords(specialEvents ? SPECIAL_EVENT_CATEGORIES : BASE_CATEGORIES));
         setInitialized(json.record?.initializedMonths ?? ['enero']);
         setCurrency(json.record?.currency ?? 'MXN');
         setBankDeposits(json.record?.bankDeposits ?? []);
@@ -203,7 +216,29 @@ export default function OfferingRegistryPage() {
       }
     })();
     return () => { cancelled = true; };
-  }, [churchId, year, toast]);
+  }, [apiPath, churchId, specialEvents, year, toast]);
+
+  React.useEffect(() => {
+    if (!specialEvents || !churchId) {
+      setRegularOfferingDeductions([]);
+      return;
+    }
+    let cancelled = false;
+    void (async () => {
+      try {
+        const response = await fetch(
+          `/api/donations/registro?churchId=${encodeURIComponent(churchId)}&year=${year}`,
+          { cache: 'no-store' }
+        );
+        const json = await response.json() as { record?: { deductions?: Deduction[] } | null };
+        if (!response.ok) throw new Error();
+        if (!cancelled) setRegularOfferingDeductions(json.record?.deductions ?? []);
+      } catch {
+        if (!cancelled) setRegularOfferingDeductions([]);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [churchId, specialEvents, year]);
 
   const updateValue = (month: MonthKey, id: string, week: number, day: number, value: number) => {
     setRecords((previous) => ({ ...previous, [month]: { ...previous[month], categories: previous[month].categories.map((category) => category.id === id ? { ...category, weeks: category.weeks.map((row, rowIndex) => rowIndex === week ? row.map((amount, dayIndex) => dayIndex === day ? value : amount) : row) } : category) } }));
@@ -256,10 +291,10 @@ export default function OfferingRegistryPage() {
     setSaving(true);
     try {
       const operations = [importedChanges ? 'import' : '', deletedCategories ? 'delete-category' : ''].filter(Boolean).join(',');
-      const response = await fetch('/api/donations/registro', { method: 'PUT', headers: { 'Content-Type': 'application/json', ...(operations ? { 'x-registry-operation': operations } : {}) }, body: JSON.stringify({ churchId, churchName, year, records, initializedMonths: initialized, currency, bankDeposits, deductions }) });
+      const response = await fetch(apiPath, { method: 'PUT', headers: { 'Content-Type': 'application/json', ...(operations ? { 'x-registry-operation': operations } : {}) }, body: JSON.stringify({ churchId, churchName, year, records, initializedMonths: initialized, currency, bankDeposits, deductions }) });
       const json = await response.json() as { message?: string; error?: string };
       if (!response.ok) throw new Error(json.error);
-      if (!silent) toast({ title: 'Ofrendas guardadas', description: json.message });
+      if (!silent) toast({ title: specialEvents ? 'Eventos especiales guardados' : 'Ofrendas guardadas', description: json.message });
       setImportedChanges(false);
       setDeletedCategories(false);
       return true;
@@ -278,8 +313,8 @@ export default function OfferingRegistryPage() {
       }
     }));
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(rows), 'Ofrendas');
-    XLSX.writeFile(workbook, `registro-ofrendas-${year}.xlsx`);
+    XLSX.utils.book_append_sheet(workbook, XLSX.utils.json_to_sheet(rows), specialEvents ? 'Eventos Especiales' : 'Ofrendas');
+    XLSX.writeFile(workbook, `${specialEvents ? 'eventos-especiales' : 'registro-ofrendas'}-${year}.xlsx`);
   };
 
   const importFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -346,7 +381,7 @@ export default function OfferingRegistryPage() {
 
   const draft = useRegistryDraftGuard({
     value: { records, initialized, currency, bankDeposits, deductions },
-    identity: `${churchId}:${year}`,
+    identity: `${specialEvents ? 'special-events' : 'offerings'}:${churchId}:${year}`,
     loading,
     onRestore: (value) => { setRecords(value.records); setInitialized(value.initialized); setCurrency(value.currency); setBankDeposits(value.bankDeposits); setDeductions(value.deductions ?? []); },
     onAutoSave: () => save(true),
@@ -387,7 +422,7 @@ export default function OfferingRegistryPage() {
   return (
     <div className="flex flex-1 flex-col">
       <RegistryImportPreview preview={importPreview} mode={importMode} onModeChange={setImportMode} onCancel={closeImportPreview} onApply={applyImport} formatTotal={money} />
-      <AppHeader stacked title={`Registro de Ofrendas ${year}`} description={`Control anual por categorías. Templo seleccionado: ${churchName || 'ninguno'}.`}>
+      <AppHeader stacked title={`${registryTitle} ${year}`} description={`${specialEvents ? 'Ofrendas de eventos especiales' : 'Control anual por categorías'}. Templo seleccionado: ${churchName || 'ninguno'}.`}>
         <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_180px]">
           <RegistrySelector churches={churches} churchId={churchId} onChurchChange={changeChurch} churchState={churchState} year={year} years={YEARS} onYearChange={changeYear} className="sm:grid-cols-2" />
           <Select value={currency} onValueChange={(value) => setCurrency(value as CurrencyCode)} disabled={!canEdit}>
@@ -589,7 +624,7 @@ export default function OfferingRegistryPage() {
                         <span className="font-semibold text-slate-200 tabular-nums">{money(row.monthIncome)}</span>
                       </div>
                       <div className="flex items-center justify-between">
-                        <span className="text-slate-400">Deducciones:</span>
+                        <span className="text-slate-400">{specialEvents ? 'Deducciones (registro general):' : 'Deducciones:'}</span>
                         <span className="font-semibold text-red-400 tabular-nums">− {money(row.monthDeductions)}</span>
                       </div>
                     </div>
@@ -616,7 +651,7 @@ export default function OfferingRegistryPage() {
           </CardContent>
         </Card>
 
-        {permissions.can(OFFERING_PERMISSIONS.IMPORT) ? <RegistryImportCard compact busy={importing} title="Importar ofrendas desde Excel" description="Columnas: iglesia, fecha, categoría, monto, moneda y método_pago. Se aceptan categorías personalizadas." input={<input ref={fileRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={importFile} />} actions={<><Button type="button" onClick={() => fileRef.current?.click()} disabled={!churchId || importing}>{importing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UploadCloud className="mr-2 h-4 w-4" />}Seleccionar Excel</Button><Button type="button" variant="outline" onClick={downloadTemplate} disabled={!churchId}><Download className="mr-2 h-4 w-4" />Descargar plantilla</Button></>} /> : null}
+        {permissions.can(OFFERING_PERMISSIONS.IMPORT) ? <RegistryImportCard compact busy={importing} title={specialEvents ? 'Importar eventos especiales desde Excel' : 'Importar ofrendas desde Excel'} description="Columnas: iglesia, fecha, categoría, monto, moneda y método_pago. Se aceptan categorías personalizadas." input={<input ref={fileRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={importFile} />} actions={<><Button type="button" onClick={() => fileRef.current?.click()} disabled={!churchId || importing}>{importing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UploadCloud className="mr-2 h-4 w-4" />}Seleccionar Excel</Button><Button type="button" variant="outline" onClick={downloadTemplate} disabled={!churchId}><Download className="mr-2 h-4 w-4" />Descargar plantilla</Button></>} /> : null}
 
         <div className="sticky bottom-0 z-10 -mx-3 flex border-t bg-background/95 p-3 pb-[calc(.75rem+env(safe-area-inset-bottom,0px))] shadow-[0_-8px_24px_rgba(0,0,0,.08)] backdrop-blur min-[380px]:-mx-4 sm:-mx-8 sm:justify-end sm:px-8"><Button className="w-full sm:w-auto" size="lg" onClick={() => void manualSave()} disabled={!churchId || saving || !draft.dirty || !canEdit}>{saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}Guardar Registro {year}</Button></div>
       </main>

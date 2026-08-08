@@ -115,6 +115,7 @@ export const PORTAL_NAV_ENTRIES: PortalNavEntry[] = [
       icon: Heart,
       subItems: [
         { href: '/donations/registro', icon: ClipboardList, label: 'Registro de Ofrendas' },
+        { href: '/donations/eventos-especiales', icon: CalendarDays, label: 'Eventos Especiales' },
       ],
     },
     {
@@ -268,7 +269,8 @@ export const PORTAL_PERMISSIONS_BY_MODULE: Record<string, string[]> = PORTAL_NAV
 );
 
 /** Acciones sensibles que no equivalen a mostrar una entrada del menú. */
-PORTAL_PERMISSIONS_BY_MODULE.Ofrendas.push(
+const offeringPermissions = (PORTAL_PERMISSIONS_BY_MODULE.Ofrendas ??= []);
+offeringPermissions.push(
   'Ver ofrendas',
   'Registrar ofrendas',
   'Editar registros históricos',
@@ -329,10 +331,10 @@ export function filterSidebarNavByModules(
     }
     if ('subItems' in item && item.subItems) {
       const allowedValues = getAllowedForModule(item.label);
-      if (!allowedValues?.length) continue;
-      const allowedSet = new Set(allowedValues.map(normalize));
+      const allowedSet = new Set((allowedValues ?? []).map(normalize));
       const sub = item.subItems.filter(
         (s) =>
+          s.href === '/donations/fundraising' ||
           allowedSet.has('*') ||
           allowedSet.has(normalize(s.label)) ||
           allowedSet.has(normalize(s.href))

@@ -1,6 +1,7 @@
 import { TutorialImage } from '@/components/tutorial-image';
 import { LandingFooter } from '@/components/landing/landing-footer';
 import { LandingHeader } from '@/components/landing/landing-header';
+import { Scroll3DScene } from '@/components/scroll-3d-scene';
 
 const DOCUMENTATION_IMAGES = [
   {
@@ -47,12 +48,15 @@ const DOCUMENTATION_IMAGES = [
 
 export default function DocumentacionPage() {
   return (
-    <div className="min-h-dvh bg-slate-50 text-slate-900">
+    <Scroll3DScene className="documentation-3d min-h-dvh bg-slate-50 text-slate-900">
       <LandingHeader />
 
       <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
-        <div className="mb-7">
-          <h1 className="text-2xl font-bold sm:text-3xl">Guía visual de la plataforma</h1>
+        <div className="mb-10 text-center sm:mb-12" data-3d-reveal>
+          <span className="inline-flex rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em] text-blue-700 shadow-sm">
+            Centro de aprendizaje
+          </span>
+          <h1 className="mt-5 text-3xl font-bold tracking-tight sm:text-5xl">Guía visual de la plataforma</h1>
           <p className="mt-2 text-sm text-slate-600 sm:text-base">
             Selecciona cualquier imagen para verla completa y con mayor detalle.
           </p>
@@ -60,7 +64,7 @@ export default function DocumentacionPage() {
 
         <div className="grid gap-6 md:grid-cols-2">
           {DOCUMENTATION_IMAGES.map((item) => (
-            <article key={item.image} className="overflow-hidden rounded-2xl border bg-white p-3 shadow-sm sm:p-4">
+            <article key={item.image} className="documentation-3d-card overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-3 sm:p-4">
               <h2 className="mb-3 text-base font-semibold sm:text-lg">{item.title}</h2>
               <TutorialImage src={item.image} alt={`Vista de ${item.title}`} />
             </article>
@@ -68,6 +72,6 @@ export default function DocumentacionPage() {
         </div>
       </main>
       <LandingFooter />
-    </div>
+    </Scroll3DScene>
   );
 }

@@ -218,6 +218,143 @@ export const ICIAR_TEMPLES: IciarTemple[] = [
       { day: 'Viernes', time: '6:30 PM', label: 'Oración y Alabanza' },
     ],
   },
+  {
+    name: 'Iglesia Cristiana Ríos de Agua Viva ICIAR',
+    address: 'Prol. Av. Tepeyac 975, Paraísos del Colli, 45069 Zapopan, Jal.',
+    municipality: 'Zapopan',
+    lat: 21.4771268,
+    lng: -104.9034752,
+    embedUrl:
+      'https://maps.google.com/maps?q=21.4771268%2C-104.9034752&z=16&output=embed',
+    shareMapUrl: 'https://maps.app.goo.gl/ezgRbiHxzeEqbNTa8?g_st=iw',
+    schedule: [],
+  },
+  {
+    name: 'Templo Puerta del Rey ICIAR',
+    address: 'Biblia 328, La Duraznera, 45580 San Pedro Tlaquepaque, Jal.',
+    municipality: 'San Pedro Tlaquepaque',
+    lat: 0,
+    lng: 0,
+    embedUrl:
+      'https://maps.google.com/maps?q=Templo%20Puerta%20del%20Rey%20ICIAR%2C%20Biblia%20328%2C%20La%20Duraznera%2C%2045580%20San%20Pedro%20Tlaquepaque%2C%20Jalisco&z=16&output=embed',
+    shareMapUrl: 'https://maps.app.goo.gl/hd4drqqqe9aC3a7z7?g_st=aw',
+    schedule: [],
+  },
+  {
+    name: 'Llamados a Crecer ICIAR',
+    address: 'C. Río Blanco, La Venta del Astillero, 45221 Zapopan, Jal.',
+    municipality: 'Zapopan',
+    lat: 20.7264974,
+    lng: -103.5495097,
+    embedUrl:
+      'https://maps.google.com/maps?q=Llamados%20a%20Crecer%20ICIAR%2C%20Calle%20R%C3%ADo%20Blanco%2C%20La%20Venta%20del%20Astillero%2C%2045221%20Zapopan%2C%20Jalisco&z=16&output=embed',
+    shareMapUrl: 'https://maps.app.goo.gl/LrP3uKpkNuy986TVA?g_st=aw',
+    schedule: [],
+  },
+  {
+    name: 'Torre Fuerte ICIAR',
+    address:
+      'C. María Ciudadano Bancalari 3222, esq. C. Adolfo Cisneros 1216, Echeverría, 44970 Guadalajara, Jal.',
+    municipality: 'Guadalajara',
+    lat: 20.6236204,
+    lng: -103.3645749,
+    embedUrl:
+      'https://maps.google.com/maps?q=Torre%20Fuerte%20ICIAR%2C%20Mar%C3%ADa%20Ciudadano%20Bancalari%203222%2C%20Adolfo%20Cisneros%201216%2C%20Echeverr%C3%ADa%2C%2044970%20Guadalajara%2C%20Jalisco&z=16&output=embed',
+    shareMapUrl: 'https://maps.app.goo.gl/6WNHzWs9GUC3GxiY8?g_st=aw',
+    schedule: [],
+  },
+  {
+    name: 'ICIAR Iglesia Cristiana Maranatha Ixtapaluca',
+    address: 'Alfonso Reyes 2, La Venta, 56530 Ixtapaluca, Méx.',
+    municipality: 'Ixtapaluca',
+    lat: 19.3103935,
+    lng: -98.8839267,
+    embedUrl:
+      'https://maps.google.com/maps?q=ICIAR%20Iglesia%20Cristiana%20Maranatha%20Ixtapaluca%2C%20Alfonso%20Reyes%202%2C%20La%20Venta%2C%2056530%20Ixtapaluca%2C%20Estado%20de%20M%C3%A9xico&z=16&output=embed',
+    shareMapUrl: 'https://share.google/yKhDzVbSoqWyyC4Jd',
+    schedule: [],
+  },
+  {
+    name: 'Templo Sayula Congregación Ríos de Agua Viva ICIAR',
+    address: 'C. Benito Juárez 267, Col. Aguacatera, 49314 Sayula, Jal.',
+    municipality: 'Sayula',
+    lat: 19.8728619,
+    lng: -103.6031265,
+    embedUrl:
+      'https://maps.google.com/maps?q=19.8728619%2C-103.6031265&z=18&output=embed',
+    shareMapUrl: 'https://maps.app.goo.gl/ZVJzpK4RsPzipvRXA?g_st=aw',
+    schedule: [],
+  },
+  {
+    name: 'Iglesia Cristiana Interdenominacional La Hermosa',
+    address: 'Fray Toribio de Motolinía 1363, Col. San Francisco, 45140 Zapopan, Jal.',
+    municipality: 'Zapopan',
+    lat: 20.7284436,
+    lng: -103.4040046,
+    embedUrl:
+      'https://maps.google.com/maps?q=Iglesia%20Cristiana%20Interdenominacional%20La%20Hermosa%2C%20Fray%20Toribio%20de%20Motolin%C3%ADa%201363%2C%20San%20Francisco%2C%2045140%20Zapopan%2C%20Jalisco&z=16&output=embed',
+    shareMapUrl: 'https://maps.app.goo.gl/nUMqZuQEaZUnFtZG9?g_st=aw',
+    schedule: [],
+  },
+  {
+    name: 'Templo Divino Alfarero',
+    address: 'Galeana 151, Col. Centro, 45400 Tonalá, Jal.',
+    municipality: 'Tonalá',
+    lat: 20.6194871,
+    lng: -103.2437876,
+    embedUrl:
+      'https://maps.google.com/maps?q=Templo%20Divino%20Alfarero%2C%20Galeana%20151%2C%20Centro%2C%2045400%20Tonal%C3%A1%2C%20Jalisco&z=16&output=embed',
+    shareMapUrl:
+      'https://www.google.com/maps/search/?api=1&query=Templo%20Divino%20Alfarero%2C%20Galeana%20151%2C%20Centro%2C%2045400%20Tonal%C3%A1%2C%20Jalisco',
+    schedule: [],
+  },
+  {
+    name: 'Torre Fuerte Gómez Farías',
+    address: 'Del Valle 15, Col. Santa Cecilia, 49120 San Sebastián del Sur, Jal.',
+    municipality: 'Gómez Farías',
+    lat: 19.7935613,
+    lng: -103.4749503,
+    embedUrl:
+      'https://maps.google.com/maps?q=Torre%20Fuerte%20G%C3%B3mez%20Far%C3%ADas%2C%20Del%20Valle%2015%2C%20Santa%20Cecilia%2C%2049120%20San%20Sebasti%C3%A1n%20del%20Sur%2C%20Jalisco&z=16&output=embed',
+    shareMapUrl: 'https://maps.app.goo.gl/zrSyaeKuB3upBheR6?g_st=aw',
+    schedule: [],
+  },
+  {
+    name: 'ICIAR Chapala',
+    address: 'Emiliano Zapata 47, 45900 Chapala, Jal.',
+    municipality: 'Chapala',
+    lat: 20.3014062,
+    lng: -103.1930671,
+    embedUrl:
+      'https://maps.google.com/maps?q=Iglesia%20Cristiana%20Interdenominacional%2C%20Emiliano%20Zapata%2047%2C%2045900%20Chapala%2C%20Jalisco&z=16&output=embed',
+    shareMapUrl:
+      'https://www.google.com/maps/search/?api=1&query=Iglesia%20Cristiana%20Interdenominacional%2C%20Emiliano%20Zapata%2047%2C%2045900%20Chapala%2C%20Jalisco',
+    schedule: [],
+  },
+  {
+    name: 'ICIAR Pacana',
+    address: 'Castro Urdiales (Pacana), 45325 Tala, Jal.',
+    municipality: 'Tala',
+    lat: 20.60455,
+    lng: -103.82203,
+    embedUrl:
+      'https://maps.google.com/maps?q=ICIAR%20Pacana%2C%20Castro%20Urdiales%20Pacana%2C%2045325%20Tala%2C%20Jalisco&z=15&output=embed',
+    shareMapUrl:
+      'https://www.google.com/maps/search/?api=1&query=ICIAR%20Pacana%2C%20Castro%20Urdiales%20Pacana%2C%2045325%20Tala%2C%20Jalisco',
+    schedule: [],
+  },
+  {
+    name: 'Monte Sion Gómez Farías',
+    address: 'C. Cedro Blanco 100, Fracc. San Pedro, Col. Iprovipe, 49120 Gómez Farías, Jal.',
+    municipality: 'Gómez Farías',
+    lat: 19.7935613,
+    lng: -103.4749503,
+    embedUrl:
+      'https://maps.google.com/maps?q=Templo%20Monte%20Sion%2C%20Cedro%20Blanco%20100%2C%20Fraccionamiento%20San%20Pedro%2C%20Iprovipe%2C%2049120%20G%C3%B3mez%20Far%C3%ADas%2C%20Jalisco&z=17&output=embed',
+    shareMapUrl:
+      'https://www.google.com/maps/search/?api=1&query=Templo%20Monte%20Sion%2C%20Cedro%20Blanco%20100%2C%20Fraccionamiento%20San%20Pedro%2C%20Iprovipe%2C%20G%C3%B3mez%20Far%C3%ADas%2C%20Jalisco',
+    schedule: [],
+  },
 ];
 
 export function getIciarTempleById(id: number): IciarTemple | undefined {

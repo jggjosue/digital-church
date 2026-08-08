@@ -154,7 +154,7 @@ export default function EditFundraisingCampaignPage() {
     if (!campaignId) return;
 
     const raisedParsed = Number(raised.replace(/,/g, ''));
-    const goalParsed = goal.trim() === '' ? null : Number(goal.replace(/,/g, ''));
+    const goalParsed = Number(goal.replace(/,/g, ''));
 
     if (!name.trim()) {
       toast({ title: 'Revise el formulario', description: 'El título es obligatorio.', variant: 'destructive' });
@@ -168,8 +168,8 @@ export default function EditFundraisingCampaignPage() {
       });
       return;
     }
-    if (goalParsed !== null && (!Number.isFinite(goalParsed) || goalParsed < 0)) {
-      toast({ title: 'Revise el formulario', description: 'La meta no es válida.', variant: 'destructive' });
+    if (!goal.trim() || !Number.isFinite(goalParsed) || goalParsed <= 0) {
+      toast({ title: 'Revise el formulario', description: 'Indique una meta económica mayor a cero.', variant: 'destructive' });
       return;
     }
 
@@ -348,13 +348,14 @@ export default function EditFundraisingCampaignPage() {
                     </p>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="campaign-goal">Meta (MXN)</Label>
+                    <Label htmlFor="campaign-goal">Cantidad necesaria / Meta (MXN) *</Label>
                     <Input
                       id="campaign-goal"
                       inputMode="decimal"
                       value={goal}
                       onChange={(e) => setGoal(e.target.value)}
-                      placeholder="Opcional"
+                      placeholder="Ej. 100000"
+                      required
                     />
                   </div>
                 </div>

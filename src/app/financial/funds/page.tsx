@@ -12,9 +12,10 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Search, Plus, RefreshCw, Loader2 } from 'lucide-react';
+import { Search, Plus, RefreshCw, Loader2, Download } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { AppHeader } from '@/components/app-header';
+import { exportExcelReport } from '@/lib/export-excel';
 
 const formatCurrency = (amount: number, showSign = false) => {
     const formatted = new Intl.NumberFormat('es-MX', {
@@ -47,6 +48,8 @@ export default function FundBalancesPage() {
   const [summary, setSummary] = React.useState<any>(null);
   const [loading, setLoading] = React.useState(true);
   const [year, setYear] = React.useState(new Date().getFullYear().toString());
+  const [search, setSearch] = React.useState('');
+  const [selectedType, setSelectedType] = React.useState('all');
 
   React.useEffect(() => {
       setLoading(true);
@@ -71,7 +74,8 @@ export default function FundBalancesPage() {
           return { 
               name: fundName,
               description: 'Generado a partir de transacciones',
-              type: 'Fondo de Iglesia',
+              type: 'No Restringido',
+              typeKey: 'unrestricted',
               status: 'Activo',
               ytdInflows, 
               ytdOutflows, 
@@ -93,6 +97,38 @@ export default function FundBalancesPage() {
   };
 
   const data = processData();
+  const filteredFunds = data.funds.filter((fund) =>
+    (selectedType === 'all' || fund.typeKey === selectedType) &&
+    `${fund.name} ${fund.description} ${fund.type}`.toLowerCase().includes(search.trim().toLowerCase())
+  );
+
+  const handleExport = async () => {
+    await exportExcelReport({
+      fileName: `saldos-de-fondos-${year}`,
+      title: 'Saldos de Fondos',
+      metadata: [
+        ['Año', year],
+        ['Búsqueda', search || 'Todos los fondos'],
+        ['Tipo', selectedType === 'all' ? 'Todos' : selectedType],
+      ],
+      sections: [
+        {
+          name: 'Fondos',
+          columns: ['Nombre', 'Descripción', 'Tipo', 'Saldo actual', 'Entradas YTD', 'Salidas YTD', 'Estado'],
+          rows: filteredFunds.map((fund) => [
+            fund.name,
+            fund.description,
+            fund.type,
+            fund.balance,
+            fund.ytdInflows,
+            fund.ytdOutflows,
+            fund.status,
+          ]),
+          currencyColumns: [3, 4, 5],
+        },
+      ],
+    });
+  };
 
   return (
     <div className="flex flex-col flex-1">
@@ -101,6 +137,9 @@ export default function FundBalancesPage() {
         description={`Al ${new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}`}
       >
         <div className="flex items-center gap-2">
+            <Button variant="outline" type="button" onClick={() => void handleExport()} disabled={loading}>
+                <Download className="mr-2 h-4 w-4" /> Exportar Reporte
+            </Button>
             <Button variant="outline">
                 <RefreshCw className="mr-2 h-4 w-4" /> Reconciliar
             </Button>
@@ -113,9 +152,14 @@ export default function FundBalancesPage() {
       <div className="flex flex-col sm:flex-row items-center gap-2">
         <div className="relative w-full max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder="Buscar fondos..." className="pl-9" />
+            <Input
+              placeholder="Buscar fondos..."
+              className="pl-9"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
         </div>
-        <Select>
+        <Select value={selectedType} onValueChange={setSelectedType}>
           <SelectTrigger className="w-full sm:w-[180px]">
             <SelectValue placeholder="Todos los Tipos de Fondos" />
           </SelectTrigger>
@@ -179,7 +223,7 @@ export default function FundBalancesPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {data.funds.map((fund, index) => (
+                    {filteredFunds.map((fund, index) => (
                         <tr key={index} className="border-b">
                             <td className="p-4">
                                 <div className="font-medium text-primary">{fund.name}</div>

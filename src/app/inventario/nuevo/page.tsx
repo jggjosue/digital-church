@@ -283,7 +283,7 @@ export default function InventarioNuevoPage() {
     <div className="flex min-h-0 flex-1 flex-col">
       <AppHeader
         title="Añadir recurso nuevo"
-        description="Elija templo y área interna, cantidad, condición y estado."
+        description="Elija templo y área interna, cantidad, condición y procedencia del recurso."
       >
         <Button variant="outline" type="button" asChild>
           <Link href={listHref}>
@@ -443,7 +443,7 @@ export default function InventarioNuevoPage() {
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <Label>Estado</Label>
+                  <Label>Procedencia del recurso</Label>
                   <Select
                     value={status}
                     onValueChange={(v) => setStatus(v)}
@@ -475,7 +475,7 @@ export default function InventarioNuevoPage() {
                     >
                       Agregar
                     </Link>{' '}
-                    otro estado si no está en la lista.
+                    otra procedencia si no está en la lista.
                   </p>
                 </div>
               </div>

@@ -22,6 +22,7 @@ import { Label } from '@/components/ui/label';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { AppHeader } from '@/components/app-header';
 import { Skeleton } from '@/components/ui/skeleton';
+import { isCongreganteAccessRole } from '@/lib/congregante-access';
 import {
   Dialog,
   DialogContent,
@@ -483,7 +484,7 @@ export default function GivingStatementPage() {
         const m = data.member;
         if (!m?.id) return;
         const role = String(m.staffRole ?? '').trim().toLowerCase();
-        if (role !== 'congregante') return;
+        if (!isCongreganteAccessRole(role)) return;
         const donor: DonorSuggestion = {
           memberId: String(m.id),
           firstName: String(m.firstName ?? '').trim(),

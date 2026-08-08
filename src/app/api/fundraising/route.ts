@@ -2,38 +2,12 @@ import type { Collection } from 'mongodb';
 import { NextResponse } from 'next/server';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { CHURCHES_COLLECTION, type ChurchLocation } from '@/lib/church-locations';
-import { normalizeMemberChurchIds } from '@/lib/member-church-ids';
 import { getDb } from '@/lib/mongodb';
-import { isFullAccessStaffRole } from '@/lib/pastor-church-access';
 import type { FundraisingCampaignDoc, FundraisingStatus } from '@/lib/fundraising-seed';
 
 const COLLECTION = 'fundraising';
 
 const STATUSES: FundraisingStatus[] = ['Active', 'Completed', 'Upcoming', 'Draft'];
-
-/**
- * Alcance para no-admin: templo(s) del miembro, campañas sin templo (legado) y las que él creó
- * (evita listas vacías si `churchId` guardado no coincide con `churchIds` del perfil).
- */
-function filterScopedFundraising(
-  churchIds: string[],
-  createdByMemberId: string | null | undefined
-): Record<string, unknown> {
-  const clauses: Record<string, unknown>[] = [];
-  if (churchIds.length > 0) {
-    clauses.push({ churchId: { $in: churchIds } });
-  }
-  clauses.push(
-    { churchId: { $exists: false } },
-    { churchId: null },
-    { churchId: '' }
-  );
-  const creator = String(createdByMemberId ?? '').trim();
-  if (creator) {
-    clauses.push({ createdByMemberId: creator });
-  }
-  return clauses.length === 1 ? clauses[0]! : { $or: clauses };
-}
 
 function computeProgress(raised: number, goal: number | null): number {
   if (goal == null || goal <= 0) return 0;
@@ -67,32 +41,9 @@ export async function GET() {
   try {
     const db = await getDb();
     const collection = db.collection<FundraisingCampaignDoc>(COLLECTION);
-    let filter: Record<string, unknown> = {};
-
-    const { userId } = await auth();
-    if (userId) {
-      const user = await currentUser();
-      const email = user?.primaryEmailAddress?.emailAddress?.trim().toLowerCase() ?? '';
-      if (email) {
-        const member = await db
-          .collection<Record<string, unknown>>('members')
-          .findOne(
-            { email },
-            { projection: { _id: 0, id: 1, churchIds: 1, templeIds: 1, staffRole: 1 } }
-          );
-        if (member && !isFullAccessStaffRole(member.staffRole as string | null | undefined)) {
-          const churchIds = normalizeMemberChurchIds(member);
-          if (churchIds.length > 0) {
-            const mid =
-              typeof member.id === 'string' ? member.id.trim() : String(member.id ?? '').trim();
-            filter = filterScopedFundraising(churchIds, mid || null);
-          }
-        }
-      }
-    }
 
     const campaigns = await collection
-      .find(filter, { projection: { _id: 0 } })
+      .find({}, { projection: { _id: 0 } })
       .sort({ sortOrder: 1 })
       .toArray();
 
@@ -131,13 +82,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Monto recaudado inválido.' }, { status: 400 });
     }
 
-    let goal: number | null = null;
-    if (body.goal !== undefined && body.goal !== null) {
-      const g = Number(body.goal);
-      if (!Number.isFinite(g) || g < 0) {
-        return NextResponse.json({ error: 'Meta inválida.' }, { status: 400 });
-      }
-      goal = g;
+    const goal = Number(body.goal);
+    if (!Number.isFinite(goal) || goal <= 0) {
+      return NextResponse.json({ error: 'La meta económica debe ser mayor a cero.' }, { status: 400 });
     }
 
     const date = typeof body.date === 'string' ? body.date.trim() : '';
