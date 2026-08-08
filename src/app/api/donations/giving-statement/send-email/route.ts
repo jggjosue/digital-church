@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import nodemailer from 'nodemailer';
 import { z } from 'zod';
-import { getDb } from '@/lib/mongodb';
-import { hasPortalPermission, OFFERING_PERMISSIONS } from '@/lib/portal-permissions';
+import { auth } from '@clerk/nextjs/server';
 
 /**
  * Envío vía Gmail (Google): configure en el entorno:
@@ -51,8 +50,10 @@ function humanizeSmtpError(raw: string): string {
 
 export async function POST(request: Request) {
   try {
-    const db = await getDb();
-    if (!await hasPortalPermission(db, 'Ofrendas', OFFERING_PERMISSIONS.DOWNLOAD)) return NextResponse.json({ error: 'No tienes permiso para enviar reportes.' }, { status: 403 });
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: 'No autorizado.' }, { status: 401 });
+    }
     const user = process.env.GMAIL_USER?.trim();
     const pass = process.env.GMAIL_APP_PASSWORD?.replace(/\s/g, '') ?? '';
 

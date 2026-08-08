@@ -380,6 +380,9 @@ export default function NewDonationPage() {
 
                 setChurchEvents(uniqueByName);
                 setChurchEventsState('ready');
+                if (uniqueByName.length === 0) {
+                    setSelectedChurchEventId('ofrenda-voluntaria');
+                }
             } catch (_error) {
                 if (cancelled) return;
                 setChurchEvents([]);
@@ -392,6 +395,20 @@ export default function NewDonationPage() {
             cancelled = true;
         };
     }, [selectedChurchId]);
+
+    const effectiveChurchEvents = React.useMemo(() => {
+        if (churchEventsState === 'ready' && churchEvents.length === 0) {
+            return [
+                {
+                    id: 'ofrenda-voluntaria',
+                    eventName: 'Ofrenda voluntaria',
+                    eventType: 'event' as const,
+                    createdAt: new Date().toISOString(),
+                },
+            ];
+        }
+        return churchEvents;
+    }, [churchEvents, churchEventsState]);
 
     const handleSelectMember = (member: MemberItem) => {
         suppressMemberSearchRef.current = true;
@@ -445,9 +462,7 @@ export default function NewDonationPage() {
             } else if (churchEventsState === 'loading' || churchEventsState === 'idle') {
                 errors.event = 'Espere a que se carguen los eventos del templo.';
             } else if (churchEventsState === 'ready') {
-                if (churchEvents.length === 0) {
-                    errors.event = 'Este templo no tiene eventos registrados en asistencia.';
-                } else if (!selectedChurchEventId) {
+                if (effectiveChurchEvents.length === 0 || !selectedChurchEventId) {
                     errors.event = 'Seleccione el evento del templo.';
                 }
             }
@@ -507,7 +522,7 @@ export default function NewDonationPage() {
         if (!validateForm()) return;
 
         const church = churches.find((c) => c.id === selectedChurchId);
-        const selectedEvent = churchEvents.find((e) => e.id === selectedChurchEventId);
+        const selectedEvent = effectiveChurchEvents.find((e) => e.id === selectedChurchEventId);
         if (!church || !selectedEvent || !date || (!isOffering && !selectedDonor)) {
             toast({
                 variant: 'destructive',
@@ -901,14 +916,12 @@ export default function NewDonationPage() {
                                                         ? 'Cargando eventos...'
                                                         : churchEventsState === 'error'
                                                             ? 'Error al cargar eventos'
-                                                            : churchEvents.length === 0
-                                                                ? 'Este templo no tiene eventos'
-                                                                : 'Selecciona un evento'
+                                                            : 'Selecciona un evento'
                                             }
                                         />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        {churchEvents.map((event) => (
+                                        {effectiveChurchEvents.map((event) => (
                                             <SelectItem key={event.id} value={event.id}>
                                                 {event.eventName}
                                             </SelectItem>

@@ -28,31 +28,45 @@ export async function GET(request: Request) {
     const end = new Date(Date.UTC(year, 11, 31, 23, 59, 59, 999)).toISOString();
 
     const db = await getDb();
-    if (!await hasPortalPermission(db, 'Ofrendas', OFFERING_PERMISSIONS.DOWNLOAD)) return NextResponse.json({ error: 'No tienes permiso para descargar reportes.' }, { status: 403 });
-
     const { userId } = await auth();
     const scopeClauses: Record<string, unknown>[] = [];
+    let isSelfRequest = false;
+
     if (userId) {
       const user = await currentUser();
       const email = user?.primaryEmailAddress?.emailAddress?.trim().toLowerCase() ?? '';
       if (email) {
-        const member = await db.collection<MemberScopeDoc>('members').findOne(
+        const sessionMember = await db.collection<MemberScopeDoc>('members').findOne(
           { email },
-          { projection: { _id: 0, churchIds: 1, templeIds: 1, staffRole: 1 } }
+          { projection: { _id: 0, id: 1, churchIds: 1, templeIds: 1, staffRole: 1 } }
         );
-        if (member && !isFullAccessStaffRole(member.staffRole as string | null | undefined)) {
-          const churchIds = normalizeMemberChurchIds(member);
-          if (churchIds.length > 0) {
-            scopeClauses.push({ churchId: { $in: churchIds } });
-          } else {
+        const sessionMemberId = sessionMember?.id ? String(sessionMember.id).trim() : '';
+        if (sessionMemberId && sessionMemberId === memberId) {
+          isSelfRequest = true;
+        }
+
+        if (!isSelfRequest) {
+          const hasPerm = await hasPortalPermission(db, 'Ofrendas', OFFERING_PERMISSIONS.DOWNLOAD);
+          if (!hasPerm) {
+            return NextResponse.json({ error: 'No tienes permiso para descargar reportes.' }, { status: 403 });
+          }
+
+          if (sessionMember && !isFullAccessStaffRole(sessionMember.staffRole as string | null | undefined)) {
+            const churchIds = normalizeMemberChurchIds(sessionMember);
+            if (churchIds.length > 0) {
+              scopeClauses.push({ churchId: { $in: churchIds } });
+            } else {
+              scopeClauses.push({ churchId: '__no_church_access__' });
+            }
+          } else if (!sessionMember) {
             scopeClauses.push({ churchId: '__no_church_access__' });
           }
-        } else if (!member) {
-          scopeClauses.push({ churchId: '__no_church_access__' });
         }
       } else {
         scopeClauses.push({ churchId: '__no_church_access__' });
       }
+    } else {
+      scopeClauses.push({ churchId: '__no_church_access__' });
     }
 
     const andClauses: Record<string, unknown>[] = [

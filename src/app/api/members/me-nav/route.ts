@@ -95,7 +95,7 @@ export async function GET() {
         access: 'partial' as const,
         modules: {
           Iglesias: ['Buscar'],
-          Donaciones: ['Añadir Donación', 'Recaudación de Fondos'],
+          Donaciones: ['Añadir Donación', 'Recaudación de Fondos', 'Declaración de Donación'],
           Directorio: ['Pastoral'],
           Oración: ['Peticiones', 'Nueva petición'],
         },
