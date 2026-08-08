@@ -443,11 +443,11 @@ export default function DonationsPage() {
     <div className="flex flex-col flex-1">
       <AppHeader
         title="Donaciones y Ofrendas"
-        description="Gestione donaciones, promesas de donación y genere estados de cuenta."
+        description="Gestione donaciones, promesas de donación y expida certificados de donación."
       >
         <Button variant="outline" asChild>
           <Link href="/donations/giving-statement">
-            <FileText className="mr-2 h-4 w-4" /> Generar Estado de Cuenta
+            <FileText className="mr-2 h-4 w-4" /> Certificados de Donación
           </Link>
         </Button>
       </AppHeader>

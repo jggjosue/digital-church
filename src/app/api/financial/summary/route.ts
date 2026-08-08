@@ -27,6 +27,13 @@ export async function GET(request: Request) {
       { projection: { _id: 0, staffRole: 1, churchIds: 1, templeIds: 1 } }
     );
     
+    if (sessionMember) {
+      const sr = String(sessionMember.staffRole ?? '').trim().toLowerCase();
+      if (sr === 'congregante') {
+        return NextResponse.json({ error: 'No tienes acceso a los datos financieros.' }, { status: 403 });
+      }
+    }
+    
     let churchIdsScope: string[] | null = null;
     if (sessionMember && !isFullAccessStaffRole(sessionMember.staffRole as string | null | undefined)) {
       let ids = normalizeMemberChurchIds(sessionMember);

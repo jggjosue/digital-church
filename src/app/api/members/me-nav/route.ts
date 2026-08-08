@@ -25,7 +25,7 @@ const LEADERSHIP_PORTAL_MODULES = {
     'Crear Campaña',
     'Donaciones y ofrendas',
     'Gestión de Promesas',
-    'Declaración de Donación',
+    'Certificados de Donación',
     'Recaudación de Fondos',
   ],
   Directorio: ['Mis Datos', 'Añadir', 'Miembros', 'Pastoral'],
@@ -95,8 +95,10 @@ export async function GET() {
         access: 'partial' as const,
         modules: {
           Iglesias: ['Buscar'],
-          Donaciones: ['Añadir Donación'],
+          Ofrendas: ['Añadir Donación', 'Recaudación de Fondos', 'Certificados de Donación'],
+          Donaciones: ['Añadir Donación', 'Recaudación de Fondos', 'Certificados de Donación'],
           Directorio: ['Pastoral'],
+          Oración: ['Peticiones', 'Nueva petición'],
         },
         staffRole,
       });

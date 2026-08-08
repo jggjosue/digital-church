@@ -6,6 +6,7 @@ import { resolvePastorChurchAccess } from '@/lib/pastor-church-access';
 import type { IciarTempleSchedule } from '@/lib/iciar-temples';
 import {
   CHURCHES_COLLECTION,
+  buildDefaultChurchDocuments,
   type ChurchInventoryArea,
   type ChurchLocation,
 } from '@/lib/church-locations';
@@ -45,10 +46,15 @@ export async function GET(
     }
     const trimmedId = id.trim();
     const db = await getDb();
-
-    const doc = await db
+    let doc: ChurchLocation | null = await db
       .collection<ChurchLocation>(CHURCHES_COLLECTION)
       .findOne({ id: trimmedId }, { projection: { _id: 0 } });
+    if (!doc) {
+      const seedMatch = buildDefaultChurchDocuments().find((c) => c.id === trimmedId);
+      if (seedMatch) {
+        doc = seedMatch;
+      }
+    }
     if (!doc) {
       return NextResponse.json({ error: 'Ubicación no encontrada.' }, { status: 404 });
     }
@@ -99,7 +105,6 @@ export async function PATCH(
           { status: 400 }
         );
       }
-
       const cleaned: ChurchInventoryArea[] = [];
       for (const raw of body.inventoryAreas) {
         if (!raw || typeof raw !== 'object') continue;
@@ -136,6 +141,11 @@ export async function PATCH(
     const municipality = typeof body.municipality === 'string' ? body.municipality.trim() : '';
     const embedUrl = typeof body.embedUrl === 'string' ? body.embedUrl : '';
     const shareMapUrl = typeof body.shareMapUrl === 'string' ? body.shareMapUrl : '';
+    const driveFolderUrl = typeof body.driveFolderUrl === 'string' ? body.driveFolderUrl.trim() : undefined;
+    const campusPastor = typeof body.campusPastor === 'string' ? body.campusPastor.trim() : undefined;
+    const contactEmail = typeof body.contactEmail === 'string' ? body.contactEmail.trim() : undefined;
+    const description = typeof body.description === 'string' ? body.description.trim() : undefined;
+    const phone = typeof body.phone === 'string' ? body.phone.trim() : undefined;
 
     const lat = parseFiniteNumber(body.lat);
     const lng = parseFiniteNumber(body.lng);
@@ -151,25 +161,27 @@ export async function PATCH(
       return NextResponse.json({ error: 'Horarios inválidos.' }, { status: 400 });
     }
 
-    const result = await db.collection<ChurchLocation>(CHURCHES_COLLECTION).updateOne(
-      { id: trimmed },
-      {
-        $set: {
-          name,
-          address,
-          municipality,
-          lat,
-          lng,
-          embedUrl,
-          shareMapUrl,
-          schedule,
-        },
-      }
-    );
+    const updateFields: Record<string, unknown> = {
+      name,
+      address,
+      municipality,
+      lat,
+      lng,
+      embedUrl,
+      shareMapUrl,
+      schedule,
+    };
+    if (driveFolderUrl !== undefined) updateFields.driveFolderUrl = driveFolderUrl;
+    if (campusPastor !== undefined) updateFields.campusPastor = campusPastor;
+    if (contactEmail !== undefined) updateFields.contactEmail = contactEmail;
+    if (description !== undefined) updateFields.description = description;
+    if (phone !== undefined) updateFields.phone = phone;
 
-    if (result.matchedCount === 0) {
-      return NextResponse.json({ error: 'Ubicación no encontrada.' }, { status: 404 });
-    }
+    await db.collection<ChurchLocation>(CHURCHES_COLLECTION).updateOne(
+      { id: trimmed },
+      { $set: { ...updateFields, id: trimmed, updatedAt: new Date().toISOString() } },
+      { upsert: true }
+    );
 
     const doc = await db
       .collection<ChurchLocation>(CHURCHES_COLLECTION)

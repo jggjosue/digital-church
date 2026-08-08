@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -33,6 +34,11 @@ function EditTempleForm({
     lng: number;
     embedUrl: string;
     shareMapUrl: string;
+    campusPastor?: string;
+    contactEmail?: string;
+    description?: string;
+    phone?: string;
+    driveFolderUrl?: string;
     schedule: IciarTempleSchedule[];
   };
 }) {
@@ -44,6 +50,11 @@ function EditTempleForm({
   const [lng, setLng] = React.useState(String(initial.lng));
   const [embedUrl, setEmbedUrl] = React.useState(initial.embedUrl);
   const [shareMapUrl, setShareMapUrl] = React.useState(initial.shareMapUrl);
+  const [campusPastor, setCampusPastor] = React.useState(initial.campusPastor ?? '');
+  const [contactEmail, setContactEmail] = React.useState(initial.contactEmail ?? '');
+  const [description, setDescription] = React.useState(initial.description ?? '');
+  const [phone, setPhone] = React.useState(initial.phone ?? '');
+  const [driveFolderUrl, setDriveFolderUrl] = React.useState(initial.driveFolderUrl ?? '');
   const [schedule, setSchedule] = React.useState<IciarTempleSchedule[]>(() =>
     initial.schedule.map((s) => ({ ...s }))
   );
@@ -112,6 +123,11 @@ function EditTempleForm({
           lng: lngNum,
           embedUrl,
           shareMapUrl,
+          campusPastor: campusPastor.trim(),
+          contactEmail: contactEmail.trim(),
+          description: description.trim(),
+          phone: phone.trim(),
+          driveFolderUrl: driveFolderUrl.trim(),
           schedule: schedule.map((s) => ({ ...s })),
         }),
       });
@@ -131,6 +147,11 @@ function EditTempleForm({
         setLng(String(c.lng));
         setEmbedUrl(c.embedUrl);
         setShareMapUrl(c.shareMapUrl);
+        setCampusPastor(c.campusPastor ?? '');
+        setContactEmail(c.contactEmail ?? '');
+        setDescription(c.description ?? '');
+        setPhone(c.phone ?? '');
+        setDriveFolderUrl(c.driveFolderUrl ?? '');
         setSchedule(c.schedule.map((s) => ({ ...s })));
       }
       toast({
@@ -195,6 +216,46 @@ function EditTempleForm({
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div className="space-y-2">
+                <Label htmlFor="campus-pastor">Pastor del campus</Label>
+                <Input
+                  id="campus-pastor"
+                  value={campusPastor}
+                  onChange={(e) => setCampusPastor(e.target.value)}
+                  placeholder="Nombre del pastor"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="contact-email">Email de contacto</Label>
+                <Input
+                  id="contact-email"
+                  type="email"
+                  value={contactEmail}
+                  onChange={(e) => setContactEmail(e.target.value)}
+                  placeholder="correo@ejemplo.com"
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone">Número de teléfono</Label>
+              <Input
+                id="phone"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="(123) 456-7890"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="description">Descripción del campus</Label>
+              <Textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Breve descripción del templo, servicios o comunidad."
+                className="min-h-[90px]"
+              />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="space-y-2">
                 <Label htmlFor="lat">Latitud</Label>
                 <Input
                   id="lat"
@@ -240,6 +301,30 @@ function EditTempleForm({
                 value={shareMapUrl}
                 onChange={(e) => setShareMapUrl(e.target.value)}
               />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="max-w-3xl mx-auto">
+          <CardHeader>
+            <CardTitle>Documentación y Papeles del Templo</CardTitle>
+            <CardDescription>
+              Enlace a la carpeta digital (Google Drive, OneDrive, etc.) con escrituras, permisos municipales, recibos de luz/agua y trámites de construcción.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="drive-folder-url">Enlace de Google Drive / Expediente Digital</Label>
+              <Input
+                id="drive-folder-url"
+                type="url"
+                placeholder="https://drive.google.com/drive/folders/..."
+                value={driveFolderUrl}
+                onChange={(e) => setDriveFolderUrl(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Pegue la URL de la carpeta compartida donde se resguardan los permisos, recibos de servicios y expedientes de este templo.
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -405,6 +490,11 @@ export default function EditChurchPage() {
         lng: church.lng,
         embedUrl: church.embedUrl,
         shareMapUrl: church.shareMapUrl,
+        campusPastor: church.campusPastor,
+        contactEmail: church.contactEmail,
+        description: church.description,
+        phone: church.phone,
+        driveFolderUrl: church.driveFolderUrl,
         schedule: church.schedule,
       }}
     />

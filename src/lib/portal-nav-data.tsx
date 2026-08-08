@@ -35,19 +35,19 @@ export type PortalNavSubItem = { href: string; label: string; icon: LucideIcon }
 
 export type PortalNavEntry =
   | {
-      kind: 'link';
-      module: string;
-      href: string;
-      label: string;
-      icon: LucideIcon;
-    }
+    kind: 'link';
+    module: string;
+    href: string;
+    label: string;
+    icon: LucideIcon;
+  }
   | {
-      kind: 'group';
-      module: string;
-      label: string;
-      icon: LucideIcon;
-      subItems: PortalNavSubItem[];
-    };
+    kind: 'group';
+    module: string;
+    label: string;
+    icon: LucideIcon;
+    subItems: PortalNavSubItem[];
+  };
 
 /** Árbol del menú lateral y matriz de permisos (etiquetas deben coincidir con la UI de roles). */
 export const PORTAL_NAV_ENTRIES: PortalNavEntry[] = [
@@ -66,16 +66,6 @@ export const PORTAL_NAV_ENTRIES: PortalNavEntry[] = [
   },
   {
     kind: 'group',
-    module: 'Iglesias',
-    label: 'Iglesias',
-    icon: Church,
-    subItems: [
-      { href: '/churches/new', icon: Plus, label: 'Añadir Ubicación' },
-      { href: '/churches', icon: Search, label: 'Buscar' },
-    ],
-  },
-  {
-    kind: 'group',
     module: 'Ministerios',
     label: 'Ministerios',
     icon: HandHelping,
@@ -83,6 +73,16 @@ export const PORTAL_NAV_ENTRIES: PortalNavEntry[] = [
       { href: '/ministries/new', icon: Plus, label: 'Nuevo Ministerio' },
       { href: '/ministries', icon: List, label: 'Gestionar' },
       { href: '/ministries/assign-members', icon: UserPlus, label: 'Asignar Miembros' },
+    ],
+  },
+  {
+    kind: 'group',
+    module: 'Iglesias',
+    label: 'Iglesias',
+    icon: Church,
+    subItems: [
+      { href: '/churches/new', icon: Plus, label: 'Añadir Ubicación' },
+      { href: '/churches', icon: Search, label: 'Buscar' },
     ],
   },
   {
@@ -107,29 +107,31 @@ export const PORTAL_NAV_ENTRIES: PortalNavEntry[] = [
       { href: '/online/reporte', icon: FileText, label: 'Reporte' },
     ],
   },
-  {
-    kind: 'group',
-    module: 'Ofrendas',
-    label: 'Ofrendas',
-    icon: Heart,
-    subItems: [
-      { href: '/donations/registro', icon: ClipboardList, label: 'Registro de Ofrendas' },
-    ],
-  },
-  {
-    kind: 'group',
-    module: 'Donaciones',
-    label: 'Donaciones',
-    icon: Gift,
-    subItems: [
-      { href: '/donations/new', icon: Plus, label: 'Añadir Donación' },
-      { href: '/donations/fundraising/new', icon: Megaphone, label: 'Crear Campaña' },
-      { href: '/donations', icon: Heart, label: 'Donaciones y ofrendas' },
-      { href: '/donations/pledges', icon: List, label: 'Gestión de Promesas' },
-      { href: '/donations/giving-statement', icon: FileText, label: 'Declaración de Donación' },
-      { href: '/donations/fundraising', icon: PiggyBank, label: 'Recaudación de Fondos' },
-    ],
-  },
+  ...(process.env.NEXT_PUBLIC_ENABLE_DONATIONS === 'true' ? [
+    {
+      kind: 'group' as const,
+      module: 'Ofrendas',
+      label: 'Ofrendas',
+      icon: Heart,
+      subItems: [
+        { href: '/donations/registro', icon: ClipboardList, label: 'Registro de Ofrendas' },
+      ],
+    },
+    {
+      kind: 'group' as const,
+      module: 'Donaciones',
+      label: 'Donaciones',
+      icon: Gift,
+      subItems: [
+        { href: '/donations/new', icon: Plus, label: 'Añadir Donación' },
+        { href: '/donations/fundraising/new', icon: Megaphone, label: 'Crear Campaña' },
+        { href: '/donations', icon: Heart, label: 'Donaciones y ofrendas' },
+        { href: '/donations/pledges', icon: List, label: 'Gestión de Promesas' },
+        { href: '/donations/giving-statement', icon: FileText, label: 'Certificados de Donación' },
+        { href: '/donations/fundraising', icon: PiggyBank, label: 'Recaudación de Fondos' },
+      ],
+    },
+  ] : []),
   ...(process.env.NEXT_PUBLIC_ENABLE_FINANCIAL === 'true' ? [{
     kind: 'group' as const,
     module: 'Finanzas',
@@ -144,8 +146,18 @@ export const PORTAL_NAV_ENTRIES: PortalNavEntry[] = [
       { href: '/financial/new-transaction', icon: Plus, label: 'Nueva Transacción' },
     ],
   }] : []),
-  ...(process.env.NEXT_PUBLIC_ENABLE_PRAYER === 'true' ? [{
-    kind: 'group' as const,
+  {
+    kind: 'group',
+    module: 'Inventario',
+    label: 'Inventario',
+    icon: Package,
+    subItems: [
+      { href: '/inventario', icon: List, label: 'Gestión de inventario' },
+      { href: '/inventario/nuevo', icon: Plus, label: 'Nueva Artículo' },
+    ],
+  },
+  {
+    kind: 'group',
     module: 'Oración',
     label: 'Oración',
     icon: BookHeart,
@@ -153,7 +165,7 @@ export const PORTAL_NAV_ENTRIES: PortalNavEntry[] = [
       { href: '/prayer', icon: List, label: 'Peticiones' },
       { href: '/prayer/new', icon: Plus, label: 'Nueva petición' },
     ],
-  }] : []),
+  },
   /**{
     kind: 'group',
     module: 'Grupos',
@@ -235,16 +247,6 @@ export const PORTAL_NAV_ENTRIES: PortalNavEntry[] = [
   },**/
   {
     kind: 'group',
-    module: 'Inventario',
-    label: 'Inventario',
-    icon: Package,
-    subItems: [
-      { href: '/inventario', icon: List, label: 'Gestión de inventario' },
-      { href: '/inventario/nuevo', icon: Plus, label: 'Nueva Artículo' },
-    ],
-  },
-  {
-    kind: 'group',
     module: 'Configuración',
     label: 'Configuración',
     icon: Settings,
@@ -301,7 +303,7 @@ export function filterSidebarNavByModules(
   const getAllowedForModule = (moduleName: string): string[] | undefined => {
     const target = normalize(moduleName);
     let key = Object.keys(modules).find((k) => normalize(k) === target);
-    
+
     // Backwards compatibility for users whose roles still use 'Ofrendas' for both modules
     if (!key && target === 'donaciones') {
       key = Object.keys(modules).find((k) => normalize(k) === 'ofrendas');

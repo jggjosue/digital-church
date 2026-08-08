@@ -42,12 +42,34 @@ const FOOTER_ROUTES = new Set([
   '/settings/roles',
   '/settings/users',
   '/tutorial',
+  '/prayer',
+  '/prayer/new',
+  '/prayer/groups',
 ]);
+
+function isAllowedCongregantePath(pathname: string | null): boolean {
+  if (!pathname) return false;
+  const norm = pathname.replace(/\/+$/, '') || '/';
+  if (norm === '/churches') return true;
+  if (norm.startsWith('/churches/') && norm !== '/churches/new' && !norm.endsWith('/edit')) return true;
+  if (norm === '/members/staff') return true;
+  if (norm === '/members/new') return true;
+  if (norm === '/donations/new') return true;
+  if (norm === '/donations') return true;
+  if (norm === '/donations/giving-statement') return true;
+  if (norm === '/donations/fundraising' || norm.startsWith('/donations/fundraising/')) return true;
+  if (norm === '/prayer' || norm.startsWith('/prayer/')) return true;
+  if (norm === '/tutorial') return true;
+  return false;
+}
 
 export function AuthenticatedChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [memberLookup, setMemberLookup] = React.useState<'idle' | 'exists' | 'missing'>('idle');
+  const [roleChecked, setRoleChecked] = React.useState(false);
+  const [userRole, setUserRole] = React.useState<string | null>(null);
+
   const isAuthPage = pathname ? AUTH_ROUTE.test(pathname) : false;
   const isLandingHome = pathname === '/' || pathname === '';
   const normalizedPath = pathname?.replace(/\/+$/, '') || '/';
@@ -62,6 +84,7 @@ export function AuthenticatedChrome({ children }: { children: React.ReactNode })
     normalizedPath.startsWith('/documentacion/');
   const showFooter = FOOTER_ROUTES.has(normalizedPath);
   const isMembersNewRoute = normalizedPath === '/members/new';
+  const isAllowedForCongregante = isAllowedCongregantePath(pathname);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -85,6 +108,7 @@ export function AuthenticatedChrome({ children }: { children: React.ReactNode })
         }
 
         if (isMembersNewRoute) {
+          if (!cancelled) setRoleChecked(true);
           return;
         }
 
@@ -105,25 +129,25 @@ export function AuthenticatedChrome({ children }: { children: React.ReactNode })
         const role = String(data.staffRole ?? '')
           .trim()
           .toLowerCase();
-        const allowCongreganteRoute =
-          pathname === '/churches' ||
-          pathname === '/members/staff' ||
-          pathname === '/donations/new' ||
-          pathname === '/donations' ||
-          pathname === '/donations/giving-statement' ||
-          pathname === '/donations/fundraising';
-        const allowTutorial = pathname === '/tutorial';
-        if (!cancelled && !adminBypass && role === 'congregante' && !allowCongreganteRoute && !allowTutorial) {
+
+        if (!cancelled) {
+          setUserRole(role);
+          setRoleChecked(true);
+        }
+
+        if (!cancelled && !adminBypass && role === 'congregante' && !isAllowedForCongregante) {
           router.replace('/churches');
         }
       } catch {
-        // Si falla la validación, no interrumpe la navegación normal.
+        if (!cancelled) {
+          setRoleChecked(true);
+        }
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [isAuthPage, isLandingHome, isMembersNewRoute, isPublicBypassRoute, pathname, router]);
+  }, [isAuthPage, isLandingHome, isMembersNewRoute, isPublicBypassRoute, isAllowedForCongregante, pathname, router]);
 
   if (isAuthPage || isLandingHome || isPublicBypassRoute) {
     return <>{children}</>;
@@ -132,6 +156,15 @@ export function AuthenticatedChrome({ children }: { children: React.ReactNode })
   const showMembersOnlyPanel = isMembersNewRoute && memberLookup !== 'exists';
   if (showMembersOnlyPanel) {
     return <>{children}</>;
+  }
+
+  // Prevent UI flash or rendering of unauthorized pages for congregantes
+  if (userRole === 'congregante' && !isAllowedForCongregante) {
+    return null;
+  }
+
+  if (!roleChecked && !isAllowedForCongregante) {
+    return null;
   }
 
   return (

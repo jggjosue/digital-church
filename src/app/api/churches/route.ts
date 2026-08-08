@@ -77,6 +77,7 @@ const createChurchFromFormSchema = z.object({
   campusPastor: z.string().min(1).max(200),
   contactEmail: z.union([z.literal(''), z.string().email()]).default(''),
   description: z.string().min(1).max(8000),
+  driveFolderUrl: z.union([z.literal(''), z.string().url()]).optional().default(''),
 });
 
 export async function POST(request: Request) {
@@ -139,6 +140,7 @@ export async function POST(request: Request) {
       campusPastor: body.campusPastor.trim(),
       contactEmail: body.contactEmail.trim(),
       description: body.description.trim(),
+      driveFolderUrl: (body.driveFolderUrl ?? '').trim(),
       ...(createdByMemberId ? { createdByMemberId } : {}),
     };
     await db.collection<ChurchLocation>(CHURCHES_COLLECTION).insertOne(doc);
