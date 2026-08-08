@@ -398,7 +398,7 @@ export default function NewMemberPage() {
   };
 
   return (
-    <div className="flex flex-col flex-1">
+    <div className="flex flex-col flex-1 min-h-screen bg-muted/20">
       <AppHeader
         title={
           isAddMode
@@ -449,7 +449,7 @@ export default function NewMemberPage() {
           </Button>
         </div>
       </AppHeader>
-      <main className="flex-1 space-y-6 p-4 sm:space-y-8 sm:p-8">
+      <main className="flex-1 space-y-6 bg-muted/20 p-4 sm:space-y-8 sm:p-8">
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
