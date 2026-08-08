@@ -25,6 +25,7 @@ export async function resolvePortalModules(db: Db): Promise<Record<string, strin
   if (normalize(String(member.staffRole ?? '')) === 'congregante') {
     return {
       Iglesias: ['Buscar'],
+      Ofrendas: ['Añadir Donación', 'Recaudación de Fondos', 'Declaración de Donación'],
       Donaciones: ['Añadir Donación', 'Recaudación de Fondos', 'Declaración de Donación'],
       Directorio: ['Pastoral'],
       Oración: ['Peticiones', 'Nueva petición'],
@@ -39,7 +40,13 @@ export async function resolvePortalModules(db: Db): Promise<Record<string, strin
 export async function hasPortalPermission(db: Db, moduleName: string, permission: string) {
   const modules = await resolvePortalModules(db);
   if (modules === null) return true;
-  const moduleKey = Object.keys(modules).find((key) => normalize(key) === normalize(moduleName));
+  let moduleKey = Object.keys(modules).find((key) => normalize(key) === normalize(moduleName));
+  if (!moduleKey && normalize(moduleName) === 'ofrendas') {
+    moduleKey = Object.keys(modules).find((key) => normalize(key) === 'donaciones');
+  }
+  if (!moduleKey && normalize(moduleName) === 'donaciones') {
+    moduleKey = Object.keys(modules).find((key) => normalize(key) === 'ofrendas');
+  }
   const allowed = moduleKey ? modules[moduleKey] : [];
   return allowed.some((value) => normalize(value) === '*' || normalize(value) === normalize(permission));
 }

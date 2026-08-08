@@ -92,11 +92,11 @@ export default function NewDonationPage() {
     const isOffering = recordCategory === 'offering';
     const isFundraisingMode = donationEntryMode === 'fundraising';
     const isDonorLocked = lockedDonor != null && !isOffering;
-    /** Tipo principal Ofrenda + tipo de registro Ofrenda: solo templos del usuario (API con alcance de sesión). */
+    /** Tipo principal Ofrenda + tipo de registro Ofrenda: solo templos del usuario si tiene asignados; de lo contrario, todos los templos. */
     const restrictTemplesToUser =
         donationEntryMode === 'offering' && recordCategory === 'offering';
     const churches = React.useMemo(
-        () => (restrictTemplesToUser ? scopedChurches : allChurches),
+        () => (restrictTemplesToUser && scopedChurches.length > 0 ? scopedChurches : allChurches),
         [restrictTemplesToUser, scopedChurches, allChurches]
     );
 
@@ -751,11 +751,6 @@ export default function NewDonationPage() {
                                         ))}
                                     </SelectContent>
                                 </Select>
-                                <p className="text-sm text-muted-foreground">
-                                    La búsqueda de donante solo incluye cargos pastorales (Pastor, Ayuda Pastoral,
-                                    Pastor Regional, etc.) en el directorio y
-                                    vinculados a este templo.
-                                </p>
                                 {fieldErrors.church ? (
                                     <p className="text-xs text-destructive" role="alert">
                                         {fieldErrors.church}
