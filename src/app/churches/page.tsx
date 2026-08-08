@@ -61,7 +61,7 @@ export default function ChurchesPage() {
   const [stateFilter, setStateFilter] = React.useState<string>('all');
   const [searchQuery, setSearchQuery] = React.useState('');
   const [currentPage, setCurrentPage] = React.useState(1);
-  const itemsPerPage = 6;
+  const itemsPerPage = 15;
 
   React.useEffect(() => {
     let cancelled = false;
