@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -51,6 +52,13 @@ const formSchema = z.object({
   description: z
     .string()
     .min(1, { message: 'La descripción del campus es requerida.' }),
+  driveFolderUrl: z
+    .union([
+      z.literal(''),
+      z.string().url({ message: 'Ingrese una URL válida (ej. https://drive.google.com/...).' }),
+    ])
+    .optional()
+    .default(''),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -74,6 +82,7 @@ export default function NewChurchPage() {
       campusPastor: '',
       contactEmail: '',
       description: '',
+      driveFolderUrl: '',
     },
   });
 
@@ -94,6 +103,7 @@ export default function NewChurchPage() {
           campusPastor: values.campusPastor.trim(),
           contactEmail: values.contactEmail.trim(),
           description: values.description.trim(),
+          driveFolderUrl: values.driveFolderUrl.trim(),
         }),
       });
       const data = (await res.json().catch(() => ({}))) as {
@@ -321,6 +331,38 @@ export default function NewChurchPage() {
                           {...field}
                         />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </CardContent>
+            </Card>
+
+            <Card className="max-w-3xl mx-auto">
+              <CardHeader>
+                <CardTitle>Documentación y Papeles del Templo</CardTitle>
+                <CardDescription>
+                  Enlace a la carpeta digital (Google Drive, OneDrive, etc.) con escrituras, permisos municipales, recibos de luz/agua y trámites de construcción.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="driveFolderUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Enlace de Google Drive / Expediente Digital (opcional)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="url"
+                          placeholder="https://drive.google.com/drive/folders/..."
+                          className="h-11"
+                          {...field}
+                        />
+                      </FormControl>
+                      <p className="text-xs text-muted-foreground">
+                        Pegue la URL de la carpeta compartida donde se resguardan los permisos, recibos de servicios y expedientes de este templo.
+                      </p>
                       <FormMessage />
                     </FormItem>
                   )}

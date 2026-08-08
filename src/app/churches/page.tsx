@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/select';
 import { AppHeader } from '@/components/app-header';
 import Link from 'next/link';
-import { dedupeChurchesById, type ChurchLocation } from '@/lib/church-locations';
+import { dedupeChurchesById, normalizeMunicipality, type ChurchLocation } from '@/lib/church-locations';
 import {
   Pagination,
   PaginationContent,
@@ -41,13 +41,14 @@ type LocationRow = {
 };
 
 function mapDocToRow(doc: ChurchLocation): LocationRow {
+  const rawState = doc.municipality || doc.city || '';
   return {
     id: doc.id,
     name: doc.name,
     address: doc.address,
     phone: doc.phone ?? '',
     country: doc.country || 'mexico',
-    state: doc.municipality || doc.city || '',
+    state: normalizeMunicipality(rawState) || rawState.trim(),
     embedUrl: doc.embedUrl ?? '',
   };
 }
@@ -104,10 +105,11 @@ export default function ChurchesPage() {
     const set = new Set<string>();
     for (const loc of locations) {
       if (countryFilter === 'all' || loc.country === countryFilter) {
-        set.add(loc.state);
+        const norm = normalizeMunicipality(loc.state);
+        if (norm) set.add(norm);
       }
     }
-    return Array.from(set).sort();
+    return Array.from(set).sort((a, b) => a.localeCompare(b, 'es'));
   }, [locations, countryFilter]);
 
   React.useEffect(() => {
@@ -121,9 +123,13 @@ export default function ChurchesPage() {
     const q = searchQuery.trim().toLowerCase();
     return locations.filter((loc) => {
       if (countryFilter !== 'all' && loc.country !== countryFilter) return false;
-      if (stateFilter !== 'all' && loc.state !== stateFilter) return false;
+      if (stateFilter !== 'all') {
+        const normLocState = normalizeMunicipality(loc.state);
+        const normFilter = normalizeMunicipality(stateFilter);
+        if (normLocState !== normFilter) return false;
+      }
       if (q) {
-        const haystack = `${loc.name} ${loc.address}`.toLowerCase();
+        const haystack = `${loc.name} ${loc.address} ${loc.state}`.toLowerCase();
         if (!haystack.includes(q)) return false;
       }
       return true;

@@ -66,16 +66,6 @@ export const PORTAL_NAV_ENTRIES: PortalNavEntry[] = [
   },
   {
     kind: 'group',
-    module: 'Iglesias',
-    label: 'Iglesias',
-    icon: Church,
-    subItems: [
-      { href: '/churches/new', icon: Plus, label: 'Añadir Ubicación' },
-      { href: '/churches', icon: Search, label: 'Buscar' },
-    ],
-  },
-  {
-    kind: 'group',
     module: 'Ministerios',
     label: 'Ministerios',
     icon: HandHelping,
@@ -83,6 +73,16 @@ export const PORTAL_NAV_ENTRIES: PortalNavEntry[] = [
       { href: '/ministries/new', icon: Plus, label: 'Nuevo Ministerio' },
       { href: '/ministries', icon: List, label: 'Gestionar' },
       { href: '/ministries/assign-members', icon: UserPlus, label: 'Asignar Miembros' },
+    ],
+  },
+  {
+    kind: 'group',
+    module: 'Iglesias',
+    label: 'Iglesias',
+    icon: Church,
+    subItems: [
+      { href: '/churches/new', icon: Plus, label: 'Añadir Ubicación' },
+      { href: '/churches', icon: Search, label: 'Buscar' },
     ],
   },
   {

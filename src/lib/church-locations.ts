@@ -37,9 +37,75 @@ export type ChurchLocation = {
   campusPastor?: string;
   contactEmail?: string;
   description?: string;
+  /** Enlace opcional a carpeta de Google Drive o repositorio digital de documentos del templo (permisos, luz, agua, construcción, etc.). */
+  driveFolderUrl?: string;
   /** Id del miembro (`members.id`) que creó la ubicación (p. ej. pastor que da de alta el templo). */
   createdByMemberId?: string;
 };
+
+/**
+ * Normaliza y canoniza nombres de municipios para evitar duplicados en listas y filtros.
+ * Elimina comas/puntuación al final, espacios extras y homologa variantes comunes.
+ */
+export function normalizeMunicipality(raw?: string | null): string {
+  if (!raw) return '';
+
+  let clean = raw
+    .trim()
+    .replace(/^[\s,.;:-]+|[\s,.;:-]+$/g, '')
+    .replace(/\s+/g, ' ');
+
+  if (!clean) return '';
+
+  const lower = clean
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+
+  if (
+    lower === 'el nayar' ||
+    lower === 'del nayar' ||
+    lower === 'sierra del nayar' ||
+    lower === 'sierra de nayar'
+  ) {
+    return 'El Nayar';
+  }
+
+  if (
+    lower === 'sierra de mezquitic' ||
+    lower === 'sierra del mezquital' ||
+    lower === 'mezquitic' ||
+    lower === 'mezquital'
+  ) {
+    return 'Mezquital';
+  }
+
+  if (lower === 'santa maria del oro') {
+    return 'Santa María del Oro';
+  }
+
+  if (lower === 'ixtlan del rio') {
+    return 'Ixtlán del Río';
+  }
+
+  if (lower === 'santiago ixcuintla') {
+    return 'Santiago Ixcuintla';
+  }
+
+  if (lower === 'san blas') {
+    return 'San Blas';
+  }
+
+  if (lower === 'tepic') {
+    return 'Tepic';
+  }
+
+  if (lower === 'ruiz') {
+    return 'Ruiz';
+  }
+
+  return clean;
+}
 
 /** Texto secundario en listas (prioriza ciudad/estado del documento en BD). */
 export function formatChurchLocationLine(
@@ -52,7 +118,7 @@ export function formatChurchLocationLine(
   const state = doc.state?.trim();
   if (city && state) return `${city}, ${state}`;
   if (city) return city;
-  const muni = doc.municipality?.trim();
+  const muni = normalizeMunicipality(doc.municipality);
   if (muni) return muni;
   const street = doc.streetAddress?.trim();
   const nb = doc.neighborhood?.trim();

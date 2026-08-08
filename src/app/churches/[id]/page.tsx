@@ -13,6 +13,7 @@ import {
   Mail,
   User,
   Phone,
+  Folder,
 } from 'lucide-react';
 import Link from 'next/link';
 import { AppHeader } from '@/components/app-header';
@@ -282,6 +283,23 @@ export default function ChurchDetailsPage() {
                           <p className="font-medium">{church.municipality}</p>
                         </div>
                       </div>
+                      {church.driveFolderUrl ? (
+                        <div className="flex items-start gap-3">
+                          <Folder className="mt-0.5 h-4 w-4 shrink-0 text-sky-600" />
+                          <div>
+                            <p className="text-muted-foreground">Papeles del Templo (Drive)</p>
+                            <a
+                              href={church.driveFolderUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+                            >
+                              Ver expediente digital
+                              <ExternalLink className="h-3.5 w-3.5" />
+                            </a>
+                          </div>
+                        </div>
+                      ) : null}
                       <div className="flex items-start gap-3">
                         <Clock className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
                         <div>
